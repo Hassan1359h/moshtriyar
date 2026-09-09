@@ -1,1 +1,3 @@
-{"functions":{"api/**/*.js":{"maxDuration":20}}}
+{
+  "version": 2
+}
