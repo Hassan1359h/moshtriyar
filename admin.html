@@ -83,19 +83,13 @@ async function init() {
         me = session.user;
 
         // ۲. چک ادمین با RPC
-        const { data: isAdmin, error: adminErr } = await supabase.rpc('is_admin');
-        console.log('is_admin:', isAdmin, 'error:', adminErr);
+        const isAdmin = me.user_metadata?.role === 'admin';
+console.log('is_admin check:', isAdmin, 'metadata:', me.user_metadata);
 
-        if (adminErr) {
-            app.innerHTML = '<div class="empty">⚠️ خطا در بررسی دسترسی: ' + adminErr.message + '</div>';
-            return;
-        }
-
-        if (!isAdmin) {
-            // به جای ریدایرکت، یه پیام نشون بده
-            app.innerHTML = '<div class="empty">⛔ شما ادمین نیستید. اگر مطمئنید که باید ادمین باشید، به مدیر سیستم اطلاع دهید.</div>';
-            return;
-        }
+if (!isAdmin) {
+    app.innerHTML = '<div class="empty">⛔ شما ادمین نیستید. (role: ' + (me.user_metadata?.role || 'ندارد') + ')</div>';
+    return;
+    }
 
         // ۳. بارگذاری
         await loadSettings();
