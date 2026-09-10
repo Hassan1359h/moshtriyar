@@ -120,12 +120,17 @@ async function init() {
     if (!session) { window.location.href = 'login.html'; return; }
     me = session.user;
 
-    const { data: prof } = await supabase.from('profiles').select('role').eq('id', me.id).single();
-    if (prof?.role !== 'admin') {
-        alert('⛔ دسترسی ندارید');
-        window.location.href = 'dashboard.html';
-        return;
-    }
+    const { data: isAdminResult, error: adminError } = await supabase.rpc('is_admin');
+
+if (adminError) {
+    console.log('Admin check error:', adminError);
+}
+
+if (!isAdminResult) {
+    alert('⛔ دسترسی ندارید');
+    window.location.href = 'dashboard.html';
+    return;
+}
 
     await loadSettings();
     await loadPayments();
