@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>پنل مدیریت | مشتری‌یار</title>
+<link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+<link rel="icon" href="icon-192.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f1f5f9;color:#0f172a;line-height:1.7}
+.header{background:#1e293b;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100}
+.header h1{font-size:16px;font-weight:800}
+.header a{color:#fff;text-decoration:none;background:#334155;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:700}
+.container{max-width:1000px;margin:0 auto;padding:24px 20px 60px}
+.title{font-size:22px;font-weight:800;margin-bottom:4px}
+.sub{color:#64748b;font-size:14px;margin-bottom:24px}
+.card{background:#fff;border-radius:16px;padding:22px;margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,.04)}
+.card h2{font-size:16px;font-weight:800;margin-bottom:16px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.stat{background:#f8fafc;border-radius:12px;padding:16px;text-align:center}
+.stat b{font-size:24px;display:block;font-weight:900}
+.stat.y b{color:#d97706}.stat.g b{color:#16a34a}.stat.r b{color:#dc2626}
+.stat span{font-size:11px;color:#64748b;font-weight:700}
+.settings{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.field label{display:block;font-size:13px;font-weight:700;color:#475569;margin-bottom:6px}
+.field input{width:100%;padding:10px;border:2px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:14px;background:#f8fafc;direction:ltr;text-align:right}
+.field input:focus{outline:none;border-color:#3b82f6;background:#fff}
+.btn-save{width:100%;padding:12px;background:#2563eb;color:#fff;border:none;border-radius:10px;font-family:inherit;font-weight:800;font-size:14px;cursor:pointer;margin-top:16px}
+.btn-save:disabled{opacity:.6}
+.msg{text-align:center;margin-top:10px;font-size:13px;font-weight:700;min-height:18px}
+.tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.tab{padding:8px 14px;border-radius:10px;background:#fff;border:2px solid #e2e8f0;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;color:#475569}
+.tab.active{background:#2563eb;color:#fff;border-color:#2563eb}
+.pay{background:#fff;border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:0 2px 10px rgba(0,0,0,.04);border-right:5px solid #cbd5e1}
+.pay.pending{border-right-color:#f59e0b}
+.pay.approved{border-right-color:#16a34a}
+.pay.rejected{border-right-color:#dc2626}
+.pay-head{display:flex;justify-content:space-between;margin-bottom:10px;gap:10px}
+.pay-user{font-weight:800;font-size:15px}
+.pay-email{font-size:12px;color:#64748b;direction:ltr;text-align:right}
+.badge{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:800;white-space:nowrap;height:fit-content}
+.badge.pending{background:#fef3c7;color:#92400e}
+.badge.approved{background:#dcfce7;color:#166534}
+.badge.rejected{background:#fee2e2;color:#991b1b}
+.pay-info{background:#f8fafc;border-radius:10px;padding:12px;margin-bottom:12px;font-size:13px}
+.pay-info div{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed #e2e8f0}
+.pay-info div:last-child{border-bottom:none}
+.pay-info span:first-child{color:#64748b;font-weight:600}
+.pay-info span:last-child{color:#1e293b;font-weight:700}
+.pay-info .code{font-family:monospace;direction:ltr}
+.actions{display:flex;gap:10px}
+.btn{flex:1;padding:10px;border-radius:10px;border:none;font-family:inherit;font-weight:800;font-size:13px;cursor:pointer}
+.btn-ok{background:#16a34a;color:#fff}
+.btn-no{background:#fee2e2;color:#dc2626}
+.btn:disabled{opacity:.5}
+.empty{text-align:center;padding:50px 20px;color:#94a3b8}
+.loading{text-align:center;padding:50px;color:#64748b}
+.loading::before{content:'';display:block;width:32px;height:32px;margin:0 auto 16px;border:3px solid #e2e8f0;border-top-color:#2563eb;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hidden{display:none}
+@media(max-width:600px){.stats,.settings{grid-template-columns:1fr}.pay-head{flex-direction:column}}
+</style>
+</head>
+<body>
+
+<header class="header">
+    <h1>⚙️ پنل مدیریت</h1>
+    <a href="dashboard.html">← داشبورد</a>
+</header>
+
+<div class="container">
+    <h1 class="title">📋 مدیریت پرداخت‌ها</h1>
+    <p class="sub">پرداخت‌های کارت‌به‌کارت کاربران را بررسی، تایید یا رد کنید.</p>
+
+    <div class="loading" id="loading">در حال بارگذاری...</div>
+
+    <div class="hidden" id="main">
+
+        <div class="card">
+            <h2>📊 آمار</h2>
+            <div class="stats">
+                <div class="stat y"><b id="stP">0</b><span>در انتظار</span></div>
+                <div class="stat g"><b id="stA">0</b><span>تایید شده</span></div>
+                <div class="stat r"><b id="stR">0</b><span>رد شده</span></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>⚙️ تنظیمات قیمت و مدت زمان</h2>
+            <div class="settings">
+                <div class="field"><label>قیمت پلن حرفه‌ای (تومان)</label><input type="number" id="proPrice" placeholder="490000"></div>
+                <div class="field"><label>قیمت پلن کسب‌وکار (تومان)</label><input type="number" id="bizPrice" placeholder="990000"></div>
+                <div class="field"><label>مدت پلن تست (روز)</label><input type="number" id="trialDays" placeholder="3"></div>
+                <div class="field"><label>مدت پلن‌های اصلی (روز)</label><input type="number" id="planDays" placeholder="30"></div>
+            </div>
+            <button class="btn-save" id="saveBtn">💾 ذخیره تنظیمات</button>
+            <p class="msg" id="saveMsg"></p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" data-f="pending">⏳ در انتظار</button>
+            <button class="tab" data-f="approved">✅ تایید شده</button>
+            <button class="tab" data-f="rejected">❌ رد شده</button>
+            <button class="tab" data-f="all">📋 همه</button>
+        </div>
+
+        <div id="list"></div>
+    </div>
+</div>
+
+<script type="module">
+import { supabase } from './js/supabase.js';
+
+const $ = id => document.getElementById(id);
+let all = [], filter = 'pending', me = null;
+
+async function init() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { window.location.href = 'login.html'; return; }
+    me = session.user;
+
+    const { data: prof } = await supabase.from('profiles').select('role').eq('id', me.id).single();
+    if (prof?.role !== 'admin') {
+        alert('⛔ دسترسی ندارید');
+        window.location.href = 'dashboard.html';
+        return;
+    }
+
+    await loadSettings();
+    await loadPayments();
+    $('loading').classList.add('hidden');
+    $('main').classList.remove('hidden');
+}
+
+async function loadSettings() {
+    const { data } = await supabase.from('settings').select('*');
+    const s = {};
+    (data || []).forEach(x => s[x.key] = x.value);
+    $('proPrice').value = s.pro_price || '490000';
+    $('bizPrice').value = s.business_price || '990000';
+    $('trialDays').value = s.trial_days || '3';
+    $('planDays').value = s.pro_days || '30';
+}
+
+$('saveBtn').addEventListener('click', async () => {
+    const btn = $('saveBtn'), msg = $('saveMsg');
+    btn.disabled = true; msg.textContent = 'در حال ذخیره...'; msg.style.color = '#2563eb';
+    try {
+        const items = [
+            { key: 'pro_price', value: $('proPrice').value },
+            { key: 'business_price', value: $('bizPrice').value },
+            { key: 'trial_days', value: $('trialDays').value },
+            { key: 'pro_days', value: $('planDays').value },
+            { key: 'business_days', value: $('planDays').value }
+        ];
+        for (const it of items) {
+            const { error } = await supabase.from('settings').upsert({ key: it.key, value: it.value });
+            if (error) throw error;
+        }
+        msg.textContent = '✅ ذخیره شد'; msg.style.color = '#16a34a';
+    } catch (e) {
+        msg.textContent = '❌ ' + e.message; msg.style.color = '#dc2626';
+    } finally {
+        btn.disabled = false;
+        setTimeout(() => msg.textContent = '', 3000);
+    }
+});
+
+async function loadPayments() {
+    const { data, error } = await supabase.from('payments').select('*').order('created_at', { ascending: false });
+    if (error) { $('list').innerHTML = '<div class="empty">⚠️ ' + error.message + '</div>'; return; }
+
+    all = await Promise.all((data || []).map(async p => {
+        const { data: prof } = await supabase.from('profiles').select('email,full_name').eq('id', p.user_id).single();
+        return { ...p, prof };
+    }));
+
+    updateStats();
+    render();
+}
+
+function updateStats() {
+    $('stP').textContent = all.filter(p => p.status === 'pending').length;
+    $('stA').textContent = all.filter(p => p.status === 'approved').length;
+    $('stR').textContent = all.filter(p => p.status === 'rejected').length;
+}
+
+function render() {
+    const items = filter === 'all' ? all : all.filter(p => p.status === filter);
+    if (!items.length) {
+        $('list').innerHTML = '<div class="empty">📭 هیچ پرداختی نیست</div>';
+        return;
+    }
+    $('list').innerHTML = '';
+    items.forEach(p => {
+        const badge = p.status === 'pending' ? '⏳ در انتظار' : p.status === 'approved' ? '✅ تایید' : '❌ رد';
+        const date = new Date(p.created_at).toLocaleString('fa-IR');
+        const actions = p.status === 'pending' ? `
+            <div class="actions">
+                <button class="btn btn-ok" data-a="ok" data-id="${p.id}" data-u="${p.user_id}" data-d="${p.days || 30}">✅ تایید</button>
+                <button class="btn btn-no" data-a="no" data-id="${p.id}">❌ رد</button>
+            </div>` : '';
+
+        const div = document.createElement('div');
+        div.className = 'pay ' + p.status;
+        div.innerHTML = `
+            <div class="pay-head">
+                <div>
+                    <div class="pay-user">${p.prof?.full_name || 'بدون نام'}</div>
+                    <div class="pay-email">${p.prof?.email || '-'}</div>
+                </div>
+                <span class="badge ${p.status}">${badge}</span>
+            </div>
+            <div class="pay-info">
+                <div><span>پلن</span><span>${p.plan_name}</span></div>
+                <div><span>مبلغ</span><span>${parseInt(p.amount).toLocaleString('fa-IR')} تومان</span></div>
+                <div><span>مدت</span><span>${p.days || 30} روز</span></div>
+                <div><span>کد پیگیری</span><span class="code">${p.tracking_code}</span></div>
+                ${p.description ? `<div><span>توضیحات</span><span style="font-weight:400">${p.description}</span></div>` : ''}
+                <div><span>تاریخ</span><span style="font-weight:400;font-size:12px">${date}</span></div>
+            </div>
+            ${actions}`;
+        $('list').appendChild(div);
+    });
+
+    $('list').querySelectorAll('[data-a="ok"]').forEach(b => b.onclick = () => approve(b.dataset.id, b.dataset.u, b.dataset.d, b));
+    $('list').querySelectorAll('[data-a="no"]').forEach(b => b.onclick = () => reject(b.dataset.id, b));
+}
+
+async function approve(id, uid, days, btn) {
+    if (!confirm(`تایید پرداخت و فعال‌سازی اشتراک ${days} روزه؟`)) return;
+    btn.disabled = true; btn.textContent = 'در حال تایید...';
+    try {
+        const res = await fetch('/api/approve-payment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ paymentId: id, userId: uid })
+        });
+        const r = await res.json();
+        if (!res.ok || !r.success) throw new Error(r.error || 'خطا');
+        alert('✅ ' + r.message);
+        await loadPayments();
+    } catch (e) {
+        alert('❌ ' + e.message + '\n\n(آیا API روی Vercel دیپلوی شده؟)');
+        btn.disabled = false; btn.textContent = '✅ تایید';
+    }
+}
+
+async function reject(id, btn) {
+    if (!confirm('از رد این پرداخت مطمئنید؟')) return;
+    btn.disabled = true; btn.textContent = 'در حال رد...';
+    try {
+        const { error } = await supabase.from('payments').update({ status: 'rejected' }).eq('id', id);
+        if (error) throw error;
+        alert('پرداخت رد شد');
+        await loadPayments();
+    } catch (e) {
+        alert('❌ ' + e.message);
+        btn.disabled = false; btn.textContent = '❌ رد';
+    }
+}
+
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    filter = t.dataset.f;
+    render();
+});
+
+init();
+</script>
+</body>
+</html>
