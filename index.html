@@ -16,11 +16,30 @@
 
     <nav class="bg-white shadow-sm p-4 flex justify-between items-center max-w-6xl mx-auto rounded-b-xl">
         <div class="flex items-center gap-2">
-            <svg class="w-10 h-10 text-blue-600" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="50" cy="50" r="45" stroke="currentColor" stroke-width="8"/>
-                <path d="M30 60 L50 30 L70 60" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
-                <circle cx="50" cy="70" r="5" fill="currentColor"/>
-            </svg>
+            <svg class="w-10 h-10" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- پس‌زمینه دایره‌ای با گرادیانت -->
+  <circle cx="50" cy="50" r="48" fill="url(#logoGradient)" />
+  
+  <!-- سر شخصیت -->
+  <circle cx="50" cy="38" r="12" fill="#ffffff" />
+  
+  <!-- بدن شخصیت -->
+  <path d="M 32 75 Q 32 55 50 55 Q 68 55 68 75 Z" fill="#ffffff" />
+  
+  <!-- ستاره درخشان بالای سر (نماد هوشمندی) -->
+  <path d="M 50 12 L 53 20 L 61 20 L 55 25 L 57 33 L 50 28 L 43 33 L 45 25 L 39 20 L 47 20 Z" fill="#fbbf24" />
+  
+  <!-- نقطه چک روی سینه (نماد تایید/خدمات) -->
+  <circle cx="50" cy="65" r="4" fill="url(#logoGradient)" />
+  <path d="M 47 65 L 49 67 L 53 63" stroke="#ffffff" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+</svg>
             <span class="text-xl font-bold text-gray-800">مشتری‌یار</span>
         </div>
         <div class="flex gap-3">
