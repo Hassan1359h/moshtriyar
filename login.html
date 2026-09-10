@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2563eb">
+    <title>ورود / ثبت‌نام | مشتری‌یار</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+    <link rel="icon" href="icon-192.png">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: Vazirmatn, Tahoma, sans-serif;
+            background: linear-gradient(135deg, #eff6ff 0%, #f5f3ff 100%);
+            color: #0f172a;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            line-height: 1.7;
+        }
+        .box {
+            background: #fff;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(59, 130, 246, 0.15);
+            width: 100%;
+            max-width: 420px;
+            padding: 40px 32px;
+            position: relative;
+        }
+        .logo-wrap {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .logo-wrap svg {
+            width: 64px;
+            height: 64px;
+        }
+        h1 {
+            font-size: 24px;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 6px;
+            color: #1e293b;
+        }
+        .subtitle {
+            text-align: center;
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+        .tabs {
+            display: flex;
+            background: #f1f5f9;
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 24px;
+        }
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 14px;
+            color: #64748b;
+            transition: all 0.2s;
+            border: none;
+            background: transparent;
+            font-family: inherit;
+        }
+        .tab.active {
+            background: #fff;
+            color: #2563eb;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .field {
+            margin-bottom: 16px;
+        }
+        .field label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 6px;
+        }
+        .field input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 15px;
+            font-family: inherit;
+            background: #f8fafc;
+            transition: border-color 0.2s;
+            direction: ltr;
+            text-align: right;
+        }
+        .field input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: #fff;
+        }
+        .btn-main {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            font-family: inherit;
+            margin-top: 8px;
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+            transition: transform 0.2s;
+        }
+        .btn-main:hover {
+            transform: translateY(-1px);
+        }
+        .btn-main:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .message {
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 16px;
+            min-height: 20px;
+            color: #64748b;
+        }
+        .message.success { color: #16a34a; }
+        .message.error { color: #dc2626; }
+        .message.info { color: #2563eb; }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #64748b;
+            text-decoration: none;
+            font-size: 13px;
+        }
+        .back-link:hover {
+            color: #2563eb;
+        }
+        .plan-badge {
+            display: none;
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            text-align: center;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+        .plan-badge.show {
+            display: block;
+        }
+        @media (max-width: 480px) {
+            .box { padding: 30px 22px; }
+            h1 { font-size: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="box">
+        <div class="logo-wrap">
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#3b82f6"/>
+                        <stop offset="100%" stop-color="#8b5cf6"/>
+                    </linearGradient>
+                </defs>
+                <rect width="100" height="100" rx="22" fill="url(#lg)"/>
+                <circle cx="50" cy="42" r="11" fill="#fff"/>
+                <path d="M 32 78 Q 32 58 50 58 Q 68 58 68 78 Z" fill="#fff"/>
+                <path d="M 50 15 L 53 24 L 62 24 L 55 30 L 58 39 L 50 33 L 42 39 L 45 30 L 38 24 L 47 24 Z" fill="#fbbf24"/>
+                <circle cx="50" cy="68" r="6" fill="#2563eb"/>
+                <path d="M 46 68 L 49 71 L 54 66" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </div>
+
+        <h1>مشتری‌یار</h1>
+        <p class="subtitle">به دستیار هوشمند مدیریت مشتریان خوش آمدید</p>
+
+        <div class="plan-badge" id="planBadge"></div>
+
+        <div class="tabs">
+            <button class="tab active" id="tabLogin" type="button">ورود</button>
+            <button class="tab" id="tabSignup" type="button">ثبت‌نام</button>
+        </div>
+
+        <form id="authForm">
+            <div class="field" id="nameField" style="display:none;">
+                <label>نام و نام خانوادگی</label>
+                <input type="text" id="fullName" placeholder="مثلاً: حسن نادریان">
+            </div>
+            <div class="field">
+                <label>ایمیل</label>
+                <input type="email" id="email" required placeholder="example@email.com">
+            </div>
+            <div class="field">
+                <label>رمز عبور</label>
+                <input type="password" id="password" required placeholder="حداقل ۶ کاراکتر" minlength="6">
+            </div>
+            <button type="submit" class="btn-main" id="submitBtn">ورود</button>
+            <p class="message" id="message"></p>
+        </form>
+
+        <a href="index.html" class="back-link">← بازگشت به صفحه اصلی</a>
+    </div>
+
+    <script type="module">
+        import { supabase } from './js/supabase.js';
+
+        const tabLogin = document.getElementById('tabLogin');
+        const tabSignup = document.getElementById('tabSignup');
+        const nameField = document.getElementById('nameField');
+        const fullNameInput = document.getElementById('fullName');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const submitBtn = document.getElementById('submitBtn');
+        const message = document.getElementById('message');
+        const authForm = document.getElementById('authForm');
+        const planBadge = document.getElementById('planBadge');
+
+        // بررسی پارامتر پلن در URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const selectedPlan = urlParams.get('plan');
+        if (selectedPlan) {
+            const planName = selectedPlan === 'pro' ? 'پلن حرفه‌ای' : 
+                            selectedPlan === 'business' ? 'پلن کسب‌وکار' : selectedPlan;
+            planBadge.textContent = '🎯 پلن انتخابی شما: ' + planName;
+            planBadge.classList.add('show');
+        }
+
+        // بررسی اینکه کاربر قبلاً وارد شده یا نه
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+            window.location.href = 'dashboard.html';
+        }
+
+        let mode = 'login';
+
+        function setMode(newMode) {
+            mode = newMode;
+            if (mode === 'login') {
+                tabLogin.classList.add('active');
+                tabSignup.classList.remove('active');
+                nameField.style.display = 'none';
+                submitBtn.textContent = 'ورود';
+                document.title = 'ورود | مشتری‌یار';
+            } else {
+                tabSignup.classList.add('active');
+                tabLogin.classList.remove('active');
+                nameField.style.display = 'block';
+                submitBtn.textContent = 'ثبت‌نام';
+                document.title = 'ثبت‌نام | مشتری‌یار';
+            }
+            message.textContent = '';
+            message.className = 'message';
+        }
+
+        tabLogin.addEventListener('click', () => setMode('login'));
+        tabSignup.addEventListener('click', () => setMode('signup'));
+
+        function showMessage(text, type = 'info') {
+            message.textContent = text;
+            message.className = 'message ' + type;
+        }
+
+        authForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            const fullName = fullNameInput.value.trim();
+
+            submitBtn.disabled = true;
+            showMessage('در حال پردازش...', 'info');
+
+            try {
+                if (mode === 'login') {
+                    const { error } = await supabase.auth.signInWithPassword({ email, password });
+                    if (error) throw error;
+                    showMessage('ورود موفق! در حال انتقال...', 'success');
+                    setTimeout(() => { window.location.href = 'dashboard.html'; }, 800);
+                } else {
+                    if (!fullName) {
+                        throw new Error('لطفاً نام و نام خانوادگی را وارد کنید.');
+                    }
+                    const { error } = await supabase.auth.signUp({
+                        email,
+                        password,
+                        options: {
+                            data: { full_name: fullName }
+                        }
+                    });
+                    if (error) throw error;
+                    showMessage('✅ ثبت‌نام موفق! حالا وارد شوید.', 'success');
+                    setTimeout(() => setMode('login'), 1500);
+                }
+            } catch (err) {
+                let errorMsg = err.message || 'خطای نامشخص';
+                // ترجمه خطاهای رایج Supabase
+                if (errorMsg.includes('Invalid login credentials')) {
+                    errorMsg = 'ایمیل یا رمز عبور اشتباه است.';
+                } else if (errorMsg.includes('User already registered')) {
+                    errorMsg = 'این ایمیل قبلاً ثبت‌نام کرده است.';
+                } else if (errorMsg.includes('Password should be at least')) {
+                    errorMsg = 'رمز عبور باید حداقل ۶ کاراکتر باشد.';
+                } else if (errorMsg.includes('Unable to validate email')) {
+                    errorMsg = 'ایمیل وارد شده معتبر نیست.';
+                }
+                showMessage('❌ ' + errorMsg, 'error');
+            } finally {
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+                  </html>
