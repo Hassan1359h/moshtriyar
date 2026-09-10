@@ -502,8 +502,9 @@
 
         paymentForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const [planName, amountStr] = planNameSelect.value.split('|');
-            const amount = parseInt(amountStr);
+            const [planName, amountStr, daysStr] = planNameSelect.value.split('|');
+const amount = parseInt(amountStr);
+const days = parseInt(daysStr);
             const trackingCode = trackingCodeInput.value.trim();
             const description = descriptionInput.value.trim();
 
@@ -513,13 +514,14 @@
 
             try {
                 const { error } = await supabase.from('payments').insert({
-                    user_id: currentUser.id,
-                    plan_name: planName,
-                    amount: amount,
-                    tracking_code: trackingCode,
-                    description: description,
-                    status: 'pending'
-                });
+    user_id: currentUser.id,
+    plan_name: planName,
+    amount: amount,
+    days: days,
+    tracking_code: trackingCode,
+    description: description,
+    status: 'pending'
+});
 
                 if (error) throw error;
 
