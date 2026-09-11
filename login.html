@@ -279,6 +279,19 @@
             message.textContent = text;
             message.className = 'message ' + type;
         }
+     document.getElementById('forgotLink').addEventListener('click', async (e) => {
+    e.preventDefault();
+    const email = prompt('ایمیل خود را وارد کنید تا لینک بازیابی ارسال شود:');
+    if (!email) return;
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + window.location.pathname.replace('login.html', 'reset-password.html')
+    });
+    if (error) {
+        alert('❌ خطا: ' + error.message);
+    } else {
+        alert('✅ لینک بازیابی به ایمیل شما ارسال شد.');
+    }
+}); 
 
         authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
