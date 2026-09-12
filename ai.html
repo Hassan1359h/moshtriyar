@@ -132,7 +132,11 @@ import { supabase } from './js/supabase.js';
 const $ = id => document.getElementById(id);
 let currentScenario = '';
 let lastText = '';
-
+const urlParams = new URLSearchParams(window.location.search);
+const customerFromUrl = urlParams.get('customer');
+if (customerFromUrl) {
+    document.getElementById('customerName').value = customerFromUrl;
+    }
 // چک لاگین
 const { data: { session } } = await supabase.auth.getSession();
 if (!session) { window.location.href = 'login.html'; }
