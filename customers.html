@@ -335,8 +335,9 @@ $('deleteBtn').onclick = async () => {
 $('aiBtn').onclick = () => {
     const name = $('name').value.trim();
     const phone = $('phone').value.trim();
+    const channel = $('preferredChannel').value;
     if (!name) return;
-    window.location.href = 'ai.html?customer=' + encodeURIComponent(name) + '&phone=' + encodeURIComponent(phone || '');
+    window.location.href = 'ai.html?customer=' + encodeURIComponent(name) + '&phone=' + encodeURIComponent(phone || '') + '&channel=' + encodeURIComponent(channel);
 };
 $('exportBtn').onclick = () => {
     if (!customers.length) {
