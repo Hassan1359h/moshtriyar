@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#2563eb">
+<title>گزارش‌ها | مشتری‌یار</title>
+<link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+<link rel="icon" href="icon-192.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;line-height:1.7;padding-bottom:80px}
+.header{background:#1e293b;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100}
+.header h1{font-size:16px;font-weight:800}
+.header a{color:#fff;text-decoration:none;background:#334155;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:700;margin-right:6px}
+.container{max-width:800px;margin:0 auto;padding:20px}
+.period{display:flex;gap:8px;margin-bottom:20px}
+.period button{flex:1;padding:10px;border:2px solid #e2e8f0;background:#fff;border-radius:10px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;color:#475569}
+.period button.active{background:#2563eb;color:#fff;border-color:#2563eb}
+.card{background:#fff;border-radius:18px;padding:22px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,.04)}
+.card h2{font-size:16px;font-weight:800;color:#1e293b;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.stat{background:#f8fafc;border-radius:12px;padding:16px;text-align:center}
+.stat b{font-size:24px;display:block;font-weight:900;margin-bottom:4px}
+.stat span{font-size:11px;color:#64748b;font-weight:700}
+.stat .blue{color:#2563eb}
+.stat .green{color:#16a34a}
+.stat .yellow{color:#d97706}
+.stat .red{color:#dc2626}
+.funnel{display:flex;flex-direction:column;gap:8px}
+.funnel-step{display:flex;align-items:center;gap:12px;padding:14px;background:#f8fafc;border-radius:12px}
+.funnel-num{width:40px;height:40px;background:#2563eb;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:16px;flex-shrink:0}
+.funnel-content{flex:1}
+.funnel-label{font-weight:800;font-size:14px;color:#1e293b}
+.funnel-bar{height:8px;background:#e2e8f0;border-radius:4px;margin-top:6px;overflow:hidden}
+.funnel-bar-inner{height:100%;background:linear-gradient(90deg,#3b82f6,#8b5cf6);border-radius:4px;transition:width .5s}
+.funnel-count{font-weight:900;color:#2563eb;font-size:16px}
+.roi-card{background:linear-gradient(135deg,#fef2f2,#fff);border:2px solid #fecaca;border-radius:16px;padding:22px;text-align:center}
+.roi-card .big{font-size:32px;font-weight:900;color:#dc2626;margin:10px 0}
+.roi-card p{color:#64748b;font-size:14px}
+.tips{background:linear-gradient(135deg,#eff6ff,#fff);border:2px solid #bfdbfe;border-radius:16px;padding:18px;margin-top:16px}
+.tips h3{font-size:14px;font-weight:800;color:#2563eb;margin-bottom:10px}
+.tips p{font-size:13px;color:#1e293b;line-height:1.9;margin-bottom:6px}
+.empty{text-align:center;padding:50px 20px;color:#94a3b8}
+.loading{text-align:center;padding:60px;color:#64748b}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<header class="header">
+    <h1>📊 گزارش‌ها</h1>
+    <div>
+        <a href="ai.html">✨ دستیار</a>
+        <a href="at-risk.html">⚠️ در خطر</a>
+        <a href="dashboard.html">داشبورد</a>
+    </div>
+</header>
+
+<div class="container">
+    <div class="loading" id="loading">در حال بارگذاری...</div>
+
+    <div class="hidden" id="content">
+        <div class="period">
+            <button data-period="30" class="active">۳۰ روز اخیر</button>
+            <button data-period="90">۳ ماه اخیر</button>
+            <button data-period="all">همه</button>
+        </div>
+
+        <div class="card">
+            <h2>📈 آمار کلی</h2>
+            <div class="stats-grid" id="statsGrid"></div>
+        </div>
+
+        <div class="card">
+            <h2>🎯 قیف فروش</h2>
+            <div class="funnel" id="funnel"></div>
+        </div>
+
+        <div class="card">
+            <h2>💰 فرصت‌های از دست رفته</h2>
+            <div class="roi-card">
+                <p>ارزش فرصت‌هایی که این ماه از دست دادی:</p>
+                <div class="big" id="lostValue">۰ تومان</div>
+                <p>اگه پیگیری کنی، احتمال بازگشت ۶۰٪ است</p>
+            </div>
+            <div class="tips">
+                <h3>💡 نکته</h3>
+                <p>• هر پیگیری می‌تونه یه فروش جدید باشه</p>
+                <p>• به «مشتریان در خطر» سر بزن و امروز با ۳ نفر تماس بگیر</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+import { supabase } from './js/supabase.js';
+
+const $ = id => document.getElementById(id);
+let allCustomers = [];
+let currentPeriod = 30;
+
+const { data: { session } } = await supabase.auth.getSession();
+if (!session) { window.location.href = 'login.html'; }
+
+document.querySelectorAll('.period button').forEach(btn => {
+    btn.onclick = () => {
+        document.querySelectorAll('.period button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentPeriod = btn.dataset.period === 'all' ? 9999 : parseInt(btn.dataset.period);
+        render();
+    };
+});
+
+async function loadData() {
+    const { data, error } = await supabase.from('customers').select('*');
+    if (error) { $('loading').textContent = 'خطا: ' + error.message; return; }
+
+    allCustomers = data || [];
+    $('loading').classList.add('hidden');
+    $('content').classList.remove('hidden');
+    render();
+}
+
+function getFilteredCustomers() {
+    if (currentPeriod === 9999) return allCustomers;
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - currentPeriod);
+    return allCustomers.filter(c => new Date(c.created_at) >= cutoff);
+}
+
+function render() {
+    const customers = getFilteredCustomers();
+
+    const total = customers.length;
+    const converted = customers.filter(c => c.status === 'customer').length;
+    const negotiating = customers.filter(c => c.status === 'negotiating').length;
+    const lost = customers.filter(c => c.status === 'lost').length;
+    const leads = customers.filter(c => c.status === 'lead').length;
+
+    // آمار
+    $('statsGrid').innerHTML = `
+        <div class="stat"><b class="blue">${total}</b><span>کل مشتریان</span></div>
+        <div class="stat"><b class="green">${converted}</b><span>مشتری (خرید کرد)</span></div>
+        <div class="stat"><b class="yellow">${negotiating}</b><span>در حال مذاکره</span></div>
+        <div class="stat"><b class="red">${lost}</b><span>از دست رفته</span></div>
+    `;
+
+    // قیف فروش
+    const maxCount = Math.max(total, 1);
+    $('funnel').innerHTML = `
+        ${funnelStep('مشتریان بالقوه', leads, maxCount)}
+        ${funnelStep('در حال مذاکره', negotiating, maxCount)}
+        ${funnelStep('مشتری شده', converted, maxCount)}
+    `;
+
+    // ارزش فرصت‌های از دست رفته
+    const atRisk = customers.filter(c => {
+        if (c.status === 'lost') return true;
+        if (c.status === 'customer' || c.status === 'negotiating') {
+            if (!c.last_contact_at) return true;
+            const days = Math.floor((Date.now() - new Date(c.last_contact_at)) / 86400000);
+            return days >= 14;
+        }
+        return false;
+    });
+
+    const lostValue = atRisk.reduce((sum, c) => sum + (parseInt(c.total_purchase) || 3000000), 0);
+    $('lostValue').textContent = lostValue.toLocaleString('fa-IR') + ' تومان';
+}
+
+function funnelStep(label, count, max) {
+    const percent = Math.round((count / max) * 100);
+    return `
+        <div class="funnel-step">
+            <div class="funnel-num">${count}</div>
+            <div class="funnel-content">
+                <div class="funnel-label">${label}</div>
+                <div class="funnel-bar"><div class="funnel-bar-inner" style="width:${percent}%"></div></div>
+            </div>
+        </div>
+    `;
+}
+
+loadData();
+</script>
+</body>
+</html>
