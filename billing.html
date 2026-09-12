@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#2563eb">
+<title>ثبت پرداخت | مشتری‌یار</title>
+<link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+<link rel="icon" href="icon-192.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;line-height:1.7;padding-bottom:90px}
+.header{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.05);padding:12px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100}
+.header-name{font-size:17px;font-weight:800;color:#1e293b}
+.btn-logout{background:#fee2e2;color:#dc2626;border:none;padding:8px 14px;border-radius:10px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer}
+.container{max-width:700px;margin:0 auto;padding:20px}
+.card{background:#fff;border-radius:18px;padding:22px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,.04)}
+.status-box{border-radius:16px;padding:20px;text-align:center;margin-bottom:16px}
+.status-active{background:linear-gradient(135deg,#f0fdf4,#fff);border:2px solid #bbf7d0}
+.status-inactive{background:linear-gradient(135deg,#fef2f2,#fff);border:2px solid #fecaca}
+.status-box h3{font-size:16px;font-weight:800;margin-bottom:6px}
+.status-active h3{color:#16a34a}
+.status-inactive h3{color:#dc2626}
+.status-box .days{font-size:26px;font-weight:900;margin:8px 0}
+.status-active .days{color:#16a34a}
+.status-box p{color:#64748b;font-size:13px}
+.card-info{background:#fffbeb;border:2px dashed #fcd34d;border-radius:14px;padding:18px;text-align:center;margin-bottom:16px}
+.card-info h3{font-size:15px;color:#92400e;margin-bottom:10px}
+.card-box{background:#fff;border-radius:12px;padding:14px;display:inline-block;text-align:right;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.card-box p{margin:3px 0;font-size:14px}
+.card-number{font-family:monospace;font-size:18px;font-weight:800;color:#2563eb;letter-spacing:1px;direction:ltr;display:inline-block;margin-top:4px}
+.copy-btn{background:#2563eb;color:#fff;border:none;padding:6px 12px;border-radius:8px;font-family:inherit;font-weight:700;font-size:11px;cursor:pointer;margin-top:8px;display:block;margin-left:auto;margin-right:auto}
+.form-title{font-size:16px;font-weight:800;color:#1e293b;margin-bottom:16px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:13px;font-weight:700;color:#475569;margin-bottom:6px}
+.field select,.field input,.field textarea{width:100%;padding:12px;border:2px solid #e2e8f0;border-radius:12px;font-family:inherit;font-size:14px;background:#f8fafc;color:#0f172a}
+.field select:focus,.field input:focus,.field textarea:focus{outline:none;border-color:#3b82f6;background:#fff}
+.field textarea{min-height:70px;resize:vertical}
+.btn-submit{width:100%;padding:16px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;border:none;border-radius:14px;font-family:inherit;font-weight:800;font-size:16px;cursor:pointer;box-shadow:0 8px 20px rgba(59,130,246,.3)}
+.btn-submit:disabled{opacity:.6;cursor:not-allowed}
+.msg{text-align:center;margin-top:14px;font-size:14px;font-weight:700;min-height:20px}
+.history-item{padding:14px;border-radius:12px;background:#f8fafc;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px}
+.history-info{flex:1}
+.history-plan{font-weight:800;color:#1e293b;font-size:14px}
+.history-code{font-family:monospace;color:#64748b;direction:ltr;display:inline-block;margin-top:2px}
+.badge{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:800;white-space:nowrap}
+.badge.pending{background:#fef3c7;color:#92400e}
+.badge.approved{background:#dcfce7;color:#166534}
+.badge.rejected{background:#fee2e2;color:#991b1b}
+.loading{text-align:center;padding:60px;color:#64748b}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<header class="header">
+    <span class="header-name">💳 ثبت پرداخت</span>
+    <button class="btn-logout" id="logoutBtn">خروج</button>
+</header>
+
+<div class="loading" id="loading">در حال بارگذاری...</div>
+
+<div class="container hidden" id="content">
+
+    <div class="status-box" id="statusBox"></div>
+
+    <div class="card" id="paymentSection">
+        <div class="card-info">
+            <h3>💳 پرداخت کارت‌به‌کارت</h3>
+            <p style="color:#78716c;font-size:12px;margin-bottom:10px;">مبلغ پلن انتخابی را به کارت زیر واریز کنید:</p>
+            <div class="card-box">
+                <p><strong>بانک:</strong> سامان</p>
+                <p><strong>به نام:</strong> حسن نادریان</p>
+                <span class="card-number" id="cardNumber">6219-8618-2849-2446</span>
+            </div>
+            <button class="copy-btn" id="copyCard">📋 کپی شماره کارت</button>
+        </div>
+
+        <div class="form-title">📝 ثبت اطلاعات پرداخت</div>
+        <form id="paymentForm">
+            <div class="field">
+                <label>پلن انتخابی</label>
+                <select id="planName">
+                    <option value="پلن تست|0|3">پلن تست - رایگان (۳ روز)</option>
+                    <option value="پلن حرفه‌ای|490000|30">پلن حرفه‌ای - ۴۹۰,۰۰۰ تومان (۳۰ روز)</option>
+                    <option value="پلن کسب‌وکار|990000|30">پلن کسب‌وکار - ۹۹۰,۰۰۰ تومان (۳۰ روز)</option>
+                </select>
+            </div>
+            <div class="field">
+                <label>کد پیگیری واریز</label>
+                <input type="text" id="trackingCode" required placeholder="مثلاً: 123456789" style="direction:ltr;text-align:right;">
+            </div>
+            <div class="field">
+                <label>توضیحات (اختیاری)</label>
+                <textarea id="description" placeholder="مثلاً: واریز از حساب شخصی"></textarea>
+            </div>
+            <button type="submit" class="btn-submit" id="submitBtn">ثبت پرداخت</button>
+            <p class="msg" id="paymentMsg"></p>
+        </form>
+    </div>
+
+    <div class="card" id="historyCard" style="display:none;">
+        <div class="form-title">🧾 تاریخچه پرداخت‌ها</div>
+        <div id="historyList"></div>
+    </div>
+
+</div>
+
+<script type="module">
+import { supabase } from './js/supabase.js';
+
+const $ = id => document.getElementById(id);
+let me = null;
+
+const { data: { session } } = await supabase.auth.getSession();
+if (!session) { window.location.href = 'login.html'; return; }
+me = session.user;
+
+// کپی شماره کارت
+$('copyCard').onclick = async () => {
+    try {
+        await navigator.clipboard.writeText('6219861828492446');
+        $('copyCard').textContent = '✅ کپی شد';
+        setTimeout(() => { $('copyCard').textContent = '📋 کپی شماره کارت'; }, 2000);
+    } catch (e) {
+        alert('شماره کارت: 6219-8618-2849-2446');
+    }
+};
+
+async function init() {
+    await loadStatus();
+    await loadHistory();
+    $('loading').classList.add('hidden');
+    $('content').classList.remove('hidden');
+}
+
+async function loadStatus() {
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('subscription_end_date')
+        .eq('id', me.id)
+        .maybeSingle();
+
+    const endDate = profile?.subscription_end_date ? new Date(profile.subscription_end_date) : null;
+    const now = new Date();
+
+    if (endDate && endDate > now) {
+        const days = Math.ceil((endDate - now) / 86400000);
+        $('statusBox').className = 'status-box status-active';
+        $('statusBox').innerHTML = `
+            <h3>✅ اشتراک شما فعال است</h3>
+            <div class="days">${days} روز باقی‌مانده</div>
+            <p>تا تاریخ ${endDate.toLocaleDateString('fa-IR')}</p>
+            <p style="margin-top:12px;font-size:12px;">می‌تونی الان اشتراکت رو تمدید کنی تا روزها بهش اضافه بشه.</p>
+        `;
+    } else {
+        $('statusBox').className = 'status-box status-inactive';
+        $('statusBox').innerHTML = `
+            <h3>⚠️ اشتراک شما فعال نیست</h3>
+            <p>برای دسترسی به همه امکانات، یه پلن انتخاب کن و پرداخت رو ثبت کن.</p>
+        `;
+    }
+}
+
+async function loadHistory() {
+    const { data, error } = await supabase
+        .from('payments')
+        .select('*')
+        .eq('user_id', me.id)
+        .order('created_at', { ascending: false });
+
+    if (error || !data || !data.length) {
+        $('historyCard').style.display = 'none';
+        return;
+    }
+
+    $('historyCard').style.display = 'block';
+    $('historyList').innerHTML = '';
+
+    data.forEach(p => {
+        const badgeClass = p.status;
+        const badgeText = p.status === 'pending' ? '⏳ در انتظار' :
+                          p.status === 'approved' ? '✅ تایید شده' : '❌ رد شده';
+        const date = new Date(p.created_at).toLocaleDateString('fa-IR');
+
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        div.innerHTML = `
+            <div class="history-info">
+                <div class="history-plan">${p.plan_name}</div>
+                <div class="history-code">کد: ${p.tracking_code}</div>
+                <div style="font-size:11px;color:#94a3b8;margin-top:2px;">${date}</div>
+            </div>
+            <span class="badge ${badgeClass}">${badgeText}</span>
+        `;
+        $('historyList').appendChild(div);
+    });
+}
+
+$('paymentForm').onsubmit = async (e) => {
+    e.preventDefault();
+
+    const [planName, amountStr, daysStr] = $('planName').value.split('|');
+    const amount = parseInt(amountStr);
+    const days = parseInt(daysStr);
+    const trackingCode = $('trackingCode').value.trim();
+    const description = $('description').value.trim();
+
+    const btn = $('submitBtn');
+    const msg = $('paymentMsg');
+    btn.disabled = true;
+    msg.textContent = 'در حال ثبت...';
+    msg.style.color = '#2563eb';
+
+    try {
+        const { error } = await supabase.from('payments').insert({
+            user_id: me.id,
+            plan_name: planName,
+            amount: amount,
+            days: days,
+            tracking_code: trackingCode,
+            description: description || null,
+            status: 'pending'
+        });
+
+        if (error) throw error;
+
+        msg.textContent = '✅ پرداخت ثبت شد و در انتظار بررسی مدیر است.';
+        msg.style.color = '#16a34a';
+        $('paymentForm').reset();
+        await loadHistory();
+
+    } catch (err) {
+        msg.textContent = '❌ ' + err.message;
+        msg.style.color = '#dc2626';
+    } finally {
+        btn.disabled = false;
+    }
+};
+
+$('logoutBtn').onclick = async () => {
+    await supabase.auth.signOut();
+    window.location.href = 'index.html';
+};
+
+init();
+</script>
+</body>
+</html>
