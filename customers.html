@@ -216,7 +216,7 @@ function openAdd() {
     $('customerForm').reset();
     $('customerId').value = '';
     $('deleteBtn').classList.add('hidden');
-    $('aiBtn').style.display = 'block';
+    $('aiBtn').style.display = 'none';
     $('modal').classList.add('open');
 }
 
@@ -229,6 +229,7 @@ function openEdit(c) {
     $('status').value = c.status || 'lead';
     $('notes').value = c.notes || '';
     $('deleteBtn').classList.remove('hidden');
+    $('aiBtn').style.display = 'block';
     $('modal').classList.add('open');
 }
 
@@ -280,7 +281,11 @@ $('deleteBtn').onclick = async () => {
     $('modal').classList.remove('open');
     await loadCustomers();
 };
-
+$('aiBtn').onclick = () => {
+    const name = $('name').value.trim();
+    if (!name) return;
+    window.location.href = 'ai.html?customer=' + encodeURIComponent(name);
+};
 init();
 </script>
 </body>
