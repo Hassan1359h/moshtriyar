@@ -284,8 +284,9 @@ $('deleteBtn').onclick = async () => {
 };
 $('aiBtn').onclick = () => {
     const name = $('name').value.trim();
+    const phone = $('phone').value.trim();
     if (!name) return;
-    window.location.href = 'ai.html?customer=' + encodeURIComponent(name);
+    window.location.href = 'ai.html?customer=' + encodeURIComponent(name) + '&phone=' + encodeURIComponent(phone || '');
 };
 init();
 </script>
