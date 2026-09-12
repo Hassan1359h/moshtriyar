@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#2563eb">
+<title>دستیار فروش | مشتری‌یار</title>
+<link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+<link rel="icon" href="icon-192.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;line-height:1.7;padding-bottom:80px}
+.header{background:#1e293b;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100}
+.header h1{font-size:16px;font-weight:800}
+.header a{color:#fff;text-decoration:none;background:#334155;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:700;margin-right:6px}
+.container{max-width:800px;margin:0 auto;padding:20px}
+.hero{background:linear-gradient(135deg,#3b82f6,#8b5cf6);border-radius:20px;padding:24px;color:#fff;margin-bottom:20px;text-align:center}
+.hero h2{font-size:22px;font-weight:900;margin-bottom:6px}
+.hero p{font-size:14px;opacity:.9}
+.section-title{font-size:15px;font-weight:800;color:#1e293b;margin-bottom:12px;margin-top:20px}
+.scenarios{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
+.scenario{background:#fff;border:2px solid #e2e8f0;border-radius:14px;padding:14px;cursor:pointer;transition:all .2s;text-align:right;font-family:inherit;font-size:13px;font-weight:700;color:#1e293b}
+.scenario:hover{border-color:#3b82f6;background:#eff6ff}
+.scenario.active{border-color:#3b82f6;background:#3b82f6;color:#fff}
+.scenario .icon{font-size:20px;display:block;margin-bottom:6px}
+.card{background:#fff;border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 2px 10px rgba(0,0,0,.04)}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:13px;font-weight:700;color:#475569;margin-bottom:6px}
+.field input,.field textarea,.field select{width:100%;padding:12px;border:2px solid #e2e8f0;border-radius:12px;font-family:inherit;font-size:14px;background:#f8fafc;color:#0f172a}
+.field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:#3b82f6;background:#fff}
+.field textarea{min-height:90px;resize:vertical}
+.btn-generate{width:100%;padding:16px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;border:none;border-radius:14px;font-family:inherit;font-weight:800;font-size:16px;cursor:pointer;box-shadow:0 8px 20px rgba(59,130,246,.3)}
+.btn-generate:disabled{opacity:.6;cursor:not-allowed}
+.btn-generate:hover:not(:disabled){transform:translateY(-1px)}
+.result{background:#fff;border-radius:16px;padding:20px;margin-top:16px;border:2px solid #dbeafe;box-shadow:0 4px 16px rgba(59,130,246,.08)}
+.result-title{font-size:14px;font-weight:800;color:#2563eb;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.result-text{background:#f8fafc;border-radius:12px;padding:16px;font-size:15px;color:#1e293b;line-height:1.9;white-space:pre-wrap;min-height:80px}
+.result-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.btn-copy{flex:1;padding:12px;background:#2563eb;color:#fff;border:none;border-radius:10px;font-family:inherit;font-weight:800;font-size:13px;cursor:pointer;min-width:100px}
+.btn-wa{flex:1;padding:12px;background:#25D366;color:#fff;border:none;border-radius:10px;font-family:inherit;font-weight:800;font-size:13px;cursor:pointer;min-width:100px}
+.btn-retry{flex:1;padding:12px;background:#e2e8f0;color:#0f172a;border:none;border-radius:10px;font-family:inherit;font-weight:800;font-size:13px;cursor:pointer;min-width:100px}
+.loader{display:inline-block;width:16px;height:16px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite;margin-left:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:30px;color:#94a3b8;font-size:14px}
+.hidden{display:none!important}
+@media(max-width:600px){.scenarios{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header class="header">
+    <h1>✨ دستیار فروش</h1>
+    <div>
+        <a href="customers.html">👥 مشتریان</a>
+        <a href="dashboard.html">داشبورد</a>
+    </div>
+</header>
+
+<div class="container">
+
+    <div class="hero">
+        <h2>✨ دستیار هوشمند فروش</h2>
+        <p>بگو مشتری چی گفته، من جواب مناسب رو می‌سازم.</p>
+    </div>
+
+    <div class="section-title">🎯 سناریوهای آماده</div>
+    <div class="scenarios" id="scenarios">
+        <button class="scenario" data-scenario="مشتری می‌گه گرونه، چطور قانعش کنم؟">
+            <span class="icon">💰</span> می‌گه گرونه
+        </button>
+        <button class="scenario" data-scenario="مشتری جواب نمی‌ده، چطور پیگیری کنم؟">
+            <span class="icon">📭</span> جواب نمی‌ده
+        </button>
+        <button class="scenario" data-scenario="مشتری می‌گه بعداً، چطور پیگیری کنم؟">
+            <span class="icon">⏰</span> می‌گه بعداً
+        </button>
+        <button class="scenario" data-scenario="مشتری می‌گه از رقیب می‌خرم، چطور منصرفش کنم؟">
+            <span class="icon">🏪</span> از رقیب می‌خرم
+        </button>
+        <button class="scenario" data-scenario="پیام معرفی محصول جدید برای مشتریان قبلی بنویس">
+            <span class="icon">🛍️</span> معرفی محصول
+        </button>
+        <button class="scenario" data-scenario="پیام تشکر از خرید مشتری بنویس">
+            <span class="icon">🙏</span> تشکر از خرید
+        </button>
+        <button class="scenario" data-scenario="پیام برای مشتری غیرفعال بنویس که دوباره برگرده">
+            <span class="icon">😴</span> مشتری غیرفعال
+        </button>
+        <button class="scenario" data-scenario="پیام پیشنهاد ویژه با تخفیف بنویس">
+            <span class="icon">🎁</span> پیشنهاد ویژه
+        </button>
+    </div>
+
+    <div class="card">
+        <div class="field">
+            <label>👤 نام مشتری (اختیاری)</label>
+            <input type="text" id="customerName" placeholder="مثلاً: علی احمدی">
+        </div>
+        <div class="field">
+            <label>🏢 کسب‌وکار تو چیه؟ (اختیاری، ولی کمک می‌کنه)</label>
+            <input type="text" id="businessType" placeholder="مثلاً: فروش لباس، آرایشگاه، مشاوره">
+        </div>
+        <div class="field">
+            <label>💬 مشتری چی گفته؟ یا چی می‌خوای بنویسم؟</label>
+            <textarea id="prompt" placeholder="مثلاً: مشتری میگه قیمتت از فلانی بالاتره..."></textarea>
+        </div>
+
+        <button class="btn-generate" id="generateBtn">✨ بساز پیام</button>
+    </div>
+
+    <div id="result" class="hidden">
+        <div class="result">
+            <div class="result-title">✨ پیام پیشنهادی</div>
+            <div class="result-text" id="resultText"></div>
+            <div class="result-actions">
+                <button class="btn-copy" id="copyBtn">📋 کپی</button>
+                <button class="btn-wa" id="waBtn">📱 واتساپ</button>
+                <button class="btn-retry" id="retryBtn">🔄 دوباره</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="emptyState" class="empty">
+        یه سناریو انتخاب کن یا خودت بنویس، بعد روی «بساز پیام» بزن.
+    </div>
+
+</div>
+
+<script type="module">
+import { supabase } from './js/supabase.js';
+
+const $ = id => document.getElementById(id);
+let currentScenario = '';
+let lastText = '';
+
+// چک لاگین
+const { data: { session } } = await supabase.auth.getSession();
+if (!session) { window.location.href = 'login.html'; }
+
+// انتخاب سناریو
+document.querySelectorAll('.scenario').forEach(btn => {
+    btn.onclick = () => {
+        document.querySelectorAll('.scenario').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentScenario = btn.dataset.scenario;
+        $('prompt').value = currentScenario;
+        $('prompt').focus();
+    };
+});
+
+// ساخت پیام
+$('generateBtn').onclick = async () => {
+    const prompt = $('prompt').value.trim();
+    const name = $('customerName').value.trim();
+    const business = $('businessType').value.trim();
+
+    if (!prompt) {
+        alert('لطفاً بنویس چی می‌خوای بگی یا مشتری چی گفته.');
+        return;
+    }
+
+    const btn = $('generateBtn');
+    btn.disabled = true;
+    btn.innerHTML = 'در حال ساخت... <span class="loader"></span>';
+
+    // آماده‌سازی درخواست
+    let fullPrompt = prompt;
+    if (name) fullPrompt = `نام مشتری: ${name}\n${fullPrompt}`;
+    if (business) fullPrompt = `نوع کسب‌وکار: ${business}\n${fullPrompt}`;
+
+    try {
+        const response = await fetch('/api/ai-generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                prompt: fullPrompt,
+                scenario: currentScenario || 'عمومی'
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.error || 'خطا در ساخت پیام');
+        }
+
+        lastText = data.text;
+        $('resultText').textContent = data.text;
+        $('result').classList.remove('hidden');
+        $('emptyState').classList.add('hidden');
+        $('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    } catch (err) {
+        alert('❌ ' + err.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '✨ بساز پیام';
+    }
+};
+
+// کپی
+$('copyBtn').onclick = async () => {
+    if (!lastText) return;
+    try {
+        await navigator.clipboard.writeText(lastText);
+        $('copyBtn').textContent = '✅ کپی شد';
+        setTimeout(() => { $('copyBtn').textContent = '📋 کپی'; }, 2000);
+    } catch (err) {
+        alert('❌ کپی نشد. دستی انتخاب کن.');
+    }
+};
+
+// واتساپ
+$('waBtn').onclick = () => {
+    if (!lastText) return;
+    const url = 'https://wa.me/?text=' + encodeURIComponent(lastText);
+    window.open(url, '_blank');
+};
+
+// دوباره
+$('retryBtn').onclick = () => {
+    $('generateBtn').click();
+};
+
+// Enter برای ارسال
+$('prompt').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.ctrlKey) $('generateBtn').click();
+});
+</script>
+</body>
+          </html>
