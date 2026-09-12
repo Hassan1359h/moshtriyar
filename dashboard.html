@@ -60,9 +60,9 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;li
 </head>
 <body>
 
-<header class="header">
-    <div class="header-brand">
-        <svg class="header-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+<header style="background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.05);padding:12px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;">
+    <div style="display:flex;align-items:center;gap:10px;">
+        <svg style="width:38px;height:38px;border-radius:10px;" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
             <defs>
                 <linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stop-color="#3b82f6"/>
@@ -76,14 +76,9 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;li
             <circle cx="50" cy="68" r="6" fill="#2563eb"/>
             <path d="M 46 68 L 49 71 L 54 66" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-        <span class="header-name">مشتری‌یار</span>
+        <span style="font-size:17px;font-weight:800;color:#1e293b;">مشتری‌یار</span>
     </div>
-    <div class="header-actions">
-    <a href="customers.html">👥 مشتریان</a>
-        <a href="reports.html" style="background:#f59e0b;color:#fff;text-decoration:none;padding:8px 14px;border-radius:10px;font-weight:700;font-size:13px;">📊 گزارش</a>
-    <a href="ai.html">✨ دستیار</a>
-    <button class="btn-logout" id="logoutBtn">خروج</button>
-    </div>
+    <button id="logoutBtn" style="background:#fee2e2;color:#dc2626;border:none;padding:8px 14px;border-radius:10px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;">خروج</button>
 </header>
 
 <div class="loading" id="loading">در حال بارگذاری...</div>
