@@ -16,6 +16,7 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f1f5f9;color:#0f172a;li
 .top-bar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
 .search{flex:1;min-width:200px;padding:12px;border:2px solid #e2e8f0;border-radius:12px;font-family:inherit;font-size:14px;background:#fff}
 .btn-add{background:#2563eb;color:#fff;border:none;padding:12px 20px;border-radius:12px;font-family:inherit;font-weight:800;font-size:14px;cursor:pointer;white-space:nowrap}
+ .btn-export{background:#16a34a;color:#fff;border:none;padding:12px 20px;border-radius:12px;font-family:inherit;font-weight:800;font-size:14px;cursor:pointer;white-space:nowrap}   
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
 .stat{background:#fff;border-radius:12px;padding:14px;text-align:center}
 .stat b{font-size:22px;display:block;font-weight:900;color:#2563eb}
@@ -62,6 +63,7 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f1f5f9;color:#0f172a;li
     <div class="top-bar">
         <input type="text" class="search" id="search" placeholder="🔍 جستجوی نام یا شماره...">
         <button class="btn-add" id="addBtn">+ افزودن مشتری</button>
+        <button class="btn-export" id="exportBtn">📥 خروجی</button>
     </div>
 
     <div class="stats">
@@ -288,6 +290,58 @@ $('aiBtn').onclick = () => {
     if (!name) return;
     window.location.href = 'ai.html?customer=' + encodeURIComponent(name) + '&phone=' + encodeURIComponent(phone || '');
 };
+$('exportBtn').onclick = () => {
+    if (!customers.length) {
+        alert('هنوز مشتری‌ای نداری که خروجی بگیری.');
+        return;
+    }
+
+    const statusMap = {
+        'lead': 'بالقوه',
+        'negotiating': 'در مذاکره',
+        'customer': 'مشتری',
+        'lost': 'از دست رفته'
+    };
+
+    // ساخت هدر
+    const headers = ['نام', 'موبایل', 'ایمیل', 'وضعیت', 'آخرین تماس', 'مجموع خرید', 'توضیحات', 'تاریخ ثبت'];
+
+    // ساخت ردیف‌ها
+    const rows = customers.map(c => [
+        c.name || '',
+        c.phone || '',
+        c.email || '',
+        statusMap[c.status] || c.status || '',
+        c.last_contact_at ? new Date(c.last_contact_at).toLocaleDateString('fa-IR') : '',
+        c.total_purchase || 0,
+        (c.notes || '').replace(/\n/g, ' '),
+        c.created_at ? new Date(c.created_at).toLocaleDateString('fa-IR') : ''
+    ]);
+
+    // اضافه کردن BOM برای پشتیبانی از فارسی در Excel
+    let csv = '\uFEFF';
+    csv += headers.join(',') + '\n';
+    rows.forEach(row => {
+        csv += row.map(cell => {
+            const str = String(cell);
+            if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                return '"' + str.replace(/"/g, '""') + '"';
+            }
+            return str;
+        }).join(',') + '\n';
+    });
+
+    // دانلود
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'moshtariyan-' + new Date().toISOString().slice(0, 10) + '.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+};    
 init();
 </script>
 </body>
