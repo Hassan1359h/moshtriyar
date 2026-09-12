@@ -92,10 +92,11 @@ async function loadData() {
     const now = Date.now();
 
     risky = customers.filter(c => {
-        if (!c.last_contact_at) return true;
-        const days = Math.floor((now - new Date(c.last_contact_at)) / 86400000);
-        return days >= 14;
-    }).map(c => {
+    if (c.do_not_disturb) return false;  // ⬅️ مزاحم نشو → حذف
+    if (!c.last_contact_at) return true;
+    const days = Math.floor((now - new Date(c.last_contact_at)) / 86400000);
+    return days >= 14;
+}).map(c => {
         const days = c.last_contact_at 
             ? Math.floor((now - new Date(c.last_contact_at)) / 86400000) 
             : null;
@@ -136,24 +137,47 @@ function renderList() {
             ? 'هنوز هیچ تماسی ثبت نشده' 
             : `${c.days_since} روز بدون پیگیری`;
 
-        const card = document.createElement('div');
-        card.className = 'risk-card ' + (level === 'medium' ? 'warn' : '');
-        card.innerHTML = `
-            <div class="risk-head">
-                <div class="risk-name">${c.name}</div>
-                <div class="risk-level ${level}">${levelText}</div>
-            </div>
-            <div class="risk-info">
-                <div><span>📞 آخرین تماس</span><span>${c.days_since === null ? 'ندارد' : c.days_since + ' روز پیش'}</span></div>
-                <div><span>💰 خرید قبلی</span><span>${(parseInt(c.total_purchase) || 0).toLocaleString('fa-IR')} تومان</span></div>
-                <div><span>📱 موبایل</span><span style="direction:ltr">${c.phone || '—'}</span></div>
-            </div>
-            <div class="risk-reason">⚠️ ${reason}</div>
-            <div class="risk-actions">
-                <a class="btn btn-ai" href="ai.html?customer=${encodeURIComponent(c.name)}">✨ پیام بساز</a>
-                <button class="btn btn-contact" data-id="${c.id}">✅ ثبت تماس</button>
-            </div>
-        `;
+        const channelInfo = {
+    'call': { icon: '📞', label: 'تماس تلفنی' },
+    'whatsapp': { icon: '💬', label: 'واتساپ' },
+    'sms': { icon: '📱', label: 'پیامک' },
+    'instagram': { icon: '📷', label: 'اینستاگرام DM' },
+    'inperson': { icon: '👤', label: 'حضوری' }
+}[c.preferred_channel || 'call'] || { icon: '📞', label: 'تماس تلفنی' };
+
+const timeInfo = {
+    'anytime': 'هر وقت',
+    'morning': 'صبح (۹-۱۲)',
+    'noon': 'ظهر (۱۲-۱۵)',
+    'evening': 'عصر (۱۵-۱۸)',
+    'night': 'شب (۱۸-۲۱)'
+}[c.best_time || 'anytime'] || 'هر وقت';
+
+// اگه اینستاگرام بود، دکمه فرق می‌کنه
+const isInstagram = c.preferred_channel === 'instagram';
+const aiLink = isInstagram
+    ? `ai.html?customer=${encodeURIComponent(c.name)}&channel=instagram`
+    : `ai.html?customer=${encodeURIComponent(c.name)}&phone=${encodeURIComponent(c.phone || '')}`;
+
+const card = document.createElement('div');
+card.className = 'risk-card ' + (level === 'medium' ? 'warn' : '');
+card.innerHTML = `
+    <div class="risk-head">
+        <div class="risk-name">${c.name}</div>
+        <div class="risk-level ${level}">${levelText}</div>
+    </div>
+    <div class="risk-info">
+        <div><span>${channelInfo.icon} راه پیشنهادی</span><span>${channelInfo.label}</span></div>
+        <div><span>⏰ بهترین زمان</span><span>${timeInfo}</span></div>
+        <div><span>📞 آخرین تماس</span><span>${c.days_since === null ? 'ندارد' : c.days_since + ' روز پیش'}</span></div>
+        <div><span>💰 خرید قبلی</span><span>${(parseInt(c.total_purchase) || 0).toLocaleString('fa-IR')} تومان</span></div>
+    </div>
+    <div class="risk-reason">⚠️ ${reason}</div>
+    <div class="risk-actions">
+        <a class="btn btn-ai" href="${aiLink}">✨ پیام بساز</a>
+        <button class="btn btn-contact" data-id="${c.id}">✅ ثبت تماس</button>
+    </div>
+`;
         $('list').appendChild(card);
     });
 
