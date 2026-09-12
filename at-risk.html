@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#dc2626">
+<title>مشتریان در خطر | مشتری‌یار</title>
+<link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+<link rel="icon" href="icon-192.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;line-height:1.7;padding-bottom:80px}
+.header{background:#1e293b;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100}
+.header h1{font-size:16px;font-weight:800}
+.header a{color:#fff;text-decoration:none;background:#334155;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:700;margin-right:6px}
+.container{max-width:800px;margin:0 auto;padding:20px}
+.alert-box{background:linear-gradient(135deg,#fef2f2,#fff);border:2px solid #fecaca;border-radius:20px;padding:24px;text-align:center;margin-bottom:20px}
+.alert-box .icon{font-size:42px;margin-bottom:8px}
+.alert-box h2{font-size:22px;font-weight:900;color:#dc2626;margin-bottom:6px}
+.alert-box p{color:#64748b;font-size:14px}
+.alert-amount{font-size:28px;font-weight:900;color:#dc2626;margin:10px 0}
+.section-title{font-size:15px;font-weight:800;color:#1e293b;margin-bottom:12px;margin-top:20px}
+.risk-card{background:#fff;border-radius:16px;padding:18px;margin-bottom:12px;box-shadow:0 2px 10px rgba(0,0,0,.04);border-right:5px solid #dc2626}
+.risk-card.warn{border-right-color:#f59e0b}
+.risk-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px}
+.risk-name{font-weight:800;font-size:16px;color:#1e293b}
+.risk-level{font-size:11px;font-weight:800;padding:4px 10px;border-radius:20px;white-space:nowrap}
+.risk-level.high{background:#fee2e2;color:#dc2626}
+.risk-level.medium{background:#fef3c7;color:#d97706}
+.risk-info{background:#f8fafc;border-radius:10px;padding:12px;margin-bottom:12px;font-size:13px}
+.risk-info div{display:flex;justify-content:space-between;padding:3px 0}
+.risk-info span:first-child{color:#64748b;font-weight:600}
+.risk-info span:last-child{color:#1e293b;font-weight:700}
+.risk-reason{background:#fef2f2;color:#dc2626;border-radius:10px;padding:10px;font-size:12px;font-weight:700;margin-bottom:12px;text-align:center}
+.risk-actions{display:flex;gap:8px}
+.btn{flex:1;padding:10px;border-radius:10px;border:none;font-family:inherit;font-weight:800;font-size:12px;cursor:pointer;text-decoration:none;text-align:center}
+.btn-ai{background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff}
+.btn-contact{background:#dbeafe;color:#2563eb}
+.btn-view{background:#f1f5f9;color:#475569}
+.empty{text-align:center;padding:60px 20px;color:#94a3b8;background:#fff;border-radius:14px}
+.loading{text-align:center;padding:60px;color:#64748b}
+.hidden{display:none!important}
+.btn-bulk{display:block;width:100%;padding:16px;background:linear-gradient(135deg,#dc2626,#f59e0b);color:#fff;text-decoration:none;text-align:center;border-radius:14px;font-weight:800;font-size:15px;border:none;font-family:inherit;cursor:pointer;box-shadow:0 8px 20px rgba(220,38,38,.25);margin-top:16px}
+</style>
+</head>
+<body>
+
+<header class="header">
+    <h1>⚠️ مشتریان در خطر</h1>
+    <div>
+        <a href="ai.html">✨ دستیار</a>
+        <a href="dashboard.html">داشبورد</a>
+    </div>
+</header>
+
+<div class="container">
+    <div class="loading" id="loading">در حال بارگذاری...</div>
+
+    <div class="hidden" id="content">
+        <div class="alert-box" id="alertBox">
+            <div class="icon">⚠️</div>
+            <h2><span id="riskCount">0</span> مشتری در خطر</h2>
+            <div class="alert-amount"><span id="riskValue">۰</span> تومان</div>
+            <p>اگه امروز پیگیری کنی، احتمال بازگشتشون زیاد است</p>
+        </div>
+
+        <button class="btn-bulk" id="bulkBtn">✨ پیام برای همه (AI)</button>
+
+        <div class="section-title">📋 لیست مشتریان</div>
+        <div id="list"></div>
+    </div>
+</div>
+
+<script type="module">
+import { supabase } from './js/supabase.js';
+
+const $ = id => document.getElementById(id);
+let risky = [];
+
+const { data: { session } } = await supabase.auth.getSession();
+if (!session) { window.location.href = 'login.html'; }
+
+async function loadData() {
+    const { data, error } = await supabase
+        .from('customers')
+        .select('*')
+        .neq('status', 'lost');
+
+    if (error) { $('loading').textContent = 'خطا: ' + error.message; return; }
+
+    const customers = data || [];
+    const now = Date.now();
+
+    risky = customers.filter(c => {
+        if (!c.last_contact_at) return true;
+        const days = Math.floor((now - new Date(c.last_contact_at)) / 86400000);
+        return days >= 14;
+    }).map(c => {
+        const days = c.last_contact_at 
+            ? Math.floor((now - new Date(c.last_contact_at)) / 86400000) 
+            : null;
+        return { ...c, days_since: days };
+    }).sort((a, b) => {
+        const da = a.days_since === null ? 999 : a.days_since;
+        const db = b.days_since === null ? 999 : b.days_since;
+        return db - da;
+    });
+
+    if (!risky.length) {
+        $('loading').classList.add('hidden');
+        $('content').classList.remove('hidden');
+        $('alertBox').innerHTML = '<div class="icon">🎉</div><h2 style="color:#16a34a">هیچ مشتری در خطری نداری!</h2><p>کارت درسته.</p>';
+        $('bulkBtn').classList.add('hidden');
+        $('list').innerHTML = '';
+        return;
+    }
+
+    const value = risky.reduce((sum, c) => sum + (parseInt(c.total_purchase) || 3000000), 0);
+
+    $('riskCount').textContent = risky.length;
+    $('riskValue').textContent = value.toLocaleString('fa-IR');
+
+    renderList();
+
+    $('loading').classList.add('hidden');
+    $('content').classList.remove('hidden');
+}
+
+function renderList() {
+    $('list').innerHTML = '';
+    risky.forEach(c => {
+        const level = c.days_since === null || c.days_since >= 30 ? 'high' : 'medium';
+        const levelText = level === 'high' ? '🔴 خطر بالا' : '🟠 خطر متوسط';
+
+        const reason = c.days_since === null 
+            ? 'هنوز هیچ تماسی ثبت نشده' 
+            : `${c.days_since} روز بدون پیگیری`;
+
+        const card = document.createElement('div');
+        card.className = 'risk-card ' + (level === 'medium' ? 'warn' : '');
+        card.innerHTML = `
+            <div class="risk-head">
+                <div class="risk-name">${c.name}</div>
+                <div class="risk-level ${level}">${levelText}</div>
+            </div>
+            <div class="risk-info">
+                <div><span>📞 آخرین تماس</span><span>${c.days_since === null ? 'ندارد' : c.days_since + ' روز پیش'}</span></div>
+                <div><span>💰 خرید قبلی</span><span>${(parseInt(c.total_purchase) || 0).toLocaleString('fa-IR')} تومان</span></div>
+                <div><span>📱 موبایل</span><span style="direction:ltr">${c.phone || '—'}</span></div>
+            </div>
+            <div class="risk-reason">⚠️ ${reason}</div>
+            <div class="risk-actions">
+                <a class="btn btn-ai" href="ai.html?customer=${encodeURIComponent(c.name)}">✨ پیام بساز</a>
+                <button class="btn btn-contact" data-id="${c.id}">✅ ثبت تماس</button>
+            </div>
+        `;
+        $('list').appendChild(card);
+    });
+
+    $('list').querySelectorAll('.btn-contact').forEach(btn => {
+        btn.onclick = () => recordContact(btn.dataset.id, btn);
+    });
+}
+
+async function recordContact(id, btn) {
+    btn.disabled = true;
+    btn.textContent = '...';
+
+    const { error } = await supabase
+        .from('customers')
+        .update({ last_contact_at: new Date().toISOString() })
+        .eq('id', id);
+
+    if (error) { alert('❌ ' + error.message); btn.disabled = false; btn.textContent = '✅ ثبت تماس'; return; }
+
+    alert('✅ تماس ثبت شد. مشتری از لیست خطر حذف میشه.');
+    await loadData();
+}
+
+$('bulkBtn').onclick = () => {
+    if (!risky.length) return;
+    const names = risky.slice(0, 5).map(c => c.name).join('، ');
+    const q = `برای این مشتریان پیام پیگیری بنویس: ${names}`;
+    window.location.href = 'ai.html?prompt=' + encodeURIComponent(q);
+};
+
+loadData();
+</script>
+</body>
+</html>
