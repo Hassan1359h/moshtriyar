@@ -217,21 +217,31 @@ function render() {
     }
 
     list.innerHTML = '';
-    filtered.forEach(c => {
-        const risk = getRiskLevel(c);
-        const div = document.createElement('div');
-        div.className = 'customer ' + risk;
-        div.innerHTML = `
-            <div class="c-info">
-                <div class="c-name">${c.name}</div>
-                ${c.phone ? `<div class="c-phone">📱 ${c.phone}</div>` : ''}
-                <div class="c-meta">آخرین تماس: ${daysAgo(c.last_contact_at)} • ${statusLabel(c.status)}</div>
-            </div>
-            <div style="font-size:20px;">${statusIcon(c.status)}</div>
-        `;
-        div.onclick = () => openEdit(c);
-        list.appendChild(div);
-    });
+filtered.forEach(c => {
+    const risk = getRiskLevel(c);
+    const channelIcon = {
+        'call': '📞',
+        'whatsapp': '💬',
+        'sms': '📱',
+        'instagram': '📷',
+        'inperson': '👤'
+    }[c.preferred_channel || 'call'] || '📞';
+
+    const dndBadge = c.do_not_disturb ? ' <span style="background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:10px;font-size:10px;font-weight:800;">🔕 مزاحم نشو</span>' : '';
+
+    const div = document.createElement('div');
+    div.className = 'customer ' + risk;
+    div.innerHTML = `
+        <div class="c-info">
+            <div class="c-name">${c.name}${dndBadge}</div>
+            ${c.phone ? `<div class="c-phone">📱 ${c.phone}</div>` : ''}
+            <div class="c-meta">${channelIcon} ${daysAgo(c.last_contact_at)} • ${statusLabel(c.status)}</div>
+        </div>
+        <div style="font-size:20px;">${statusIcon(c.status)}</div>
+    `;
+    div.onclick = () => openEdit(c);
+    list.appendChild(div);
+});
 }
 
 function statusLabel(s) {
