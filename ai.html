@@ -247,12 +247,26 @@ $('waBtn').onclick = () => {
         else if (!phone.startsWith('98')) phone = '98' + phone;
     }
      // اگه کانال اینستاگرام بود
+
+
+    if (!phone) {
+        alert('برای ارسال پیامک، ابتدا شماره مشتری را وارد کنید.');
+        return;
+    }
+
+    const text = encodeURIComponent(lastText);
+    window.location.href = `sms:${phone}?body=${text}`;
+};
+// دوباره
+$('retryBtn').onclick = () => {
+    $('generateBtn').click();
+};
+   
+// اگه کانال اینستاگرام بود
 if (customerChannel === 'instagram') {
-    // دکمه واتساپ و پیامک رو مخفی کن
     $('waBtn').style.display = 'none';
     $('smsBtn').style.display = 'none';
 
-    // دکمه اینستاگرام رو نشون بده
     const igBtn = document.createElement('button');
     igBtn.className = 'btn-wa';
     igBtn.style.background = 'linear-gradient(135deg,#E1306C,#F77737)';
@@ -271,20 +285,7 @@ if (customerChannel === 'instagram') {
     };
 
     $('waBtn').parentNode.insertBefore(igBtn, $('copyBtn').nextSibling);
-}   
-
-    if (!phone) {
-        alert('برای ارسال پیامک، ابتدا شماره مشتری را وارد کنید.');
-        return;
-    }
-
-    const text = encodeURIComponent(lastText);
-    window.location.href = `sms:${phone}?body=${text}`;
-};
-// دوباره
-$('retryBtn').onclick = () => {
-    $('generateBtn').click();
-};
+    } 
 
 // Enter برای ارسال
 $('prompt').addEventListener('keydown', (e) => {
