@@ -138,11 +138,12 @@ let lastText = '';
 const urlParams = new URLSearchParams(window.location.search);
 const customerFromUrl = urlParams.get('customer');
 const phoneFromUrl = urlParams.get('phone');
+const channelFromUrl = urlParams.get('channel') || '';
 if (customerFromUrl) {
     document.getElementById('customerName').value = customerFromUrl;
 }
 let customerPhone = phoneFromUrl || '';
-// چک لاگین
+let customerChannel = channelFromUrl;
 const { data: { session } } = await supabase.auth.getSession();
 if (!session) { window.location.href = 'login.html'; }
 
@@ -245,6 +246,32 @@ $('waBtn').onclick = () => {
         if (phone.startsWith('0')) phone = '98' + phone.substring(1);
         else if (!phone.startsWith('98')) phone = '98' + phone;
     }
+     // اگه کانال اینستاگرام بود
+if (customerChannel === 'instagram') {
+    // دکمه واتساپ و پیامک رو مخفی کن
+    $('waBtn').style.display = 'none';
+    $('smsBtn').style.display = 'none';
+
+    // دکمه اینستاگرام رو نشون بده
+    const igBtn = document.createElement('button');
+    igBtn.className = 'btn-wa';
+    igBtn.style.background = 'linear-gradient(135deg,#E1306C,#F77737)';
+    igBtn.textContent = '📷 اینستاگرام';
+    igBtn.onclick = async () => {
+        if (!lastText) return;
+        try {
+            await navigator.clipboard.writeText(lastText);
+            alert('✅ پیام کپی شد!\n\nحالا اینستاگرام باز میشه. توی DM مشتری پیست کن.');
+            setTimeout(() => {
+                window.location.href = 'https://www.instagram.com/direct/new/';
+            }, 800);
+        } catch (e) {
+            alert('⚠️ پیام رو دستی کپی کن.');
+        }
+    };
+
+    $('waBtn').parentNode.insertBefore(igBtn, $('copyBtn').nextSibling);
+}   
 
     if (!phone) {
         alert('برای ارسال پیامک، ابتدا شماره مشتری را وارد کنید.');
