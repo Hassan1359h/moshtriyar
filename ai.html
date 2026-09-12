@@ -38,6 +38,7 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;li
 .result-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
 .btn-copy{flex:1;padding:12px;background:#2563eb;color:#fff;border:none;border-radius:10px;font-family:inherit;font-weight:800;font-size:13px;cursor:pointer;min-width:100px}
 .btn-wa{flex:1;padding:12px;background:#25D366;color:#fff;border:none;border-radius:10px;font-family:inherit;font-weight:800;font-size:13px;cursor:pointer;min-width:100px}
+.btn-sms{flex:1;padding:12px;background:#f59e0b;color:#fff;border:none;border-radius:10px;font-family:inherit;font-weight:800;font-size:13px;cursor:pointer;min-width:100px}  
 .btn-retry{flex:1;padding:12px;background:#e2e8f0;color:#0f172a;border:none;border-radius:10px;font-family:inherit;font-weight:800;font-size:13px;cursor:pointer;min-width:100px}
 .loader{display:inline-block;width:16px;height:16px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite;margin-left:8px}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -116,6 +117,7 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;li
             <div class="result-actions">
                 <button class="btn-copy" id="copyBtn">📋 کپی</button>
                 <button class="btn-wa" id="waBtn">📱 واتساپ</button>
+                <button class="btn-sms" id="smsBtn">💬 پیامک</button>
                 <button class="btn-retry" id="retryBtn">🔄 دوباره</button>
             </div>
         </div>
@@ -233,6 +235,24 @@ $('waBtn').onclick = () => {
 
     // باز کردن با لینک مستقیم
     window.location.href = url;
+};
+    $('smsBtn').onclick = () => {
+    if (!lastText) return;
+
+    let phone = '';
+    if (customerPhone) {
+        phone = customerPhone.replace(/\D/g, '');
+        if (phone.startsWith('0')) phone = '98' + phone.substring(1);
+        else if (!phone.startsWith('98')) phone = '98' + phone;
+    }
+
+    if (!phone) {
+        alert('برای ارسال پیامک، ابتدا شماره مشتری را وارد کنید.');
+        return;
+    }
+
+    const text = encodeURIComponent(lastText);
+    window.location.href = `sms:${phone}?body=${text}`;
 };
 // دوباره
 $('retryBtn').onclick = () => {
