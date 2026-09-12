@@ -45,7 +45,7 @@ module.exports = async function handler(req, res) {
                     }],
                     generationConfig: {
                         temperature: 0.9,
-                        maxOutputTokens: 500,
+                        maxOutputTokens: 2000,
                     }
                 })
             }
