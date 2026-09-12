@@ -93,6 +93,34 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f1f5f9;color:#0f172a;li
                 <label>ایمیل</label>
                 <input type="email" id="email" placeholder="example@email.com" style="direction:ltr;text-align:right;">
             </div>
+         <div class="field">
+    <label>📱 راه ارتباطی ترجیحی</label>
+    <select id="preferredChannel">
+        <option value="call">📞 تماس تلفنی</option>
+        <option value="whatsapp">💬 واتساپ</option>
+        <option value="sms">📱 پیامک</option>
+        <option value="instagram">📷 اینستاگرام DM</option>
+        <option value="inperson">👤 حضوری</option>
+    </select>
+</div>
+<div class="field">
+    <label>⏰ بهترین زمان تماس</label>
+    <select id="bestTime">
+        <option value="anytime">هر وقت</option>
+        <option value="morning">صبح (۹-۱۲)</option>
+        <option value="noon">ظهر (۱۲-۱۵)</option>
+        <option value="evening">عصر (۱۵-۱۸)</option>
+        <option value="night">شب (۱۸-۲۱)</option>
+    </select>
+</div>
+<div class="field">
+    <label>📷 نام کاربری اینستاگرام (اختیاری)</label>
+    <input type="text" id="instagramUsername" placeholder="example_username" style="direction:ltr;text-align:right;">
+</div>
+<div class="field" style="display:flex;align-items:center;gap:10px;padding:12px;background:#fef3c7;border-radius:10px;">
+    <input type="checkbox" id="doNotDisturb" style="width:20px;height:20px;cursor:pointer;">
+    <label for="doNotDisturb" style="margin:0;cursor:pointer;font-weight:700;color:#92400e;">🔕 مزاحم نشو (یادآوری نشه)</label>
+</div>
             <div class="field">
                 <label>وضعیت</label>
                 <select id="status">
@@ -219,6 +247,9 @@ function openAdd() {
     $('customerForm').reset();
     $('customerId').value = '';
     $('deleteBtn').classList.add('hidden');
+ $('preferredChannel').value = 'call';
+$('bestTime').value = 'anytime';
+$('doNotDisturb').checked = false;
     $('aiBtn').style.display = 'none';
     $('modal').classList.add('open');
 }
@@ -232,6 +263,10 @@ function openEdit(c) {
     $('status').value = c.status || 'lead';
     $('notes').value = c.notes || '';
     $('deleteBtn').classList.remove('hidden');
+ $('preferredChannel').value = c.preferred_channel || 'call';
+$('bestTime').value = c.best_time || 'anytime';
+$('instagramUsername').value = c.instagram_username || '';
+$('doNotDisturb').checked = c.do_not_disturb || false;
     $('aiBtn').style.display = 'block';
     $('modal').classList.add('open');
 }
@@ -248,14 +283,17 @@ $('customerForm').onsubmit = async (e) => {
 
     const id = $('customerId').value;
     const payload = {
-        user_id: me.id,
-        name: $('name').value.trim(),
-        phone: $('phone').value.trim() || null,
-        email: $('email').value.trim() || null,
-        status: $('status').value,
-        notes: $('notes').value.trim() || null
-    };
-
+    user_id: me.id,
+    name: $('name').value.trim(),
+    phone: $('phone').value.trim() || null,
+    email: $('email').value.trim() || null,
+    status: $('status').value,
+    notes: $('notes').value.trim() || null,
+    preferred_channel: $('preferredChannel').value,
+    best_time: $('bestTime').value,
+    instagram_username: $('instagramUsername').value.trim() || null,
+    do_not_disturb: $('doNotDisturb').checked
+};
     try {
         if (id) {
             const { error } = await supabase.from('customers').update(payload).eq('id', id);
