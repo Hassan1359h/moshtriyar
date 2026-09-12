@@ -135,9 +135,11 @@ let currentScenario = '';
 let lastText = '';
 const urlParams = new URLSearchParams(window.location.search);
 const customerFromUrl = urlParams.get('customer');
+const phoneFromUrl = urlParams.get('phone');
 if (customerFromUrl) {
     document.getElementById('customerName').value = customerFromUrl;
-    }
+}
+let customerPhone = phoneFromUrl || '';
 // چک لاگین
 const { data: { session } } = await supabase.auth.getSession();
 if (!session) { window.location.href = 'login.html'; }
@@ -218,10 +220,19 @@ $('copyBtn').onclick = async () => {
 // واتساپ
 $('waBtn').onclick = () => {
     if (!lastText) return;
-    const url = 'https://wa.me/?text=' + encodeURIComponent(lastText);
-    window.open(url, '_blank');
-};
 
+    let url;
+    if (customerPhone) {
+        let phone = customerPhone.replace(/\D/g, '');
+        if (phone.startsWith('0')) phone = '98' + phone.substring(1);
+        else if (!phone.startsWith('98')) phone = '98' + phone;
+        url = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(lastText);
+    } else {
+        url = 'https://wa.me/?text=' + encodeURIComponent(lastText);
+    }
+
+    window.location.href = url;
+};
 // دوباره
 $('retryBtn').onclick = () => {
     $('generateBtn').click();
