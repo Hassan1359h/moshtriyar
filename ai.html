@@ -149,6 +149,65 @@ if (customerFromUrl) {
 }
 let customerPhone = phoneFromUrl || '';
 let customerChannel = channelFromUrl;
+    let selectedProducts = [];
+let allProducts = [];
+let currentUser = null;
+
+// گرفتن کاربر
+async function getUser() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { window.location.href = 'login.html'; return null; }
+    return user;
+}
+
+// بارگذاری محصولات
+async function loadProductsForAI() {
+    const user = await getUser();
+    if (!user) return;
+    currentUser = user;
+
+    const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+    if (error || !data || !data.length) {
+        document.getElementById('productList').innerHTML = '<div style="text-align:center;color:#94a3b8;font-size:12px;">هنوز محصولی نداری</div>';
+        return;
+    }
+
+    allProducts = data;
+    renderProductList();
+}
+
+function renderProductList() {
+    const list = document.getElementById('productList');
+    list.innerHTML = '';
+    allProducts.forEach(p => {
+        const isSelected = selectedProducts.includes(p.id);
+        const item = document.createElement('div');
+        item.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;cursor:pointer;margin-bottom:4px;' + (isSelected ? 'background:#dbeafe;border:1px solid #3b82f6;' : 'background:#fff;border:1px solid #e2e8f0;');
+        item.innerHTML = `
+            <div style="width:18px;height:18px;border-radius:4px;background:${isSelected ? '#3b82f6' : '#fff'};border:2px solid ${isSelected ? '#3b82f6' : '#cbd5e1'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;">${isSelected ? '✓' : ''}</div>
+            <div style="flex:1;">
+                <div style="font-weight:700;font-size:13px;">${p.name}</div>
+                <div style="font-size:11px;color:#2563eb;font-weight:800;">${(parseInt(p.price) || 0).toLocaleString('fa-IR')} تومان</div>
+            </div>
+        `;
+        item.onclick = () => {
+            if (selectedProducts.includes(p.id)) {
+                selectedProducts = selectedProducts.filter(id => id !== p.id);
+            } else {
+                selectedProducts.push(p.id);
+            }
+            renderProductList();
+        };
+        list.appendChild(item);
+    });
+}
+
+loadProductsForAI();
 const { data: { session } } = await supabase.auth.getSession();
 if (!session) { window.location.href = 'login.html'; }
 
@@ -164,7 +223,7 @@ document.querySelectorAll('.scenario').forEach(btn => {
 });
 
 // ساخت پیام
-$('generateBtn').onclick = async () => {
+    $('generateBtn').onclick = async () => {
     const prompt = $('prompt').value.trim();
     const name = $('customerName').value.trim();
     const business = $('businessType').value.trim();
@@ -179,9 +238,15 @@ $('generateBtn').onclick = async () => {
     btn.innerHTML = 'در حال ساخت... <span class="loader"></span>';
 
     // آماده‌سازی درخواست
+      let productsInfo = '';
+if (selectedProducts.length) {
+    const prods = allProducts.filter(p => selectedProducts.includes(p.id));
+    productsInfo = '\n\nمحصولات مرتبط:\n' + prods.map(p => `- ${p.name}: ${parseInt(p.price).toLocaleString('fa-IR')} تومان`).join('\n');
+}  
     let fullPrompt = prompt;
     if (name) fullPrompt = `نام مشتری: ${name}\n${fullPrompt}`;
     if (business) fullPrompt = `نوع کسب‌وکار: ${business}\n${fullPrompt}`;
+        if (productsInfo) fullPrompt += productsInfo;
 
     try {
         const response = await fetch('/api/ai-generate', {
