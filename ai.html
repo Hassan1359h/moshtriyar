@@ -275,6 +275,7 @@ if (selectedProducts.length) {
         lastText = data.text;
         $('resultText').textContent = data.text;
         $('result').classList.remove('hidden');
+        $('followup').classList.remove('hidden');
         $('emptyState').classList.add('hidden');
         $('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
 
