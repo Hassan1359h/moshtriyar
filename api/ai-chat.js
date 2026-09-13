@@ -3,7 +3,7 @@ module.exports = async function handler(req, res) {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { messages, products } = req.body;
+    const { messages, products, customerName } = req.body;
 
     if (!messages || !messages.length) {
         return res.status(400).json({ error: 'Messages required' });
@@ -29,6 +29,7 @@ module.exports = async function handler(req, res) {
 - بدون توضیح اضافه، بدون راهنمایی، بدون چند گزینه
 
 ${products ? `محصولات موجود:\n${products}` : ''}
+${customerName ? `نام مشتری: ${customerName} — توی پیام از اسمش استفاده کن` : ''}
 
 وقتی کاربر درباره محصولی پرسید:
 - اگه عکس داره، توی پاسخ این فرمت رو بذار: [IMG:لینک عکس]
