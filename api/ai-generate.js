@@ -52,6 +52,25 @@ for (const model of models) {
     lastError = await response.json();
 }
 
+if (!response.ok) throw new Error(lastError?.error?.message || 'خطا در AI');
+let response, lastError
+
+for (const model of models) {
+    response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_KEY}`,
+        {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: systemPrompt }] }],
+                generationConfig: { temperature: 0.7, maxOutputTokens: 2000 }
+            })
+        }
+    );
+    if (response.ok) break;
+    lastError = await response.json();
+}
+
 if (!response.ok) throw new Error(lastError?.error?.message || 'خطا در AI')
 
         const data = await response.json();
