@@ -1,4 +1,4 @@
-module.exports = async function handler(req, res) {
+۸module.exports = async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
@@ -25,6 +25,7 @@ module.exports = async function handler(req, res) {
 - از ایموجی به اندازه استفاده کن
 - لحن دوستانه ولی حرفه‌ای داشته باش
 - اگه اسم مشتری داده شد، در ابتدای پیام به کار ببر
+- اگه لینک عکس محصول در پیام بود، حتماً توی پاسخ نهایی به صورت "عکسش: [لینک]" بنویس
 
 سناریو: ${scenario || 'عمومی'}
 
