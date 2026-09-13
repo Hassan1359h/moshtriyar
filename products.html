@@ -70,6 +70,7 @@ body{font-family:Vazirmatn,sans-serif;background:#f1f5f9;margin:0;padding:20px;p
         <div class="btns">
             <button class="btn-cancel" onclick="closeModal()">انصراف</button>
             <button class="btn-save" id="saveBtn" onclick="saveProduct()">ذخیره</button>
+            <button id="deleteBtn" onclick="deleteProduct()" style="width:100%;padding:12px;background:#fee2e2;color:#dc2626;border:none;border-radius:10px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:10px;display:none;">🗑️ حذف محصول</button>
         </div>
     </div>
 </div>
@@ -159,6 +160,7 @@ window.saveProduct = async function() {
 };
 
 async function loadProducts() {
+    
     const { data, error } = await supabase.from('products').select('*').eq('user_id', me.id).order('created_at', { ascending: false });
     
     if (error) {
@@ -197,12 +199,21 @@ function render() {
             } else {
                 document.getElementById('preview').innerHTML = '<span>📸 برای انتخاب عکس کلیک کن</span>';
             }
+            document.getElementById('deleteBtn').style.display = 'block';
             document.getElementById('modal').classList.add('show');
         };
         grid.appendChild(card);
     });
 }
-
+window.deleteProduct = async function() {
+    const id = document.getElementById('productId').value;
+    if (!id) return;
+    if (!confirm('از حذف این محصول مطمئنید؟')) return;
+    const { error } = await supabase.from('products').delete().eq('id', id);
+    if (error) { alert('خطا: ' + error.message); return; }
+    closeModal();
+    await loadProducts();
+};
 loadProducts();
 </script>
 </body>
