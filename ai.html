@@ -275,6 +275,33 @@ document.querySelectorAll('.suggestion').forEach(btn => {
 });
 
 // بارگذاری اولیه
+// بارگذاری مشتری‌ها
+async function loadCustomers() {
+    const { data } = await supabase
+        .from('customers')
+        .select('id, name, phone')
+        .eq('user_id', session.user.id)
+        .order('name');
+
+    const select = $('customerSelect');
+    (data || []).forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.name + (c.phone ? ' — ' + c.phone : '');
+        opt.dataset.phone = c.phone || '';
+        opt.dataset.name = c.name || '';
+        select.appendChild(opt);
+    });
+}
+
+// انتخاب مشتری
+$('customerSelect').onchange = function() {
+    const opt = this.options[this.selectedIndex];
+    window.customerPhone = opt.dataset.phone || '';
+    window.customerName = opt.dataset.name || '';
+};
+
+await loadCustomers();   
 await loadProducts();
 </script>
 </body>
