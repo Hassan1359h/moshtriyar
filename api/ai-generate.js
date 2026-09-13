@@ -33,28 +33,26 @@ module.exports = async function handler(req, res) {
 حالا فقط متن پیام نهایی رو بنویس (بدون توضیح اضافه):`;
 
     try {
-    
-        const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${GEMINI_KEY}`, 
-            {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{
-                        parts: [{ text: systemPrompt }]
-                    }],
-                    generationConfig: {
-                        temperature: 0.9,
-                        maxOutputTokens: 2000,
-                    }
-                })
-            }
-        );
+    const models = ['gemini-3.6-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+let response, lastError;
 
-        if (!response.ok) {
-            const errData = await response.json();
-            throw new Error(errData.error?.message || 'خطا در ارتباط با AI');
+for (const model of models) {
+    response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_KEY}`,
+        {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: systemPrompt }] }],
+                generationConfig: { temperature: 0.7, maxOutputTokens: 2000 }
+            })
         }
+    );
+    if (response.ok) break;
+    lastError = await response.json();
+}
+
+if (!response.ok) throw new Error(lastError?.error?.message || 'خطا در AI')
 
         const data = await response.json();
         const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
