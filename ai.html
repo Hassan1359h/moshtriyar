@@ -182,10 +182,11 @@ async function sendMessage() {
         let cleanText = data.text;
 
         if (imageMatch) {
-            imageUrl = imageMatch[1];
-            cleanText = data.text.replace(/\[IMG:.*?\]/g, '').trim();
+    imageUrl = imageMatch[1];
+    // لینک رو توی متن نگه دار، ولی فرمتش رو تمیز کن
+    cleanText = data.text.replace(/\[IMG:(.*?)\]/g, '📸 عکس: $1').trim();
         }
-
+        
         addMessage('bot', cleanText, imageUrl);
         messages.push({ role: 'assistant', content: data.text });
 
