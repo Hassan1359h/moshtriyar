@@ -35,26 +35,6 @@ module.exports = async function handler(req, res) {
     try {
     const models = ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-2.5-flash', 'gemini-3.8-flash'];
 let response, lastError;
-
-for (const model of models) {
-    response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_KEY}`,
-        {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: systemPrompt }] }],
-                generationConfig: { temperature: 0.7, maxOutputTokens: 2000 }
-            })
-        }
-    );
-    if (response.ok) break;
-    lastError = await response.json();
-}
-
-if (!response.ok) throw new Error(lastError?.error?.message || 'خطا در AI');
-let response, lastError
-
 for (const model of models) {
     response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_KEY}`,
