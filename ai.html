@@ -249,7 +249,9 @@ document.querySelectorAll('.scenario').forEach(btn => {
       let productsInfo = '';
 if (selectedProducts.length) {
     const prods = allProducts.filter(p => selectedProducts.includes(p.id));
-    productsInfo = '\n\nمحصولات مرتبط:\n' + prods.map(p => `- ${p.name}: ${parseInt(p.price).toLocaleString('fa-IR')} تومان`).join('\n');
+    productsInfo = '\n\nمحصولات مرتبط:\n' + prods.map(p => 
+    `- ${p.name}: ${parseInt(p.price).toLocaleString('fa-IR')} تومان${p.image_url ? ' | عکس: ' + p.image_url : ''}`
+).join('\n');
 }  
     let fullPrompt = prompt;
     if (name) fullPrompt = `نام مشتری: ${name}\n${fullPrompt}`;
