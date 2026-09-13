@@ -196,6 +196,41 @@ async function sendMessage() {
         $('sendBtn').disabled = false;
     }
 }
+// کپی پیام AI
+window.copyMsg = async function(btn) {
+    const bubble = btn.closest('.bubble');
+    const clone = bubble.cloneNode(true);
+    clone.querySelectorAll('.actions').forEach(el => el.remove());
+    const text = clone.innerText.trim();
+    try {
+        await navigator.clipboard.writeText(text);
+        const original = btn.textContent;
+        btn.textContent = '✅ کپی شد';
+        setTimeout(() => { btn.textContent = original; }, 2000);
+    } catch (e) {
+        alert('کپی نشد. دستی انتخاب کن.');
+    }
+};
+
+// ارسال به واتساپ
+window.sendWA = function(btn) {
+    const bubble = btn.closest('.bubble');
+    const clone = bubble.cloneNode(true);
+    clone.querySelectorAll('.actions').forEach(el => el.remove());
+    const text = clone.innerText.trim();
+    const url = 'https://wa.me/?text=' + encodeURIComponent(text);
+    window.location.href = url;
+};
+
+// ارسال پیامک
+window.sendSMS = function(btn) {
+    const bubble = btn.closest('.bubble');
+    const clone = bubble.cloneNode(true);
+    clone.querySelectorAll('.actions').forEach(el => el.remove());
+    const text = clone.innerText.trim();
+    const url = 'sms:?body=' + encodeURIComponent(text);
+    window.location.href = url;
+};
 
 // دکمه ارسال
 $('sendBtn').onclick = sendMessage;
