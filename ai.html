@@ -218,9 +218,18 @@ window.sendWA = function(btn) {
     const bubble = btn.closest('.bubble');
     const clone = bubble.cloneNode(true);
     clone.querySelectorAll('.actions').forEach(el => el.remove());
+    clone.querySelectorAll('img').forEach(el => el.remove());
     const text = clone.innerText.trim();
-    const url = 'https://wa.me/?text=' + encodeURIComponent(text);
-    window.location.href = url;
+
+    // اگه شماره مشتری رو داریم، مستقیم به چتش برو
+    if (window.customerPhone) {
+        let phone = window.customerPhone.replace(/\D/g, '');
+        if (phone.startsWith('0')) phone = '98' + phone.substring(1);
+        else if (!phone.startsWith('98')) phone = '98' + phone;
+        window.location.href = 'whatsapp://send?phone=' + phone + '&text=' + encodeURIComponent(text);
+    } else {
+        window.location.href = 'whatsapp://send?text=' + encodeURIComponent(text);
+    }
 };
 
 // ارسال پیامک
