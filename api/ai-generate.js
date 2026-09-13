@@ -68,4 +68,5 @@ if (!response.ok) throw new Error(lastError?.error?.message || 'خطا در AI')
             error: error.message
         });
     }
+    
 };
