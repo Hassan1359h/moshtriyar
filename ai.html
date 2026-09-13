@@ -173,9 +173,10 @@ async function sendMessage() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                messages: messages,
-                products: productContext
-            })
+    messages: messages,
+    products: productContext,
+    customerName: window.customerName || ''
+}
         });
 
         const data = await response.json();
