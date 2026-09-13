@@ -336,21 +336,45 @@ $('followupBtn').onclick = async () => {
 
 
 // واتساپ
-$('waBtn').onclick = () => {
+    $('waBtn').onclick = async () => {
     if (!lastText) return;
 
-    let url;
-    if (customerPhone) {
-        let phone = customerPhone.replace(/\D/g, '');
-        if (phone.startsWith('0')) phone = '98' + phone.substring(1);
-        else if (!phone.startsWith('98')) phone = '98' + phone;
-        url = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(lastText);
-    } else {
-        url = 'https://wa.me/?text=' + encodeURIComponent(lastText);
+    // ۱. کپی پیام
+    try { await navigator.clipboard.writeText(lastText); } catch(e) {}
+
+    // ۲. دانلود عکس‌های محصولات انتخاب‌شده
+    const prods = allProducts.filter(p => selectedProducts.includes(p.id));
+    const images = prods.filter(p => p.image_url);
+
+    if (images.length) {
+        images.forEach((p, i) => {
+            setTimeout(() => {
+                const a = document.createElement('a');
+                a.href = p.image_url;
+                a.download = p.name + '.jpg';
+                a.target = '_blank';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }, i * 500);
+        });
     }
 
-    // باز کردن با لینک مستقیم
-    window.location.href = url;
+    // ۳. باز کردن واتساپ
+    let phone = '';
+    if (customerPhone) {
+        phone = customerPhone.replace(/\D/g, '');
+        if (phone.startsWith('0')) phone = '98' + phone.substring(1);
+        else if (!phone.startsWith('98')) phone = '98' + phone;
+    }
+
+    const url = phone 
+        ? `https://wa.me/${phone}?text=${encodeURIComponent(lastText)}`
+        : `https://wa.me/?text=${encodeURIComponent(lastText)}`;
+
+    setTimeout(() => {
+        window.location.href = url;
+    }, 1000);
 };
     $('smsBtn').onclick = () => {
     if (!lastText) return;
