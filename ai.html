@@ -281,7 +281,7 @@ async function loadCustomers() {
     const { data } = await supabase
         .from('customers')
         .select('id, name, phone')
-        .eq('user_id', session.user.id)
+
         .order('name');
 
     const select = $('customerSelect');
