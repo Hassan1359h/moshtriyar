@@ -99,8 +99,7 @@ const userId = session.user.id;
 async function loadProducts() {
     const { data } = await supabase
         .from('products')
-        .select('*')
-        .eq('user_id', session.user.id);
+        .select('*');
     products = data || [];
 }
 
