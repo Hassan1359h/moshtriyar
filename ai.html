@@ -165,15 +165,16 @@ async function sendMessage() {
         if (!response.ok || !data.success) throw new Error(data.error || 'خطا در پاسخ');
 
         removeTyping();
+        // تشخیص خودکار لینک عکس توی متن
+const imgRegex = /(https?:\/\/[^\s]+\.(?:png|jpg|jpeg|webp|gif))/i;
+const imageMatch = data.text.match(imgRegex);
+let imageUrl = null;
+let cleanText = data.text;
 
-        const imageMatch = data.text.match(/\[IMG:(.*?)\]/);
-        let imageUrl = null;
-        let cleanText = data.text;
-
-        if (imageMatch) {
-            imageUrl = imageMatch[1];
-            cleanText = data.text.replace(/\[IMG:(.*?)\]/g, '📸 عکس: $1').trim();
-        }
+if (imageMatch) {
+    imageUrl = imageMatch[1];
+    cleanText = data.text.replace(imgRegex, '📸 عکس محصول').trim();
+}
 
         addMessage('bot', cleanText, imageUrl);
         messages.push({ role: 'assistant', content: data.text });
