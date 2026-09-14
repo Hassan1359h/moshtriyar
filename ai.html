@@ -145,11 +145,11 @@ async function sendMessage() {
     addTyping();
 
     try {
-        let productContext = '';
         if (products.length) {
-            productContext = '\n\nمحصولات موجود من:\n' + products.map(p =>
-                `- ${p.name} | مارک: ${p.brand || 'ندارد'} | قیمت: ${(parseInt(p.price) || 0).toLocaleString('fa-IR')} تومان | توضیحات: ${p.description || 'ندارد'} | عکس: ${p.image_url || 'ندارد'}`
-            ).join('\n');
+    productContext = '\n\nمحصولات موجود من:\n' + products.map(p =>
+        `- نام: ${p.name}\n  مارک: ${p.brand || 'ندارد'}\n  قیمت: ${(parseInt(p.price) || 0).toLocaleString('fa-IR')} تومان\n  توضیحات: ${p.description || 'ندارد'}\n  IMAGE_URL: ${p.image_url || 'ندارد'}`
+    ).join('\n\n');
+        }
         }
 
         const response = await fetch('/api/ai-chat', {
