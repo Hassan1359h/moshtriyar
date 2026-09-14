@@ -81,6 +81,11 @@ body{
     border:2px solid #fecaca
 }
 
+.status-loading{
+    background:#f8fafc;
+    border:2px solid #e2e8f0
+}
+
 .status-box h3{
     font-size:16px;
     font-weight:800;
@@ -89,6 +94,7 @@ body{
 
 .status-active h3{color:#16a34a}
 .status-inactive h3{color:#dc2626}
+.status-loading h3{color:#64748b}
 
 .status-box .days{
     font-size:26px;
@@ -147,7 +153,7 @@ body{
     background:#2563eb;
     color:#fff;
     border:none;
-    padding:6px 12px;
+    padding:7px 14px;
     border-radius:8px;
     font-family:inherit;
     font-weight:700;
@@ -281,12 +287,6 @@ body{
     color:#991b1b
 }
 
-.loading{
-    text-align:center;
-    padding:60px;
-    color:#64748b
-}
-
 .hidden{
     display:none!important
 }
@@ -295,6 +295,16 @@ body{
     margin-top:7px;
     font-size:11px;
     color:#64748b
+}
+
+.error-box{
+    background:#fef2f2;
+    border:1px solid #fecaca;
+    color:#991b1b;
+    border-radius:12px;
+    padding:12px;
+    margin-top:12px;
+    font-size:12px
 }
 </style>
 </head>
@@ -306,13 +316,12 @@ body{
     <button class="btn-logout" id="logoutBtn">خروج</button>
 </header>
 
-<div class="loading" id="loading">
-    در حال بارگذاری...
-</div>
+<div class="container" id="content">
 
-<div class="container hidden" id="content">
-
-    <div class="status-box" id="statusBox"></div>
+    <div class="status-box status-loading" id="statusBox">
+        <h3>🔄 در حال بررسی وضعیت اشتراک...</h3>
+        <p>صفحه پرداخت آماده است.</p>
+    </div>
 
     <div class="card" id="paymentSection">
 
@@ -336,7 +345,7 @@ body{
                     حسن نادریان
                 </p>
 
-                <span class="card-number" id="cardNumber">
+                <span class="card-number">
                     6219-8618-2849-2446
                 </span>
 
@@ -379,7 +388,7 @@ body{
                 </select>
 
                 <div class="plan-hint" id="planHint">
-                    پلن تست رایگان است و نیاز به واریز ندارد.
+                    پلن تست رایگان است و ۳ روز اعتبار دارد.
                 </div>
 
             </div>
@@ -427,13 +436,17 @@ body{
 
     </div>
 
-    <div class="card" id="historyCard" style="display:none;">
+    <div class="card" id="historyCard">
 
         <div class="form-title">
             🧾 تاریخچه پرداخت‌ها
         </div>
 
-        <div id="historyList"></div>
+        <div id="historyList">
+            <p style="text-align:center;color:#94a3b8;font-size:12px;">
+                در حال دریافت تاریخچه...
+            </p>
+        </div>
 
     </div>
 
@@ -447,54 +460,39 @@ const $ = id => document.getElementById(id);
 
 let me = null;
 
-async function start() {
+/*
+ * Run an async operation with a timeout.
+ * This prevents the billing page from being blocked indefinitely.
+ */
+async function withTimeout(promise, milliseconds = 8000) {
+
+    let timer;
+
+    const timeout = new Promise((_, reject) => {
+
+        timer = setTimeout(() => {
+            reject(new Error('زمان اتصال به سرور تمام شد.'));
+        }, milliseconds);
+
+    });
 
     try {
 
-        const {
-            data: { session },
-            error
-        } = await supabase.auth.getSession();
+        return await Promise.race([
+            promise,
+            timeout
+        ]);
 
-        if (error) {
-            throw error;
-        }
+    } finally {
 
-        if (!session) {
-            window.location.href = 'login.html';
-            return;
-        }
+        clearTimeout(timer);
 
-        me = session.user;
-
-        await init();
-
-    } catch (error) {
-
-        console.error('Billing initialization error:', error);
-
-        $('loading').innerHTML = `
-            <div style="color:#dc2626;">
-                ❌ خطا در بارگذاری صفحه
-                <br>
-                <small>${escapeHtml(error.message || 'خطای نامشخص')}</small>
-            </div>
-        `;
     }
 }
 
-async function init() {
-
-    await loadStatus();
-    await loadHistory();
-
-    $('loading').classList.add('hidden');
-    $('content').classList.remove('hidden');
-
-    updatePlanUI();
-
-}
-
+/*
+ * Escape text before inserting it into HTML.
+ */
 function escapeHtml(value) {
 
     return String(value ?? '')
@@ -506,33 +504,529 @@ function escapeHtml(value) {
 
 }
 
+/*
+ * Show an inactive subscription status.
+ */
+function showInactiveStatus(message = 'برای دسترسی به همه امکانات، یک پلن انتخاب کن و پرداخت را ثبت کن.') {
+
+    $('statusBox').className =
+        'status-box status-inactive';
+
+    $('statusBox').innerHTML = `
+
+        <h3>
+            ⚠️ اشتراک شما فعال نیست
+        </h3>
+
+        <p>
+            ${escapeHtml(message)}
+        </p>
+
+    `;
+
+}
+
+/*
+ * Load the current user's subscription status.
+ * Failure here must NOT block the payment form.
+ */
 async function loadStatus() {
 
-    const {
-        data: profile,
-        error
-    } = await supabase
-        .from('profiles')
-        .select('subscription_end_date')
-        .eq('id', me.id)
-        .maybeSingle();
+    if (!me) return;
 
-    if (error) {
+    try {
 
-        console.error('Profile error:', error);
+        const result = await withTimeout(
 
-        renderInactiveStatus(
-            '⚠️ وضعیت اشتراک قابل دریافت نیست',
-            'لطفاً اتصال پایگاه داده را بررسی کنید.'
+            supabase
+                .from('profiles')
+                .select('subscription_end_date')
+                .eq('id', me.id)
+                .maybeSingle(),
+
+            8000
+
         );
 
-        return;
+        const {
+            data: profile,
+            error
+        } = result;
+
+        if (error) {
+
+            console.error(
+                'Subscription status error:',
+                error
+            );
+
+            showInactiveStatus(
+                'وضعیت اشتراک فعلاً قابل دریافت نیست، اما می‌توانی پرداخت را ثبت کنی.'
+            );
+
+            return;
+
+        }
+
+        const endDate =
+            profile?.subscription_end_date
+                ? new Date(profile.subscription_end_date)
+                : null;
+
+        const now = new Date();
+
+        if (
+            endDate &&
+            !isNaN(endDate.getTime()) &&
+            endDate > now
+        ) {
+
+            const days = Math.ceil(
+                (endDate - now) / 86400000
+            );
+
+            $('statusBox').className =
+                'status-box status-active';
+
+            $('statusBox').innerHTML = `
+
+                <h3>
+                    ✅ اشتراک شما فعال است
+                </h3>
+
+                <div class="days">
+                    ${days} روز باقی‌مانده
+                </div>
+
+                <p>
+                    تا تاریخ
+                    ${endDate.toLocaleDateString('fa-IR')}
+                </p>
+
+                <p style="margin-top:12px;font-size:12px;">
+                    می‌توانی اشتراکت را تمدید کنی.
+                </p>
+
+            `;
+
+        } else {
+
+            showInactiveStatus();
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            'Subscription status failed:',
+            error
+        );
+
+        showInactiveStatus(
+            'اتصال وضعیت اشتراک برقرار نشد. فرم پرداخت همچنان قابل استفاده است.'
+        );
+
     }
 
-    const endDate = profile?.subscription_end_date
-        ? new Date(profile.subscription_end_date)
-        : null;
+}
 
-    const now = new Date();
+/*
+ * Load payment history independently.
+ * Failure here must NOT block payment submission.
+ */
+async function loadHistory() {
 
-    if (endDate && !isNaN(endDate.getTime()) && endDate > now)
+    if (!me) return;
+
+    try {
+
+        const result = await withTimeout(
+
+            supabase
+                .from('payments')
+                .select('*')
+                .eq('user_id', me.id)
+                .order('created_at', { ascending:false }),
+
+            8000
+
+        );
+
+        const {
+            data,
+            error
+        } = result;
+
+        if (error) {
+
+            console.error(
+                'Payment history error:',
+                error
+            );
+
+            $('historyList').innerHTML = `
+                <div class="error-box">
+                    ⚠️ تاریخچه پرداخت در حال حاضر قابل دریافت نیست.
+                    <br>
+                    ثبت پرداخت همچنان امکان‌پذیر است.
+                </div>
+            `;
+
+            return;
+
+        }
+
+        if (!data || !data.length) {
+
+            $('historyList').innerHTML = `
+                <p style="text-align:center;color:#94a3b8;font-size:12px;">
+                    هنوز پرداختی ثبت نشده است.
+                </p>
+            `;
+
+            return;
+
+        }
+
+        $('historyList').innerHTML = '';
+
+        data.forEach(payment => {
+
+            const status =
+                payment.status || 'pending';
+
+            const badgeText =
+                status === 'pending'
+                    ? '⏳ در انتظار'
+                    : status === 'approved'
+                        ? '✅ تایید شده'
+                        : '❌ رد شده';
+
+            const safeStatus =
+                ['pending','approved','rejected'].includes(status)
+                    ? status
+                    : 'pending';
+
+            const date =
+                payment.created_at
+                    ? new Date(payment.created_at)
+                        .toLocaleDateString('fa-IR')
+                    : '-';
+
+            const div =
+                document.createElement('div');
+
+            div.className =
+                'history-item';
+
+            div.innerHTML = `
+
+                <div class="history-info">
+
+                    <div class="history-plan">
+                        ${escapeHtml(
+                            payment.plan_name || 'پلن'
+                        )}
+                    </div>
+
+                    ${
+                        payment.tracking_code
+                        ?
+                        `<div class="history-code">
+                            کد: ${escapeHtml(
+                                payment.tracking_code
+                            )}
+                        </div>`
+                        :
+                        ''
+                    }
+
+                    <div style="font-size:11px;color:#94a3b8;margin-top:2px;">
+                        ${date}
+                    </div>
+
+                </div>
+
+                <span class="badge ${safeStatus}">
+                    ${badgeText}
+                </span>
+
+            `;
+
+            $('historyList')
+                .appendChild(div);
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            'Payment history failed:',
+            error
+        );
+
+        $('historyList').innerHTML = `
+            <div class="error-box">
+                ⚠️ دریافت تاریخچه زمان زیادی برد.
+                <br>
+                ثبت پرداخت همچنان امکان‌پذیر است.
+            </div>
+        `;
+
+    }
+
+}
+
+/*
+ * Update the form according to the selected plan.
+ */
+function updatePlanUI() {
+
+    const value =
+        $('planName').value;
+
+    const parts =
+        value.split('|');
+
+    const amount =
+        parseInt(parts[1] || '0');
+
+    const days =
+        parseInt(parts[2] || '0');
+
+    const trackingField =
+        $('trackingField');
+
+    const trackingCode =
+        $('trackingCode');
+
+    const submitBtn =
+        $('submitBtn');
+
+    const hint =
+        $('planHint');
+
+    if (amount === 0) {
+
+        trackingField.classList.add('hidden');
+
+        trackingCode.required = false;
+
+        submitBtn.textContent =
+            '🎁 فعال‌سازی پلن تست';
+
+        hint.textContent =
+            `پلن تست رایگان است و ${days} روز اعتبار دارد.`;
+
+    } else {
+
+        trackingField.classList.remove('hidden');
+
+        trackingCode.required = true;
+
+        submitBtn.textContent =
+            '💳 ثبت پرداخت';
+
+        hint.textContent =
+            `پس از واریز مبلغ، کد پیگیری را وارد و ثبت کنید.`;
+
+    }
+
+}
+
+/*
+ * Copy bank card number.
+ */
+$('copyCard').addEventListener(
+    'click',
+    async () => {
+
+        const card =
+            '6219861828492446';
+
+        try {
+
+            await navigator.clipboard.writeText(card);
+
+            $('copyCard').textContent =
+                '✅ کپی شد';
+
+            setTimeout(() => {
+
+                $('copyCard').textContent =
+                    '📋 کپی شماره کارت';
+
+            }, 2000);
+
+        } catch (error) {
+
+            alert(
+                'شماره کارت: 6219-8618-2849-2446'
+            );
+
+        }
+
+    }
+);
+
+/*
+ * Submit payment.
+ */
+$('paymentForm').addEventListener(
+    'submit',
+    async event => {
+
+        event.preventDefault();
+
+        const msg =
+            $('paymentMsg');
+
+        const btn =
+            $('submitBtn');
+
+        if (!me) {
+
+            msg.textContent =
+                '❌ نشست کاربری پیدا نشد. لطفاً دوباره وارد حساب شوید.';
+
+            msg.style.color =
+                '#dc2626';
+
+            return;
+
+        }
+
+        const [
+            planName,
+            amountStr,
+            daysStr
+        ] =
+            $('planName').value.split('|');
+
+        const amount =
+            parseInt(amountStr || '0');
+
+        const days =
+            parseInt(daysStr || '0');
+
+        const trackingCode =
+            $('trackingCode').value.trim();
+
+        const description =
+            $('description').value.trim();
+
+        if (amount > 0 && !trackingCode) {
+
+            msg.textContent =
+                '❌ لطفاً کد پیگیری واریز را وارد کنید.';
+
+            msg.style.color =
+                '#dc2626';
+
+            $('trackingCode').focus();
+
+            return;
+
+        }
+
+        btn.disabled = true;
+
+        msg.textContent =
+            'در حال ثبت...';
+
+        msg.style.color =
+            '#2563eb';
+
+        try {
+
+            const paymentData = {
+
+                user_id: me.id,
+
+                plan_name: planName,
+
+                amount: amount,
+
+                days: days,
+
+                tracking_code:
+                    trackingCode || null,
+
+                description:
+                    description || null,
+
+                status:
+                    'pending'
+
+            };
+
+            const result =
+                await withTimeout(
+
+                    supabase
+                        .from('payments')
+                        .insert(paymentData)
+                        .select()
+                        .single(),
+
+                    10000
+
+                );
+
+            const {
+                data,
+                error
+            } = result;
+
+            if (error) {
+                throw error;
+            }
+
+            console.log(
+                'Payment created:',
+                data
+            );
+
+            msg.textContent =
+                amount === 0
+                    ? '✅ درخواست پلن تست با موفقیت ثبت شد.'
+                    : '✅ پرداخت با موفقیت ثبت شد و در انتظار بررسی مدیر است.';
+
+            msg.style.color =
+                '#16a34a';
+
+            $('trackingCode').value = '';
+
+            $('description').value = '';
+
+            await loadHistory();
+
+        } catch (error) {
+
+            console.error(
+                'Payment submission error:',
+                error
+            );
+
+            msg.textContent =
+                '❌ ثبت پرداخت انجام نشد: ' +
+                (error.message || 'خطای نامشخص');
+
+            msg.style.color =
+                '#dc2626';
+
+        } finally {
+
+            btn.disabled = false;
+
+        }
+
+    }
+);
+
+/*
+ * Plan selector.
+ */
+$('planName').addEventListener(
+    'change',
+    updat
