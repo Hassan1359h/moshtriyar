@@ -280,7 +280,7 @@ async function loadCustomers() {
     const { data, error } = await supabase
         .from('customers')
         .select('id, name, phone')
-        .eq('user_id', userId)
+    
         .order('name');
 
     if (error) {
