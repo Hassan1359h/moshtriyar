@@ -89,12 +89,12 @@ import { supabase } from './js/supabase.js';
 const $ = id => document.getElementById(id);
 let messages = [];
 let products = [];
-const { data: { session } } = await supabase.auth.getSession();
+const { data: { session } } = await supabase.auth.getSession()
 if (!session) {
     window.location.href = 'login.html';
     throw new Error('No session');
     }
-
+const userId = session.user.id;
 // بارگذاری محصولات
 async function loadProducts() {
     const { data } = await supabase
@@ -278,11 +278,16 @@ document.querySelectorAll('.suggestion').forEach(btn => {
 // بارگذاری اولیه
 // بارگذاری مشتری‌ها
 async function loadCustomers() {
-    const { data } = await supabase
+    const { data, error } = await supabase
         .from('customers')
         .select('id, name, phone')
-
+        .eq('user_id', userId)
         .order('name');
+
+    if (error) {
+        alert('خطا در مشتری‌ها: ' + error.message);
+        return;
+    }
 
     const select = $('customerSelect');
     (data || []).forEach(c => {
@@ -293,7 +298,11 @@ async function loadCustomers() {
         opt.dataset.name = c.name || '';
         select.appendChild(opt);
     });
-}
+
+    if (!data || !data.length) {
+        alert('مشتری‌ای پیدا نشد');
+    }
+    }
 
 // انتخاب مشتری
 $('customerSelect').onchange = function() {
