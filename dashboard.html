@@ -125,7 +125,19 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;li
         <div id="subContent"></div>
     </div>
 </div>
+<div class="card hidden" id="adminCard">
+    <div class="card-title">👑 مدیریت سیستم</div>
 
+    <p style="color:#64748b;font-size:13px;margin-bottom:14px;">
+        مدیریت کاربران، پرداخت‌ها و اشتراک‌ها
+    </p>
+
+    <a href="admin.html"
+       class="btn-main"
+       style="display:block;text-align:center;text-decoration:none;">
+        ⚙️ ورود به پنل مدیریت
+    </a>
+</div>
 <script type="module">
 import { supabase } from './js/supabase.js';
 
@@ -137,7 +149,13 @@ async function init() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { window.location.href = 'login.html'; return; }
     me = session.user;
+    
+const isAdmin =
+    me.user_metadata?.role === 'admin';
 
+if (isAdmin) {
+    $('adminCard').classList.remove('hidden');
+}
 if (me.user_metadata?.role === 'admin') {
     $('adminNav').style.display = 'flex';
 }
