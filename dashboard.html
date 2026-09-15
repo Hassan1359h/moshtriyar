@@ -138,7 +138,11 @@ async function init() {
     if (!session) { window.location.href = 'login.html'; return; }
     me = session.user;
 
-    await loadProfile();
+if (me.user_metadata?.role === 'admin') {
+    $('adminNav').style.display = 'flex';
+}
+
+await loadProfile();
     await loadCustomers();
     await loadSubscription();
 
@@ -355,24 +359,36 @@ $('logoutBtn').onclick = async () => {
 
 init();
 </script>
-    <nav style="position:fixed;bottom:0;right:0;left:0;background:#fff;box-shadow:0 -2px 10px rgba(0,0,0,.05);display:flex;justify-content:space-around;padding:8px 0;z-index:100;">
+   <nav id="bottomNav" style="position:fixed;bottom:0;right:0;left:0;background:#fff;box-shadow:0 -2px 10px rgba(0,0,0,.05);display:flex;justify-content:space-around;padding:8px 0;z-index:100;">
+
     <a href="dashboard.html" style="flex:1;text-align:center;text-decoration:none;color:#2563eb;padding:6px;display:flex;flex-direction:column;align-items:center;gap:2px;">
         <span style="font-size:20px;">🏠</span>
         <span style="font-size:11px;font-weight:700;">داشبورد</span>
     </a>
+
     <a href="customers.html" style="flex:1;text-align:center;text-decoration:none;color:#64748b;padding:6px;display:flex;flex-direction:column;align-items:center;gap:2px;">
         <span style="font-size:20px;">👥</span>
         <span style="font-size:11px;font-weight:700;">مشتریان</span>
     </a>
+
     <a href="ai.html" style="flex:1;text-align:center;text-decoration:none;color:#64748b;padding:6px;display:flex;flex-direction:column;align-items:center;gap:2px;">
         <span style="font-size:20px;">✨</span>
         <span style="font-size:11px;font-weight:700;">دستیار</span>
     </a>
+
     <a href="reports.html" style="flex:1;text-align:center;text-decoration:none;color:#64748b;padding:6px;display:flex;flex-direction:column;align-items:center;gap:2px;">
         <span style="font-size:20px;">📊</span>
         <span style="font-size:11px;font-weight:700;">گزارش</span>
     </a>
-    </nav>
+
+    <a id="adminNav"
+       href="admin.html"
+       style="display:none;flex:1;text-align:center;text-decoration:none;color:#7c3aed;padding:6px;flex-direction:column;align-items:center;gap:2px;">
+        <span style="font-size:20px;">⚙️</span>
+        <span style="font-size:11px;font-weight:700;">مدیریت</span>
+    </a>
+
+   </nav> 
 </body>
   </html>
 
