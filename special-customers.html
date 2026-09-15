@@ -4,10 +4,7 @@
 <head>
 <meta charset="UTF-8">
 
-<meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>مشتریان ویژه | مشتری‌یار</title>
 
@@ -90,7 +87,7 @@ body{
 
 .stats{
     display:grid;
-    grid-template-columns:repeat(2,1fr);
+    grid-template-columns:repeat(3,1fr);
     gap:12px;
     margin-bottom:18px;
 }
@@ -139,6 +136,10 @@ body{
     box-shadow:0 2px 8px rgba(0,0,0,.04);
 }
 
+.customer.expired{
+    border-right-color:#dc2626;
+}
+
 .customer-head{
     display:flex;
     justify-content:space-between;
@@ -161,8 +162,6 @@ body{
 }
 
 .badge{
-    background:#dcfce7;
-    color:#166534;
     padding:4px 10px;
     border-radius:20px;
     font-size:10px;
@@ -170,7 +169,12 @@ body{
     white-space:nowrap;
 }
 
-.badge.admin{
+.badge.active{
+    background:#dcfce7;
+    color:#166534;
+}
+
+.badge.expired{
     background:#fee2e2;
     color:#991b1b;
 }
@@ -201,6 +205,16 @@ body{
 
 .phone{
     direction:ltr;
+}
+
+.days-active{
+    color:#16a34a;
+    font-weight:900!important;
+}
+
+.days-expired{
+    color:#dc2626;
+    font-weight:900!important;
 }
 
 .empty{
@@ -250,7 +264,6 @@ body{
 
 
 <body>
-
 
 <header class="header">
 
@@ -304,7 +317,20 @@ body{
                 </b>
 
                 <span>
-                    کاربران عادی
+                    اشتراک فعال
+                </span>
+
+            </div>
+
+
+            <div class="stat">
+
+                <b id="expiredCount">
+                    0
+                </b>
+
+                <span>
+                    اشتراک منقضی
                 </span>
 
             </div>
@@ -350,6 +376,9 @@ const totalCount =
 const activeCount =
     document.getElementById('activeCount');
 
+const expiredCount =
+    document.getElementById('expiredCount');
+
 
 let customers = [];
 
@@ -379,6 +408,44 @@ function formatDate(value){
         return '-';
 
     }
+
+}
+
+
+function getSubscriptionStatus(date){
+
+    if(!date){
+
+        return {
+            active:false,
+            days:0
+        };
+
+    }
+
+
+    const end =
+        new Date(date);
+
+    const now =
+        new Date();
+
+
+    const diff =
+        end.getTime() -
+        now.getTime();
+
+
+    const days =
+        Math.ceil(
+            diff / 86400000
+        );
+
+
+    return {
+        active: days > 0,
+        days: Math.max(days,0)
+    };
 
 }
 
@@ -467,7 +534,7 @@ async function loadCustomers(){
         await supabase
             .from('profiles')
             .select(
-                'id,full_name,phone,created_at,updated_at,email,role'
+                'id,full_name,phone,created_at,updated_at,email,role,subscription_end_date'
             )
             .order(
                 'created_at',
@@ -483,11 +550,6 @@ async function loadCustomers(){
 
     }
 
-
-    /*
-     * فقط کاربران عادی را نمایش می‌دهیم.
-     * ادمین از لیست مشتریان ویژه حذف می‌شود.
-     */
 
     customers =
         (data || [])
@@ -513,8 +575,26 @@ function updateStats(){
         customers.length;
 
 
+    const active =
+        customers.filter(
+            user =>
+                getSubscriptionStatus(
+                    user.subscription_end_date
+                ).active
+        ).length;
+
+
+    const expired =
+        customers.length -
+        active;
+
+
     activeCount.textContent =
-        customers.length;
+        active;
+
+
+    expiredCount.textContent =
+        expired;
 
 }
 
@@ -556,7 +636,8 @@ function render(){
             <div class="empty">
 
                 📭
-                ${q
+                ${
+                    q
                     ? 'موردی پیدا نشد.'
                     : 'هنوز مشتری ویژه‌ای ثبت نشده است.'
                 }
@@ -575,12 +656,49 @@ function render(){
 
     filtered.forEach(user => {
 
+        const subscription =
+            getSubscriptionStatus(
+                user.subscription_end_date
+            );
+
+
         const div =
             document.createElement('div');
 
 
         div.className =
-            'customer';
+            subscription.active
+            ? 'customer'
+            : 'customer expired';
+
+
+        const statusBadge =
+            subscription.active
+            ? `
+                <span class="badge active">
+                    🟢 اشتراک فعال
+                </span>
+            `
+            : `
+                <span class="badge expired">
+                    🔴 اشتراک منقضی
+                </span>
+            `;
+
+
+        const daysText =
+            subscription.active
+            ? `
+                <span class="days-active">
+                    ${subscription.days}
+                    روز باقی‌مانده
+                </span>
+            `
+            : `
+                <span class="days-expired">
+                    منقضی شده
+                </span>
+            `;
 
 
         div.innerHTML = `
@@ -612,11 +730,7 @@ function render(){
                 </div>
 
 
-                <span class="badge">
-
-                    مشتری ویژه
-
-                </span>
+                ${statusBadge}
 
             </div>
 
@@ -661,13 +775,24 @@ function render(){
                 <div>
 
                     <span>
-                        🔄 آخرین بروزرسانی
+                        💳 وضعیت اشتراک
+                    </span>
+
+                    ${daysText}
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        📅 پایان اشتراک
                     </span>
 
                     <span>
 
                         ${formatDate(
-                            user.updated_at
+                            user.subscription_end_date
                         )}
 
                     </span>
@@ -678,19 +803,13 @@ function render(){
                 <div>
 
                     <span>
-                        🆔 شناسه
+                        🔄 آخرین بروزرسانی
                     </span>
 
-                    <span
-                        style="
-                            font-family:monospace;
-                            font-size:10px;
-                            direction:ltr
-                        "
-                    >
+                    <span>
 
-                        ${esc(
-                            user.id
+                        ${formatDate(
+                            user.updated_at
                         )}
 
                     </span>
@@ -745,4 +864,4 @@ loadCustomers()
 </script>
 
 </body>
-  </html>
+</html>
