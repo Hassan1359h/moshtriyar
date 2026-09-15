@@ -923,62 +923,152 @@ $("shareBtn").onclick = async () => {
 
 };
 
+$("saveBtn").onclick = async () => {
 
-$("saveBtn").onclick = () => {
+    if(!me){
 
-    const key = "moshtriyar_invoices";
+        message(
+            "کاربر وارد حساب نشده است.",
+            "error"
+        );
 
-    let list = [];
-
-    try{
-
-        list =
-            JSON.parse(
-                localStorage.getItem(key) || "[]"
-            );
-
-        if(!Array.isArray(list))
-            list = [];
-
-    }catch(e){
-
-        list = [];
+        return;
 
     }
 
+    const calc = calculate();
 
-    list.unshift({
+    const customerId =
+        $("customerSelect").value || null;
 
-        invoice_number:
-            $("invoiceNumber").value,
+    const customerName =
+        $("customer").value.trim() || null;
 
-        invoice_date:
-            $("invoiceDate").value,
+    const invoiceData = [];
 
-        customer:
-            $("customer").value,
+    document
+        .querySelectorAll(".item")
+        .forEach(item => {
 
-        text:
-            invoiceText(),
+            const productSelect =
+                item.querySelector(".productSelect");
 
-        created_at:
-            new Date().toISOString()
+            const quantity =
+                Number(
+                    item.querySelector(".quantity").value
+                ) || 0;
 
-    });
+            const price =
+                Number(
+                    item.querySelector(".price").value
+                ) || 0;
 
+            const productId =
+                productSelect.value || null;
 
-    localStorage.setItem(
-        key,
-        JSON.stringify(
-            list.slice(0,100)
-        )
-    );
+            const productName =
+                productSelect
+                .selectedOptions[0]
+                ?.textContent
+                ?.split(" - ")[0]
+                ?.trim() || "محصول";
 
+            if(quantity > 0 && (productId || price > 0)){
 
-    message(
-        "فاکتور در گوشی ذخیره شد.",
-        "success"
-    );
+                invoiceData.push({
+                    product_id: productId,
+                    product_name: productName,
+                    quantity: quantity,
+                    unit_price: price,
+                    row_total: quantity * price
+                });
+
+            }
+
+        });
+
+    if(invoiceData.length === 0){
+
+        message(
+            "حداقل یک محصول برای ذخیره فاکتور وارد کنید.",
+            "error"
+        );
+
+        return;
+
+    }
+
+    $("saveBtn").disabled = true;
+    $("saveBtn").textContent = "⏳ در حال ذخیره...";
+
+    try{
+
+        const {
+            data,
+            error
+        } = await supabase
+            .from("invoices")
+            .insert({
+                user_id: me.id,
+                invoice_number:
+                    $("invoiceNumber").value,
+                invoice_date:
+                    $("invoiceDate").value,
+                customer_id:
+                    customerId,
+                customer_name:
+                    customerName,
+                items:
+                    invoiceData,
+                subtotal:
+                    calc.subtotal,
+                discount:
+                    calc.discount,
+                total:
+                    calc.total
+            })
+            .select()
+            .single();
+
+        if(error){
+
+            console.error(error);
+
+            message(
+                "ذخیره فاکتور انجام نشد.",
+                "error"
+            );
+
+            return;
+
+        }
+
+        message(
+            "فاکتور با موفقیت در حساب شما ذخیره شد.",
+            "success"
+        );
+
+        console.log(
+            "Saved invoice:",
+            data
+        );
+
+    }catch(error){
+
+        console.error(error);
+
+        message(
+            "خطا در ذخیره فاکتور.",
+            "error"
+        );
+
+    }finally{
+
+        $("saveBtn").disabled = false;
+        $("saveBtn").textContent =
+            "💾 ذخیره در حساب";
+
+    }
 
 };
 
