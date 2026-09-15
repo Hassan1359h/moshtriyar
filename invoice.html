@@ -4,45 +4,205 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta name="theme-color" content="#2563eb">
-<title>🧾 فاکتور هوشمند</title>
+<title>🧾 فاکتور هوشمند | مشتری‌یار</title>
+
+<link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
+
 <style>
 *{box-sizing:border-box}
-body{margin:0;font-family:Tahoma,Arial,sans-serif;background:#f1f5f9;color:#0f172a}
-.container{max-width:900px;margin:auto;padding:15px}
-.header{background:linear-gradient(135deg,#2563eb,#4f46e5);color:#fff;padding:20px;border-radius:18px;margin-bottom:15px}
-.header h1{margin:0 0 7px;font-size:22px}
-.header p{margin:0;font-size:13px;opacity:.9}
-.card{background:#fff;border-radius:16px;padding:16px;margin-bottom:15px;box-shadow:0 3px 15px rgba(0,0,0,.06)}
-.title{font-size:16px;font-weight:800;margin-bottom:14px}
-.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-@media(max-width:600px){.grid{grid-template-columns:1fr}}
-label{display:block;font-size:12px;font-weight:700;margin-bottom:6px}
-input{width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:11px;font-family:inherit;font-size:13px}
-.items{display:flex;flex-direction:column;gap:10px}
-.item{border:1px solid #e2e8f0;border-radius:14px;padding:12px;background:#f8fafc}
-.item-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
-.item-number{font-weight:800;font-size:13px}
-.remove{border:0;background:#fee2e2;color:#b91c1c;width:32px;height:32px;border-radius:9px;cursor:pointer}
-.item-grid{display:grid;grid-template-columns:2fr 1fr 1.5fr;gap:8px}
-@media(max-width:600px){
-.item-grid{grid-template-columns:1fr 1fr}
-.item-grid input:first-child{grid-column:1/-1}
+body{
+    margin:0;
+    font-family:Vazirmatn,Tahoma,Arial,sans-serif;
+    background:#f1f5f9;
+    color:#0f172a;
 }
-.btn{border:0;border-radius:11px;padding:12px 15px;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer}
-.btn-blue{background:#2563eb;color:#fff}
-.btn-green{background:#16a34a;color:#fff}
-.btn-gray{background:#e2e8f0;color:#0f172a}
-.btn-red{background:#dc2626;color:#fff}
-.buttons{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
-@media(max-width:600px){.buttons{grid-template-columns:1fr}}
-.add-btn{width:100%;margin-top:12px}
-.summary{border-top:1px solid #e2e8f0;margin-top:15px;padding-top:15px}
-.sum-row{display:flex;justify-content:space-between;padding:7px 0;font-size:13px}
-.total{font-size:18px;font-weight:900;color:#2563eb;border-top:2px solid #e2e8f0;margin-top:7px;padding-top:12px}
-.message{padding:12px;border-radius:10px;font-size:12px;margin-bottom:12px;display:none}
-.success{display:block;background:#dcfce7;color:#166534}
-.error{display:block;background:#fee2e2;color:#991b1b}
-.info{display:block;background:#dbeafe;color:#1e40af}
+.container{
+    max-width:900px;
+    margin:auto;
+    padding:15px;
+}
+.header{
+    background:linear-gradient(135deg,#2563eb,#4f46e5);
+    color:#fff;
+    padding:20px;
+    border-radius:18px;
+    margin-bottom:15px;
+}
+.header h1{
+    margin:0 0 7px;
+    font-size:22px;
+}
+.header p{
+    margin:0;
+    font-size:13px;
+    opacity:.9;
+}
+.card{
+    background:#fff;
+    border-radius:16px;
+    padding:16px;
+    margin-bottom:15px;
+    box-shadow:0 3px 15px rgba(0,0,0,.06);
+}
+.title{
+    font-size:16px;
+    font-weight:800;
+    margin-bottom:14px;
+}
+.grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:10px;
+}
+@media(max-width:600px){
+    .grid{grid-template-columns:1fr}
+}
+label{
+    display:block;
+    font-size:12px;
+    font-weight:700;
+    margin-bottom:6px;
+}
+input,select{
+    width:100%;
+    border:1px solid #cbd5e1;
+    border-radius:10px;
+    padding:11px;
+    font-family:inherit;
+    font-size:13px;
+    background:#fff;
+}
+input:focus,select:focus{
+    outline:none;
+    border-color:#2563eb;
+}
+.items{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+.item{
+    border:1px solid #e2e8f0;
+    border-radius:14px;
+    padding:12px;
+    background:#f8fafc;
+}
+.item-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:9px;
+}
+.item-number{
+    font-weight:800;
+    font-size:13px;
+}
+.remove{
+    border:0;
+    background:#fee2e2;
+    color:#b91c1c;
+    width:32px;
+    height:32px;
+    border-radius:9px;
+    cursor:pointer;
+    font-size:18px;
+}
+.item-grid{
+    display:grid;
+    grid-template-columns:2fr 1fr 1.5fr;
+    gap:8px;
+}
+@media(max-width:600px){
+    .item-grid{
+        grid-template-columns:1fr 1fr;
+    }
+    .item-grid select{
+        grid-column:1/-1;
+    }
+}
+.btn{
+    border:0;
+    border-radius:11px;
+    padding:12px 15px;
+    font-family:inherit;
+    font-size:13px;
+    font-weight:800;
+    cursor:pointer;
+}
+.btn-blue{
+    background:#2563eb;
+    color:#fff;
+}
+.btn-green{
+    background:#16a34a;
+    color:#fff;
+}
+.btn-gray{
+    background:#e2e8f0;
+    color:#0f172a;
+}
+.btn-red{
+    background:#dc2626;
+    color:#fff;
+}
+.buttons{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:9px;
+}
+@media(max-width:600px){
+    .buttons{grid-template-columns:1fr}
+}
+.add-btn{
+    width:100%;
+    margin-top:12px;
+}
+.summary{
+    border-top:1px solid #e2e8f0;
+    margin-top:15px;
+    padding-top:15px;
+}
+.sum-row{
+    display:flex;
+    justify-content:space-between;
+    padding:7px 0;
+    font-size:13px;
+}
+.total{
+    font-size:18px;
+    font-weight:900;
+    color:#2563eb;
+    border-top:2px solid #e2e8f0;
+    margin-top:7px;
+    padding-top:12px;
+}
+.message{
+    padding:12px;
+    border-radius:10px;
+    font-size:12px;
+    margin-bottom:12px;
+    display:none;
+}
+.success{
+    display:block;
+    background:#dcfce7;
+    color:#166534;
+}
+.error{
+    display:block;
+    background:#fee2e2;
+    color:#991b1b;
+}
+.info{
+    display:block;
+    background:#dbeafe;
+    color:#1e40af;
+}
+.loading{
+    text-align:center;
+    color:#64748b;
+    padding:20px;
+}
 </style>
 </head>
 
@@ -51,8 +211,8 @@ input{width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:11px;font-f
 <main class="container">
 
 <div class="header">
-<h1>🧾 فاکتور هوشمند</h1>
-<p>ساخت سریع فاکتور برای مشتری و محصولات</p>
+    <h1>🧾 فاکتور هوشمند</h1>
+    <p>ساخت سریع فاکتور با مشتریان و محصولات مشتری‌یار</p>
 </div>
 
 <div id="message" class="message"></div>
@@ -74,8 +234,15 @@ input{width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:11px;font-f
 </div>
 
 <div>
+<label>👥 مشتری</label>
+<select id="customerSelect">
+<option value="">در حال بارگذاری مشتریان...</option>
+</select>
+</div>
+
+<div>
 <label>نام مشتری</label>
-<input id="customer" placeholder="نام مشتری">
+<input id="customer" placeholder="یا نام را دستی وارد کنید">
 </div>
 
 </div>
@@ -86,7 +253,9 @@ input{width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:11px;font-f
 
 <div class="title">📦 محصولات</div>
 
-<div id="items" class="items"></div>
+<div id="items" class="items">
+    <div class="loading">در حال آماده‌سازی...</div>
+</div>
 
 <button id="addItem" class="btn btn-blue add-btn">
 ➕ افزودن محصول
@@ -161,487 +330,697 @@ input{width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:11px;font-f
 
 </main>
 
-<script>
+<script type="module">
 
-let itemCount=0;
+import { supabase } from './js/supabase.js';
 
-const $=id=>document.getElementById(id);
+let itemCount = 0;
+let products = [];
+let customers = [];
+let me = null;
 
-const money=n=>
-new Intl.NumberFormat("fa-IR")
-.format(Math.round(Number(n)||0))
-+" تومان";
+const $ = id => document.getElementById(id);
+
+const money = n =>
+    new Intl.NumberFormat("fa-IR")
+    .format(Math.round(Number(n) || 0))
+    + " تومان";
 
 
 function todayShamsi(){
 
-try{
+    try{
 
-return new Intl.DateTimeFormat(
-"fa-IR-u-ca-persian",
-{
-year:"numeric",
-month:"2-digit",
-day:"2-digit"
-}
-).format(new Date());
+        return new Intl.DateTimeFormat(
+            "fa-IR-u-ca-persian",
+            {
+                year:"numeric",
+                month:"2-digit",
+                day:"2-digit"
+            }
+        ).format(new Date());
 
-}catch(e){
+    }catch(e){
 
-return new Date().toLocaleDateString("fa-IR");
+        return new Date().toLocaleDateString("fa-IR");
 
-}
+    }
 
 }
 
 
 function invoiceNumber(){
 
-const d=new Date();
+    const d = new Date();
 
-return "INV-"+
-d.getFullYear()+
-String(d.getMonth()+1).padStart(2,"0")+
-String(d.getDate()).padStart(2,"0")+
-"-"+
-String(d.getHours()).padStart(2,"0")+
-String(d.getMinutes()).padStart(2,"0")+
-String(d.getSeconds()).padStart(2,"0");
+    return "INV-" +
+        d.getFullYear() +
+        String(d.getMonth()+1).padStart(2,"0") +
+        String(d.getDate()).padStart(2,"0") +
+        "-" +
+        String(d.getHours()).padStart(2,"0") +
+        String(d.getMinutes()).padStart(2,"0") +
+        String(d.getSeconds()).padStart(2,"0");
 
 }
 
 
 function message(text,type){
 
-const box=$("message");
+    const box = $("message");
 
-box.textContent=text;
+    box.textContent = text;
+    box.className = "message " + type;
 
-box.className="message "+type;
+    setTimeout(() => {
+        box.className = "message";
+    },3500);
 
-setTimeout(()=>box.className="message",3500);
+}
+
+
+async function init(){
+
+    const {
+        data:{
+            session
+        }
+    } = await supabase.auth.getSession();
+
+    if(!session){
+
+        window.location.href = "login.html";
+        return;
+
+    }
+
+    me = session.user;
+
+    await Promise.all([
+        loadCustomers(),
+        loadProducts()
+    ]);
+
+    $("invoiceNumber").value = invoiceNumber();
+    $("invoiceDate").value = todayShamsi();
+
+    $("items").innerHTML = "";
+
+    addItem();
+
+    calculate();
+
+}
+
+
+async function loadCustomers(){
+
+    const {
+        data,
+        error
+    } = await supabase
+        .from("customers")
+        .select("id,name,phone")
+        .eq("user_id",me.id)
+        .order("created_at",{ascending:false});
+
+    if(error){
+
+        $("customerSelect").innerHTML =
+            '<option value="">خطا در دریافت مشتریان</option>';
+
+        console.error(error);
+
+        return;
+
+    }
+
+    customers = data || [];
+
+    renderCustomers();
+
+}
+
+
+function renderCustomers(){
+
+    const select = $("customerSelect");
+
+    select.innerHTML =
+        '<option value="">انتخاب مشتری...</option>';
+
+    customers.forEach(c => {
+
+        const option = document.createElement("option");
+
+        option.value = c.id;
+
+        option.textContent =
+            c.name +
+            (c.phone ? " - " + c.phone : "");
+
+        select.appendChild(option);
+
+    });
+
+}
+
+
+$("customerSelect").onchange = () => {
+
+    const id = $("customerSelect").value;
+
+    if(!id) return;
+
+    const customer = customers.find(c => c.id === id);
+
+    if(customer){
+
+        $("customer").value = customer.name || "";
+
+    }
+
+};
+
+
+async function loadProducts(){
+
+    const {
+        data,
+        error
+    } = await supabase
+        .from("products")
+        .select("id,name,price")
+        .eq("user_id",me.id)
+        .order("created_at",{ascending:false});
+
+    if(error){
+
+        products = [];
+
+        console.error(error);
+
+        return;
+
+    }
+
+    products = data || [];
+
+}
+
+
+function productOptions(){
+
+    let html =
+        '<option value="">انتخاب محصول...</option>';
+
+    products.forEach(p => {
+
+        html +=
+            '<option value="' +
+            escapeHtml(p.id) +
+            '">' +
+            escapeHtml(p.name) +
+            " - " +
+            money(p.price) +
+            "</option>";
+
+    });
+
+    return html;
+
+}
+
+
+function escapeHtml(value){
+
+    return String(value ?? "")
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
 
 }
 
 
 function addItem(){
 
-if(itemCount>=25){
+    if(itemCount >= 25){
 
-message(
-"حداکثر ۲۵ ردیف مجاز است.",
-"error"
-);
+        message(
+            "حداکثر ۲۵ ردیف مجاز است.",
+            "error"
+        );
 
-return;
+        return;
 
-}
+    }
 
-itemCount++;
+    itemCount++;
 
-const id=itemCount;
+    const id = itemCount;
 
-const div=document.createElement("div");
+    const div = document.createElement("div");
 
-div.className="item";
+    div.className = "item";
+    div.dataset.id = id;
 
-div.dataset.id=id;
+    div.innerHTML =
 
-div.innerHTML=
+        '<div class="item-head">' +
 
-'<div class="item-head">'+
+        '<span class="item-number">' +
+        "ردیف " +
+        new Intl.NumberFormat("fa-IR").format(id) +
+        "</span>" +
 
-'<span class="item-number">'+
-"ردیف "+
-new Intl.NumberFormat("fa-IR").format(id)+
-"</span>"+
+        '<button class="remove" type="button">×</button>' +
 
-'<button class="remove" type="button">×</button>'+
+        "</div>" +
 
-'</div>'+
+        '<div class="item-grid">' +
 
-'<div class="item-grid">'+
+        '<select class="productSelect">' +
+        productOptions() +
+        "</select>" +
 
-'<input class="product" placeholder="نام محصول">'+
+        '<input class="quantity" type="number" min="1" value="1" placeholder="تعداد">' +
 
-'<input class="quantity" type="number" min="1" value="1" placeholder="تعداد">'+
+        '<input class="price" type="number" min="0" value="0" placeholder="قیمت واحد">' +
 
-'<input class="price" type="number" min="0" value="0" placeholder="قیمت واحد">'+
+        "</div>" +
 
-'</div>'+
+        '<div style="margin-top:9px;font-size:12px;font-weight:800;color:#475569">' +
 
-'<div style="margin-top:9px;font-size:12px;font-weight:800;color:#475569">'+
+        "مبلغ ردیف: " +
 
-"مبلغ ردیف: "+
+        '<span class="rowTotal">۰ تومان</span>' +
 
-'<span class="rowTotal">۰ تومان</span>'+
+        "</div>";
 
-"</div>";
+    $("items").appendChild(div);
 
-$("items").appendChild(div);
 
-div.querySelector(".remove").onclick=()=>{
+    const productSelect =
+        div.querySelector(".productSelect");
 
-div.remove();
+    const quantity =
+        div.querySelector(".quantity");
 
-calculate();
+    const price =
+        div.querySelector(".price");
 
-};
 
-div.querySelector(".quantity").oninput=calculate;
+    productSelect.onchange = () => {
 
-div.querySelector(".price").oninput=calculate;
+        const product =
+            products.find(
+                p => p.id === productSelect.value
+            );
+
+        if(product){
+
+            price.value =
+                Number(product.price) || 0;
+
+        }
+
+        calculate();
+
+    };
+
+
+    quantity.oninput = calculate;
+    price.oninput = calculate;
+
+
+    div.querySelector(".remove").onclick = () => {
+
+        div.remove();
+
+        calculate();
+
+    };
 
 }
 
 
 function calculate(){
 
-let subtotal=0;
+    let subtotal = 0;
 
-document.querySelectorAll(".item").forEach(item=>{
+    document
+        .querySelectorAll(".item")
+        .forEach(item => {
 
-const q=
-Number(
-item.querySelector(".quantity").value
-)||0;
+            const q =
+                Number(
+                    item.querySelector(".quantity").value
+                ) || 0;
 
-const p=
-Number(
-item.querySelector(".price").value
-)||0;
+            const p =
+                Number(
+                    item.querySelector(".price").value
+                ) || 0;
 
-const t=q*p;
+            const t = q * p;
 
-subtotal+=t;
+            subtotal += t;
 
-item.querySelector(".rowTotal")
-.textContent=money(t);
+            item.querySelector(".rowTotal")
+                .textContent = money(t);
 
-});
-
-
-const percent=
-Math.min(
-100,
-Math.max(
-0,
-Number($("discountPercent").value)||0
-)
-);
-
-const fixed=
-Math.max(
-0,
-Number($("discountFixed").value)||0
-);
+        });
 
 
-const discount=
-Math.min(
-subtotal,
-subtotal*percent/100+fixed
-);
-
-const total=
-Math.max(
-0,
-subtotal-discount
-);
-
-
-$("subtotal").textContent=
-money(subtotal);
-
-$("discount").textContent=
-money(discount);
-
-$("total").textContent=
-money(total);
+    const percent =
+        Math.min(
+            100,
+            Math.max(
+                0,
+                Number(
+                    $("discountPercent").value
+                ) || 0
+            )
+        );
 
 
-return{
-subtotal,
-discount,
-total
-};
+    const fixed =
+        Math.max(
+            0,
+            Number(
+                $("discountFixed").value
+            ) || 0
+        );
+
+
+    const discount =
+        Math.min(
+            subtotal,
+            subtotal * percent / 100 + fixed
+        );
+
+
+    const total =
+        Math.max(
+            0,
+            subtotal - discount
+        );
+
+
+    $("subtotal").textContent =
+        money(subtotal);
+
+    $("discount").textContent =
+        money(discount);
+
+    $("total").textContent =
+        money(total);
+
+
+    return {
+        subtotal,
+        discount,
+        total
+    };
 
 }
 
 
 function invoiceText(){
 
-const c=
-$("customer").value.trim();
+    const customer =
+        $("customer").value.trim();
 
-const calc=calculate();
+    const calc = calculate();
 
-let text=
-"🧾 فاکتور هوشمند مشتری‌یار\n"+
-"━━━━━━━━━━━━━━\n";
-
-text+=
-"شماره فاکتور: "+
-$("invoiceNumber").value+
-"\n";
-
-text+=
-"تاریخ: "+
-$("invoiceDate").value+
-"\n";
-
-if(c){
-
-text+=
-"مشتری: "+
-c+
-"\n";
-
-}
-
-text+=
-"\n📦 محصولات:\n";
-
-let i=0;
-
-document
-.querySelectorAll(".item")
-.forEach(item=>{
-
-const name=
-item.querySelector(".product")
-.value.trim();
-
-const q=
-Number(
-item.querySelector(".quantity").value
-)||0;
-
-const p=
-Number(
-item.querySelector(".price").value
-)||0;
+    let text =
+        "🧾 فاکتور هوشمند مشتری‌یار\n" +
+        "━━━━━━━━━━━━━━\n";
 
 
-if(name||p){
-
-i++;
-
-text+=
-i+
-". "+
-(name||"محصول")+
-" | تعداد: "+
-q+
-" | قیمت: "+
-money(p)+
-" | جمع: "+
-money(q*p)+
-"\n";
-
-}
-
-});
+    text +=
+        "شماره فاکتور: " +
+        $("invoiceNumber").value +
+        "\n";
 
 
-text+=
-"\n━━━━━━━━━━━━━━\n"+
-"جمع کالاها: "+
-money(calc.subtotal)+
-"\n"+
-"تخفیف: "+
-money(calc.discount)+
-"\n"+
-"مبلغ نهایی: "+
-money(calc.total)+
-"\n\n"+
-"مشتری‌یار";
+    text +=
+        "تاریخ: " +
+        $("invoiceDate").value +
+        "\n";
 
 
-return text;
+    if(customer){
 
-}
+        text +=
+            "مشتری: " +
+            customer +
+            "\n";
 
-
-$("addItem").onclick=addItem;
-
-$("discountPercent").oninput=calculate;
-
-$("discountFixed").oninput=calculate;
+    }
 
 
-$("copyBtn").onclick=async()=>{
+    text +=
+        "\n📦 محصولات:\n";
 
-try{
 
-await navigator.clipboard.writeText(
-invoiceText()
-);
+    let i = 0;
 
-message(
-"فاکتور کپی شد.",
-"success"
-);
 
-}catch(e){
+    document
+        .querySelectorAll(".item")
+        .forEach(item => {
 
-message(
-"کپی در این مرورگر انجام نشد.",
-"error"
-);
+            const name =
+                item.querySelector(".productSelect")
+                .selectedOptions[0]?.textContent
+                ?.split(" - ")[0]
+                ?.trim() || "";
+
+
+            const q =
+                Number(
+                    item.querySelector(".quantity").value
+                ) || 0;
+
+
+            const p =
+                Number(
+                    item.querySelector(".price").value
+                ) || 0;
+
+
+            if(name || p){
+
+                i++;
+
+                text +=
+                    i +
+                    ". " +
+                    (name || "محصول") +
+                    " | تعداد: " +
+                    q +
+                    " | قیمت: " +
+                    money(p) +
+                    " | جمع: " +
+                    money(q*p) +
+                    "\n";
+
+            }
+
+        });
+
+
+    text +=
+        "\n━━━━━━━━━━━━━━\n" +
+        "جمع کالاها: " +
+        money(calc.subtotal) +
+        "\n" +
+        "تخفیف: " +
+        money(calc.discount) +
+        "\n" +
+        "مبلغ نهایی: " +
+        money(calc.total) +
+        "\n\n" +
+        "مشتری‌یار";
+
+
+    return text;
 
 }
+
+
+$("addItem").onclick = addItem;
+
+$("discountPercent").oninput = calculate;
+
+$("discountFixed").oninput = calculate;
+
+
+$("copyBtn").onclick = async () => {
+
+    try{
+
+        await navigator.clipboard.writeText(
+            invoiceText()
+        );
+
+        message(
+            "فاکتور کپی شد.",
+            "success"
+        );
+
+    }catch(e){
+
+        message(
+            "کپی در این مرورگر انجام نشد.",
+            "error"
+        );
+
+    }
 
 };
 
 
-$("shareBtn").onclick=async()=>{
+$("shareBtn").onclick = async () => {
 
-const text=invoiceText();
+    const text = invoiceText();
 
-if(navigator.share){
+    if(navigator.share){
 
-try{
+        try{
 
-await navigator.share({
+            await navigator.share({
+                title:"فاکتور مشتری‌یار",
+                text
+            });
 
-title:"فاکتور مشتری‌یار",
+        }catch(e){}
 
-text
+    }else{
 
-});
+        try{
 
-}catch(e){}
+            await navigator.clipboard.writeText(text);
 
-}else{
+            message(
+                "متن فاکتور کپی شد.",
+                "info"
+            );
 
-try{
+        }catch(e){
 
-await navigator.clipboard.writeText(text);
+            message(
+                "اشتراک‌گذاری پشتیبانی نمی‌شود.",
+                "error"
+            );
 
-message(
-"متن فاکتور کپی شد.",
-"info"
-);
+        }
 
-}catch(e){
-
-message(
-"اشتراک‌گذاری پشتیبانی نمی‌شود.",
-"error"
-);
-
-}
-
-}
+    }
 
 };
 
 
-$("saveBtn").onclick=()=>{
+$("saveBtn").onclick = () => {
 
-const key=
-"moshtriyar_invoices";
+    const key = "moshtriyar_invoices";
 
-let list=[];
+    let list = [];
 
-try{
+    try{
 
-list=
-JSON.parse(
-localStorage.getItem(key)||"[]"
-);
+        list =
+            JSON.parse(
+                localStorage.getItem(key) || "[]"
+            );
 
-if(!Array.isArray(list))
-list=[];
+        if(!Array.isArray(list))
+            list = [];
 
-}catch(e){
+    }catch(e){
 
-list=[];
+        list = [];
 
-}
-
-
-list.unshift({
-
-invoice_number:
-$("invoiceNumber").value,
-
-invoice_date:
-$("invoiceDate").value,
-
-customer:
-$("customer").value,
-
-text:
-invoiceText(),
-
-created_at:
-new Date().toISOString()
-
-});
+    }
 
 
-localStorage.setItem(
-key,
-JSON.stringify(
-list.slice(0,100)
-)
-);
+    list.unshift({
+
+        invoice_number:
+            $("invoiceNumber").value,
+
+        invoice_date:
+            $("invoiceDate").value,
+
+        customer:
+            $("customer").value,
+
+        text:
+            invoiceText(),
+
+        created_at:
+            new Date().toISOString()
+
+    });
 
 
-message(
-"فاکتور در گوشی ذخیره شد.",
-"success"
-);
-
-};
-
-
-$("clearBtn").onclick=()=>{
-
-if(
-!confirm(
-"فاکتور فعلی پاک شود؟"
-)
-)return;
+    localStorage.setItem(
+        key,
+        JSON.stringify(
+            list.slice(0,100)
+        )
+    );
 
 
-$("customer").value="";
-
-$("discountPercent").value=0;
-
-$("discountFixed").value=0;
-
-$("items").innerHTML="";
-
-itemCount=0;
-
-$("invoiceNumber").value=
-invoiceNumber();
-
-$("invoiceDate").value=
-todayShamsi();
-
-addItem();
-
-message(
-"فاکتور جدید آماده شد.",
-"success"
-);
+    message(
+        "فاکتور در گوشی ذخیره شد.",
+        "success"
+    );
 
 };
 
 
-$("invoiceNumber").value=
-invoiceNumber();
+$("clearBtn").onclick = () => {
 
-$("invoiceDate").value=
-todayShamsi();
+    if(
+        !confirm(
+            "فاکتور فعلی پاک شود؟"
+        )
+    ) return;
 
-addItem();
 
-calculate();
+    $("customerSelect").value = "";
+    $("customer").value = "";
+
+    $("discountPercent").value = 0;
+    $("discountFixed").value = 0;
+
+    $("items").innerHTML = "";
+
+    itemCount = 0;
+
+    $("invoiceNumber").value =
+        invoiceNumber();
+
+    $("invoiceDate").value =
+        todayShamsi();
+
+    addItem();
+
+    calculate();
+
+    message(
+        "فاکتور جدید آماده شد.",
+        "success"
+    );
+
+};
+
+
+init();
 
 </script>
 
