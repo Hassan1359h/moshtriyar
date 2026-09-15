@@ -573,15 +573,22 @@ async function loadCustomers(){
     }
 
 
-    customers =
-        (data || [])
-            .filter(
-                user =>
-                    String(
-                        user.role || ''
-                    ).toLowerCase()
-                    !== 'admin'
+   const adminEmail = 'hahass12na@gmail.com';
+
+customers =
+    (data || [])
+        .filter(user => {
+            const role =
+                String(user.role || '').toLowerCase();
+
+            const email =
+                String(user.email || '').toLowerCase();
+
+            return (
+                role !== 'admin' &&
+                email !== adminEmail
             );
+        }); 
 
 
     updateStats();
