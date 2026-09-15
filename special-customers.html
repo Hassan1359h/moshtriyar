@@ -238,7 +238,29 @@ body{
     background:#fff;
     border-radius:14px;
 }
+.actions{
+    display:flex;
+    gap:8px;
+    margin-top:12px;
+}
 
+.btn-extend{
+    flex:1;
+    border:none;
+    background:#16a34a;
+    color:#fff;
+    padding:10px;
+    border-radius:10px;
+    font-family:inherit;
+    font-size:12px;
+    font-weight:800;
+    cursor:pointer;
+}
+
+.btn-extend:disabled{
+    opacity:.6;
+    cursor:not-allowed;
+    }
 @media(max-width:600px){
 
     .stats{
@@ -739,6 +761,18 @@ function render(){
 
                 <div>
 
+            <div class="actions">
+
+                <button
+                    class="btn-extend"
+                    data-user-id="${esc(user.id)}"
+                >
+                    ➕ تمدید اشتراک
+                </button>
+
+            </div>
+
+        `;
                     <span>
                         📱 شماره تماس
                     </span>
@@ -827,7 +861,116 @@ function render(){
 
 }
 
+list.addEventListener('click', async (event) => {
 
+    const button =
+        event.target.closest('.btn-extend');
+
+    if(!button){
+        return;
+    }
+
+    const userId =
+        button.dataset.userId;
+
+    const daysInput =
+        prompt(
+            'چند روز به اشتراک اضافه شود؟\nمثلاً: 30'
+        );
+
+    if(daysInput === null){
+        return;
+    }
+
+    const days =
+        Number(daysInput);
+
+    if(!Number.isInteger(days) || days <= 0){
+        alert('❌ تعداد روز واردشده معتبر نیست.');
+        return;
+    }
+
+    if(days > 3650){
+        alert('❌ حداکثر مدت تمدید 3650 روز است.');
+        return;
+    }
+
+    const {
+        data:{
+            session
+        }
+    } =
+        await supabase.auth.getSession();
+
+    if(!session){
+        alert('❌ جلسه مدیر منقضی شده است.');
+        return;
+    }
+
+    const oldText =
+        button.textContent;
+
+    button.disabled = true;
+    button.textContent = '⏳ در حال تمدید...';
+
+    try{
+
+        const response =
+            await fetch(
+                '/api/extend-subscription',
+                {
+                    method:'POST',
+
+                    headers:{
+                        'Content-Type':'application/json',
+                        'Authorization':
+                            `Bearer ${session.access_token}`
+                    },
+
+                    body:JSON.stringify({
+                        userId,
+                        days
+                    })
+                }
+            );
+
+        const result =
+            await response.json();
+
+        if(!response.ok || !result.success){
+            throw new Error(
+                result.error ||
+                'تمدید اشتراک انجام نشد.'
+            );
+        }
+
+        alert(
+            `✅ ${result.message}\n\n` +
+            `📅 پایان جدید: ${
+                formatDate(result.endDate)
+            }`
+        );
+
+        await loadCustomers();
+
+    }catch(error){
+
+        console.error(
+            'Extend subscription error:',
+            error
+        );
+
+        alert(
+            '❌ خطا در تمدید اشتراک:\n' +
+            error.message
+        );
+
+        button.disabled = false;
+        button.textContent = oldText;
+
+    }
+
+});
 search.addEventListener(
     'input',
     render
