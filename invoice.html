@@ -329,7 +329,25 @@ input:focus,select:focus{
 </section>
 
 </main>
+<section class="card">
 
+    <div class="title">📚 آرشیو فاکتورها</div>
+
+    <div style="margin-bottom:12px;">
+        <input
+            id="invoiceSearch"
+            type="text"
+            placeholder="🔎 جستجو با شماره فاکتور یا نام مشتری..."
+        >
+    </div>
+
+    <div id="invoiceArchive">
+        <div class="loading">
+            در حال دریافت فاکتورها...
+        </div>
+    </div>
+
+</section>
 <script type="module">
 
 import { supabase } from './js/supabase.js';
