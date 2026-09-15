@@ -284,17 +284,42 @@ function renderRisk() {
 }
 
 async function loadSubscription() {
+
+    const role = me?.user_metadata?.role;
+
+    // ادمین اشتراک و تاریخ انقضا ندارد
+    if (role === 'admin') {
+
+        $('subContent').innerHTML = `
+            <div class="status-active">
+                <h3>👑 حساب مدیر سیستم</h3>
+                <div class="days">اشتراک نامحدود</div>
+                <p>دسترسی مدیر بدون محدودیت زمانی فعال است.</p>
+            </div>
+        `;
+
+        return;
+    }
+
     const { data: profile } = await supabase
         .from('profiles')
         .select('subscription_end_date')
         .eq('id', me.id)
         .maybeSingle();
 
-    const endDate = profile?.subscription_end_date ? new Date(profile.subscription_end_date) : null;
+    const endDate =
+        profile?.subscription_end_date
+            ? new Date(profile.subscription_end_date)
+            : null;
+
     const now = new Date();
 
     if (endDate && endDate > now) {
-        const days = Math.ceil((endDate - now) / 86400000);
+
+        const days = Math.ceil(
+            (endDate - now) / 86400000
+        );
+
         $('subContent').innerHTML = `
             <div class="status-active">
                 <h3>✅ اشتراک شما فعال است</h3>
@@ -302,16 +327,26 @@ async function loadSubscription() {
                 <p>تا تاریخ ${endDate.toLocaleDateString('fa-IR')}</p>
             </div>
         `;
+
     } else {
+
         $('subContent').innerHTML = `
             <div style="text-align:center;padding:10px;">
-                <p style="color:#dc2626;font-weight:800;margin-bottom:12px;">⚠️ اشتراک شما فعال نیست</p>
-                <p style="color:#64748b;font-size:13px;margin-bottom:14px;">برای فعال‌سازی، پرداخت را ثبت کنید.</p>
-                <a href="billing.html" class="btn-main">💳 ثبت پرداخت</a>
+                <p style="color:#dc2626;font-weight:800;margin-bottom:12px;">
+                    ⚠️ اشتراک شما فعال نیست
+                </p>
+
+                <p style="color:#64748b;font-size:13px;margin-bottom:14px;">
+                    برای فعال‌سازی، پرداخت را ثبت کنید.
+                </p>
+
+                <a href="billing.html" class="btn-main">
+                    💳 ثبت پرداخت
+                </a>
             </div>
         `;
     }
-}
+    }
 
 $('logoutBtn').onclick = async () => {
     await supabase.auth.signOut();
