@@ -1004,5 +1004,62 @@ $('paymentForm').addEventListener(
             updatePlanUI();
 
         }
+        });
+
+async function start() {
+    try {
+        const { data, error } = await supabase.auth.getSession();
+
+        if (error) throw error;
+
+        const session = data?.session;
+
+        if (!session) {
+            window.location.replace('login.html');
+            return;
+        }
+
+        me = session.user;
+
+        updatePlanUI();
+
+        await Promise.allSettled([
+            loadStatus(),
+            loadHistory()
+        ]);
+
+    } catch (error) {
+        console.error('Billing start error:', error);
+
+        $('paymentMsg').textContent =
+            '❌ نشست کاربری قابل دریافت نیست. لطفاً دوباره وارد شوید.';
+
+        $('paymentMsg').style.color = '#dc2626';
+    }
+}
+
+$('logoutBtn').addEventListener('click', async () => {
+    const btn = $('logoutBtn');
+
+    btn.disabled = true;
+    btn.textContent = 'در حال خروج...';
+
+    try {
+        await supabase.auth.signOut({
+            scope: 'local'
+        });
+    } catch (error) {
+        console.error('Logout error:', error);
+    } finally {
+        window.location.replace('login.html');
+    }
+});
+
+start();
+
+</script>
+
+</body>
+</html>
 
    
