@@ -757,53 +757,41 @@ function render(){
             </div>
 
 
-            <div class="info">
+     <div class="info">
 
-                <div>
+    <div>
 
-            <div class="actions">
+        <span>
+            📱 شماره تماس
+        </span>
 
-                <button
-                    class="btn-extend"
-                    data-user-id="${esc(user.id)}"
-                >
-                    ➕ تمدید اشتراک
-                </button>
+        <span class="phone">
 
-            </div>
+            ${esc(
+                user.phone ||
+                '-'
+            )}
 
-        `;
-                    <span>
-                        📱 شماره تماس
-                    </span>
+        </span>
 
-                    <span class="phone">
-
-                        ${esc(
-                            user.phone ||
-                            '-'
-                        )}
-
-                    </span>
-
-                </div>
+    </div>
 
 
-                <div>
+    <div>
 
-                    <span>
-                        📅 تاریخ ثبت‌نام
-                    </span>
+        <span>
+            📅 تاریخ ثبت‌نام
+        </span>
 
-                    <span>
+        <span>
 
-                        ${formatDate(
-                            user.created_at
-                        )}
+            ${formatDate(
+                user.created_at
+            )}
 
-                    </span>
+        </span>
 
-                </div>
+    </div>       
 
 
                 <div>
@@ -849,6 +837,18 @@ function render(){
                     </span>
 
                 </div>
+
+            </div>
+            </div>
+
+            <div class="actions">
+
+                <button
+                    class="btn-extend"
+                    data-user-id="${esc(user.id)}"
+                >
+                    ➕ تمدید اشتراک
+                </button>
 
             </div>
 
