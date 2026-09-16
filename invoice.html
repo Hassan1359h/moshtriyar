@@ -1409,15 +1409,21 @@ if(editingInvoiceId){
 
         }
 
-        message(
-            "فاکتور با موفقیت در حساب شما ذخیره شد.",
-            "success"
-        );
+       message(
+    editingInvoiceId
+        ? "فاکتور با موفقیت بروزرسانی شد."
+        : "فاکتور با موفقیت در حساب شما ذخیره شد.",
+    "success"
+);
 
-        console.log(
-            "Saved invoice:",
-            data
-        );
+editingInvoiceId = null;
+
+await loadInvoiceArchive();
+
+console.log(
+    "Saved invoice:",
+    data
+); 
 
     }catch(error){
 
