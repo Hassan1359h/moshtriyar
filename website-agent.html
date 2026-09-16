@@ -571,7 +571,67 @@ $("copyBtn").onclick = async () => {
         showMessage("کپی کد انجام نشد. کد را دستی انتخاب و کپی کنید.", "error");
     }
 };
+$("copyBtn").onclick = async () => {
 
+    const code = $("embedCode").textContent;
+
+    if(!code){
+        showMessage("ابتدا کد اتصال را تولید کنید.", "error");
+        return;
+    }
+
+    try{
+
+        if(
+            navigator.clipboard &&
+            window.isSecureContext
+        ){
+
+            await navigator.clipboard.writeText(code);
+
+        }else{
+
+            const textarea =
+                document.createElement("textarea");
+
+            textarea.value = code;
+
+            textarea.style.position = "fixed";
+            textarea.style.opacity = "0";
+
+            document.body.appendChild(textarea);
+
+            textarea.focus();
+            textarea.select();
+
+            const success =
+                document.execCommand("copy");
+
+            textarea.remove();
+
+            if(!success){
+                throw new Error("Copy failed");
+            }
+
+        }
+
+        showMessage(
+            "✅ کد اتصال با موفقیت کپی شد.",
+            "success"
+        );
+
+    }catch(error){
+
+        console.error(error);
+
+        showMessage(
+            "کپی خودکار انجام نشد؛ کد را دستی انتخاب و کپی کنید.",
+            "error"
+        );
+
+    }
+
+};
 
 // ===== ۷) دکمه ذخیره =====
 $("saveBtn").onclick = async () => {
