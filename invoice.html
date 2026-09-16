@@ -441,12 +441,16 @@ function renderInvoiceArchive(list){
             "</div>" +
 
             '<button class="btn btn-blue archive-copy" type="button">' +
-            "📋 کپی فاکتور" +
-            "</button>" +
+"📋 کپی فاکتور" +
+"</button>" +
 
-            '<button class="btn btn-red archive-delete" type="button" style="margin-right:6px;">' +
-            "🗑️ حذف" +
-            "</button>";
+'<button class="btn btn-green archive-edit" type="button" style="margin-right:6px;">' +
+"✏️ ویرایش" +
+"</button>" +
+
+'<button class="btn btn-red archive-delete" type="button" style="margin-right:6px;">' +
+"🗑️ حذف" +
+"</button>";
 
         div.querySelector(".archive-copy").onclick =
             async () => {
