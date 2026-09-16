@@ -1072,4 +1072,179 @@ $("saveBtn").onclick = async () => {
                 }
 
             });
-  
+        
+  const result =
+    await supabase.auth.updateUser({
+
+        data:{
+
+            website_agent:
+                config
+
+        }
+
+    });
+
+
+if(result.error){
+
+    console.error(
+        "Save settings error:",
+        result.error
+    );
+
+    showMessage(
+        "ذخیره تنظیمات انجام نشد.",
+        "error"
+    );
+
+    return;
+
+}
+
+
+me =
+    result.data.user ||
+    me;
+
+
+generateEmbedCode();
+
+
+showMessage(
+    "تنظیمات وب‌سایت با موفقیت ذخیره شد.",
+    "success"
+);
+
+
+}catch(error){
+
+    console.error(
+        "Save settings exception:",
+        error
+    );
+
+    showMessage(
+        "خطا در ذخیره تنظیمات.",
+        "error"
+    );
+
+}finally{
+
+    $("saveBtn").disabled =
+        false;
+
+    $("saveBtn").textContent =
+        "💾 ذخیره تنظیمات";
+
+}
+
+};
+
+
+async function init(){
+
+    try{
+
+        const sessionResult =
+            await Promise.race([
+
+                supabase.auth.getSession(),
+
+                new Promise((_,reject) => {
+
+                    setTimeout(
+                        () => reject(
+                            new Error(
+                                "Session timeout"
+                            )
+                        ),
+                        10000
+                    );
+
+                })
+
+            ]);
+
+
+        const session =
+            sessionResult?.data?.session;
+
+
+        if(!session){
+
+            window.location.href =
+                "login.html";
+
+            return;
+
+        }
+
+
+        me =
+            session.user;
+
+
+        const savedConfig =
+            me.user_metadata?.website_agent ||
+            {};
+
+
+        applyConfig({
+
+            businessName:
+                savedConfig.businessName || "",
+
+            websiteUrl:
+                savedConfig.websiteUrl || "",
+
+            welcomeMessage:
+                savedConfig.welcomeMessage ||
+                "سلام 👋 چطور می‌توانم به شما کمک کنم؟",
+
+            agentColor:
+                savedConfig.agentColor ||
+                "#2563eb",
+
+            agentTitle:
+                savedConfig.agentTitle ||
+                "دستیار هوشمند",
+
+            enabled:
+                savedConfig.enabled === true
+
+        });
+
+
+        $("loading").classList.add(
+            "hidden"
+        );
+
+        $("main").classList.remove(
+            "hidden"
+        );
+
+
+    }catch(error){
+
+        console.error(
+            "Website Agent Init Error:",
+            error
+        );
+
+
+        $("loading").innerHTML =
+            "❌ اتصال به حساب انجام نشد.<br>" +
+            "<small>صفحه را یک‌بار تازه‌سازی کنید.</small>";
+
+    }
+
+}
+
+
+init();
+
+</script>
+
+</body>
+</html>
