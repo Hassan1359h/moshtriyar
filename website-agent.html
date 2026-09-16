@@ -436,20 +436,13 @@
 
 <script type="module">
 
-// ===== ۱) ایمپورت Supabase =====
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+    // ===== اتصال به Supabase =====
+    import { supabase } from "./js/supabase.js";
 
-window.__websiteAgentScriptLoaded = true;
+    const supabaseClient = supabase;
 
-// ===== ۲) کلاینت Supabase =====
-const supabaseClient = createClient(
-    "https://ocxlarkkpowlztgtcuyf.supabase.co",
-    "sb_publishable_2UrLE2rdsB-GK6r6u_Pa0g_qeURaDDm"
-);
-
+    let me = null;
 const $ = (id) => document.getElementById(id);
-
-let me = null;
 
 
 // ===== ۳) پیام‌ها =====
