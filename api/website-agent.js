@@ -352,8 +352,8 @@ export default async function handler(req, res) {
             try {
 
                 var response =
-                    await fetch(
-                        "https://moshtiyar.vercel.app/api/website-chat",
+    await fetch(
+        "https://moshtriyar.vercel.app/api/website-chat",
                         {
                             method:"POST",
 
