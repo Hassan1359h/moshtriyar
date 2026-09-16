@@ -737,10 +737,16 @@
 </main>
 
 
-<script>
+<script type="module">
+    
 window.__websiteAgentScriptLoaded = true;
 
-import { supabase } from './js/supabase.js';
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+const supabase = createClient(
+    'https://ocxlarkkpowlztgtcuyf.supabase.co',
+    'sb_publishable_2UrLE2rdsB-GK6r6u_Pa0g_qeURaDDm'
+);
 
 
 const $ = id =>
