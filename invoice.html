@@ -1418,6 +1418,23 @@ if(editingInvoiceId){
 
 editingInvoiceId = null;
 
+$("customerSelect").value = "";
+$("customer").value = "";
+
+$("discountPercent").value = 0;
+$("discountFixed").value = 0;
+
+$("items").innerHTML = "";
+
+itemCount = 0;
+
+$("invoiceNumber").value = invoiceNumber();
+$("invoiceDate").value = todayShamsi();
+
+addItem();
+
+calculate();
+
 await loadInvoiceArchive();
 
 console.log(
