@@ -1328,10 +1328,46 @@ $("saveBtn").onclick = async () => {
 
     try{
 
-        const {
-            data,
-            error
-        } = await supabase
+       let data;
+let error;
+
+if(editingInvoiceId){
+
+    const result =
+        await supabase
+            .from("invoices")
+            .update({
+                invoice_number:
+                    $("invoiceNumber").value,
+                invoice_date:
+                    $("invoiceDate").value,
+                customer_id:
+                    customerId,
+                customer_name:
+                    customerName,
+                items:
+                    invoiceData,
+                subtotal:
+                    calc.subtotal,
+                discount:
+                    calc.discount,
+                total:
+                    calc.total,
+                updated_at:
+                    new Date().toISOString()
+            })
+            .eq("id",editingInvoiceId)
+            .eq("user_id",me.id)
+            .select()
+            .single();
+
+    data = result.data;
+    error = result.error;
+
+}else{
+
+    const result =
+        await supabase
             .from("invoices")
             .insert({
                 user_id: me.id,
@@ -1354,6 +1390,11 @@ $("saveBtn").onclick = async () => {
             })
             .select()
             .single();
+
+    data = result.data;
+    error = result.error;
+
+    } 
 
         if(error){
 
