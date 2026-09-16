@@ -519,56 +519,7 @@ function renderInvoiceArchive(list){
 
 }
     
-$("invoiceSearch").addEventListener("input", async () => {
 
-    const query =
-        $("invoiceSearch").value.trim().toLowerCase();
-
-    if(!me) return;
-
-    const {
-        data,
-        error
-    } = await supabase
-        .from("invoices")
-        .select("*")
-        .eq("user_id", me.id)
-        .order("created_at", { ascending: false });
-
-    if(error){
-
-        console.error(error);
-
-        message(
-            "خطا در جستجوی فاکتورها.",
-            "error"
-        );
-
-        return;
-
-    }
-
-    const filtered =
-        (data || []).filter(invoice => {
-
-            const number =
-                String(invoice.invoice_number || "")
-                    .toLowerCase();
-
-            const customer =
-                String(invoice.customer_name || "")
-                    .toLowerCase();
-
-            return (
-                number.includes(query) ||
-                customer.includes(query)
-            );
-
-        });
-
-    renderInvoiceArchive(filtered);
-
-});
 
 function buildSavedInvoiceText(invoice){
 
