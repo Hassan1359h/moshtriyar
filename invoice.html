@@ -480,6 +480,8 @@ function renderInvoiceArchive(list){
             };
 div.querySelector(".archive-edit").onclick = () => {
 
+    editingInvoiceId = invoice.id;
+
     $("invoiceNumber").value =
         invoice.invoice_number || "";
 
