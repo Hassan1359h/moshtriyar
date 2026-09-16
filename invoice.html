@@ -1357,10 +1357,44 @@ $("clearBtn").onclick = () => {
 
 };
 
-
 init();
 
+
+$("invoiceSearch").addEventListener("input", () => {
+
+    const query =
+        $("invoiceSearch").value
+            .trim()
+            .toLowerCase();
+
+    const list =
+        window.invoiceArchiveData || [];
+
+    const filtered =
+        list.filter(invoice => {
+
+            const number =
+                String(invoice.invoice_number || "")
+                    .toLowerCase();
+
+            const customer =
+                String(invoice.customer_name || "")
+                    .toLowerCase();
+
+            return (
+                number.includes(query) ||
+                customer.includes(query)
+            );
+
+        });
+
+    renderInvoiceArchive(filtered);
+
+});
+
+
 </script>
+
 
 </body>
   </html>
