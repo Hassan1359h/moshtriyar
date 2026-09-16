@@ -477,7 +477,77 @@ function renderInvoiceArchive(list){
                 }
 
             };
+div.querySelector(".archive-edit").onclick = () => {
 
+    $("invoiceNumber").value =
+        invoice.invoice_number || "";
+
+    $("invoiceDate").value =
+        invoice.invoice_date || "";
+
+    $("customerSelect").value =
+        invoice.customer_id || "";
+
+    $("customer").value =
+        invoice.customer_name || "";
+
+    $("discountPercent").value = 0;
+    $("discountFixed").value =
+        Number(invoice.discount) || 0;
+
+    $("items").innerHTML = "";
+    itemCount = 0;
+
+    const items =
+        Array.isArray(invoice.items)
+            ? invoice.items
+            : [];
+
+    items.forEach(savedItem => {
+
+        addItem();
+
+        const item =
+            $("items").lastElementChild;
+
+        const productSelect =
+            item.querySelector(".productSelect");
+
+        const quantity =
+            item.querySelector(".quantity");
+
+        const price =
+            item.querySelector(".price");
+
+        productSelect.value =
+            savedItem.product_id || "";
+
+        quantity.value =
+            savedItem.quantity || 1;
+
+        price.value =
+            savedItem.unit_price || 0;
+
+    });
+
+    if(items.length === 0){
+        addItem();
+    }
+
+    calculate();
+
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+
+    message(
+        "فاکتور برای ویرایش آماده شد.",
+        "success"
+    );
+
+};
+        
 
         div.querySelector(".archive-delete").onclick =
             async () => {
