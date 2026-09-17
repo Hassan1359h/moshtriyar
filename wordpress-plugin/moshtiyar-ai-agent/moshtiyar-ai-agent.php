@@ -896,7 +896,6 @@ function moshtiyar_ai_agent() {
 
 moshtiyar_ai_agent();
 
-
 /**
  * ---------------------------------------------------------
  * Activation
@@ -908,6 +907,135 @@ register_activation_hook(
 
         flush_rewrite_rules();
 
+        /*
+         * اتصال خودکار افزونه به مشتری‌یار
+         */
+
+        if (
+            !defined('MOSHTIYAR_CONNECTION_TOKEN') ||
+            MOSHTIYAR_CONNECTION_TOKEN === '__CONNECTION_TOKEN__'
+        ) {
+            update_option(
+                'moshtiyar_connection_error',
+                'توکن اتصال افزونه وجود ندارد.',
+                false
+            );
+
+            return;
+        }
+
+        $response = wp_remote_post(
+            trailingslashit(MOSHTIYAR_API_URL) .
+            'wordpress-activate',
+            array(
+                'timeout' => 30,
+
+                'headers' => array(
+                    'Content-Type' =>
+                        'application/json',
+
+                    'Accept' =>
+                        'application/json',
+
+                    'X-Moshtiyar-Plugin' =>
+                        MOSHTIYAR_PLUGIN_VERSION,
+                ),
+
+                'body' => wp_json_encode(
+                    array(
+                        'token' =>
+                            MOSHTIYAR_CONNECTION_TOKEN,
+
+                        'siteUrl' =>
+                            home_url('/'),
+                    )
+                ),
+            )
+        );
+
+        if (is_wp_error($response)) {
+
+            update_option(
+                'moshtiyar_connection_error',
+                $response->get_error_message(),
+                false
+            );
+
+            return;
+        }
+
+        $status_code =
+            wp_remote_retrieve_response_code(
+                $response
+            );
+
+        $body =
+            wp_remote_retrieve_body(
+                $response
+            );
+
+        $data =
+            json_decode(
+                $body,
+                true
+            );
+
+        if (
+            $status_code >= 200 &&
+            $status_code < 300 &&
+            is_array($data) &&
+            !empty($data['success']) &&
+            !empty($data['userId'])
+        ) {
+
+            update_option(
+                'moshtiyar_connected',
+                true,
+                false
+            );
+
+            update_option(
+                'moshtiyar_user_id',
+                sanitize_text_field(
+                    $data['userId']
+                ),
+                false
+            );
+
+            update_option(
+                'moshtiyar_site_url',
+                esc_url_raw(
+                    home_url('/')
+                ),
+                false
+            );
+
+            delete_option(
+                'moshtiyar_connection_error'
+            );
+
+            return;
+        }
+
+        $error_message =
+            'اتصال خودکار به مشتری‌یار انجام نشد.';
+
+        if (
+            is_array($data) &&
+            !empty($data['error'])
+        ) {
+
+            $error_message =
+                sanitize_text_field(
+                    $data['error']
+                );
+        }
+
+        update_option(
+            'moshtiyar_connection_error',
+            $error_message,
+            false
+        );
     }
 );
 
@@ -925,5 +1053,6 @@ register_deactivation_hook(
 
     }
 );
+
 
                 
