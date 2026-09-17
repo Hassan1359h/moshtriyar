@@ -579,7 +579,139 @@ $("generateBtn").onclick = () => {
     generateEmbedCode();
     showMessage("کد اتصال تولید شد.", "success");
 };
+// ===== اتصال واقعی وردپرس =====
+$("wordpressBtn").onclick = async () => {
 
+    if(!me){
+
+        showMessage(
+            "کاربر وارد حساب نشده است.",
+            "error"
+        );
+
+        return;
+    }
+
+    const siteUrl =
+        $("websiteUrl").value.trim();
+
+    if(!siteUrl){
+
+        showMessage(
+            "ابتدا آدرس وب‌سایت را وارد کنید.",
+            "error"
+        );
+
+        return;
+    }
+
+    const button =
+        $("wordpressBtn");
+
+    const box =
+        $("wordpressBox");
+
+    button.disabled = true;
+    button.textContent =
+        "⏳ در حال ایجاد اتصال...";
+
+    box.style.display = "none";
+
+    try{
+
+        const {
+            data: {
+                session
+            }
+        } =
+            await supabaseClient.auth.getSession();
+
+        if(!session){
+
+            throw new Error(
+                "جلسه ورود منقضی شده است."
+            );
+
+        }
+
+        const response =
+            await fetch(
+                "/api/wordpress-connect",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json",
+
+                        "Authorization":
+                            "Bearer " +
+                            session.access_token
+                    },
+
+                    body: JSON.stringify({
+                        siteUrl: siteUrl
+                    })
+                }
+            );
+
+        const result =
+            await response.json();
+
+        if(!response.ok){
+
+            throw new Error(
+                result.error ||
+                "ایجاد اتصال انجام نشد."
+            );
+
+        }
+
+        window.wordpressConnection =
+            result;
+
+        box.className =
+            "message success";
+
+        box.style.display =
+            "block";
+
+        box.textContent =
+            "✅ اتصال امن آماده شد.";
+
+        button.textContent =
+            "📦 دریافت افزونه وردپرس";
+
+    }catch(error){
+
+        console.error(
+            "WordPress connection:",
+            error
+        );
+
+        box.className =
+            "message error";
+
+        box.style.display =
+            "block";
+
+        box.textContent =
+            "❌ " +
+            (
+                error.message ||
+                "خطا در ایجاد اتصال."
+            );
+
+        button.textContent =
+            "🟢 شروع نصب آسان وردپرس";
+
+    }finally{
+
+        button.disabled = false;
+
+    }
+
+};
 $("copyBtn").onclick = async () => {
     const code = $("embedCode").textContent;
 
