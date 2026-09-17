@@ -3,7 +3,7 @@
  * Plugin Name: Moshtiyar AI Agent
  * Plugin URI: https://moshtiyar.vercel.app
  * Description: اتصال سایت وردپرس به سرویس هوشمند مشتری‌یار
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: Moshtiyar
  * Text Domain: moshtiyar-ai-agent
  */
@@ -13,11 +13,9 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * ---------------------------------------------------------
- * Configuration
- * ---------------------------------------------------------
+ * Connection token
  *
- * این مقدار توسط Vercel هنگام ساخت فایل ZIP جایگزین می‌شود.
+ * این مقدار هنگام ساخت ZIP توسط Vercel جایگزین می‌شود.
  */
 define(
     'MOSHTIYAR_CONNECTION_TOKEN',
@@ -25,9 +23,7 @@ define(
 );
 
 /**
- * آدرس API اصلی مشتری‌یار
- *
- * در صورت تغییر دامنه Vercel فقط این مقدار باید تغییر کند.
+ * API URL
  */
 define(
     'MOSHTIYAR_API_URL',
@@ -35,11 +31,11 @@ define(
 );
 
 /**
- * Version
+ * Plugin version
  */
 define(
     'MOSHTIYAR_PLUGIN_VERSION',
-    '1.0.0'
+    '1.1.0'
 );
 
 
@@ -50,18 +46,10 @@ define(
  */
 final class Moshtiyar_AI_Agent {
 
-    /**
-     * Singleton instance
-     *
-     * @var Moshtiyar_AI_Agent|null
-     */
     private static $instance = null;
 
-
     /**
-     * Get plugin instance.
-     *
-     * @return Moshtiyar_AI_Agent
+     * Singleton
      */
     public static function instance() {
 
@@ -72,9 +60,8 @@ final class Moshtiyar_AI_Agent {
         return self::$instance;
     }
 
-
     /**
-     * Constructor.
+     * Constructor
      */
     private function __construct() {
 
@@ -86,11 +73,6 @@ final class Moshtiyar_AI_Agent {
         add_action(
             'admin_menu',
             array($this, 'admin_menu')
-        );
-
-        add_action(
-            'admin_enqueue_scripts',
-            array($this, 'admin_assets')
         );
 
         add_action(
@@ -136,6 +118,8 @@ final class Moshtiyar_AI_Agent {
         }
 
         $site_url = home_url('/');
+
+        $connected = $this->is_connected();
         ?>
 
         <div class="wrap" dir="rtl">
@@ -156,8 +140,8 @@ final class Moshtiyar_AI_Agent {
                 <h2>اتصال سایت به مشتری‌یار</h2>
 
                 <p>
-                    این افزونه برای اتصال سایت وردپرس شما
-                    به سرویس هوشمند مشتری‌یار استفاده می‌شود.
+                    این افزونه سایت وردپرسی شما را
+                    به سرویس هوشمند مشتری‌یار متصل می‌کند.
                 </p>
 
                 <table class="form-table">
@@ -180,12 +164,7 @@ final class Moshtiyar_AI_Agent {
 
                         <td>
 
-                            <?php
-                            if (
-                                MOSHTIYAR_CONNECTION_TOKEN !==
-                                '__CONNECTION_TOKEN__'
-                            ) {
-                                ?>
+                            <?php if ($connected) : ?>
 
                                 <span
                                     style="
@@ -196,9 +175,7 @@ final class Moshtiyar_AI_Agent {
                                     ● اتصال فعال
                                 </span>
 
-                                <?php
-                            } else {
-                                ?>
+                            <?php else : ?>
 
                                 <span
                                     style="
@@ -206,12 +183,10 @@ final class Moshtiyar_AI_Agent {
                                         font-weight:bold;
                                     "
                                 >
-                                    ● افزونه هنوز فعال‌سازی نشده است
+                                    ● سایت هنوز متصل نشده است
                                 </span>
 
-                                <?php
-                            }
-                            ?>
+                            <?php endif; ?>
 
                         </td>
                     </tr>
@@ -220,17 +195,14 @@ final class Moshtiyar_AI_Agent {
 
                 <hr>
 
-                <h3>درباره افزونه</h3>
+                <h3>استفاده از دستیار</h3>
 
                 <p>
-                    مشتری‌یار AI برای اضافه کردن قابلیت‌های
-                    هوشمند به سایت وردپرسی طراحی شده است.
+                    برای نمایش دستیار هوشمند در هر صفحه یا نوشته،
+                    از شورت‌کد زیر استفاده کنید:
                 </p>
 
-                <p>
-                    پس از فعال‌سازی، ارتباط سایت با سرویس
-                    مشتری‌یار از طریق API امن انجام می‌شود.
-                </p>
+                <code>[moshtiyar_ai]</code>
 
             </div>
 
@@ -242,61 +214,24 @@ final class Moshtiyar_AI_Agent {
 
     /**
      * -----------------------------------------------------
-     * Admin Assets
-     * -----------------------------------------------------
-     */
-    public function admin_assets($hook) {
-
-        if ($hook !== 'toplevel_page_moshtiyar-ai-agent') {
-            return;
-        }
-
-        wp_enqueue_style(
-            'moshtiyar-ai-admin',
-            false,
-            array(),
-            MOSHTIYAR_PLUGIN_VERSION
-        );
-    }
-
-
-    /**
-     * -----------------------------------------------------
      * Frontend Assets
      * -----------------------------------------------------
      */
     public function frontend_assets() {
 
-        wp_register_script(
+        wp_enqueue_script(
             'moshtiyar-ai-agent',
-            '',
+            false,
             array(),
             MOSHTIYAR_PLUGIN_VERSION,
             true
-        );
-
-        wp_enqueue_script(
-            'moshtiyar-ai-agent'
-        );
-
-        wp_localize_script(
-            'moshtiyar-ai-agent',
-            'MoshtiyarAI',
-            array(
-                'restUrl' => esc_url_raw(
-                    rest_url('moshtiyar/v1/')
-                ),
-                'nonce' => wp_create_nonce(
-                    'wp_rest'
-                ),
-            )
         );
     }
 
 
     /**
      * -----------------------------------------------------
-     * REST API Routes
+     * REST Routes
      * -----------------------------------------------------
      */
     public function register_rest_routes() {
@@ -305,11 +240,13 @@ final class Moshtiyar_AI_Agent {
             'moshtiyar/v1',
             '/status',
             array(
-                'methods'  => WP_REST_Server::READABLE,
+                'methods' => WP_REST_Server::READABLE,
+
                 'callback' => array(
                     $this,
                     'status'
                 ),
+
                 'permission_callback' => '__return_true',
             )
         );
@@ -317,13 +254,15 @@ final class Moshtiyar_AI_Agent {
 
         register_rest_route(
             'moshtiyar/v1',
-            '/connect',
+            '/activate',
             array(
-                'methods'  => WP_REST_Server::CREATABLE,
+                'methods' => WP_REST_Server::CREATABLE,
+
                 'callback' => array(
                     $this,
-                    'connect'
+                    'activate'
                 ),
+
                 'permission_callback' => array(
                     $this,
                     'check_permission'
@@ -336,11 +275,13 @@ final class Moshtiyar_AI_Agent {
             'moshtiyar/v1',
             '/ask',
             array(
-                'methods'  => WP_REST_Server::CREATABLE,
+                'methods' => WP_REST_Server::CREATABLE,
+
                 'callback' => array(
                     $this,
                     'ask_ai'
                 ),
+
                 'permission_callback' => array(
                     $this,
                     'check_permission'
@@ -352,7 +293,7 @@ final class Moshtiyar_AI_Agent {
 
     /**
      * -----------------------------------------------------
-     * Permission Check
+     * Permission
      * -----------------------------------------------------
      */
     public function check_permission() {
@@ -363,22 +304,40 @@ final class Moshtiyar_AI_Agent {
 
     /**
      * -----------------------------------------------------
-     * Status Endpoint
+     * Connected
+     * -----------------------------------------------------
+     */
+    private function is_connected() {
+
+        return (bool) get_option(
+            'moshtiyar_connected',
+            false
+        );
+    }
+
+
+    /**
+     * -----------------------------------------------------
+     * Status
      * -----------------------------------------------------
      */
     public function status() {
 
-        $connected =
-            MOSHTIYAR_CONNECTION_TOKEN !==
-            '__CONNECTION_TOKEN__';
-
         return new WP_REST_Response(
             array(
                 'success' => true,
-                'plugin' => 'moshtiyar-ai-agent',
-                'version' => MOSHTIYAR_PLUGIN_VERSION,
-                'connected' => $connected,
-                'siteUrl' => home_url('/'),
+
+                'plugin' =>
+                    'moshtiyar-ai-agent',
+
+                'version' =>
+                    MOSHTIYAR_PLUGIN_VERSION,
+
+                'connected' =>
+                    $this->is_connected(),
+
+                'siteUrl' =>
+                    home_url('/'),
             ),
             200
         );
@@ -387,10 +346,10 @@ final class Moshtiyar_AI_Agent {
 
     /**
      * -----------------------------------------------------
-     * Connect Endpoint
+     * Activate Connection
      * -----------------------------------------------------
      */
-    public function connect(WP_REST_Request $request) {
+    public function activate(WP_REST_Request $request) {
 
         if (
             MOSHTIYAR_CONNECTION_TOKEN ===
@@ -398,8 +357,8 @@ final class Moshtiyar_AI_Agent {
         ) {
 
             return new WP_Error(
-                'not_activated',
-                'افزونه هنوز فعال‌سازی نشده است.',
+                'missing_token',
+                'توکن اتصال افزونه وجود ندارد.',
                 array(
                     'status' => 403,
                 )
@@ -408,14 +367,15 @@ final class Moshtiyar_AI_Agent {
 
 
         $response = $this->api_request(
-            '/wordpress/connect',
+            '/wordpress-activate',
             array(
-                'siteUrl' => home_url('/'),
-                'siteName' => get_bloginfo('name'),
-                'wpVersion' => get_bloginfo('version'),
-                'pluginVersion' =>
-                    MOSHTIYAR_PLUGIN_VERSION,
-            )
+                'token' =>
+                    MOSHTIYAR_CONNECTION_TOKEN,
+
+                'siteUrl' =>
+                    home_url('/'),
+            ),
+            false
         );
 
 
@@ -424,8 +384,56 @@ final class Moshtiyar_AI_Agent {
         }
 
 
+        if (
+            empty($response['success']) ||
+            empty($response['userId'])
+        ) {
+
+            return new WP_Error(
+                'activation_failed',
+                'فعال‌سازی سایت در مشتری‌یار انجام نشد.',
+                array(
+                    'status' => 502,
+                )
+            );
+        }
+
+
+        update_option(
+            'moshtiyar_connected',
+            true,
+            false
+        );
+
+        update_option(
+            'moshtiyar_user_id',
+            sanitize_text_field(
+                $response['userId']
+            ),
+            false
+        );
+
+        update_option(
+            'moshtiyar_site_url',
+            esc_url_raw(
+                home_url('/')
+            ),
+            false
+        );
+
+
         return new WP_REST_Response(
-            $response,
+            array(
+                'success' => true,
+
+                'connected' => true,
+
+                'userId' =>
+                    $response['userId'],
+
+                'siteUrl' =>
+                    home_url('/'),
+            ),
             200
         );
     }
@@ -433,14 +441,15 @@ final class Moshtiyar_AI_Agent {
 
     /**
      * -----------------------------------------------------
-     * Ask AI Endpoint
+     * Ask AI
      * -----------------------------------------------------
      */
     public function ask_ai(WP_REST_Request $request) {
 
-        $message = sanitize_textarea_field(
-            $request->get_param('message')
-        );
+        $message =
+            sanitize_textarea_field(
+                $request->get_param('message')
+            );
 
 
         if (empty($message)) {
@@ -455,14 +464,30 @@ final class Moshtiyar_AI_Agent {
         }
 
 
-        if (
-            MOSHTIYAR_CONNECTION_TOKEN ===
-            '__CONNECTION_TOKEN__'
-        ) {
+        if (!$this->is_connected()) {
 
             return new WP_Error(
-                'not_activated',
-                'افزونه هنوز فعال‌سازی نشده است.',
+                'not_connected',
+                'سایت هنوز به مشتری‌یار متصل نشده است.',
+                array(
+                    'status' => 403,
+                )
+            );
+        }
+
+
+        $user_id =
+            get_option(
+                'moshtiyar_user_id',
+                ''
+            );
+
+
+        if (empty($user_id)) {
+
+            return new WP_Error(
+                'missing_user_id',
+                'شناسه اتصال مشتری‌یار پیدا نشد.',
                 array(
                     'status' => 403,
                 )
@@ -471,12 +496,18 @@ final class Moshtiyar_AI_Agent {
 
 
         $response = $this->api_request(
-            '/wordpress/ask',
+            '/website-chat',
             array(
-                'message' => $message,
-                'siteUrl' => home_url('/'),
-                'siteName' => get_bloginfo('name'),
-            )
+                'userId' =>
+                    $user_id,
+
+                'site' =>
+                    home_url('/'),
+
+                'message' =>
+                    $message,
+            ),
+            false
         );
 
 
@@ -485,8 +516,33 @@ final class Moshtiyar_AI_Agent {
         }
 
 
+        if (
+            empty($response['reply'])
+        ) {
+
+            return new WP_Error(
+                'empty_ai_response',
+                'پاسخ مناسبی از دستیار دریافت نشد.',
+                array(
+                    'status' => 502,
+                )
+            );
+        }
+
+
         return new WP_REST_Response(
-            $response,
+            array(
+                'success' => true,
+
+                'reply' =>
+                    $response['reply'],
+
+                'businessName' =>
+                    $response['businessName'] ?? '',
+
+                'agentTitle' =>
+                    $response['agentTitle'] ?? '',
+            ),
             200
         );
     }
@@ -499,42 +555,50 @@ final class Moshtiyar_AI_Agent {
      */
     private function api_request(
         $endpoint,
-        $body = array()
+        $body = array(),
+        $include_token = true
     ) {
 
-        $url = trailingslashit(
-            MOSHTIYAR_API_URL
-        ) . ltrim(
-            $endpoint,
-            '/'
-        );
+        $url =
+            trailingslashit(
+                MOSHTIYAR_API_URL
+            ) .
+            ltrim(
+                $endpoint,
+                '/'
+            );
 
 
-        $body['connectionToken'] =
-            MOSHTIYAR_CONNECTION_TOKEN;
+        if ($include_token) {
+
+            $body['token'] =
+                MOSHTIYAR_CONNECTION_TOKEN;
+        }
 
 
-        $response = wp_remote_post(
-            $url,
-            array(
-                'timeout' => 30,
+        $response =
+            wp_remote_post(
+                $url,
+                array(
+                    'timeout' => 30,
 
-                'headers' => array(
-                    'Content-Type' =>
-                        'application/json',
+                    'headers' => array(
+                        'Content-Type' =>
+                            'application/json',
 
-                    'Accept' =>
-                        'application/json',
+                        'Accept' =>
+                            'application/json',
 
-                    'X-Moshtiyar-Plugin' =>
-                        MOSHTIYAR_PLUGIN_VERSION,
-                ),
+                        'X-Moshtiyar-Plugin' =>
+                            MOSHTIYAR_PLUGIN_VERSION,
+                    ),
 
-                'body' => wp_json_encode(
-                    $body
-                ),
-            )
-        );
+                    'body' =>
+                        wp_json_encode(
+                            $body
+                        ),
+                )
+            );
 
 
         if (is_wp_error($response)) {
@@ -544,6 +608,7 @@ final class Moshtiyar_AI_Agent {
                 'ارتباط با سرور مشتری‌یار برقرار نشد.',
                 array(
                     'status' => 502,
+
                     'error' =>
                         $response->get_error_message(),
                 )
@@ -581,12 +646,12 @@ final class Moshtiyar_AI_Agent {
 
             if (
                 is_array($decoded) &&
-                !empty($decoded['message'])
+                !empty($decoded['error'])
             ) {
 
                 $message =
                     sanitize_text_field(
-                        $decoded['message']
+                        $decoded['error']
                     );
             }
 
@@ -624,6 +689,12 @@ final class Moshtiyar_AI_Agent {
      * -----------------------------------------------------
      */
     public function shortcode($atts = array()) {
+
+        if (!$this->is_connected()) {
+
+            return '';
+        }
+
 
         ob_start();
         ?>
@@ -763,7 +834,8 @@ final class Moshtiyar_AI_Agent {
                                         },
 
                                         body: JSON.stringify({
-                                            message: message
+                                            message:
+                                                message
                                         })
                                     }
                                 );
@@ -783,26 +855,24 @@ final class Moshtiyar_AI_Agent {
 
 
                             result.textContent =
-                                data.answer ||
-                                data.message ||
-                                JSON.stringify(
-                                    data,
-                                    null,
-                                    2
-                                );
+                                data.reply ||
+                                'پاسخی دریافت نشد.';
+
 
                         } catch (error) {
-
-                            result.textContent =
+                                 result.textContent =
                                 error.message ||
                                 'خطایی رخ داد.';
 
                         } finally {
 
                             button.disabled = false;
+
                         }
+
                     }
                 );
+
             }
         );
         </script>
@@ -821,8 +891,9 @@ final class Moshtiyar_AI_Agent {
  */
 function moshtiyar_ai_agent() {
 
-    return Moshtiyar_AI_Agent::instance()
-      
+    return Moshtiyar_AI_Agent::instance();
+}
+
 moshtiyar_ai_agent();
 
 
@@ -836,6 +907,7 @@ register_activation_hook(
     function () {
 
         flush_rewrite_rules();
+
     }
 );
 
@@ -850,5 +922,8 @@ register_deactivation_hook(
     function () {
 
         flush_rewrite_rules();
+
     }
 );
+
+                
