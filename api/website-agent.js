@@ -5,17 +5,6 @@ export default async function handler(req, res) {
         return;
     }
 
-    const userId =
-        String(req.query?.userId || "").trim();
-
-    const site =
-        String(req.query?.site || "").trim();
-
-    if (!userId) {
-        res.status(400).send("Missing userId");
-        return;
-    }
-
     const script = `
 
 (function () {
@@ -28,10 +17,35 @@ export default async function handler(req, res) {
 
     window.__MOSHTRIYAR_AGENT__ = true;
 
+    var scriptTag = document.currentScript;
+
     var config = {
-        userId: ${JSON.stringify(userId)},
-        site: ${JSON.stringify(site)}
+        userId:
+            scriptTag?.getAttribute("data-user-id") || "",
+
+        site:
+            scriptTag?.getAttribute("data-site") || "",
+
+        color:
+            scriptTag?.getAttribute("data-color") || "#2563eb",
+
+        title:
+            scriptTag?.getAttribute("data-title") || "دستیار هوشمند",
+
+        enabled:
+            scriptTag?.getAttribute("data-enabled") !== "false"
     };
+
+    if (!config.userId) {
+        console.error(
+            "Moshtriyar: data-user-id is missing."
+        );
+        return;
+    }
+
+    if (!config.enabled) {
+        return;
+    }
 
 
     function createAgent() {
@@ -61,7 +75,7 @@ export default async function handler(req, res) {
             "height:58px;" +
             "border:none;" +
             "border-radius:50%;" +
-            "background:#2563eb;" +
+            "background:" + config.color + ";" +
             "color:#fff;" +
             "font-size:26px;" +
             "cursor:pointer;" +
