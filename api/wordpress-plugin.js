@@ -22,7 +22,8 @@ function hashToken(token) {
 
 function normalizeOrigin(value) {
     try {
-        const url = new URL(String(value || "").trim());
+        const url =
+            new URL(String(value || "").trim());
 
         if (
             url.protocol !== "http:" &&
@@ -46,6 +47,10 @@ export default async function handler(req, res) {
     }
 
     try {
+
+        /* =========================
+           احراز هویت مشتری‌یار
+        ========================= */
 
         const auth =
             req.headers.authorization || "";
@@ -72,6 +77,10 @@ export default async function handler(req, res) {
                 error: "Unauthorized"
             });
         }
+
+        /* =========================
+           اطلاعات اتصال
+        ========================= */
 
         const token =
             String(
@@ -103,6 +112,10 @@ export default async function handler(req, res) {
                 error: "Invalid site URL"
             });
         }
+
+        /* =========================
+           بررسی توکن
+        ========================= */
 
         const tokenHash =
             hashToken(token);
@@ -186,7 +199,9 @@ export default async function handler(req, res) {
             });
         }
 
-        /* ===== ساخت کد افزونه ===== */
+        /* =========================
+           کد واقعی افزونه
+        ========================= */
 
         const pluginCode = `<?php
 
@@ -194,7 +209,7 @@ export default async function handler(req, res) {
  * Plugin Name: Moshtriyar AI Agent
  * Plugin URI: https://moshtriyar.vercel.app
  * Description: اتصال خودکار وب‌سایت وردپرسی به دستیار هوشمند مشتری‌یار
- * Version: 1.0.0
+ * Version: 1.0.2
  * Author: Moshtriyar
  */
 
@@ -212,7 +227,10 @@ define(
     'https://moshtriyar.vercel.app/api/wordpress-activate'
 );
 
-function moshtriyar_activate_plugin() {
+/*
+ * تلاش برای اتصال به مشتری‌یار
+ */
+function moshtriyar_connect_to_service() {
 
     $token =
         MOSHTRIYAR_CONNECTION_TOKEN;
@@ -221,21 +239,32 @@ function moshtriyar_activate_plugin() {
         !$token ||
         $token === '__CONNECTION_TOKEN__'
     ) {
-        return;
+        update_option(
+            'moshtriyar_connection_status',
+            'error'
+        );
+
+        update_option(
+            'moshtriyar_connection_message',
+            'توکن اتصال در افزونه وجود ندارد.'
+        );
+
+        return false;
     }
 
     $response =
         wp_remote_post(
             MOSHTRIYAR_API_URL,
             array(
-                'timeout' => 20,
+                'timeout' => 30,
                 'headers' => array(
                     'Content-Type' =>
                         'application/json'
                 ),
                 'body' => wp_json_encode(
                     array(
-                        'token' => $token,
+                        'token' =>
+                            $token,
                         'siteUrl' =>
                             home_url('/')
                     )
@@ -243,7 +272,13 @@ function moshtriyar_activate_plugin() {
             )
         );
 
+    /*
+     * خطای ارتباط با سرور
+     */
     if (is_wp_error($response)) {
+
+        $errorMessage =
+            $response->get_error_message();
 
         update_option(
             'moshtriyar_connection_status',
@@ -252,10 +287,15 @@ function moshtriyar_activate_plugin() {
 
         update_option(
             'moshtriyar_connection_message',
-            $response->get_error_message()
+            $errorMessage
         );
 
-        return;
+        error_log(
+            'Moshtriyar connection error: ' .
+            $errorMessage
+        );
+
+        return false;
     }
 
     $status =
@@ -263,12 +303,20 @@ function moshtriyar_activate_plugin() {
             $response
         );
 
+    $rawBody =
+        wp_remote_retrieve_body(
+            $response
+        );
+
     $body =
         json_decode(
-            wp_remote_retrieve_body($response),
+            $rawBody,
             true
         );
 
+    /*
+     * اتصال موفق
+     */
     if (
         $status >= 200 &&
         $status < 300 &&
@@ -292,21 +340,65 @@ function moshtriyar_activate_plugin() {
             'اتصال با موفقیت انجام شد.'
         );
 
-    } else {
-
-        update_option(
-            'moshtriyar_connection_status',
-            'error'
+        delete_option(
+            'moshtriyar_connection_pending'
         );
 
-        update_option(
-            'moshtriyar_connection_message',
-            sanitize_text_field(
-                $body['error'] ??
-                'اتصال انجام نشد.'
+        return true;
+    }
+
+    /*
+     * خطای برگشتی از API
+     */
+    $errorMessage =
+        sanitize_text_field(
+            $body['error'] ??
+            (
+                'HTTP ' .
+                $status .
+                ' - پاسخ نامعتبر از سرور مشتری‌یار'
             )
         );
-    }
+
+    update_option(
+        'moshtriyar_connection_status',
+        'error'
+    );
+
+    update_option(
+        'moshtriyar_connection_message',
+        $errorMessage
+    );
+
+    error_log(
+        'Moshtriyar API error: ' .
+        $status .
+        ' - ' .
+        $rawBody
+    );
+
+    return false;
+}
+
+/*
+ * هنگام فعال‌سازی فقط اتصال را علامت‌گذاری می‌کنیم.
+ */
+function moshtriyar_activate_plugin() {
+
+    update_option(
+        'moshtriyar_connection_pending',
+        '1'
+    );
+
+    update_option(
+        'moshtriyar_connection_status',
+        'connecting'
+    );
+
+    update_option(
+        'moshtriyar_connection_message',
+        'در حال اتصال به مشتری‌یار...'
+    );
 }
 
 register_activation_hook(
@@ -314,6 +406,47 @@ register_activation_hook(
     'moshtriyar_activate_plugin'
 );
 
+/*
+ * تلاش واقعی بعد از ورود به پیشخوان.
+ */
+function moshtriyar_admin_connection_check() {
+
+    $status =
+        get_option(
+            'moshtriyar_connection_status',
+            ''
+        );
+
+    $pending =
+        get_option(
+            'moshtriyar_connection_pending',
+            ''
+        );
+
+    if (
+        $status === 'connected'
+    ) {
+        return;
+    }
+
+    if (
+        $pending === '1' ||
+        $status === 'connecting' ||
+        $status === 'error'
+    ) {
+
+        moshtriyar_connect_to_service();
+    }
+}
+
+add_action(
+    'admin_init',
+    'moshtriyar_admin_connection_check'
+);
+
+/*
+ * نمایش دستیار در سایت
+ */
 function moshtriyar_add_agent() {
 
     if (is_admin()) {
@@ -343,7 +476,7 @@ function moshtriyar_add_agent() {
         home_url('/');
 
     echo '<script
-        src="https://moshtriyar.vercel.app/api/website-agent.js?v=1.0.1"
+        src="https://moshtriyar.vercel.app/api/website-agent.js?v=1.0.2"
         data-user-id="' .
         esc_attr($userId) .
         '"
@@ -360,9 +493,14 @@ add_action(
     100
 );
 
+/*
+ * پیام وضعیت در پیشخوان
+ */
 function moshtriyar_admin_notice() {
 
-    if (!current_user_can('manage_options')) {
+    if (
+        !current_user_can('manage_options')
+    ) {
         return;
     }
 
@@ -372,24 +510,51 @@ function moshtriyar_admin_notice() {
             ''
         );
 
-    if ($status === 'connected') {
+    $message =
+        get_option(
+            'moshtriyar_connection_message',
+            ''
+        );
+
+    if (
+        $status === 'connected'
+    ) {
 
         echo '<div class="notice notice-success is-dismissible">
-            <p>✅ مشتری‌یار با موفقیت به این سایت متصل است.</p>
+            <p>
+                ✅ مشتری‌یار با موفقیت به این سایت متصل است.
+            </p>
         </div>';
 
-    } elseif ($status === 'error') {
+        return;
+    }
 
-        $message =
-            get_option(
-                'moshtriyar_connection_message',
-                'اتصال انجام نشد.'
-            );
+    if (
+        $status === 'connecting'
+    ) {
+
+        echo '<div class="notice notice-warning">
+            <p>
+                ⏳ مشتری‌یار در حال اتصال است. صفحه را یک‌بار تازه‌سازی کنید.
+            </p>
+        </div>';
+
+        return;
+    }
+
+    if (
+        $status === 'error'
+    ) {
 
         echo '<div class="notice notice-error">
-            <p>❌ اتصال مشتری‌یار انجام نشد: ' .
-            esc_html($message) .
-            '</p>
+            <p>
+                ❌ اتصال مشتری‌یار انجام نشد:
+                ' .
+                esc_html(
+                    $message
+                ) .
+                '
+            </p>
         </div>';
     }
 }
@@ -407,7 +572,9 @@ add_action(
                 token
             );
 
-        /* ===== ساخت ZIP ===== */
+        /* =========================
+           ساخت ZIP
+        ========================= */
 
         const zip =
             new JSZip();
@@ -426,14 +593,16 @@ add_action(
             "readme.txt",
 `=== Moshtriyar AI Agent ===
 
-نسخه: 1.0.1
+Version: 1.0.2
 
-افزونه اتصال خودکار سایت وردپرسی
+اتصال خودکار سایت وردپرسی
 به مشتری‌یار.
 
 نصب:
-افزونه را نصب و فعال کنید.
-اتصال به‌صورت خودکار انجام می‌شود.
+1. افزونه را نصب کنید.
+2. افزونه را فعال کنید.
+3. وارد پیشخوان وردپرس شوید.
+4. وضعیت اتصال مشتری‌یار را مشاهده کنید.
 `
         );
 
