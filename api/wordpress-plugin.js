@@ -1,8 +1,6 @@
 import crypto from "crypto";
 import JSZip from "jszip";
 import { createClient } from "@supabase/supabase-js";
-import fs from "fs";
-import path from "path";
 
 const supabaseAdmin = createClient(
     process.env.SUPABASE_URL,
@@ -23,8 +21,11 @@ function hashToken(token) {
 }
 
 function normalizeOrigin(value) {
+
     try {
-        const url = new URL(String(value || "").trim());
+
+        const url =
+            new URL(String(value || "").trim());
 
         if (
             url.protocol !== "http:" &&
@@ -34,7 +35,9 @@ function normalizeOrigin(value) {
         }
 
         return url.origin;
+
     } catch {
+
         return null;
     }
 }
@@ -42,195 +45,364 @@ function normalizeOrigin(value) {
 export default async function handler(req, res) {
 
     if (req.method !== "POST") {
+
         return res.status(405).json({
             error: "Method Not Allowed"
         });
+
     }
 
     try {
 
-        const authHeader =
+        /* ===== احراز هویت مشتری‌یار ===== */
+
+        const auth =
             req.headers.authorization || "";
 
-        if (!authHeader.startsWith("Bearer ")) {
+        if (!auth.startsWith("Bearer ")) {
+
             return res.status(401).json({
                 error: "Unauthorized"
             });
+
         }
 
         const accessToken =
-            authHeader.replace("Bearer ", "").trim();
+            auth.replace("Bearer ", "").trim();
 
         const {
             data: { user },
             error: userError
-        } = await supabaseAdmin.auth.getUser(accessToken);
+        } =
+            await supabaseAdmin.auth.getUser(
+                accessToken
+            );
 
         if (userError || !user) {
+
             return res.status(401).json({
                 error: "Unauthorized"
             });
+
         }
 
+        /* ===== اطلاعات اتصال ===== */
+
         const token =
-            String(req.body?.token || "").trim();
+            String(
+                req.body?.token || ""
+            ).trim();
 
         const siteUrl =
-            String(req.body?.siteUrl || "").trim();
+            String(
+                req.body?.siteUrl || ""
+            ).trim();
 
         if (!token) {
+
             return res.status(400).json({
                 error: "Missing connection token"
             });
+
         }
 
         if (!siteUrl) {
+
             return res.status(400).json({
                 error: "Missing site URL"
             });
+
         }
 
         const requestedOrigin =
             normalizeOrigin(siteUrl);
 
         if (!requestedOrigin) {
+
             return res.status(400).json({
                 error: "Invalid site URL"
             });
+
         }
 
-        const tokenHash = hashToken(token);
+        /* ===== بررسی توکن ===== */
+
+        const tokenHash =
+            hashToken(token);
 
         const {
             data: connection,
             error: connectionError
-        } = await supabaseAdmin
-            .from("wordpress_connections")
-            .select(`
-                id,
-                user_id,
-                site_url,
-                expires_at,
-                used_at
-            `)
-            .eq("token_hash", tokenHash)
-            .maybeSingle();
+        } =
+            await supabaseAdmin
+                .from("wordpress_connections")
+                .select(
+                    "id,user_id,site_url,expires_at,used_at"
+                )
+                .eq(
+                    "token_hash",
+                    tokenHash
+                )
+                .maybeSingle();
 
         if (connectionError) {
+
             console.error(
                 "wordpress connection lookup:",
                 connectionError
             );
 
             return res.status(500).json({
-                error: "Connection lookup failed"
+                error:
+                    "Connection lookup failed"
             });
+
         }
 
         if (!connection) {
+
             return res.status(401).json({
-                error: "Invalid connection token"
+                error:
+                    "Invalid connection token"
             });
+
         }
 
-        if (connection.user_id !== user.id) {
+        if (
+            connection.user_id !== user.id
+        ) {
+
             return res.status(403).json({
                 error:
                     "Connection does not belong to this user"
             });
+
         }
 
         if (connection.used_at) {
+
             return res.status(409).json({
                 error:
                     "Connection token has already been used"
             });
+
         }
 
         if (
             !connection.expires_at ||
-            new Date(connection.expires_at).getTime() <= Date.now()
+            new Date(
+                connection.expires_at
+            ).getTime() <= Date.now()
         ) {
+
             return res.status(410).json({
                 error:
                     "Connection token has expired"
             });
+
         }
 
         const configuredOrigin =
-            normalizeOrigin(connection.site_url);
+            normalizeOrigin(
+                connection.site_url
+            );
 
         if (
             !configuredOrigin ||
             configuredOrigin.toLowerCase() !==
             requestedOrigin.toLowerCase()
         ) {
+
             return res.status(403).json({
                 error:
                     "Website is not authorized"
             });
+
         }
 
-        const pluginPath = path.join(
-            process.cwd(),
-            "wordpress-plugin",
-            "moshtriyar-ai-agent",
-            "moshtiryar-ai-agent.php"
+        /* ===== قالب واقعی افزونه ===== */
+
+        const pluginCode = `<?php
+
+/**
+ * Plugin Name: Moshtriyar AI Agent
+ * Plugin URI: https://moshtriyar.vercel.app
+ * Description: اتصال خودکار وب‌سایت وردپرسی به دستیار هوشمند مشتری‌یار
+ * Version: 1.0.0
+ * Author: Moshtriyar
+ */
+
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+define(
+    'MOSHTRIYAR_CONNECTION_TOKEN',
+    '__CONNECTION_TOKEN__'
+);
+
+define(
+    'MOSHTRIYAR_API_URL',
+    'https://moshtriyar.vercel.app/api/wordpress-activate'
+);
+
+function moshtriyar_activate_plugin() {
+
+    $token =
+        MOSHTRIYAR_CONNECTION_TOKEN;
+
+    if (
+        !$token ||
+        $token === '__CONNECTION_TOKEN__'
+    ) {
+        return;
+    }
+
+    $response =
+        wp_remote_post(
+            MOSHTRIYAR_API_URL,
+            array(
+                'timeout' => 20,
+                'headers' => array(
+                    'Content-Type' =>
+                        'application/json'
+                ),
+                'body' => wp_json_encode(
+                    array(
+                        'token' => $token,
+                        'siteUrl' =>
+                            home_url('/')
+                    )
+                )
+            )
         );
 
-        if (!fs.existsSync(pluginPath)) {
-            return res.status(500).json({
-                error:
-                    "WordPress plugin template is missing"
-            });
-        }
+    if (is_wp_error($response)) {
 
-        let pluginCode =
-            fs.readFileSync(pluginPath, "utf8");
+        update_option(
+            'moshtriyar_connection_status',
+            'error'
+        );
 
-        if (
-            !pluginCode.includes(
-                "__CONNECTION_TOKEN__"
+        return;
+    }
+
+    $status =
+        wp_remote_retrieve_response_code(
+            $response
+        );
+
+    $body =
+        json_decode(
+            wp_remote_retrieve_body($response),
+            true
+        );
+
+    if (
+        $status >= 200 &&
+        $status < 300 &&
+        !empty($body['success'])
+    ) {
+
+        update_option(
+            'moshtriyar_connection_status',
+            'connected'
+        );
+
+        update_option(
+            'moshtriyar_user_id',
+            sanitize_text_field(
+                $body['userId'] ?? ''
             )
-        ) {
-            return res.status(500).json({
-                error:
-                    "Plugin template is invalid"
-            });
-        }
+        );
 
-        pluginCode =
+    } else {
+
+        update_option(
+            'moshtriyar_connection_status',
+            'error'
+        );
+    }
+}
+
+register_activation_hook(
+    __FILE__,
+    'moshtriyar_activate_plugin'
+);
+
+function moshtriyar_add_agent() {
+
+    $status =
+        get_option(
+            'moshtriyar_connection_status',
+            ''
+        );
+
+    $userId =
+        get_option(
+            'moshtriyar_user_id',
+            ''
+        );
+
+    if (
+        $status !== 'connected' ||
+        !$userId
+    ) {
+        return;
+    }
+
+    echo '<script
+        src="https://moshtriyar.vercel.app/api/website-agent.js"
+        data-user-id="' .
+        esc_attr($userId) .
+        '"
+        data-site="' .
+        esc_url(home_url('/')) .
+        '"
+        data-enabled="true">
+    </script>';
+}
+
+add_action(
+    'wp_footer',
+    'moshtriyar_add_agent',
+    100
+);
+`;
+
+        const finalPlugin =
             pluginCode.replace(
                 /__CONNECTION_TOKEN__/g,
                 token
             );
 
-        const zip = new JSZip();
+        /* ===== ساخت ZIP ===== */
+
+        const zip =
+            new JSZip();
 
         const folder =
-            zip.folder("moshtriyar-ai-agent");
+            zip.folder(
+                "moshtriyar-ai-agent"
+            );
 
         folder.file(
-            "moshFix WordPress plugin template pathtiyar-ai-agent.php",
-            pluginCode
+            "moshtriyar-ai-agent.php",
+            finalPlugin
         );
 
         folder.file(
             "readme.txt",
-`=== مشتری‌یار AI Assistant ===
+`=== Moshtriyar AI Agent ===
 
-نسخه: 1.1.0
+نسخه: 1.0.0
 
-افزونه اتصال خودکار وب‌سایت وردپرسی
-به دستیار هوشمند مشتری‌یار.
+افزونه اتصال خودکار سایت وردپرسی
+به مشتری‌یار.
 
 نصب:
-1. افزونه را نصب کنید.
-2. افزونه را فعال کنید.
-3. اتصال به‌صورت خودکار انجام می‌شود.
-
-Website:
-https://moshtriyar.vercel.app
+افزونه را نصب و فعال کنید.
+اتصال به‌صورت خودکار انجام می‌شود.
 `
         );
 
@@ -265,7 +437,7 @@ https://moshtriyar.vercel.app
             "no-store, no-cache, must-revalidate"
         );
 
-        res.end(zipBuffer);
+        return res.end(zipBuffer);
 
     } catch (error) {
 
@@ -275,7 +447,9 @@ https://moshtriyar.vercel.app
         );
 
         return res.status(500).json({
-            error: "Internal Server Error"
+            error:
+                "Internal Server Error"
         });
+
     }
 }
