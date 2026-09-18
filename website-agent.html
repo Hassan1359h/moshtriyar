@@ -1,590 +1,386 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>🌐 اتصال وب‌سایت | مشتری‌یار</title>
 
-    <title>🌐 اتصال وب‌سایت | مشتری‌یار</title>
-
-    <meta name="theme-color" content="#2563eb">
-
-    <style>
-        *{ box-sizing:border-box; }
-
-        body{
-            margin:0;
-            font-family: Tahoma, Arial, sans-serif;
-            background:#f1f5f9;
-            color:#1e293b;
-        }
-
-        button, input, textarea, select{ font-family:inherit; }
-
-        header{
-            background:#fff;
-            box-shadow:0 1px 4px rgba(0,0,0,.06);
-            padding:12px 18px;
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            position:sticky;
-            top:0;
-            z-index:100;
-        }
-
-        .brand{
-            display:flex;
-            align-items:center;
-            gap:10px;
-            font-size:17px;
-            font-weight:900;
-        }
-
-        .brand-icon{
-            width:40px;
-            height:40px;
-            border-radius:12px;
-            background:linear-gradient(135deg,#2563eb,#7c3aed);
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            color:#fff;
-            font-size:22px;
-        }
-
-        .back-btn{
-            border:none;
-            background:#eff6ff;
-            color:#2563eb;
-            padding:9px 13px;
-            border-radius:10px;
-            font-weight:800;
-            cursor:pointer;
-            text-decoration:none;
-            font-size:13px;
-        }
-
-        .container{
-            width:min(900px,calc(100% - 24px));
-            margin:18px auto 40px;
-        }
-
-        .hero{
-            background:linear-gradient(135deg,#2563eb,#7c3aed);
-            color:#fff;
-            border-radius:20px;
-            padding:22px;
-            margin-bottom:16px;
-            box-shadow:0 10px 30px rgba(37,99,235,.18);
-        }
-
-        .hero h1{ margin:0 0 8px; font-size:22px; }
-
-        .hero p{ margin:0; line-height:1.9; font-size:13px; opacity:.94; }
-
-        .card{
-            background:#fff;
-            border-radius:18px;
-            padding:18px;
-            margin-bottom:16px;
-            box-shadow:0 2px 10px rgba(15,23,42,.05);
-        }
-
-        .card-title{ font-size:16px; font-weight:900; margin-bottom:16px; }
-
-        .field{ margin-bottom:14px; }
-
-        .field label{
-            display:block;
-            font-size:13px;
-            font-weight:800;
-            margin-bottom:7px;
-            color:#334155;
-        }
-
-        input, textarea, select{
-            width:100%;
-            border:1px solid #cbd5e1;
-            border-radius:11px;
-            padding:11px 12px;
-            font-size:14px;
-            outline:none;
-            background:#fff;
-            color:#1e293b;
-        }
-
-        input:focus, textarea:focus, select:focus{
-            border-color:#2563eb;
-            box-shadow:0 0 0 3px rgba(37,99,235,.1);
-        }
-
-        textarea{ min-height:95px; resize:vertical; line-height:1.8; }
-
-        .grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-
-        .btn{
-            width:100%;
-            border:none;
-            border-radius:12px;
-            padding:12px 14px;
-            font-size:14px;
-            font-weight:900;
-            cursor:pointer;
-            margin-top:6px;
-        }
-
-        .btn:disabled{ opacity:.6; cursor:not-allowed; }
-
-        .btn-blue{ background:#2563eb; color:#fff; }
-        .btn-green{ background:#16a34a; color:#fff; }
-        .btn-gray{ background:#e2e8f0; color:#334155; }
-        .btn-red{ background:#fee2e2; color:#dc2626; }
-
-        .status-box{
-            display:flex;
-            align-items:center;
-            justify-content:space-between;
-            gap:12px;
-            background:#f8fafc;
-            border:1px solid #e2e8f0;
-            padding:13px;
-            border-radius:13px;
-            margin-bottom:15px;
-        }
-
-        .status-info strong{ display:block; font-size:14px; margin-bottom:4px; }
-
-        .status-info span{ color:#64748b; font-size:12px; }
-
-        .switch{ position:relative; width:52px; height:30px; flex:none; }
-
-        .switch input{ display:none; }
-
-        .slider{
-            position:absolute;
-            inset:0;
-            background:#cbd5e1;
-            border-radius:30px;
-            cursor:pointer;
-            transition:.2s;
-        }
-
-        .slider:before{
-            content:"";
-            position:absolute;
-            width:22px;
-            height:22px;
-            top:4px;
-            right:4px;
-            background:#fff;
-            border-radius:50%;
-            transition:.2s;
-            box-shadow:0 1px 4px rgba(0,0,0,.2);
-        }
-
-        .switch input:checked + .slider{ background:#16a34a; }
-
-        .switch input:checked + .slider:before{ transform:translateX(-22px); }
-
-        .color-row{ display:flex; align-items:center; gap:12px; }
-
-        .color-row input[type="color"]{
-            width:55px;
-            height:42px;
-            padding:3px;
-            cursor:pointer;
-        }
-
-        .preview{
-            border:1px solid #e2e8f0;
-            border-radius:16px;
-            padding:15px;
-            background:#f8fafc;
-        }
-
-        .preview-title{
-            font-size:13px;
-            color:#64748b;
-            margin-bottom:10px;
-            font-weight:800;
-        }
-
-        .fake-widget{
-            width:min(100%,330px);
-            margin-right:auto;
-            background:#fff;
-            border-radius:16px;
-            overflow:hidden;
-            box-shadow:0 8px 25px rgba(15,23,42,.12);
-            border:1px solid #e2e8f0;
-        }
-
-        .fake-head{ padding:13px; color:#fff; font-weight:900; }
-
-        .fake-body{ padding:13px; }
-
-        .fake-message{
-            background:#f1f5f9;
-            border-radius:12px;
-            padding:10px;
-            font-size:12px;
-            line-height:1.8;
-            margin-bottom:10px;
-        }
-
-        .fake-input{
-            border:1px solid #cbd5e1;
-            border-radius:9px;
-            padding:9px;
-            color:#94a3b8;
-            font-size:11px;
-        }
-
-        .code-box{ position:relative; }
-
-        pre{
-            direction:ltr;
-            text-align:left;
-            white-space:pre-wrap;
-            word-break:break-word;
-            background:#0f172a;
-            color:#e2e8f0;
-            border-radius:13px;
-            padding:14px;
-            font-family: Consolas, Monaco, monospace;
-            font-size:11px;
-            line-height:1.7;
-            overflow:auto;
-            min-height:130px;
-        }
-
-        .hint{ color:#64748b; font-size:12px; line-height:1.8; margin-top:8px; }
-
-        .message{
-            display:none;
-            padding:12px;
-            border-radius:11px;
-            font-size:13px;
-            font-weight:800;
-            margin-bottom:15px;
-            line-height:1.8;
-        }
-
-        .message.success{ display:block; background:#dcfce7; color:#166534; }
-        .message.error{ display:block; background:#fee2e2; color:#991b1b; }
-        .message.info{ display:block; background:#dbeafe; color:#1e40af; }
-
-        .loading{ text-align:center; padding:50px 20px; color:#64748b; }
-
-        .hidden{ display:none !important; }
-
-        .danger-note{
-            background:#fff7ed;
-            border:1px solid #fed7aa;
-            color:#9a3412;
-            border-radius:12px;
-            padding:12px;
-            font-size:12px;
-            line-height:1.8;
-            margin-top:12px;
-        }
-
-        @media(max-width:650px){
-            .grid{ grid-template-columns:1fr; }
-            .hero{ padding:18px; }
-            .hero h1{ font-size:19px; }
-            .card{ padding:15px; }
-        }
-    </style>
+<style>
+*{box-sizing:border-box}
+body{
+    margin:0;
+    font-family:Tahoma,Arial,sans-serif;
+    background:#f1f5f9;
+    color:#1e293b
+}
+header{
+    background:#fff;
+    padding:14px 18px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    box-shadow:0 1px 5px #0001
+}
+header b{font-size:17px}
+a{
+    text-decoration:none;
+    color:#2563eb;
+    font-weight:bold
+}
+main{
+    width:min(700px,calc(100% - 24px));
+    margin:20px auto
+}
+.card{
+    background:#fff;
+    padding:18px;
+    border-radius:16px;
+    margin-bottom:15px;
+    box-shadow:0 2px 10px #00000008
+}
+h2{font-size:18px;margin:0 0 8px}
+h3{font-size:15px;margin:0 0 15px}
+p{
+    font-size:13px;
+    line-height:1.9;
+    color:#64748b
+}
+label{
+    display:block;
+    font-size:13px;
+    font-weight:bold;
+    margin:12px 0 6px
+}
+input,textarea{
+    width:100%;
+    padding:11px;
+    border:1px solid #cbd5e1;
+    border-radius:10px;
+    font:inherit
+}
+textarea{min-height:80px}
+button{
+    width:100%;
+    border:0;
+    border-radius:10px;
+    padding:12px;
+    margin-top:12px;
+    font:inherit;
+    font-weight:bold;
+    cursor:pointer
+}
+.blue{background:#2563eb;color:#fff}
+.green{background:#16a34a;color:#fff}
+.gray{background:#e2e8f0;color:#334155}
+button:disabled{opacity:.6}
+.msg{
+    display:none;
+    padding:11px;
+    border-radius:10px;
+    margin-bottom:15px;
+    font-size:13px;
+    font-weight:bold;
+    line-height:1.8
+}
+.success{display:block;background:#dcfce7;color:#166534}
+.error{display:block;background:#fee2e2;color:#991b1b}
+.hidden{display:none!important}
+.row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px
+}
+pre{
+    direction:ltr;
+    text-align:left;
+    white-space:pre-wrap;
+    word-break:break-word;
+    background:#0f172a;
+    color:#e2e8f0;
+    padding:13px;
+    border-radius:10px;
+    font-size:11px;
+    line-height:1.7
+}
+@media(max-width:600px){
+    .row{grid-template-columns:1fr}
+}
+</style>
 </head>
 
 <body>
 
 <header>
-    <div class="brand">
-        <div class="brand-icon">🌐</div>
-        <span>مشتری‌یار</span>
-    </div>
-    <a href="dashboard.html" class="back-btn">← داشبورد</a>
+    <b>🌐 مشتری‌یار</b>
+    <a href="dashboard.html">← داشبورد</a>
 </header>
 
+<main id="loading">
+    <div class="card">
+        در حال بررسی حساب...
+    </div>
+</main>
 
-<div id="loading" class="loading">⏳ در حال بررسی حساب...</div>
+<main id="app" class="hidden">
 
+    <div id="message" class="msg"></div>
 
-<main id="main" class="container hidden">
-
-    <section class="hero">
-        <h1>🌐 دستیار هوشمند وب‌سایت</h1>
+    <section class="card">
+        <h2>🌐 اتصال وب‌سایت</h2>
         <p>
-            وب‌سایت خود را به مشتری‌یار متصل کنید و یک دستیار هوشمند برای
-            پاسخ‌گویی، معرفی محصولات و کمک به فروش ایجاد کنید.
-        </p>
-    </section>
-
-    <div id="message" class="message"></div>
-
-    <section class="card">
-        <div class="card-title">⚙️ تنظیمات وب‌سایت</div>
-
-        <div class="field">
-            <label>نام کسب‌وکار</label>
-            <input id="businessName" type="text" placeholder="مثلاً فروشگاه موبایل من">
-        </div>
-
-        <div class="field">
-            <label>آدرس وب‌سایت</label>
-            <input id="websiteUrl" type="url" placeholder="https://example.com">
-        </div>
-
-        <div class="field">
-            <label>پیام خوشامدگویی دستیار</label>
-            <textarea id="welcomeMessage" placeholder="سلام 👋 چطور می‌توانم به شما کمک کنم؟"></textarea>
-        </div>
-
-        <div class="grid">
-            <div class="field">
-                <label>رنگ اصلی دستیار</label>
-                <div class="color-row">
-                    <input id="agentColor" type="color" value="#2563eb">
-                    <span id="colorValue" style="font-size:13px;color:#64748b;">#2563eb</span>
-                </div>
-            </div>
-
-            <div class="field">
-                <label>عنوان دستیار</label>
-                <input id="agentTitle" type="text" placeholder="دستیار هوشمند">
-            </div>
-        </div>
-    </section>
-
-    <section class="card">
-        <div class="card-title">🤖 وضعیت دستیار</div>
-
-        <div class="status-box">
-            <div class="status-info">
-                <strong>فعال بودن دستیار وب‌سایت</strong>
-                <span id="statusText">دستیار غیرفعال است</span>
-            </div>
-
-            <label class="switch">
-                <input id="agentEnabled" type="checkbox">
-                <span class="slider"></span>
-            </label>
-        </div>
-
-        <button id="saveBtn" class="btn btn-blue" type="button">💾 ذخیره تنظیمات</button>
-    </section>
-
-    <section class="card">
-        <div class="card-title">👁️ پیش‌نمایش دستیار</div>
-
-        <div class="preview">
-            <div class="preview-title">نمای تقریبی دستیار در وب‌سایت شما</div>
-
-            <div class="fake-widget">
-                <div id="previewHead" class="fake-head">🤖 دستیار هوشمند</div>
-
-                <div class="fake-body">
-                    <div id="previewMessage" class="fake-message">
-                        سلام 👋 چطور می‌توانم به شما کمک کنم؟
-                    </div>
-                    <div class="fake-input">پیام خود را بنویسید...</div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="card">
-        <div class="card-title">🔌 کد اتصال وب‌سایت</div>
-
-        <p class="hint" style="margin-top:-7px;margin-bottom:12px;">
-            این کد در مرحله اتصال واقعی، داخل سایت شما قرار می‌گیرد.
-            کد مخصوص حساب شما تولید می‌شود.
+            وب‌سایت خود را به مشتری‌یار متصل کنید و دستیار هوشمند فروش
+            را روی سایت فعال کنید.
         </p>
 
-        <div class="code-box">
-            <pre id="embedCode"></pre>
+        <label>نام کسب‌وکار</label>
+        <input id="businessName" placeholder="مثلاً فروشگاه من">
+
+        <label>آدرس وب‌سایت</label>
+        <input id="websiteUrl"
+               type="url"
+               placeholder="https://example.com">
+
+        <label>عنوان دستیار</label>
+        <input id="agentTitle"
+               placeholder="دستیار هوشمند">
+
+        <label>پیام خوشامدگویی</label>
+        <textarea id="welcomeMessage"
+                  placeholder="سلام 👋 چطور می‌توانم کمکتان کنم؟"></textarea>
+
+        <div class="row">
+            <div>
+                <label>رنگ دستیار</label>
+                <input id="agentColor"
+                       type="color"
+                       value="#2563eb"
+                       style="height:45px;padding:3px">
+            </div>
+
+            <div>
+                <label>وضعیت</label>
+                <button id="enableBtn"
+                        class="gray"
+                        type="button">
+                    فعال کردن
+                </button>
+            </div>
         </div>
 
-        <div class="grid">
-            <button id="generateBtn" class="btn btn-gray" type="button">🔄 تولید کد</button>
-            <button id="copyBtn" class="btn btn-green" type="button">📋 کپی کد اتصال</button>
-        </div>
+        <button id="saveBtn"
+                class="blue"
+                type="button">
+            💾 ذخیره تنظیمات
+        </button>
+    </section>
 
-        <div class="danger-note">
-            ⚠️ این کد را فقط در وب‌سایتی قرار دهید که متعلق به خودتان است.
-            در مرحله بعد، اتصال واقعی، نمایش محصولات و پاسخ‌گویی هوشمند
-            را به این بخش اضافه می‌کنیم.
+    <section class="card">
+        <h3>🟢 نصب آسان وردپرس</h3>
+
+        <p>
+            با این گزینه افزونه مخصوص حساب شما ساخته و دانلود می‌شود.
+        </p>
+
+        <button id="wordpressBtn"
+                class="green"
+                type="button">
+            🟢 اتصال و دریافت افزونه وردپرس
+        </button>
+
+        <div id="wordpressBox"
+             class="msg"
+             style="margin-top:12px;margin-bottom:0">
         </div>
     </section>
 
     <section class="card">
-        <div class="card-title">🚀 مراحل راه‌اندازی</div>
+        <h3>🔌 کد اتصال مستقیم</h3>
 
-        <div style="font-size:13px;line-height:2.1;color:#475569;">
-            <div>1️⃣ اطلاعات کسب‌وکار و سایت را وارد کنید.</div>
-            <div>2️⃣ دستیار را فعال کنید.</div>
-            <div>3️⃣ تنظیمات را ذخیره کنید.</div>
-            <div>4️⃣ کد اتصال مخصوص سایت تولید می‌شود.</div>
-            <div>5️⃣ در مرحله بعد اتصال واقعی به سایت را فعال می‌کنیم.</div>
-        </div>
+        <pre id="embedCode"></pre>
+
+        <button id="copyBtn"
+                class="gray"
+                type="button">
+            📋 کپی کد اتصال
+        </button>
     </section>
 
 </main>
 
-  <!-- کد اتصال -->
-<!-- نصب آسان وردپرس -->
-<section class="card">
+<script type="module">
 
-    <div class="title">🟢 نصب آسان وردپرس</div>
+import { supabase } from "./js/supabase.js";
 
-    <p style="color:#64748e;font-size:13px;line-height:1.8;margin-bottom:14px;">
-        اگر وب‌سایت شما با وردپرس ساخته شده است، می‌توانید افزونه مشتری‌یار را به‌سادگی نصب و به حساب خود متصل کنید.
-    </p>
+const $ = id => document.getElementById(id);
 
-    <button
-        id="wordpressBtn"
-        class="btn-main"
-        type="button"
-        style="width:100%;">
-        🟢 شروع نصب آسان وردپرس
-    </button>
+let me = null;
+let enabled = false;
 
-    <div
-        id="wordpressBox"
-        class="message"
-        style="display:none;margin-top:14px;">
-    </div>
-
-</section>
-
-<script type="module">  
-
-    // ===== اتصال به Supabase =====
-    import { supabase } from "./js/supabase.js";
-
-    const supabaseClient = supabase;
-
-    let me = null;
-const $ = (id) => document.getElementById(id);
-
-
-// ===== ۳) پیام‌ها =====
-function showMessage(text, type = "info"){
+function message(text,type="success"){
     const box = $("message");
-    box.className = "message " + type;
+    box.className = "msg " + type;
     box.textContent = text;
 }
 
-function hideMessage(){
-    const box = $("message");
-    box.className = "message";
-    box.textContent = "";
+function wordpressMessage(text,type="success"){
+    const box = $("wordpressBox");
+    box.className = "msg " + type;
+    box.textContent = text;
 }
 
-
-// ===== ۴) خواندن و اعمال تنظیمات =====
-function getConfig(){
+function config(){
     return {
-        businessName: $("businessName").value.trim(),
-        websiteUrl: $("websiteUrl").value.trim(),
-        welcomeMessage: $("welcomeMessage").value.trim(),
-        agentColor: $("agentColor").value,
-        agentTitle: $("agentTitle").value.trim(),
-        enabled: $("agentEnabled").checked
+        businessName:$("businessName").value.trim(),
+        websiteUrl:$("websiteUrl").value.trim(),
+        agentTitle:
+            $("agentTitle").value.trim() ||
+            "دستیار هوشمند",
+        welcomeMessage:
+            $("welcomeMessage").value.trim() ||
+            "سلام 👋 چطور می‌توانم کمکتان کنم؟",
+        agentColor:$("agentColor").value,
+        enabled
     };
 }
 
-function applyConfig(config){
-    $("businessName").value = config.businessName || "";
-    $("websiteUrl").value = config.websiteUrl || "";
-    $("welcomeMessage").value =
-        config.welcomeMessage || "سلام 👋 چطور می‌توانم به شما کمک کنم؟";
-    $("agentColor").value = config.agentColor || "#2563eb";
-    $("agentTitle").value = config.agentTitle || "دستیار هوشمند";
-    $("agentEnabled").checked = config.enabled === true;
+function generateCode(){
 
-    updateStatus();
-    updatePreview();
-    generateEmbedCode();
-}
+    const c = config();
 
-
-// ===== ۵) به‌روزرسانی UI =====
-function updateStatus(){
-    if($("agentEnabled").checked){
-        $("statusText").textContent = "دستیار فعال است";
-    }else{
-        $("statusText").textContent = "دستیار غیرفعال است";
-    }
-}
-
-function updatePreview(){
-    const color = $("agentColor").value || "#2563eb";
-    const title = $("agentTitle").value.trim() || "دستیار هوشمند";
-    const welcome = $("welcomeMessage").value.trim() ||
-                    "سلام 👋 چطور می‌توانم به شما کمک کنم؟";
-
-    $("previewHead").style.background = color;
-    $("previewHead").textContent = "🤖 " + title;
-    $("previewMessage").textContent = welcome;
-    $("colorValue").textContent = color;
-}
-
-function generateEmbedCode(){
-    const websiteUrl = $("websiteUrl").value.trim();
-
-    const code =
-`<!-- مشتری‌یار | AI Website Assistant -->
+    $("embedCode").textContent =
+`<!-- مشتری‌یار -->
 <script
-    src="https://moshtriyar.vercel.app/api/website-agent.js"
-    data-user-id="${me ? me.id : "YOUR_USER_ID"}"
-    data-site="${websiteUrl || "YOUR_WEBSITE_URL"}"
-    data-color="${$("agentColor").value}"
-    data-title="${$("agentTitle").value.trim() || "دستیار هوشمند"}"
-    data-enabled="${$("agentEnabled").checked}">
-<\/script>
-<!-- پایان کد مشتری‌یار -->`;
+src="https://moshtriyar.vercel.app/api/website-agent.js"
+data-user-id="${me?.id || ""}"
+data-site="${c.websiteUrl}"
+data-color="${c.agentColor}"
+data-title="${c.agentTitle}"
+data-enabled="${c.enabled}">
+<\/script>`;
 
-    $("embedCode").textContent = code;
 }
 
+async function load(){
 
-// ===== ۶) رویدادها =====
-$("agentColor").addEventListener("input", () => {
-    updatePreview();
-    generateEmbedCode();
-});
+    const {
+        data:{session}
+    } = await supabase.auth.getSession();
 
-$("agentTitle").addEventListener("input", () => {
-    updatePreview();
-    generateEmbedCode();
-});
+    if(!session){
 
-$("welcomeMessage").addEventListener("input", () => {
-    updatePreview();
-});
+        location.href = "login.html";
+        return;
 
-$("agentEnabled").addEventListener("change", () => {
-    updateStatus();
-    generateEmbedCode();
-});
+    }
 
-$("websiteUrl").addEventListener("input", () => {
-    generateEmbedCode();
-});
+    me = session.user;
 
-$("generateBtn").onclick = () => {
-    generateEmbedCode();
-    showMessage("کد اتصال تولید شد.", "success");
+    const saved =
+        me.user_metadata?.website_agent || {};
+
+    $("businessName").value =
+        saved.businessName || "";
+
+    $("websiteUrl").value =
+        saved.websiteUrl || "";
+
+    $("agentTitle").value =
+        saved.agentTitle || "دستیار هوشمند";
+
+    $("welcomeMessage").value =
+        saved.welcomeMessage ||
+        "سلام 👋 چطور می‌توانم کمکتان کنم؟";
+
+    $("agentColor").value =
+        saved.agentColor || "#2563eb";
+
+    enabled = saved.enabled === true;
+
+    $("enableBtn").textContent =
+        enabled ? "🟢 دستیار فعال است" : "فعال کردن";
+
+    generateCode();
+
+    $("loading").classList.add("hidden");
+    $("app").classList.remove("hidden");
+}
+
+$("enableBtn").onclick = () => {
+
+    enabled = !enabled;
+
+    $("enableBtn").textContent =
+        enabled
+            ? "🟢 دستیار فعال است"
+            : "دستیار غیرفعال است";
+
+    generateCode();
+
 };
-// ===== اتصال واقعی وردپرس =====
+
+$("saveBtn").onclick = async () => {
+
+    if(!me) return;
+
+    const c = config();
+
+    if(!c.websiteUrl){
+
+        message(
+            "آدرس وب‌سایت را وارد کنید.",
+            "error"
+        );
+
+        return;
+    }
+
+    $("saveBtn").disabled = true;
+    $("saveBtn").textContent = "⏳ در حال ذخیره...";
+
+    try{
+
+        const {
+            error
+        } =
+        await supabase.auth.updateUser({
+            data:{
+                website_agent:c
+            }
+        });
+
+        if(error) throw error;
+
+        message(
+            "✅ تنظیمات با موفقیت ذخیره شد.",
+            "success"
+        );
+
+        generateCode();
+
+    }catch(error){
+
+        console.error(error);
+
+        message(
+            "❌ ذخیره تنظیمات انجام نشد.",
+            "error"
+        );
+
+    }finally{
+
+        $("saveBtn").disabled = false;
+        $("saveBtn").textContent =
+            "💾 ذخیره تنظیمات";
+
+    }
+
+};
+
 $("wordpressBtn").onclick = async () => {
 
     if(!me){
 
-        showMessage(
+        wordpressMessage(
             "کاربر وارد حساب نشده است.",
             "error"
         );
@@ -597,7 +393,7 @@ $("wordpressBtn").onclick = async () => {
 
     if(!siteUrl){
 
-        showMessage(
+        wordpressMessage(
             "ابتدا آدرس وب‌سایت را وارد کنید.",
             "error"
         );
@@ -605,105 +401,135 @@ $("wordpressBtn").onclick = async () => {
         return;
     }
 
-    const button =
-        $("wordpressBtn");
-
-    const box =
-        $("wordpressBox");
+    const button = $("wordpressBtn");
 
     button.disabled = true;
-    button.textContent =
-        "⏳ در حال ایجاد اتصال...";
-
-    box.style.display = "none";
 
     try{
 
+        wordpressMessage(
+            "⏳ در حال ایجاد اتصال امن...",
+            "success"
+        );
+
         const {
-            data: {
-                session
-            }
-        } =
-            await supabaseClient.auth.getSession();
+            data:{session}
+        } = await supabase.auth.getSession();
 
-        if(!session){
+        if(!session)
+            throw new Error("جلسه ورود منقضی شده است.");
 
-            throw new Error(
-                "جلسه ورود منقضی شده است."
-            );
-
-        }
-
-        const response =
+        const connect =
             await fetch(
                 "/api/wordpress-connect",
                 {
-                    method: "POST",
-
-                    headers: {
+                    method:"POST",
+                    headers:{
                         "Content-Type":
                             "application/json",
-
                         "Authorization":
                             "Bearer " +
                             session.access_token
                     },
-
-                    body: JSON.stringify({
-                        siteUrl: siteUrl
+                    body:JSON.stringify({
+                        siteUrl
                     })
                 }
             );
 
-        const result =
-            await response.json();
+        const connection =
+            await connect.json();
 
-        if(!response.ok){
+        if(!connect.ok)
+            throw new Error(
+                connection.error ||
+                "ایجاد اتصال انجام نشد."
+            );
+
+        wordpressMessage(
+            "⏳ در حال ساخت افزونه...",
+            "success"
+        );
+
+        const plugin =
+            await fetch(
+                "/api/wordpress-plugin",
+                {
+                    method:"POST",
+                    headers:{
+                        "Content-Type":
+                            "application/json",
+                        "Authorization":
+                            "Bearer " +
+                            session.access_token
+                    },
+                    body:JSON.stringify({
+                        token:connection.token,
+                        siteUrl:connection.siteUrl
+                    })
+                }
+            );
+
+        if(!plugin.ok){
+
+            let result = {};
+
+            try{
+                result = await plugin.json();
+            }catch{}
 
             throw new Error(
                 result.error ||
-                "ایجاد اتصال انجام نشد."
+                "ساخت افزونه انجام نشد."
             );
 
         }
 
-        window.wordpressConnection =
-            result;
+        const blob =
+            await plugin.blob();
 
-        box.className =
-            "message success";
+        if(!blob.size)
+            throw new Error(
+                "فایل افزونه خالی است."
+            );
 
-        box.style.display =
-            "block";
+        const url =
+            URL.createObjectURL(blob);
 
-        box.textContent =
-            "✅ اتصال امن آماده شد.";
+        const a =
+            document.createElement("a");
 
-        button.textContent =
-            "📦 دریافت افزونه وردپرس";
+        a.href = url;
+        a.download =
+            "moshtriyar-ai-agent.zip";
+
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        setTimeout(
+            () => URL.revokeObjectURL(url),
+            3000
+        );
+
+        wordpressMessage(
+            "✅ افزونه با موفقیت آماده و دانلود شد.",
+            "success"
+        );
 
     }catch(error){
 
         console.error(
-            "WordPress connection:",
+            "WordPress:",
             error
         );
 
-        box.className =
-            "message error";
-
-        box.style.display =
-            "block";
-
-        box.textContent =
+        wordpressMessage(
             "❌ " +
-            (
-                error.message ||
-                "خطا در ایجاد اتصال."
-            );
-
-        button.textContent =
-            "🟢 شروع نصب آسان وردپرس";
+            (error.message ||
+            "دریافت افزونه انجام نشد."),
+            "error"
+        );
 
     }finally{
 
@@ -712,28 +538,19 @@ $("wordpressBtn").onclick = async () => {
     }
 
 };
-$("copyBtn").onclick = async () => {
-    const code = $("embedCode").textContent;
 
-    if(!code){
-        showMessage("ابتدا کد اتصال را تولید کنید.", "error");
-        return;
-    }
-
-    try{
-        await navigator.clipboard.writeText(code);
-        showMessage("کد اتصال با موفقیت کپی شد.", "success");
-    }catch(error){
-        console.error(error);
-        showMessage("کپی کد انجام نشد. کد را دستی انتخاب و کپی کنید.", "error");
-    }
-};
 $("copyBtn").onclick = async () => {
 
-    const code = $("embedCode").textContent;
+    const code =
+        $("embedCode").textContent;
 
     if(!code){
-        showMessage("ابتدا کد اتصال را تولید کنید.", "error");
+
+        message(
+            "کدی برای کپی وجود ندارد.",
+            "error"
+        );
+
         return;
     }
 
@@ -748,32 +565,27 @@ $("copyBtn").onclick = async () => {
 
         }else{
 
-            const textarea =
+            const area =
                 document.createElement("textarea");
 
-            textarea.value = code;
+            area.value = code;
+            area.style.position = "fixed";
+            area.style.opacity = "0";
 
-            textarea.style.position = "fixed";
-            textarea.style.opacity = "0";
+            document.body.appendChild(area);
 
-            document.body.appendChild(textarea);
+            area.focus();
+            area.select();
 
-            textarea.focus();
-            textarea.select();
+            if(!document.execCommand("copy"))
+                throw new Error("copy failed");
 
-            const success =
-                document.execCommand("copy");
-
-            textarea.remove();
-
-            if(!success){
-                throw new Error("Copy failed");
-            }
+            area.remove();
 
         }
 
-        showMessage(
-            "✅ کد اتصال با موفقیت کپی شد.",
+        message(
+            "✅ کد با موفقیت کپی شد.",
             "success"
         );
 
@@ -781,8 +593,8 @@ $("copyBtn").onclick = async () => {
 
         console.error(error);
 
-        showMessage(
-            "کپی خودکار انجام نشد؛ کد را دستی انتخاب و کپی کنید.",
+        message(
+            "❌ کپی انجام نشد.",
             "error"
         );
 
@@ -790,125 +602,24 @@ $("copyBtn").onclick = async () => {
 
 };
 
-// ===== ۷) دکمه ذخیره =====
-$("saveBtn").onclick = async () => {
+[
+    "businessName",
+    "websiteUrl",
+    "agentTitle",
+    "welcomeMessage",
+    "agentColor"
+].forEach(id => {
 
-    if(!me){
-        showMessage("کاربر وارد حساب نشده است.", "error");
-        return;
-    }
+    $(id).addEventListener(
+        "input",
+        generateCode
+    );
 
-    const config = getConfig();
+});
 
-    if(!config.businessName){
-        showMessage("نام کسب‌وکار را وارد کنید.", "error");
-        return;
-    }
-
-    if(!config.websiteUrl){
-        showMessage("آدرس وب‌سایت را وارد کنید.", "error");
-        return;
-    }
-
-    $("saveBtn").disabled = true;
-    $("saveBtn").textContent = "⏳ در حال ذخیره...";
-
-    try{
-        const { error } = await supabaseClient
-            .from("website_agent_settings")
-            .upsert({
-                user_id: me.id,
-                business_name: config.businessName,
-                website_url: config.websiteUrl,
-                welcome_message: config.welcomeMessage,
-                agent_color: config.agentColor,
-                agent_title: config.agentTitle,
-                enabled: config.enabled,
-                updated_at: new Date().toISOString()
-            }, {
-                onConflict: "user_id"
-            });
-
-        if(error){
-            console.error(error);
-            showMessage("ذخیره انجام نشد: " + error.message, "error");
-        }else{
-            showMessage("✅ تنظیمات ذخیره شد.", "success");
-        }
-
-    }catch(err){
-        console.error(err);
-        showMessage("خطای غیرمنتظره رخ داد.", "error");
-    }finally{
-        $("saveBtn").disabled = false;
-        $("saveBtn").textContent = "💾 ذخیره تنظیمات";
-    }
-};
-
-
-// ===== ۸) راه‌اندازی اولیه =====
-async function init(){
-    try{
-
-        // چک کن کاربر لاگین هست
-        const { data: { user }, error } = await supabaseClient.auth.getUser();
-
-        if(error || !user){
-            // لاگین نیست → برو صفحه لاگین
-            location.href = "login.html";
-            return;
-        }
-
-        me = user;
-
-        // تنظیمات قبلی رو بخون (اگه جدول نباشه، خطا رو نادیده می‌گیریم)
-        try{
-            const { data: config, error: dbError } = await supabaseClient
-                .from("website_agent_settings")
-                .select("*")
-                .eq("user_id", me.id)
-                .maybeSingle();
-
-            if(dbError){
-                console.warn("خواندن تنظیمات:", dbError.message);
-            }
-
-            if(config){
-                applyConfig({
-                    businessName: config.business_name,
-                    websiteUrl: config.website_url,
-                    welcomeMessage: config.welcome_message,
-                    agentColor: config.agent_color,
-                    agentTitle: config.agent_title,
-                    enabled: config.enabled
-                });
-            }else{
-                updateStatus();
-                updatePreview();
-                generateEmbedCode();
-            }
-        }catch(dbErr){
-            console.warn("DB error:", dbErr);
-            updateStatus();
-            updatePreview();
-            generateEmbedCode();
-        }
-
-        // صفحه رو نشون بده
-        $("loading").classList.add("hidden");
-        $("main").classList.remove("hidden");
-
-    }catch(err){
-        console.error("خطای راه‌اندازی:", err);
-        $("loading").innerHTML =
-            "❌ خطا در بارگذاری.<br><small>کنسول مرورگر را ببین.</small>";
-    }
-}
-
-init();
+load();
 
 </script>
 
 </body>
 </html>
-
