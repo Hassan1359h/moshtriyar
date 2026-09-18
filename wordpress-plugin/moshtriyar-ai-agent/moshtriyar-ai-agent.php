@@ -332,13 +332,17 @@ register_activation_hook(
 
 function moshtriyar_add_agent() {
 
+    if (is_admin()) {
+        return;
+    }
+
     $status =
         get_option(
             'moshtriyar_connection_status',
             ''
         );
 
-    $userId =
+    $user_id =
         get_option(
             'moshtriyar_user_id',
             ''
@@ -346,36 +350,29 @@ function moshtriyar_add_agent() {
 
     if (
         $status !== 'connected' ||
-        !$userId
+        !$user_id
     ) {
         return;
     }
 
+    $site_url =
+        home_url('/');
+
     echo '<script
-        src="https://moshtriyar.vercel.app/api/website-agent.js"
+        src="https://moshtriyar.vercel.app/api/website-agent.js?v=1.0.1"
         data-user-id="' .
-        esc_attr($userId) .
-        '"
+        esc_attr($user_id) . '"
         data-site="' .
-        esc_url(home_url('/')) .
-        '"
+        esc_attr($site_url) . '"
         data-enabled="true">
     </script>';
 }
 
 add_action(
-    'wp_footer',
+    'wp_head',
     'moshtriyar_add_agent',
     100
 );
-`;
-
-        const finalPlugin =
-            pluginCode.replace(
-                /__CONNECTION_TOKEN__/g,
-                token
-            );
-
         /* ===== ساخت ZIP ===== */
 
         const zip =
