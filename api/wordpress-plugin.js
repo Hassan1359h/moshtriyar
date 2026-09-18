@@ -364,11 +364,10 @@ function moshtriyar_add_agent() {
 }
 
 add_action(
-    'wp_footer',
+    'wp_head',
     'moshtriyar_add_agent',
     100
 );
-`;
 
         const finalPlugin =
             pluginCode.replace(
