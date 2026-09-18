@@ -21,11 +21,8 @@ function hashToken(token) {
 }
 
 function normalizeOrigin(value) {
-
     try {
-
-        const url =
-            new URL(String(value || "").trim());
+        const url = new URL(String(value || "").trim());
 
         if (
             url.protocol !== "http:" &&
@@ -35,9 +32,7 @@ function normalizeOrigin(value) {
         }
 
         return url.origin;
-
     } catch {
-
         return null;
     }
 }
@@ -45,26 +40,20 @@ function normalizeOrigin(value) {
 export default async function handler(req, res) {
 
     if (req.method !== "POST") {
-
         return res.status(405).json({
             error: "Method Not Allowed"
         });
-
     }
 
     try {
-
-        /* ===== احراز هویت مشتری‌یار ===== */
 
         const auth =
             req.headers.authorization || "";
 
         if (!auth.startsWith("Bearer ")) {
-
             return res.status(401).json({
                 error: "Unauthorized"
             });
-
         }
 
         const accessToken =
@@ -79,14 +68,10 @@ export default async function handler(req, res) {
             );
 
         if (userError || !user) {
-
             return res.status(401).json({
                 error: "Unauthorized"
             });
-
         }
-
-        /* ===== اطلاعات اتصال ===== */
 
         const token =
             String(
@@ -99,33 +84,25 @@ export default async function handler(req, res) {
             ).trim();
 
         if (!token) {
-
             return res.status(400).json({
                 error: "Missing connection token"
             });
-
         }
 
         if (!siteUrl) {
-
             return res.status(400).json({
                 error: "Missing site URL"
             });
-
         }
 
         const requestedOrigin =
             normalizeOrigin(siteUrl);
 
         if (!requestedOrigin) {
-
             return res.status(400).json({
                 error: "Invalid site URL"
             });
-
         }
-
-        /* ===== بررسی توکن ===== */
 
         const tokenHash =
             hashToken(token);
@@ -156,36 +133,29 @@ export default async function handler(req, res) {
                 error:
                     "Connection lookup failed"
             });
-
         }
 
         if (!connection) {
-
             return res.status(401).json({
                 error:
                     "Invalid connection token"
             });
-
         }
 
         if (
             connection.user_id !== user.id
         ) {
-
             return res.status(403).json({
                 error:
                     "Connection does not belong to this user"
             });
-
         }
 
         if (connection.used_at) {
-
             return res.status(409).json({
                 error:
                     "Connection token has already been used"
             });
-
         }
 
         if (
@@ -194,12 +164,10 @@ export default async function handler(req, res) {
                 connection.expires_at
             ).getTime() <= Date.now()
         ) {
-
             return res.status(410).json({
                 error:
                     "Connection token has expired"
             });
-
         }
 
         const configuredOrigin =
@@ -212,15 +180,13 @@ export default async function handler(req, res) {
             configuredOrigin.toLowerCase() !==
             requestedOrigin.toLowerCase()
         ) {
-
             return res.status(403).json({
                 error:
                     "Website is not authorized"
             });
-
         }
 
-        /* ===== قالب واقعی افزونه ===== */
+        /* ===== ساخت کد افزونه ===== */
 
         const pluginCode = `<?php
 
@@ -284,6 +250,11 @@ function moshtriyar_activate_plugin() {
             'error'
         );
 
+        update_option(
+            'moshtriyar_connection_message',
+            $response->get_error_message()
+        );
+
         return;
     }
 
@@ -316,11 +287,24 @@ function moshtriyar_activate_plugin() {
             )
         );
 
+        update_option(
+            'moshtriyar_connection_message',
+            'اتصال با موفقیت انجام شد.'
+        );
+
     } else {
 
         update_option(
             'moshtriyar_connection_status',
             'error'
+        );
+
+        update_option(
+            'moshtriyar_connection_message',
+            sanitize_text_field(
+                $body['error'] ??
+                'اتصال انجام نشد.'
+            )
         );
     }
 }
@@ -331,6 +315,10 @@ register_activation_hook(
 );
 
 function moshtriyar_add_agent() {
+
+    if (is_admin()) {
+        return;
+    }
 
     $status =
         get_option(
@@ -351,13 +339,16 @@ function moshtriyar_add_agent() {
         return;
     }
 
+    $siteUrl =
+        home_url('/');
+
     echo '<script
-        src="https://moshtriyar.vercel.app/api/website-agent.js"
+        src="https://moshtriyar.vercel.app/api/website-agent.js?v=1.0.1"
         data-user-id="' .
         esc_attr($userId) .
         '"
         data-site="' .
-        esc_url(home_url('/')) .
+        esc_attr($siteUrl) .
         '"
         data-enabled="true">
     </script>';
@@ -368,6 +359,47 @@ add_action(
     'moshtriyar_add_agent',
     100
 );
+
+function moshtriyar_admin_notice() {
+
+    if (!current_user_can('manage_options')) {
+        return;
+    }
+
+    $status =
+        get_option(
+            'moshtriyar_connection_status',
+            ''
+        );
+
+    if ($status === 'connected') {
+
+        echo '<div class="notice notice-success is-dismissible">
+            <p>✅ مشتری‌یار با موفقیت به این سایت متصل است.</p>
+        </div>';
+
+    } elseif ($status === 'error') {
+
+        $message =
+            get_option(
+                'moshtriyar_connection_message',
+                'اتصال انجام نشد.'
+            );
+
+        echo '<div class="notice notice-error">
+            <p>❌ اتصال مشتری‌یار انجام نشد: ' .
+            esc_html($message) .
+            '</p>
+        </div>';
+    }
+}
+
+add_action(
+    'admin_notices',
+    'moshtriyar_admin_notice'
+);
+
+`;
 
         const finalPlugin =
             pluginCode.replace(
@@ -394,7 +426,7 @@ add_action(
             "readme.txt",
 `=== Moshtriyar AI Agent ===
 
-نسخه: 1.0.0
+نسخه: 1.0.1
 
 افزونه اتصال خودکار سایت وردپرسی
 به مشتری‌یار.
@@ -449,6 +481,5 @@ add_action(
             error:
                 "Internal Server Error"
         });
-
     }
 }
