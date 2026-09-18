@@ -559,11 +559,6 @@ function moshtriyar_admin_notice() {
     }
 }
 
-add_action(
-    'init',
-    'moshtriyar_admin_connection_check'
-);
-
 `;
 
         const finalPlugin =
