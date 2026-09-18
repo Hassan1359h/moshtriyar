@@ -174,8 +174,8 @@ export default async function handler(req, res) {
         const pluginPath = path.join(
             process.cwd(),
             "wordpress-plugin",
-            "moshtiyar-ai-agent",
-            "moshtiyar-ai-agent.php"
+            "moshtriyar-ai-agent",
+            "moshtiryar-ai-agent.php"
         );
 
         if (!fs.existsSync(pluginPath)) {
@@ -208,10 +208,10 @@ export default async function handler(req, res) {
         const zip = new JSZip();
 
         const folder =
-            zip.folder("moshtiyar-ai-agent");
+            zip.folder("moshtriyar-ai-agent");
 
         folder.file(
-            "moshtiyar-ai-agent.php",
+            "moshFix WordPress plugin template pathtiyar-ai-agent.php",
             pluginCode
         );
 
@@ -230,7 +230,7 @@ export default async function handler(req, res) {
 3. اتصال به‌صورت خودکار انجام می‌شود.
 
 Website:
-https://moshtiyar.vercel.app
+https://moshtriyar.vercel.app
 `
         );
 
@@ -252,7 +252,7 @@ https://moshtiyar.vercel.app
 
         res.setHeader(
             "Content-Disposition",
-            'attachment; filename="moshtiyar-ai-agent.zip"'
+            'attachment; filename="moshtriyar-ai-agent.zip"'
         );
 
         res.setHeader(
