@@ -560,6 +560,10 @@ function moshtriyar_admin_notice() {
 }
 
 `;
+        add_action(
+    'admin_notices',
+    'moshtriyar_admin_notice'
+);
 
         const finalPlugin =
             pluginCode.replace(
