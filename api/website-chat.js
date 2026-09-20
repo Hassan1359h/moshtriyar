@@ -1,18 +1,17 @@
 // ==========================================================
 // 🤖 مشتری‌یار | Website Chat API
 // مسیر: api/website-chat.js
-// مدل: Google Gemini (with multi-model fallback)
+// مدل: Google Gemini (multi-model + retry)
 // ==========================================================
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
-// 📋 لیست مدل‌ها به ترتیب اولویت — اگه یکی شلوغ بود، بعدی امتحان می‌شه
+// 📋 مدل‌هایی که واقعاً روی کلیدهای جدید کار می‌کنن
 const GEMINI_MODELS = [
   "gemini-flash-latest",
-  "gemini-2.5-flash",
   "gemini-2.0-flash",
+  "gemini-2.0-flash-001",
   "gemini-2.5-flash-lite",
-  "gemini-1.5-flash",
 ];
 
 const GEMINI_BASE_URL =
@@ -34,16 +33,12 @@ const SYSTEM_PROMPT = `تو «مشتری‌یار» هستی؛ یک دستیار
 هرگز اطلاعات نادرست یا ساختگی ارائه نده.`;
 
 export default async function handler(req, res) {
-  // 🌐 هدرهای CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
+  if (req.method === "OPTIONS") return res.status(200).end();
 
-  // ✅ فقط POST مجاز است
   if (req.method !== "POST") {
     return res.status(405).json({
       ok: false,
@@ -52,7 +47,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 🔑 بررسی کلید API
     if (!GEMINI_API_KEY) {
       console.error("❌ GEMINI_API_KEY تنظیم نشده است");
       return res.status(500).json({
@@ -62,7 +56,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // 📨 دریافت پیام و تاریخچه
     const { message, history } = req.body || {};
 
     if (!message || typeof message !== "string" || !message.trim()) {
@@ -72,11 +65,10 @@ export default async function handler(req, res) {
       });
     }
 
-    // 🧱 ساخت محتوای گفتگو
     const contents = [];
 
     if (Array.isArray(history) && history.length > 0) {
-      const trimmed = history.slice(-10); // فقط ۱۰ پیام آخر
+      const trimmed = history.slice(-10);
       for (const turn of trimmed) {
         if (
           turn &&
@@ -91,17 +83,13 @@ export default async function handler(req, res) {
       }
     }
 
-    // پیام جدید کاربر
     contents.push({
       role: "user",
       parts: [{ text: message.trim() }],
     });
 
-    // 📦 بدنه درخواست مشترک برای همه مدل‌ها
     const requestBody = {
-      systemInstruction: {
-        parts: [{ text: SYSTEM_PROMPT }],
-      },
+      systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
       contents,
       generationConfig: {
         temperature: 0.8,
@@ -117,56 +105,56 @@ export default async function handler(req, res) {
       ],
     };
 
-    // 🔁 تلاش با مدل‌های مختلف به ترتیب
+    // 🔁 تلاش با مدل‌های مختلف + Retry خودکار
     let data = null;
     let response = null;
     let usedModel = null;
     let lastError = null;
 
     for (const model of GEMINI_MODELS) {
-      try {
-        const url = `${GEMINI_BASE_URL}/${model}:generateContent`;
-        console.log(`🔄 Trying model: ${model}`);
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+          const url = `${GEMINI_BASE_URL}/${model}:generateContent`;
+          console.log(`🔄 [${model}] attempt ${attempt}`);
 
-        const r = await fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-goog-api-key": GEMINI_API_KEY,
-          },
-          body: JSON.stringify(requestBody),
-        });
+          const r = await fetch(url, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-goog-api-key": GEMINI_API_KEY,
+            },
+            body: JSON.stringify(requestBody),
+          });
 
-        const d = await r.json();
+          const d = await r.json();
 
-        // ✅ موفق بود
-        if (r.ok && d?.candidates?.[0]?.content?.parts) {
-          response = r;
-          data = d;
-          usedModel = model;
-          console.log(`✅ Success with model: ${model}`);
+          if (r.ok && d?.candidates?.[0]?.content?.parts) {
+            response = r;
+            data = d;
+            usedModel = model;
+            console.log(`✅ Success: ${model} (attempt ${attempt})`);
+            break;
+          }
+
+          if ((r.status === 503 || r.status === 429) && attempt === 1) {
+            console.warn(`⏳ ${model} busy (${r.status}), retrying in 1s...`);
+            await new Promise((res) => setTimeout(res, 1000));
+            lastError = d?.error?.message || `Status ${r.status}`;
+            continue;
+          }
+
+          console.warn(`⚠️ ${model} failed (${r.status}): ${d?.error?.message}`);
+          lastError = d?.error?.message || `Status ${r.status}`;
+          break;
+        } catch (err) {
+          console.warn(`❌ ${model} exception:`, err.message);
+          lastError = err.message;
           break;
         }
-
-        // 🔄 خطای 503 یا 429 → برو مدل بعدی
-        if (r.status === 503 || r.status === 429) {
-          console.warn(`⏭️ Model ${model} unavailable (${r.status}), trying next...`);
-          lastError = d?.error?.message || `Status ${r.status}`;
-          continue;
-        }
-
-        // ❌ خطای دیگه (مثل 404 یا 400) → همون رو ثبت کن، برو بعدی
-        console.warn(`⚠️ Model ${model} error (${r.status}):`, d?.error?.message);
-        lastError = d?.error?.message || `Status ${r.status}`;
-        continue;
-      } catch (err) {
-        console.warn(`❌ Model ${model} exception:`, err.message);
-        lastError = err.message;
-        continue;
       }
+      if (data) break;
     }
 
-    // 🚫 هیچ مدلی جواب نداد
     if (!data || !response) {
       return res.status(200).json({
         ok: false,
@@ -176,14 +164,12 @@ export default async function handler(req, res) {
       });
     }
 
-    // 🧹 استخراج پاسخ
     const reply =
       data?.candidates?.[0]?.content?.parts
         ?.map((p) => p.text || "")
         .join("")
         .trim() || "";
 
-    // 🔍 بررسی دلایل مسدود شدن
     const finishReason = data?.candidates?.[0]?.finishReason;
     if (!reply && finishReason === "SAFETY") {
       return res.status(200).json({
@@ -201,7 +187,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // ✅ پاسخ موفق
     return res.status(200).json({
       ok: true,
       reply,
