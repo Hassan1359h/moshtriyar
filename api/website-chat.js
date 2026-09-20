@@ -1,40 +1,30 @@
 import { createClient } from "@supabase/supabase-js";
 
-const SUPABASE_URL =
-    process.env.SUPABASE_URL;
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
-const SUPABASE_SERVICE_ROLE_KEY =
-    process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-const GEMINI_API_KEY =
-    process.env.GEMINI_API_KEY;
-
+function getOrigin(value) {
+    try {
+        return new URL(String(value || "").trim()).origin.toLowerCase();
+    } catch {
+        return "";
+    }
+}
 
 export default async function handler(req, res) {
 
     if (req.method !== "POST") {
-
-        res.status(405).json({
+        return res.status(405).json({
             error: "Method Not Allowed"
         });
-
-        return;
     }
 
-
-    if (
-        !SUPABASE_URL ||
-        !SUPABASE_SERVICE_ROLE_KEY ||
-        !GEMINI_API_KEY
-    ) {
-
-        res.status(500).json({
+    if (!SUPABASE_URL || !SUPABASE_KEY || !GEMINI_API_KEY) {
+        return res.status(500).json({
             error: "Server configuration error"
         });
-
-        return;
     }
-
 
     try {
 
@@ -44,167 +34,165 @@ export default async function handler(req, res) {
             message
         } = req.body || {};
 
+        const uid = String(userId || "").trim();
+        const website = String(site || "").trim();
+        const question = String(message || "").trim();
 
-        const cleanUserId =
-            String(userId || "").trim();
-
-        const cleanSite =
-            String(site || "").trim();
-
-        const cleanMessage =
-            String(message || "").trim();
-
-
-        if (!cleanUserId) {
-
-            res.status(400).json({
+        if (!uid) {
+            return res.status(400).json({
                 error: "Missing userId"
             });
-
-            return;
         }
 
-
-        if (!cleanMessage) {
-
-            res.status(400).json({
+        if (!question) {
+            return res.status(400).json({
                 error: "Missing message"
             });
-
-            return;
         }
 
-
-        if (cleanMessage.length > 2000) {
-
-            res.status(400).json({
+        if (question.length > 2000) {
+            return res.status(400).json({
                 error: "Message is too long"
             });
-
-            return;
         }
 
-
-        const supabaseAdmin =
-            createClient(
-                SUPABASE_URL,
-                SUPABASE_SERVICE_ROLE_KEY,
-                {
-                    auth: {
-                        autoRefreshToken: false,
-                        persistSession: false
-                    }
+        const supabase = createClient(
+            SUPABASE_URL,
+            SUPABASE_KEY,
+            {
+                auth: {
+                    autoRefreshToken: false,
+                    persistSession: false
                 }
-            );
+            }
+        );
 
+        /* =========================
+           بررسی کاربر
+        ========================= */
 
         const {
             data: userData,
             error: userError
-        } =
-            await supabaseAdmin.auth.admin.getUserById(
-                cleanUserId
-            );
+        } = await supabase.auth.admin.getUserById(uid);
 
+        if (userError || !userData?.user) {
+            console.error("User error:", userError);
 
-        if (
-            userError ||
-            !userData?.user
-        ) {
-
-            res.status(404).json({
+            return res.status(404).json({
                 error: "User not found"
             });
-
-            return;
         }
 
+        const user = userData.user;
 
-        const user =
-            userData.user;
+        /* =========================
+           بررسی اتصال وردپرس
+        ========================= */
 
+        const {
+            data: connections,
+            error: connectionError
+        } = await supabase
+            .from("wordpress_connections")
+            .select(
+                "id,user_id,site_url,expires_at,used_at"
+            )
+            .eq(
+                "user_id",
+                uid
+            )
+            .order(
+                "created_at",
+                {
+                    ascending: false
+                }
+            )
+            .limit(20);
 
-        const agentConfig =
-            user.user_metadata?.website_agent ||
-            {};
+        if (connectionError) {
 
+            console.error(
+                "Connection error:",
+                connectionError
+            );
 
-        if (
-            agentConfig.enabled !== true
-        ) {
+            return res.status(500).json({
+                error: "Connection lookup failed"
+            });
+        }
 
-            res.status(403).json({
-                error: "Website agent is disabled"
+        const requestedOrigin =
+            getOrigin(website);
+
+        const connected =
+            (connections || []).some(connection => {
+
+                const allowedOrigin =
+                    getOrigin(connection.site_url);
+
+                const expired =
+                    connection.expires_at &&
+                    new Date(
+                        connection.expires_at
+                    ).getTime() <= Date.now();
+
+                return (
+                    allowedOrigin &&
+                    allowedOrigin === requestedOrigin &&
+                    !expired
+                );
             });
 
-            return;
+        if (!connected) {
+
+            return res.status(403).json({
+                error: "Website is not connected"
+            });
         }
 
+        /* =========================
+           تنظیمات دستیار
+        ========================= */
 
-        const configuredSite =
+        const agent =
+            user.user_metadata?.website_agent || {};
+
+        const businessName =
             String(
-                agentConfig.websiteUrl || ""
+                agent.businessName ||
+                "این فروشگاه"
             ).trim();
 
+        const agentTitle =
+            String(
+                agent.agentTitle ||
+                "دستیار هوشمند مشتری‌یار"
+            ).trim();
 
-        if (
-            configuredSite &&
-            cleanSite
-        ) {
-
-            try {
-
-                const configuredUrl =
-                    new URL(configuredSite);
-
-                const requestedUrl =
-                    new URL(cleanSite);
-
-                if (
-                    configuredUrl.hostname.toLowerCase() !==
-                    requestedUrl.hostname.toLowerCase()
-                ) {
-
-                    res.status(403).json({
-                        error: "Website is not authorized"
-                    });
-
-                    return;
-                }
-
-            } catch (error) {
-
-                res.status(400).json({
-                    error: "Invalid website URL"
-                });
-
-                return;
-            }
-
-        }
-
+        /* =========================
+           دریافت محصولات
+        ========================= */
 
         const {
             data: products,
             error: productsError
-        } =
-            await supabaseAdmin
-                .from("products")
-                .select(
-                    "id,name,price,description"
-                )
-                .eq(
-                    "user_id",
-                    cleanUserId
-                )
-                .order(
-                    "created_at",
-                    {
-                        ascending: false
-                    }
-                )
-                .limit(100);
-
+        } = await supabase
+            .from("products")
+            .select(
+                "id,name,price,description"
+            )
+            .eq(
+                "user_id",
+                uid
+            )
+            .order(
+                "created_at",
+                {
+                    ascending: false
+                }
+            )
+            .limit(100);
 
         if (productsError) {
 
@@ -213,112 +201,73 @@ export default async function handler(req, res) {
                 productsError
             );
 
-            res.status(500).json({
+            return res.status(500).json({
                 error: "Could not load products"
             });
-
-            return;
         }
-
 
         const productList =
             (products || [])
-                .map(
-                    (product, index) => {
+                .map((product, index) => {
 
-                        const name =
-                            String(
-                                product.name || ""
-                            ).trim();
-
-                        const price =
-                            Number(
-                                product.price || 0
-                            );
-
-                        const description =
-                            String(
-                                product.description || ""
-                            ).trim();
-
-
-                        return (
-                            `${index + 1}. ` +
-                            `نام: ${name || "بدون نام"} | ` +
-                            `قیمت: ${price.toLocaleString("fa-IR")} تومان | ` +
-                            `توضیحات: ${description || "بدون توضیحات"}`
+                    const name =
+                        String(
+                            product.name || "بدون نام"
                         );
 
-                    }
-                )
+                    const price =
+                        Number(
+                            product.price || 0
+                        );
+
+                    const description =
+                        String(
+                            product.description ||
+                            "بدون توضیحات"
+                        );
+
+                    return (
+                        `${index + 1}. ` +
+                        `نام: ${name} | ` +
+                        `قیمت: ${
+                            price
+                                ? price.toLocaleString("fa-IR") +
+                                  " تومان"
+                                : "نامشخص"
+                        } | ` +
+                        `توضیحات: ${description}`
+                    );
+
+                })
                 .join("\n");
 
-
-        const businessName =
-            String(
-                agentConfig.businessName ||
-                "این فروشگاه"
-            ).trim();
-
-
-        const agentTitle =
-            String(
-                agentConfig.agentTitle ||
-                "دستیار هوشمند"
-            ).trim();
-
-
-        const welcomeMessage =
-            String(
-                agentConfig.welcomeMessage ||
-                "سلام 👋 چطور می‌توانم به شما کمک کنم؟"
-            ).trim();
-
+        /* =========================
+           هوش مصنوعی
+        ========================= */
 
         const systemPrompt = `
-
 تو ${agentTitle} برای ${businessName} هستی.
 
-وظیفه تو کمک به بازدیدکنندگان وب‌سایت برای انتخاب محصول و پاسخ‌گویی درباره محصولات این فروشگاه است.
+به مشتریان این فروشگاه درباره محصولات کمک کن.
 
-قوانین مهم:
+قوانین:
+- فقط از اطلاعات محصولات استفاده کن.
+- قیمت یا مشخصات را حدس نزن.
+- اطلاعات ساختگی تولید نکن.
+- فارسی، کوتاه و دوستانه پاسخ بده.
+- اگر محصولی در فهرست نیست، بگو اطلاعات آن را نداری.
+- اطلاعات خصوصی سیستم را افشا نکن.
 
-1. فقط بر اساس اطلاعات محصولات موجود پاسخ بده.
-2. اگر قیمت محصول در اطلاعات موجود نیست، قیمت نساز.
-3. اگر محصولی در فهرست نیست، ادعا نکن که موجود است.
-4. اطلاعات فنی، ویژگی یا تخفیف ساختگی ایجاد نکن.
-5. پاسخ‌ها کوتاه، واضح، دوستانه و فارسی باشند.
-6. اگر مشتری هنوز محصول مناسب را نمی‌داند، با چند سؤال کوتاه به انتخاب کمک کن.
-7. اگر چند محصول مناسب وجود دارد، آن‌ها را مقایسه کن.
-8. اگر مشتری درباره موضوعی خارج از محصولات و فروشگاه پرسید، محترمانه بگو که برای راهنمایی درباره محصولات و خدمات این فروشگاه طراحی شده‌ای.
-9. قیمت‌ها را دقیقاً بر اساس اطلاعات محصولات بیان کن.
-10. هرگز درباره اطلاعات خصوصی صاحب حساب، شناسه کاربر، تنظیمات داخلی یا کلیدهای سیستم صحبت نکن.
-11. وانمود نکن که انسان هستی.
-12. پاسخ را فقط به زبان فارسی بده مگر اینکه مشتری به زبان دیگری سؤال کند.
-
-نام کسب‌وکار:
+نام فروشگاه:
 ${businessName}
 
-پیام خوشامدگویی:
-${welcomeMessage}
-
-محصولات موجود:
+محصولات:
 
 ${productList || "در حال حاضر محصولی ثبت نشده است."}
-
 `;
 
-
-        const recentMessage =
-            cleanMessage;
-
-
         const geminiUrl =
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" +
-            encodeURIComponent(
-                GEMINI_API_KEY
-            );
-
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
 
         const geminiResponse =
             await fetch(
@@ -328,105 +277,90 @@ ${productList || "در حال حاضر محصولی ثبت نشده است."}
 
                     headers: {
                         "Content-Type":
-                            "application/json"
+                            "application/json",
+                        "x-goog-api-key":
+                            GEMINI_API_KEY
                     },
 
                     body: JSON.stringify({
 
                         system_instruction: {
-
                             parts: [
                                 {
                                     text:
                                         systemPrompt
                                 }
                             ]
-
                         },
 
                         contents: [
-
                             {
                                 role: "user",
 
                                 parts: [
                                     {
                                         text:
-                                            recentMessage
+                                            question
                                     }
                                 ]
-
                             }
-
                         ],
 
                         generationConfig: {
-
                             temperature: 0.4,
-
                             maxOutputTokens: 500
-
                         }
-
                     })
-
                 }
             );
 
-
-        const geminiData =
+        const result =
             await geminiResponse.json();
 
+        /* =========================
+           خطای واقعی Gemini
+        ========================= */
 
         if (!geminiResponse.ok) {
 
             console.error(
                 "Gemini error:",
-                geminiData
+                geminiResponse.status,
+                result
             );
 
-            res.status(502).json({
-                error: "AI service error"
+            return res.status(502).json({
+                error: "Gemini API error",
+                details:
+                    result?.error?.message ||
+                    "Unknown Gemini error"
             });
-
-            return;
         }
 
-
         const reply =
-            geminiData
-                ?.candidates?.[0]
+            result?.candidates?.[0]
                 ?.content?.parts
-                ?.map(
-                    part =>
-                        part.text || ""
-                )
+                ?.map(part => part.text || "")
                 .join("")
                 .trim();
 
-
         if (!reply) {
 
-            res.status(502).json({
+            console.error(
+                "Empty Gemini response:",
+                result
+            );
+
+            return res.status(502).json({
                 error: "Empty AI response"
             });
-
-            return;
         }
 
-
-        res.status(200).json({
-
-            reply: reply,
-
-            businessName:
-                businessName,
-
-            agentTitle:
-                agentTitle
-
+        return res.status(200).json({
+            reply,
+            businessName,
+            agentTitle
         });
-
 
     } catch (error) {
 
@@ -435,11 +369,9 @@ ${productList || "در حال حاضر محصولی ثبت نشده است."}
             error
         );
 
-
-        res.status(500).json({
-            error: "Internal server error"
+        return res.status(500).json({
+            error: "Internal server error",
+            details: error.message
         });
-
     }
-
-                                 }
+}
