@@ -7,8 +7,7 @@
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 const GEMINI_URL =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
-
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
 // 🎭 شخصیت دستیار مشتری‌یار
 const SYSTEM_PROMPT = `تو «مشتری‌یار» هستی؛ یک دستیار پشتیبانی هوشمند، مودب، صبور و حرفه‌ای فارسی‌زبان که در وب‌سایت مشغول کمک به مشتریان است.
 
