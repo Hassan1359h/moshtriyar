@@ -1,3 +1,111 @@
+// ==========================================================
+// 🤖 مشتری‌یار | Website Chat API
+// مسیر: api/website-chat.js
+// ==========================================================
+
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+
+const GEMINI_MODELS = [
+  "gemini-flash-latest",
+  "gemini-2.0-flash",
+  "gemini-2.0-flash-001",
+  "gemini-2.5-flash-lite",
+];
+
+const GEMINI_BASE_URL =
+  "https://generativelanguage.googleapis.com/v1beta/models";
+
+const SYSTEM_PROMPT = `تو «مشتری‌یار» هستی؛ یک دستیار پشتیبانی هوشمند، مودب، صبور و حرفه‌ای فارسی‌زبان که در وب‌سایت مشغول کمک به مشتریان است.
+
+وظایف تو:
+- پاسخ دادن به سوالات مشتریان درباره محصولات، خدمات، سفارش‌ها، قیمت‌ها، ارسال و پیگیری
+- راهنمایی گام‌به‌گام برای حل مشکلات کاربران
+- برخورد محترمانه، گرم و صمیمی با مشتریان
+- پاسخ‌ها را کوتاه، مفید، دقیق و قابل‌فهم بده
+- از ایموجی‌های مناسب (اما نه بیش از حد) استفاده کن
+- همیشه فارسی پاسخ بده مگر اینکه کاربر به زبان دیگری صحبت کند
+- اگر سوال کاربر نامرتبط با پشتیبانی بود، با احترام او را به موضوع اصلی برگردان
+
+🚨 مهم‌ترین قاعده — درخواست پشتیبان انسانی:
+هر وقت کاربر درخواست‌هایی مثل «می‌خوام با پشتیبان انسانی صحبت کنم»، «اپراتور»، «تماس با پشتیبانی»، «شکایت»، «مشکل جدی»، «مدیر سایت»، «انسان واقعی» یا مشابه آن داشت، باید پاسخ بدی به این شکل:
+
+«برای ارتباط مستقیم با تیم پشتیبانی، لطفاً از طریق 📩 فرم تماس با ما در سایت استفاده کنید. همکاران ما در اسرع وقت به پیام شما پاسخ می‌دهند. 🌸»
+
+⚠️ هرگز شماره تلفن، آدرس یا ایمیل از خودت نساز.
+
+هرگز اطلاعات نادرست یا ساختگی ارائه نده.`;
+
+export default async function handler(req, res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  if (req.method === "OPTIONS") return res.status(200).end();
+
+  if (req.method !== "POST") {
+    return res.status(405).json({
+      ok: false,
+      reply: "فقط درخواست‌های POST پذیرفته می‌شوند.",
+    });
+  }
+
+  try {
+    if (!GEMINI_API_KEY) {
+      console.error("❌ GEMINI_API_KEY تنظیم نشده است");
+      return res.status(500).json({
+        ok: false,
+        reply: "⚠️ سرویس هوش مصنوعی در دسترس نیست.",
+      });
+    }
+
+    const { message, history } = req.body || {};
+
+    if (!message || typeof message !== "string" || !message.trim()) {
+      return res.status(400).json({
+        ok: false,
+        reply: "لطفاً پیام خود را وارد کنید. 🙏",
+      });
+    }
+
+    const contents = [];
+
+    if (Array.isArray(history) && history.length > 0) {
+      const trimmed = history.slice(-10);
+      for (const turn of trimmed) {
+        if (
+          turn &&
+          (turn.role === "user" || turn.role === "model") &&
+          typeof turn.text === "string"
+        ) {
+          contents.push({
+            role: turn.role,
+            parts: [{ text: turn.text }],
+          });
+        }
+      }
+    }
+
+    contents.push({
+      role: "user",
+      parts: [{ text: message.trim() }],
+    });
+
+    const requestBody = {
+      systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+      contents,
+      generationConfig: {
+        temperature: 0.8,
+        topP: 0.95,
+        topK: 40,
+        maxOutputTokens: 1024,
+      },
+      safetySettings: [
+        { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+        { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+        { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+      ],
+    };
 
     // 🔁 تلاش با مدل‌های مختلف + Retry خودکار
     let data = null;
