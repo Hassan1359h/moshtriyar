@@ -1,377 +1,188 @@
 import { createClient } from "@supabase/supabase-js";
 
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
-function getOrigin(value) {
-    try {
-        return new URL(String(value || "").trim()).origin.toLowerCase();
-    } catch {
-        return "";
-    }
+function origin(url) {
+  try {
+    return new URL(String(url || "").trim()).origin.toLowerCase();
+  } catch {
+    return "";
+  }
 }
 
 export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({
+      error: "Method Not Allowed"
+    });
+  }
 
-    if (req.method !== "POST") {
-        return res.status(405).json({
-            error: "Method Not Allowed"
-        });
+  try {
+    const { userId, site, message } = req.body || {};
+
+    if (!userId || !message) {
+      return res.status(400).json({
+        error: "userId و message الزامی هستند"
+      });
     }
 
-    if (!SUPABASE_URL || !SUPABASE_KEY || !GEMINI_API_KEY) {
-        return res.status(500).json({
-            error: "Server configuration error"
-        });
+    if (!GEMINI_API_KEY) {
+      return res.status(500).json({
+        error: "GEMINI_API_KEY تنظیم نشده است"
+      });
     }
 
-    try {
+    /* بررسی اتصال سایت */
 
-        const {
-            userId,
-            site,
-            message
-        } = req.body || {};
+    const { data: connections, error: connectionError } =
+      await supabase
+        .from("wordpress_connections")
+        .select("site_url,expires_at")
+        .eq("user_id", String(userId))
+        .order("created_at", { ascending: false })
+        .limit(20);
 
-        const uid = String(userId || "").trim();
-        const website = String(site || "").trim();
-        const question = String(message || "").trim();
+    if (connectionError) {
+      console.error(connectionError);
 
-        if (!uid) {
-            return res.status(400).json({
-                error: "Missing userId"
-            });
-        }
+      return res.status(500).json({
+        error: "خطا در بررسی اتصال سایت"
+      });
+    }
 
-        if (!question) {
-            return res.status(400).json({
-                error: "Missing message"
-            });
-        }
+    const requestedSite = origin(site);
 
-        if (question.length > 2000) {
-            return res.status(400).json({
-                error: "Message is too long"
-            });
-        }
+    const connected = (connections || []).some(item => {
+      const allowedSite = origin(item.site_url);
 
-        const supabase = createClient(
-            SUPABASE_URL,
-            SUPABASE_KEY,
-            {
-                auth: {
-                    autoRefreshToken: false,
-                    persistSession: false
-                }
-            }
-        );
+      const expired =
+        item.expires_at &&
+        new Date(item.expires_at).getTime() <= Date.now();
 
-        /* =========================
-           بررسی کاربر
-        ========================= */
+      return (
+        allowedSite &&
+        allowedSite === requestedSite &&
+        !expired
+      );
+    });
 
-        const {
-            data: userData,
-            error: userError
-        } = await supabase.auth.admin.getUserById(uid);
+    if (!connected) {
+      return res.status(403).json({
+        error: "این سایت متصل نیست"
+      });
+    }
 
-        if (userError || !userData?.user) {
-            console.error("User error:", userError);
+    /* دریافت محصولات */
 
-            return res.status(404).json({
-                error: "User not found"
-            });
-        }
+    const { data: products, error: productsError } =
+      await supabase
+        .from("products")
+        .select("name,price,description")
+        .eq("user_id", String(userId))
+        .limit(100);
 
-        const user = userData.user;
+    if (productsError) {
+      console.error(productsError);
 
-        /* =========================
-           بررسی اتصال وردپرس
-        ========================= */
+      return res.status(500).json({
+        error: "خطا در دریافت محصولات"
+      });
+    }
 
-        const {
-            data: connections,
-            error: connectionError
-        } = await supabase
-            .from("wordpress_connections")
-            .select(
-                "id,user_id,site_url,expires_at,used_at"
-            )
-            .eq(
-                "user_id",
-                uid
-            )
-            .order(
-                "created_at",
-                {
-                    ascending: false
-                }
-            )
-            .limit(20);
+    const productText = (products || [])
+      .map((p, i) => {
+        return `${i + 1}. ${p.name || "بدون نام"} | قیمت: ${
+          p.price
+            ? Number(p.price).toLocaleString("fa-IR") + " تومان"
+            : "نامشخص"
+        } | ${p.description || ""}`;
+      })
+      .join("\n");
 
-        if (connectionError) {
+    /* ارسال به Gemini */
 
-            console.error(
-                "Connection error:",
-                connectionError
-            );
+    const prompt = `
+تو دستیار هوشمند یک فروشگاه اینترنتی هستی.
 
-            return res.status(500).json({
-                error: "Connection lookup failed"
-            });
-        }
-
-        const requestedOrigin =
-            getOrigin(website);
-
-        const connected =
-            (connections || []).some(connection => {
-
-                const allowedOrigin =
-                    getOrigin(connection.site_url);
-
-                const expired =
-                    connection.expires_at &&
-                    new Date(
-                        connection.expires_at
-                    ).getTime() <= Date.now();
-
-                return (
-                    allowedOrigin &&
-                    allowedOrigin === requestedOrigin &&
-                    !expired
-                );
-            });
-
-        if (!connected) {
-
-            return res.status(403).json({
-                error: "Website is not connected"
-            });
-        }
-
-        /* =========================
-           تنظیمات دستیار
-        ========================= */
-
-        const agent =
-            user.user_metadata?.website_agent || {};
-
-        const businessName =
-            String(
-                agent.businessName ||
-                "این فروشگاه"
-            ).trim();
-
-        const agentTitle =
-            String(
-                agent.agentTitle ||
-                "دستیار هوشمند مشتری‌یار"
-            ).trim();
-
-        /* =========================
-           دریافت محصولات
-        ========================= */
-
-        const {
-            data: products,
-            error: productsError
-        } = await supabase
-            .from("products")
-            .select(
-                "id,name,price,description"
-            )
-            .eq(
-                "user_id",
-                uid
-            )
-            .order(
-                "created_at",
-                {
-                    ascending: false
-                }
-            )
-            .limit(100);
-
-        if (productsError) {
-
-            console.error(
-                "Products error:",
-                productsError
-            );
-
-            return res.status(500).json({
-                error: "Could not load products"
-            });
-        }
-
-        const productList =
-            (products || [])
-                .map((product, index) => {
-
-                    const name =
-                        String(
-                            product.name || "بدون نام"
-                        );
-
-                    const price =
-                        Number(
-                            product.price || 0
-                        );
-
-                    const description =
-                        String(
-                            product.description ||
-                            "بدون توضیحات"
-                        );
-
-                    return (
-                        `${index + 1}. ` +
-                        `نام: ${name} | ` +
-                        `قیمت: ${
-                            price
-                                ? price.toLocaleString("fa-IR") +
-                                  " تومان"
-                                : "نامشخص"
-                        } | ` +
-                        `توضیحات: ${description}`
-                    );
-
-                })
-                .join("\n");
-
-        /* =========================
-           هوش مصنوعی
-        ========================= */
-
-        const systemPrompt = `
-تو ${agentTitle} برای ${businessName} هستی.
-
-به مشتریان این فروشگاه درباره محصولات کمک کن.
-
-قوانین:
-- فقط از اطلاعات محصولات استفاده کن.
-- قیمت یا مشخصات را حدس نزن.
-- اطلاعات ساختگی تولید نکن.
-- فارسی، کوتاه و دوستانه پاسخ بده.
-- اگر محصولی در فهرست نیست، بگو اطلاعات آن را نداری.
-- اطلاعات خصوصی سیستم را افشا نکن.
-
-نام فروشگاه:
-${businessName}
+فقط بر اساس اطلاعات محصولات پاسخ بده.
+اطلاعاتی که در فهرست نیست را حدس نزن.
+اگر محصول موردنظر وجود ندارد، صادقانه بگو اطلاعات آن را ندارم.
+پاسخ فارسی، کوتاه و دوستانه باشد.
 
 محصولات:
+${productText || "هیچ محصولی ثبت نشده است."}
 
-${productList || "در حال حاضر محصولی ثبت نشده است."}
+سؤال مشتری:
+${String(message).trim()}
 `;
 
-        const geminiUrl =
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
-
-        const geminiResponse =
-            await fetch(
-                geminiUrl,
+    const response = await fetch(
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": GEMINI_API_KEY
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: "user",
+              parts: [
                 {
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type":
-                            "application/json",
-                        "x-goog-api-key":
-                            GEMINI_API_KEY
-                    },
-
-                    body: JSON.stringify({
-
-                        system_instruction: {
-                            parts: [
-                                {
-                                    text:
-                                        systemPrompt
-                                }
-                            ]
-                        },
-
-                        contents: [
-                            {
-                                role: "user",
-
-                                parts: [
-                                    {
-                                        text:
-                                            question
-                                    }
-                                ]
-                            }
-                        ],
-
-                        generationConfig: {
-                            temperature: 0.4,
-                            maxOutputTokens: 500
-                        }
-                    })
+                  text: prompt
                 }
-            );
+              ]
+            }
+          ],
+          generationConfig: {
+            temperature: 0.4,
+            maxOutputTokens: 500
+          }
+        })
+      }
+    );
 
-        const result =
-            await geminiResponse.json();
+    const data = await response.json();
 
-        /* =========================
-           خطای واقعی Gemini
-        ========================= */
+    if (!response.ok) {
+      console.error("Gemini:", data);
 
-        if (!geminiResponse.ok) {
-
-            console.error(
-                "Gemini error:",
-                geminiResponse.status,
-                result
-            );
-
-            return res.status(502).json({
-                error: "Gemini API error",
-                details:
-                    result?.error?.message ||
-                    "Unknown Gemini error"
-            });
-        }
-
-        const reply =
-            result?.candidates?.[0]
-                ?.content?.parts
-                ?.map(part => part.text || "")
-                .join("")
-                .trim();
-
-        if (!reply) {
-
-            console.error(
-                "Empty Gemini response:",
-                result
-            );
-
-            return res.status(502).json({
-                error: "Empty AI response"
-            });
-        }
-
-        return res.status(200).json({
-            reply,
-            businessName,
-            agentTitle
-        });
-
-    } catch (error) {
-
-        console.error(
-            "Website chat error:",
-            error
-        );
-
-        return res.status(500).json({
-            error: "Internal server error",
-            details: error.message
-        });
+      return res.status(502).json({
+        error:
+          data?.error?.message ||
+          "خطا در ارتباط با Gemini"
+      });
     }
+
+    const reply =
+      data?.candidates?.[0]?.content?.parts
+        ?.map(p => p.text || "")
+        .join("")
+        .trim();
+
+    if (!reply) {
+      console.error("Empty Gemini response:", data);
+
+      return res.status(502).json({
+        error: "Gemini پاسخ خالی ارسال کرد"
+      });
+    }
+
+    return res.status(200).json({
+      reply
+    });
+
+  } catch (error) {
+    console.error("Website chat:", error);
+
+    return res.status(500).json({
+      error: error.message || "خطای داخلی سرور"
+    });
+  }
 }
