@@ -5,6 +5,9 @@ export default async function handler(req, res) {
         return;
     }
 
+    const SUPABASE_URL = process.env.SUPABASE_URL || "";
+    const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || "";
+
     const script = `
 
 (function () {
@@ -36,6 +39,9 @@ export default async function handler(req, res) {
             scriptTag?.getAttribute("data-enabled") !== "false"
     };
 
+    var SUPABASE_URL = "${SUPABASE_URL}";
+    var SUPABASE_ANON_KEY = "${SUPABASE_ANON_KEY}";
+
     if (!config.userId) {
         console.error(
             "Moshtriyar: data-user-id is missing."
@@ -45,6 +51,34 @@ export default async function handler(req, res) {
 
     if (!config.enabled) {
         return;
+    }
+
+
+    function loadSupabase() {
+
+        return new Promise(function (resolve, reject) {
+
+            if (window.supabase) {
+                resolve(window.supabase);
+                return;
+            }
+
+            var s =
+                document.createElement("script");
+
+            s.src =
+                "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+
+            s.onload =
+                function () {
+                    resolve(window.supabase);
+                };
+
+            s.onerror =
+                reject;
+
+            document.head.appendChild(s);
+        });
     }
 
 
@@ -145,7 +179,8 @@ export default async function handler(req, res) {
             "padding:14px;" +
             "background:#f8fafc;" +
             "font-size:13px;" +
-            "line-height:1.9;";
+            "line-height:1.9;" +
+            "position:relative;";
 
 
         var welcome =
@@ -175,7 +210,8 @@ export default async function handler(req, res) {
             "gap:7px;" +
             "padding:10px;" +
             "border-top:1px solid #e2e8f0;" +
-            "background:#fff;";
+            "background:#fff;" +
+            "align-items:center;";
 
 
         var input =
@@ -203,6 +239,33 @@ export default async function handler(req, res) {
             "direction:rtl;";
 
 
+        var callBtn =
+            document.createElement("button");
+
+        callBtn.id =
+            "moshtiryar-ai-call";
+
+        callBtn.type =
+            "button";
+
+        callBtn.innerHTML =
+            "📞";
+
+        callBtn.title =
+            "تماس صوتی با پشتیبان";
+
+
+        callBtn.style.cssText =
+            "width:45px;" +
+            "height:40px;" +
+            "border:none;" +
+            "border-radius:10px;" +
+            "background:#10b981;" +
+            "color:#fff;" +
+            "font-size:18px;" +
+            "cursor:pointer;";
+
+
         var send =
             document.createElement("button");
 
@@ -218,6 +281,7 @@ export default async function handler(req, res) {
 
         send.style.cssText =
             "width:45px;" +
+            "height:40px;" +
             "border:none;" +
             "border-radius:10px;" +
             "background:#2563eb;" +
@@ -227,6 +291,8 @@ export default async function handler(req, res) {
 
 
         footer.appendChild(input);
+
+        footer.appendChild(callBtn);
 
         footer.appendChild(send);
 
@@ -366,8 +432,8 @@ export default async function handler(req, res) {
             try {
 
                 var response =
-    await fetch(
-        "https://moshtriyar.vercel.app/api/website-chat",
+                    await fetch(
+                        "https://moshtriyar.vercel.app/api/website-chat",
                         {
                             method:"POST",
 
@@ -481,6 +547,499 @@ export default async function handler(req, res) {
 
             }
         );
+
+
+        // ==========================================
+        // 📞 تماس صوتی WebRTC
+        // ==========================================
+
+        var callChannel = null;
+        var callPc = null;
+        var currentSessionId = null;
+        var callTimer = null;
+        var callStartTime = null;
+        var pendingIceCandidates = [];
+        var hasRemoteDescription = false;
+        var callOverlay = null;
+
+
+        function showCallOverlay(html) {
+
+            if (callOverlay) {
+                callOverlay.remove();
+            }
+
+            callOverlay =
+                document.createElement("div");
+
+            callOverlay.style.cssText =
+                "position:absolute;" +
+                "top:0;left:0;right:0;bottom:0;" +
+                "background:linear-gradient(135deg,#10b981,#059669);" +
+                "color:#fff;" +
+                "display:flex;" +
+                "flex-direction:column;" +
+                "align-items:center;" +
+                "justify-content:center;" +
+                "padding:20px;" +
+                "text-align:center;" +
+                "z-index:10;" +
+                "border-radius:18px;";
+
+            callOverlay.innerHTML =
+                html;
+
+            box.appendChild(callOverlay);
+        }
+
+
+        function hideCallOverlay() {
+
+            if (callOverlay) {
+                callOverlay.remove();
+                callOverlay = null;
+            }
+        }
+
+
+        async function startCall() {
+
+            try {
+
+                callBtn.disabled = true;
+                callBtn.innerHTML = "⏳";
+
+                showCallOverlay(
+                    '<div style="font-size:50px;">📞</div>' +
+                    '<h2 style="margin:15px 0;font-size:18px;">در حال تماس...</h2>' +
+                    '<p style="font-size:13px;opacity:.9;">منتظر پاسخ پشتیبان هستیم</p>' +
+                    '<button id="moshtiryar-cancel-call" ' +
+                    'style="margin-top:20px;padding:10px 20px;border:none;border-radius:30px;background:#ef4444;color:#fff;font-family:inherit;font-weight:800;cursor:pointer;">' +
+                    '❌ لغو' +
+                    '</button>'
+                );
+
+                document.getElementById(
+                    "moshtiryar-cancel-call"
+                ).onclick =
+                    function () {
+                        endCall(true);
+                    };
+
+
+                // 🎤 دسترسی به میکروفون
+                var stream =
+                    await navigator.mediaDevices
+                        .getUserMedia({ audio: true });
+
+
+                // 🔌 اتصال به Supabase
+                var sb = await loadSupabase();
+
+                var client =
+                    sb.createClient(
+                        SUPABASE_URL,
+                        SUPABASE_ANON_KEY
+                    );
+
+
+                currentSessionId =
+                    "call_" +
+                    Date.now() +
+                    "_" +
+                    Math.random().toString(36).slice(2, 8);
+
+
+                // 🔗 کانال به نام userId اپراتور
+                callChannel =
+                    client.channel(
+                        "calls-" + config.userId,
+                        { config: { broadcast: { self: false } } }
+                    );
+
+
+                // 📡 ساخت PeerConnection
+                callPc =
+                    new RTCPeerConnection({
+                        iceServers: [
+                            { urls: "stun:stun.l.google.com:19302" },
+                            { urls: "stun:stun1.l.google.com:19302" }
+                        ]
+                    });
+
+
+                stream.getTracks().forEach(
+                    function (track) {
+                        callPc.addTrack(track, stream);
+                    }
+                );
+
+
+                callPc.ontrack =
+                    function (event) {
+                        var audio =
+                            new Audio();
+                        audio.srcObject =
+                            event.streams[0];
+                        audio.play();
+                    };
+
+
+                callPc.onicecandidate =
+                    function (event) {
+
+                        if (event.candidate && callChannel) {
+
+                            callChannel.send({
+                                type: "broadcast",
+                                event: "webrtc-ice-visitor",
+                                payload: {
+                                    sessionId: currentSessionId,
+                                    candidate: event.candidate
+                                }
+                            });
+
+                        }
+
+                    };
+
+
+                // 📤 ساخت Offer
+                var offer =
+                    await callPc.createOffer();
+
+                await callPc.setLocalDescription(offer);
+
+
+                // 📥 دریافت پاسخ‌ها
+                callChannel.on(
+                    "broadcast",
+                    { event: "webrtc-answer" },
+                    async function ({ payload }) {
+
+                        if (
+                            payload.sessionId !==
+                            currentSessionId
+                        ) {
+                            return;
+                        }
+
+                        await callPc.setRemoteDescription(
+                            new RTCSessionDescription(payload.answer)
+                        );
+
+                        hasRemoteDescription = true;
+
+                        // اضافه کردن ICE معطل‌مونده
+                        for (
+                            var i = 0;
+                            i < pendingIceCandidates.length;
+                            i++
+                        ) {
+                            try {
+                                await callPc.addIceCandidate(
+                                    new RTCIceCandidate(pendingIceCandidates[i])
+                                );
+                            } catch (e) {}
+                        }
+
+                        pendingIceCandidates = [];
+
+                        // ✅ شروع تماس
+                        callStartTime = Date.now();
+                        showActiveCall();
+
+                    }
+                );
+
+
+                callChannel.on(
+                    "broadcast",
+                    { event: "webrtc-ice-operator" },
+                    async function ({ payload }) {
+
+                        if (
+                            payload.sessionId !==
+                            currentSessionId
+                        ) {
+                            return;
+                        }
+
+                        if (hasRemoteDescription) {
+
+                            try {
+                                await callPc.addIceCandidate(
+                                    new RTCIceCandidate(payload.candidate)
+                                );
+                            } catch (e) {}
+
+                        } else {
+
+                            pendingIceCandidates.push(
+                                payload.candidate
+                            );
+
+                        }
+
+                    }
+                );
+
+
+                callChannel.on(
+                    "broadcast",
+                    { event: "call-rejected" },
+                    function ({ payload }) {
+
+                        if (
+                            payload.sessionId !==
+                            currentSessionId
+                        ) {
+                            return;
+                        }
+
+                        showCallOverlay(
+                            '<div style="font-size:50px;">😔</div>' +
+                            '<h2 style="margin:15px 0;font-size:18px;">پشتیبان در دسترس نیست</h2>' +
+                            '<p style="font-size:13px;opacity:.9;">لطفاً از طریق چت پیام بگذارید</p>'
+                        );
+
+                        setTimeout(
+                            function () {
+                                endCall();
+                            },
+                            2500
+                        );
+
+                    }
+                );
+
+
+                callChannel.on(
+                    "broadcast",
+                    { event: "call-ended" },
+                    function ({ payload }) {
+
+                        if (
+                            payload.sessionId !==
+                            currentSessionId
+                        ) {
+                            return;
+                        }
+
+                        endCall();
+
+                    }
+                );
+
+
+                // 🔔 Subscribe
+                callChannel.subscribe(
+                    async function (status) {
+
+                        if (status === "SUBSCRIBED") {
+
+                            await callChannel.send({
+                                type: "broadcast",
+                                event: "call-request",
+                                payload: {
+                                    sessionId: currentSessionId,
+                                    visitorName: "کاربر سایت",
+                                    siteUrl: config.site,
+                                    offer: callPc.localDescription
+                                }
+                            });
+
+                        }
+
+                    }
+                );
+
+
+                // ⏰ Timeout 30 ثانیه
+                callTimer =
+                    setTimeout(
+                        function () {
+
+                            if (!hasRemoteDescription) {
+
+                                showCallOverlay(
+                                    '<div style="font-size:50px;">⏰</div>' +
+                                    '<h2 style="margin:15px 0;font-size:18px;">پاسخی دریافت نشد</h2>' +
+                                    '<p style="font-size:13px;opacity:.9;">پشتیبان الان پاسخ نداد</p>'
+                                );
+
+                                setTimeout(
+                                    function () {
+                                        endCall();
+                                    },
+                                    2000
+                                );
+
+                            }
+
+                        },
+                        30000
+                    );
+
+
+            } catch (err) {
+
+                console.error("Call error:", err);
+
+                showCallOverlay(
+                    '<div style="font-size:50px;">⚠️</div>' +
+                    '<h2 style="margin:15px 0;font-size:18px;">خطا در تماس</h2>' +
+                    '<p style="font-size:13px;opacity:.9;">' +
+                    (err.message || "لطفاً دسترسی میکروفون را بررسی کنید") +
+                    '</p>'
+                );
+
+                setTimeout(
+                    function () {
+                        endCall();
+                    },
+                    2500
+                );
+
+            } finally {
+
+                callBtn.disabled = false;
+                callBtn.innerHTML = "📞";
+
+            }
+
+        }
+
+
+        function showActiveCall() {
+
+            showCallOverlay(
+                '<div style="font-size:50px;">🎙️</div>' +
+                '<h2 style="margin:15px 0;font-size:18px;">تماس برقرار است</h2>' +
+                '<div id="moshtiryar-call-timer" style="font-size:32px;font-weight:900;font-family:monospace;margin:10px 0;">00:00</div>' +
+                '<button id="moshtiryar-end-call" ' +
+                'style="margin-top:15px;width:60px;height:60px;border:none;border-radius:50%;background:#ef4444;color:#fff;font-size:24px;cursor:pointer;">' +
+                '📵' +
+                '</button>'
+            );
+
+            document.getElementById(
+                "moshtiryar-end-call"
+            ).onclick =
+                function () {
+                    endCall();
+                };
+
+            if (callTimer) {
+                clearTimeout(callTimer);
+            }
+
+            callTimer =
+                setInterval(
+                    function () {
+
+                        var elapsed =
+                            Math.floor(
+                                (Date.now() - callStartTime) / 1000
+                            );
+
+                        var mins =
+                            String(
+                                Math.floor(elapsed / 60)
+                            ).padStart(2, "0");
+
+                        var secs =
+                            String(
+                                elapsed % 60
+                            ).padStart(2, "0");
+
+                        var timerEl =
+                            document.getElementById(
+                                "moshtiryar-call-timer"
+                            );
+
+                        if (timerEl) {
+                            timerEl.textContent =
+                                mins + ":" + secs;
+                        }
+
+                    },
+                    1000
+                );
+
+        }
+
+
+        function endCall(silent) {
+
+            if (callTimer) {
+                clearTimeout(callTimer);
+                clearInterval(callTimer);
+                callTimer = null;
+            }
+
+            if (callChannel && currentSessionId) {
+
+                try {
+                    callChannel.send({
+                        type: "broadcast",
+                        event: "call-ended",
+                        payload: {
+                            sessionId: currentSessionId
+                        }
+                    });
+                } catch (e) {}
+
+                try {
+                    callChannel.unsubscribe();
+                } catch (e) {}
+
+                callChannel = null;
+            }
+
+            if (callPc) {
+
+                try {
+                    callPc.getSenders().forEach(
+                        function (sender) {
+                            if (sender.track) {
+                                sender.track.stop();
+                            }
+                        }
+                    );
+                    callPc.close();
+                } catch (e) {}
+
+                callPc = null;
+            }
+
+            currentSessionId = null;
+            callStartTime = null;
+            pendingIceCandidates = [];
+            hasRemoteDescription = false;
+
+            hideCallOverlay();
+
+            if (!silent) {
+                addMessage(
+                    "📵 تماس پایان یافت.",
+                    "agent"
+                );
+            }
+
+        }
+
+
+        callBtn.onclick =
+            function () {
+
+                if (currentSessionId) {
+                    return;
+                }
+
+                startCall();
+
+            };
 
     }
 
