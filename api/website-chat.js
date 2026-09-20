@@ -1,26 +1,14 @@
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({
-      error: "Method Not Allowed"
-    });
-  }
-
   try {
     if (!GEMINI_API_KEY) {
-      return res.status(500).json({
-        error: "GEMINI_API_KEY تنظیم نشده است"
+      return res.status(200).json({
+        reply: "TEST_ERROR: GEMINI_API_KEY تنظیم نشده است"
       });
     }
 
-    const { message } = req.body || {};
-
-    if (!message) {
-      return res.status(400).json({
-        error: "message ارسال نشده است"
-      });
-    }
+    const message = req.body?.message || "سلام";
 
     const response = await fetch(
       "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
@@ -36,18 +24,11 @@ export default async function handler(req, res) {
               role: "user",
               parts: [
                 {
-                  text: `به فارسی و کوتاه پاسخ بده.
-
-سؤال:
-${String(message).trim()}`
+                  text: String(message)
                 }
               ]
             }
-          ],
-          generationConfig: {
-            temperature: 0.4,
-            maxOutputTokens: 300
-          }
+          ]
         })
       }
     );
@@ -55,34 +36,30 @@ ${String(message).trim()}`
     const data = await response.json();
 
     if (!response.ok) {
-      console.error("Gemini ERROR:", data);
-
-      return res.status(502).json({
-        error: data?.error?.message || "Gemini API Error"
+      return res.status(200).json({
+        reply:
+          "TEST_GEMINI_ERROR: " +
+          (data?.error?.message || JSON.stringify(data))
       });
     }
 
     const reply =
       data?.candidates?.[0]?.content?.parts
-        ?.map(part => part.text || "")
+        ?.map(p => p.text || "")
         .join("")
         .trim();
 
-    if (!reply) {
-      return res.status(502).json({
-        error: "Gemini پاسخ خالی داد"
-      });
-    }
-
     return res.status(200).json({
-      reply
+      reply:
+        reply ||
+        "TEST_ERROR: Gemini پاسخ خالی برگرداند"
     });
 
   } catch (error) {
-    console.error(error);
-
-    return res.status(500).json({
-      error: error.message
+    return res.status(200).json({
+      reply:
+        "TEST_EXCEPTION: " +
+        (error?.message || String(error))
     });
   }
 }
