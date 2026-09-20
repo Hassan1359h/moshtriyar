@@ -271,47 +271,81 @@ async function loadGeminiKeys() {
     }
 }
 
-
 // 🆕 سایت‌های متصل
 async function loadSites() {
+    const container = document.getElementById('sitesList');
+    if (!container) return;
+
     try {
-        const { data, error } = await supabase
-            .from('websites')
-            .select('*, profiles(plan, email, full_name)')
+        const { data: connections, error: connError } = await supabase
+            .from('wordpress_connections')
+            .select('id, user_id, site_url, expires_at, used_at, created_at')
             .order('created_at', { ascending: false });
 
-        if (error) throw error;
+        if (connError) throw connError;
 
-        const container = document.getElementById('sitesList');
-        if (!container) return;
-
-        if (!data || data.length === 0) {
+        if (!connections || connections.length === 0) {
             container.innerHTML = '<div class="empty" style="padding:20px;font-size:13px;">هیچ سایتی متصل نشده</div>';
             return;
         }
 
-        container.innerHTML = data.map(site => {
-            const plan = site.profiles?.plan || 'trial';
+        const userIds = [...new Set(connections.map(c => c.user_id).filter(Boolean))];
+        let profilesMap = {};
+
+        if (userIds.length > 0) {
+            const { data: profiles } = await supabase
+                .from('profiles')
+                .select('id, email, full_name, plan')
+                .in('id', userIds);
+
+            (profiles || []).forEach(p => {
+                profilesMap[p.id] = p;
+            });
+        }
+
+        container.innerHTML = connections.map(conn => {
+            const profile = profilesMap[conn.user_id] || {};
+            const plan = profile.plan || 'trial';
             const planLabel = plan === 'pro' ? '💎 حرفه‌ای'
-                : plan === 'business' ? '🏢 کسب‌وکار' : '🆓 تست';
+                : plan === 'business' ? '🏢 کسب‌وکار'
+                : '🆓 تست';
+
+            const isActive = conn.used_at != null;
+            const statusLabel = isActive ? '✅ متصل' : '⏳ در انتظار';
+            const statusColor = isActive ? '#166534' : '#92400e';
+            const statusBg = isActive ? '#dcfce7' : '#fef3c7';
+
+            const domain = (conn.site_url || '').replace(/^https?:\/\//, '').replace(/\/$/, '');
 
             return `
                 <div class="site-item">
                     <div class="site-head">
-                        <div class="site-name">${esc(site.name || 'بدون نام')}</div>
+                        <div class="site-name">${esc(domain || 'بدون دامنه')}</div>
                         <span class="site-plan ${plan}">${planLabel}</span>
                     </div>
-                    <div class="site-domain">${esc(site.domain || '-')}</div>
-                    <div class="site-key">${esc((site.api_key || '').slice(0, 24))}...</div>
+                    <div class="site-domain">
+                        ${esc(profile.full_name || profile.email || 'کاربر ناشناس')}
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+                        <span style="font-size:11px;color:#94a3b8;direction:ltr;">
+                            ${esc(conn.site_url || '')}
+                        </span>
+                        <span style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:800;
+                                     background:${statusBg};color:${statusColor};">
+                            ${statusLabel}
+                        </span>
+                    </div>
                 </div>
             `;
         }).join('');
 
     } catch (err) {
         console.error('Sites error:', err);
+        container.innerHTML = `<div class="empty" style="padding:20px;font-size:13px;">
+            ❌ ${esc(err.message)}
+        </div>`;
     }
 }
-
 
 // 🆕 تغییر وضعیت کلید
 window.toggleGeminiKey = async function(keyId, active) {
