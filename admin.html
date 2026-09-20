@@ -293,10 +293,15 @@ async function loadSites() {
         let profilesMap = {};
 
         if (userIds.length > 0) {
-            const { data: profiles } = await supabase
-                .from('profiles')
-                .select('id, email, full_name, plan')
-                .in('id', userIds);
+            const { data: profiles, error: profError } = await supabase
+    .from('profiles')
+    .select('id, email, full_name')
+    .in('id', userIds);
+
+console.log('Profiles fetched:', profiles, profError);
+
+
+
 
             (profiles || []).forEach(p => {
                 profilesMap[p.id] = p;
@@ -305,7 +310,7 @@ async function loadSites() {
 
         container.innerHTML = connections.map(conn => {
             const profile = profilesMap[conn.user_id] || {};
-            const plan = profile.plan || 'trial';
+            const plan = 'trial'; // فعلاً همه trial
             const planLabel = plan === 'pro' ? '💎 حرفه‌ای'
                 : plan === 'business' ? '🏢 کسب‌وکار'
                 : '🆓 تست';
