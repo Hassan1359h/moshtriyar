@@ -1,13 +1,23 @@
 // ==========================================================
 // 🤖 مشتری‌یار | Website Chat API
 // مسیر: api/website-chat.js
-// مدل: Google Gemini 2.5 Flash
+// مدل: Google Gemini (with multi-model fallback)
 // ==========================================================
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
-const GEMINI_URL =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
+// 📋 لیست مدل‌ها به ترتیب اولویت — اگه یکی شلوغ بود، بعدی امتحان می‌شه
+const GEMINI_MODELS = [
+  "gemini-flash-latest",
+  "gemini-2.5-flash",
+  "gemini-2.0-flash",
+  "gemini-2.5-flash-lite",
+  "gemini-1.5-flash",
+];
+
+const GEMINI_BASE_URL =
+  "https://generativelanguage.googleapis.com/v1beta/models";
+
 // 🎭 شخصیت دستیار مشتری‌یار
 const SYSTEM_PROMPT = `تو «مشتری‌یار» هستی؛ یک دستیار پشتیبانی هوشمند، مودب، صبور و حرفه‌ای فارسی‌زبان که در وب‌سایت مشغول کمک به مشتریان است.
 
@@ -24,7 +34,7 @@ const SYSTEM_PROMPT = `تو «مشتری‌یار» هستی؛ یک دستیار
 هرگز اطلاعات نادرست یا ساختگی ارائه نده.`;
 
 export default async function handler(req, res) {
-  // 🌐 هدرهای CORS (در صورت نیاز به فراخوانی از دامنه‌های دیگر)
+  // 🌐 هدرهای CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -87,55 +97,83 @@ export default async function handler(req, res) {
       parts: [{ text: message.trim() }],
     });
 
-    // 🌐 فراخوانی Gemini API
-    const response = await fetch(GEMINI_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-goog-api-key": GEMINI_API_KEY,
+    // 📦 بدنه درخواست مشترک برای همه مدل‌ها
+    const requestBody = {
+      systemInstruction: {
+        parts: [{ text: SYSTEM_PROMPT }],
       },
-      body: JSON.stringify({
-        systemInstruction: {
-          parts: [{ text: SYSTEM_PROMPT }],
-        },
-        contents,
-        generationConfig: {
-          temperature: 0.8,
-          topP: 0.95,
-          topK: 40,
-          maxOutputTokens: 1024,
-        },
-        safetySettings: [
-          {
-            category: "HARM_CATEGORY_HARASSMENT",
-            threshold: "BLOCK_MEDIUM_AND_ABOVE",
-          },
-          {
-            category: "HARM_CATEGORY_HATE_SPEECH",
-            threshold: "BLOCK_MEDIUM_AND_ABOVE",
-          },
-          {
-            category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-            threshold: "BLOCK_MEDIUM_AND_ABOVE",
-          },
-          {
-            category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-            threshold: "BLOCK_MEDIUM_AND_ABOVE",
-          },
-        ],
-      }),
-    });
+      contents,
+      generationConfig: {
+        temperature: 0.8,
+        topP: 0.95,
+        topK: 40,
+        maxOutputTokens: 1024,
+      },
+      safetySettings: [
+        { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+        { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+        { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+      ],
+    };
 
-    const data = await response.json();
+    // 🔁 تلاش با مدل‌های مختلف به ترتیب
+    let data = null;
+    let response = null;
+    let usedModel = null;
+    let lastError = null;
 
-    if (!response.ok) {
-  console.error("Gemini API Error:", JSON.stringify(data, null, 2));
-  return res.status(200).json({
-    ok: true,
-    reply: `🔍 DEBUG INFO\nStatus: ${response.status}\nMessage: ${
-      data?.error?.message || JSON.stringify(data)
-    }`,
-  });
+    for (const model of GEMINI_MODELS) {
+      try {
+        const url = `${GEMINI_BASE_URL}/${model}:generateContent`;
+        console.log(`🔄 Trying model: ${model}`);
+
+        const r = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": GEMINI_API_KEY,
+          },
+          body: JSON.stringify(requestBody),
+        });
+
+        const d = await r.json();
+
+        // ✅ موفق بود
+        if (r.ok && d?.candidates?.[0]?.content?.parts) {
+          response = r;
+          data = d;
+          usedModel = model;
+          console.log(`✅ Success with model: ${model}`);
+          break;
+        }
+
+        // 🔄 خطای 503 یا 429 → برو مدل بعدی
+        if (r.status === 503 || r.status === 429) {
+          console.warn(`⏭️ Model ${model} unavailable (${r.status}), trying next...`);
+          lastError = d?.error?.message || `Status ${r.status}`;
+          continue;
+        }
+
+        // ❌ خطای دیگه (مثل 404 یا 400) → همون رو ثبت کن، برو بعدی
+        console.warn(`⚠️ Model ${model} error (${r.status}):`, d?.error?.message);
+        lastError = d?.error?.message || `Status ${r.status}`;
+        continue;
+      } catch (err) {
+        console.warn(`❌ Model ${model} exception:`, err.message);
+        lastError = err.message;
+        continue;
+      }
+    }
+
+    // 🚫 هیچ مدلی جواب نداد
+    if (!data || !response) {
+      return res.status(200).json({
+        ok: false,
+        reply:
+          "⚠️ سرویس هوش مصنوعی الان شلوغه. لطفاً چند لحظه دیگه دوباره تلاش کنید. 🙏",
+        error: lastError || "All models failed",
+      });
     }
 
     // 🧹 استخراج پاسخ
@@ -167,7 +205,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       ok: true,
       reply,
-      model: "gemini-2.5-flash",
+      model: usedModel,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
