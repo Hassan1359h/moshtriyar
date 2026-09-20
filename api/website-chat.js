@@ -129,15 +129,14 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    // ❌ خطای API
     if (!response.ok) {
-      console.error("Gemini API Error:", data);
-      return res.status(200).json({
-        ok: false,
-        reply:
-          "⚠️ متأسفانه در پردازش درخواست شما مشکلی پیش آمد. لطفاً چند لحظه بعد دوباره تلاش کنید.",
-        error: data?.error?.message || "Unknown API error",
-      });
+  console.error("Gemini API Error:", JSON.stringify(data, null, 2));
+  return res.status(200).json({
+    ok: true,
+    reply: `🔍 DEBUG INFO\nStatus: ${response.status}\nMessage: ${
+      data?.error?.message || JSON.stringify(data)
+    }`,
+  });
     }
 
     // 🧹 استخراج پاسخ
