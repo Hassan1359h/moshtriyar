@@ -1,9 +1,11 @@
 // ==========================================================
-// 🤖 مشتری‌یار | Website Chat API
+// 🤖 مشتری‌یار | Website Chat API (Multi-Key + Plan Limits)
 // مسیر: api/website-chat.js
 // ==========================================================
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const GEMINI_MODELS = [
   "gemini-flash-latest",
@@ -15,26 +17,163 @@ const GEMINI_MODELS = [
 const GEMINI_BASE_URL =
   "https://generativelanguage.googleapis.com/v1beta/models";
 
-const SYSTEM_PROMPT = `تو «مشتری‌یار» هستی؛ یک دستیار پشتیبانی هوشمند، مودب، صبور و حرفه‌ای فارسی‌زبان که در وب‌سایت مشغول کمک به مشتریان است.
+// 📊 محدودیت هر پلن
+const PLAN_LIMITS = {
+  trial: { dailyMessages: 50 },
+  pro: { dailyMessages: 2000 },
+  business: { dailyMessages: 20000 },
+};
+
+// ==========================================================
+// 🔌 اتصال به Supabase
+// ==========================================================
+async function supabase(path, options = {}) {
+  if (!SUPABASE_URL || !SUPABASE_KEY) return null;
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1${path}`, {
+      ...options,
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+        "Content-Type": "application/json",
+        Prefer: "return=representation",
+        ...(options.headers || {}),
+      },
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (err) {
+    console.error("Supabase error:", err.message);
+    return null;
+  }
+}
+
+// ==========================================================
+// 🔑 انتخاب بهترین کلید Gemini
+// ==========================================================
+async function getBestGeminiKey(websiteId) {
+  // 1️⃣ کلید اختصاصی سایت
+  if (websiteId) {
+    const site = await supabase(
+      `/websites?id=eq.${websiteId}&select=gemini_key_id,gemini_keys(id,api_key,used_today,daily_limit,last_reset,active)`
+    );
+    const key = site?.[0]?.gemini_keys;
+    if (key && key.active) {
+      const today = new Date().toISOString().split("T")[0];
+      if (key.last_reset !== today) {
+        await supabase(`/gemini_keys?id=eq.${key.id}`, {
+          method: "PATCH",
+          body: JSON.stringify({ used_today: 0, last_reset: today }),
+        });
+        return { key: key.api_key, keyId: key.id };
+      }
+      if (key.used_today < key.daily_limit) {
+        return { key: key.api_key, keyId: key.id };
+      }
+    }
+  }
+
+  // 2️⃣ بهترین کلید از استخر
+  const today = new Date().toISOString().split("T")[0];
+  const keys = await supabase(
+    `/gemini_keys?active=eq.true&last_reset=eq.${today}&used_today=lt.daily_limit&order=used_today.asc&limit=1`
+  );
+  if (keys?.[0]) return { key: keys[0].api_key, keyId: keys[0].id };
+
+  // 3️⃣ کلیدهای ریست‌نشده
+  const staleKeys = await supabase(
+    `/gemini_keys?active=eq.true&last_reset=lt.${today}&order=id.asc&limit=1`
+  );
+  if (staleKeys?.[0]) {
+    await supabase(`/gemini_keys?id=eq.${staleKeys[0].id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ used_today: 0, last_reset: today }),
+    });
+    return { key: staleKeys[0].api_key, keyId: staleKeys[0].id };
+  }
+
+  // 4️⃣ Fallback از env
+  if (GEMINI_API_KEY) return { key: GEMINI_API_KEY, keyId: null };
+  return null;
+}
+
+// ==========================================================
+// 📈 افزایش مصرف کلید
+// ==========================================================
+async function incrementKeyUsage(keyId) {
+  if (!keyId) return;
+  await supabase(`/rpc/increment_key_usage`, {
+    method: "POST",
+    body: JSON.stringify({ key_id: keyId }),
+  });
+}
+
+// ==========================================================
+// 📊 چک محدودیت روزانه سایت
+// ==========================================================
+async function checkSiteLimit(websiteId, plan) {
+  if (!websiteId) return { exceeded: false };
+  const today = new Date().toISOString().split("T")[0];
+  const stats = await supabase(
+    `/usage_stats?website_id=eq.${websiteId}&date=eq.${today}&select=message_count`
+  );
+  const current = stats?.[0]?.message_count || 0;
+  const limit = PLAN_LIMITS[plan]?.dailyMessages || 50;
+  return { exceeded: current >= limit, current, limit };
+}
+
+// ==========================================================
+// ➕ افزایش شمارنده سایت
+// ==========================================================
+async function incrementSiteUsage(websiteId) {
+  if (!websiteId) return;
+  const today = new Date().toISOString().split("T")[0];
+  const existing = await supabase(
+    `/usage_stats?website_id=eq.${websiteId}&date=eq.${today}&select=id,message_count`
+  );
+  if (existing?.[0]) {
+    await supabase(`/usage_stats?id=eq.${existing[0].id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ message_count: existing[0].message_count + 1 }),
+    });
+  } else {
+    await supabase(`/usage_stats`, {
+      method: "POST",
+      body: JSON.stringify({
+        website_id: websiteId,
+        date: today,
+        message_count: 1,
+      }),
+    });
+  }
+}
+
+// ==========================================================
+// 🎭 پرامپت
+// ==========================================================
+function buildSystemPrompt() {
+  return `تو «مشتری‌یار» هستی؛ یک دستیار پشتیبانی هوشمند، مودب، صبور و حرفه‌ای فارسی‌زبان که در وب‌سایت مشغول کمک به مشتریان است.
 
 وظایف تو:
 - پاسخ دادن به سوالات مشتریان درباره محصولات، خدمات، سفارش‌ها، قیمت‌ها، ارسال و پیگیری
 - راهنمایی گام‌به‌گام برای حل مشکلات کاربران
-- برخورد محترمانه، گرم و صمیمی با مشتریان
-- پاسخ‌ها را کوتاه، مفید، دقیق و قابل‌فهم بده
-- از ایموجی‌های مناسب (اما نه بیش از حد) استفاده کن
-- همیشه فارسی پاسخ بده مگر اینکه کاربر به زبان دیگری صحبت کند
-- اگر سوال کاربر نامرتبط با پشتیبانی بود، با احترام او را به موضوع اصلی برگردان
+- برخورد محترمانه، گرم و صمیمی
+- پاسخ‌ها را کوتاه، مفید و دقیق بده
+- همیشه فارسی پاسخ بده
+- از ایموجی‌های مناسب استفاده کن
 
-🚨 مهم‌ترین قاعده — درخواست پشتیبان انسانی:
-هر وقت کاربر درخواست‌هایی مثل «می‌خوام با پشتیبان انسانی صحبت کنم»، «اپراتور»، «تماس با پشتیبانی»، «شکایت»، «مشکل جدی»، «مدیر سایت»، «انسان واقعی» یا مشابه آن داشت، باید پاسخ بدی به این شکل:
+🚨 درخواست پشتیبان انسانی:
+هر وقت کاربر درخواست «پشتیبان انسانی»، «اپراتور»، «تماس با پشتیبانی» یا «شکایت» داشت، پاسخ بده:
 
-«برای ارتباط مستقیم با تیم پشتیبانی، لطفاً از طریق 📩 فرم تماس با ما در سایت استفاده کنید. همکاران ما در اسرع وقت به پیام شما پاسخ می‌دهند. 🌸»
+«برای ارتباط با تیم پشتیبانی، لطفاً از 📩 فرم تماس با ما در سایت استفاده کنید. همکاران ما در اسرع وقت پاسخ می‌دهند. 🌸»
 
-⚠️ هرگز شماره تلفن، آدرس یا ایمیل از خودت نساز.
+⚠️ هرگز شماره، ایمیل یا آدرس از خودت نساز.`;
+}
 
-هرگز اطلاعات نادرست یا ساختگی ارائه نده.`;
-
+// ==========================================================
+// 🚀 Handler اصلی
+// ==========================================================
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
@@ -43,55 +182,68 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(200).end();
 
   if (req.method !== "POST") {
-    return res.status(405).json({
-      ok: false,
-      reply: "فقط درخواست‌های POST پذیرفته می‌شوند.",
-    });
+    return res.status(405).json({ ok: false, reply: "فقط POST." });
   }
 
   try {
-    if (!GEMINI_API_KEY) {
-      console.error("❌ GEMINI_API_KEY تنظیم نشده است");
-      return res.status(500).json({
-        ok: false,
-        reply: "⚠️ سرویس هوش مصنوعی در دسترس نیست.",
-      });
+    const { message, history, siteApiKey } = req.body || {};
+
+    if (!message || !message.trim()) {
+      return res.status(400).json({ ok: false, reply: "پیام خالی است." });
     }
 
-    const { message, history } = req.body || {};
+    // 🔍 شناسایی سایت
+    let websiteId = null;
+    let plan = "trial";
 
-    if (!message || typeof message !== "string" || !message.trim()) {
-      return res.status(400).json({
-        ok: false,
-        reply: "لطفاً پیام خود را وارد کنید. 🙏",
-      });
-    }
-
-    const contents = [];
-
-    if (Array.isArray(history) && history.length > 0) {
-      const trimmed = history.slice(-10);
-      for (const turn of trimmed) {
-        if (
-          turn &&
-          (turn.role === "user" || turn.role === "model") &&
-          typeof turn.text === "string"
-        ) {
-          contents.push({
-            role: turn.role,
-            parts: [{ text: turn.text }],
+    if (siteApiKey) {
+      const site = await supabase(
+        `/websites?api_key=eq.${siteApiKey}&active=eq.true&select=id,user_id,profiles(plan,plan_expires_at)`
+      );
+      if (site?.[0]) {
+        websiteId = site[0].id;
+        plan = site[0].profiles?.plan || "trial";
+        const expiresAt = site[0].profiles?.plan_expires_at;
+        if (expiresAt && new Date(expiresAt) < new Date()) {
+          return res.status(200).json({
+            ok: false,
+            reply: "⚠️ اشتراک این سایت منقضی شده است.",
           });
         }
       }
     }
 
-    contents.push({
-      role: "user",
-      parts: [{ text: message.trim() }],
-    });
+    // 📊 چک محدودیت
+    const limitCheck = await checkSiteLimit(websiteId, plan);
+    if (limitCheck.exceeded) {
+      return res.status(200).json({
+        ok: false,
+        reply: `⚠️ محدودیت پیام روزانه (${limitCheck.limit} پیام) پر شده. لطفاً فردا تلاش کنید.`,
+      });
+    }
+
+    // 🔑 انتخاب کلید
+    const keyInfo = await getBestGeminiKey(websiteId);
+    if (!keyInfo) {
+      return res.status(200).json({
+        ok: false,
+        reply: "⚠️ سرویس هوش مصنوعی در دسترس نیست.",
+      });
+    }
+
+    // 🧱 ساخت محتوا
+    const contents = [];
+    if (Array.isArray(history) && history.length > 0) {
+      for (const turn of history.slice(-10)) {
+        if (turn?.role && turn?.text) {
+          contents.push({ role: turn.role, parts: [{ text: turn.text }] });
+        }
+      }
+    }
+    contents.push({ role: "user", parts: [{ text: message.trim() }] });
 
     const requestBody = {
-      systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+      systemInstruction: { parts: [{ text: buildSystemPrompt() }] },
       contents,
       generationConfig: {
         temperature: 0.8,
@@ -107,9 +259,8 @@ export default async function handler(req, res) {
       ],
     };
 
-    // 🔁 تلاش با مدل‌های مختلف + Retry خودکار
+    // 🔁 تلاش با مدل‌ها
     let data = null;
-    let response = null;
     let usedModel = null;
     let lastError = null;
 
@@ -117,39 +268,30 @@ export default async function handler(req, res) {
       for (let attempt = 1; attempt <= 2; attempt++) {
         try {
           const url = `${GEMINI_BASE_URL}/${model}:generateContent`;
-          console.log(`🔄 [${model}] attempt ${attempt}`);
-
           const r = await fetch(url, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "x-goog-api-key": GEMINI_API_KEY,
+              "x-goog-api-key": keyInfo.key,
             },
             body: JSON.stringify(requestBody),
           });
-
           const d = await r.json();
 
           if (r.ok && d?.candidates?.[0]?.content?.parts) {
-            response = r;
             data = d;
             usedModel = model;
-            console.log(`✅ Success: ${model} (attempt ${attempt})`);
             break;
           }
 
           if ((r.status === 503 || r.status === 429) && attempt === 1) {
-            console.warn(`⏳ ${model} busy (${r.status}), retrying in 1s...`);
             await new Promise((res) => setTimeout(res, 1000));
-            lastError = d?.error?.message || `Status ${r.status}`;
+            lastError = d?.error?.message;
             continue;
           }
-
-          console.warn(`⚠️ ${model} failed (${r.status}): ${d?.error?.message}`);
-          lastError = d?.error?.message || `Status ${r.status}`;
+          lastError = d?.error?.message;
           break;
         } catch (err) {
-          console.warn(`❌ ${model} exception:`, err.message);
           lastError = err.message;
           break;
         }
@@ -157,37 +299,31 @@ export default async function handler(req, res) {
       if (data) break;
     }
 
-    if (!data || !response) {
+    if (!data) {
       return res.status(200).json({
         ok: false,
-        reply:
-          "⚠️ سرویس هوش مصنوعی الان شلوغه. لطفاً چند لحظه دیگه دوباره تلاش کنید. 🙏",
-        error: lastError || "All models failed",
+        reply: "⚠️ سرویس الان شلوغه. لطفاً دوباره تلاش کنید.",
+        error: lastError,
       });
     }
 
-    const reply =
-      data?.candidates?.[0]?.content?.parts
-        ?.map((p) => p.text || "")
-        .join("")
-        .trim() || "";
-
-    const finishReason = data?.candidates?.[0]?.finishReason;
-    if (!reply && finishReason === "SAFETY") {
-      return res.status(200).json({
-        ok: false,
-        reply:
-          "متأسفم، نمی‌توانم به این درخواست پاسخ دهم. لطفاً سوال خود را به شکل دیگری مطرح کنید. 🙏",
-      });
-    }
+    const reply = data?.candidates?.[0]?.content?.parts
+      ?.map((p) => p.text || "")
+      .join("")
+      .trim() || "";
 
     if (!reply) {
       return res.status(200).json({
         ok: false,
-        reply:
-          "⚠️ پاسخی دریافت نشد. لطفاً دوباره تلاش کنید یا با پشتیبانی تماس بگیرید.",
+        reply: "⚠️ پاسخی دریافت نشد.",
       });
     }
+
+    // 📊 ثبت مصرف
+    Promise.all([
+      incrementKeyUsage(keyInfo.keyId),
+      incrementSiteUsage(websiteId),
+    ]).catch(console.error);
 
     return res.status(200).json({
       ok: true,
@@ -199,9 +335,8 @@ export default async function handler(req, res) {
     console.error("Server Exception:", error);
     return res.status(500).json({
       ok: false,
-      reply:
-        "⚠️ خطای غیرمنتظره در سرور. لطفاً بعداً تلاش کنید یا با پشتیبانی انسانی تماس بگیرید.",
-      error: error?.message || String(error),
+      reply: "⚠️ خطای سرور.",
+      error: error?.message,
     });
   }
 }
