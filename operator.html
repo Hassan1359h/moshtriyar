@@ -78,9 +78,9 @@ let callStartTime = null;
 let timerInterval = null;
 let pendingIceCandidates = [];
 let hasRemoteDescription = false;
-
-const ringtone = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT');
+const ringtone = new Audio('https://actions.google.com/sounds/v1/alarms/phone_ringing.ogg');
 ringtone.loop = true;
+ringtone.volume = 1.0;
 
 async function init() {
     const { data } = await supabase.auth.getSession();
@@ -141,8 +141,10 @@ function handleIncomingCall({ payload }) {
             event: 'call-rejected',
             payload: { sessionId: payload.sessionId, reason: 'busy' }
         });
-        return;
+          
+    return;
     }
+
 // 🔔 اعلان مرورگر
 if ('Notification' in window && Notification.permission === 'granted') {
     try {
@@ -413,6 +415,22 @@ window.addEventListener('beforeunload', () => {
         });
     }
 });
+    
+// 🔓 فعال‌سازی صدا و لرزش با اولین لمس
+document.addEventListener('click', function unlockMedia() {
+    if (ringtone) {
+        ringtone.play().then(() => {
+            ringtone.pause();
+            ringtone.currentTime = 0;
+        }).catch(() => {});
+    }
+
+    if (navigator.vibrate) {
+        navigator.vibrate(1);
+    }
+
+    document.removeEventListener('click', unlockMedia);
+}, { once: true });
 </script>
 
 </body>
