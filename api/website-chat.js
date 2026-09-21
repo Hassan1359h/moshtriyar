@@ -204,12 +204,13 @@ export default async function handler(req, res) {
         websiteId = site[0].id;
         plan = site[0].profiles?.plan || "trial";
         const expiresAt = site[0].profiles?.plan_expires_at;
-        if (expiresAt && new Date(expiresAt) < new Date()) {
-          return res.status(200).json({
-            ok: false,
-            reply: "⚠️ اشتراک این سایت منقضی شده است.",
-          });
-        }
+if (expiresAt && new Date(expiresAt) < new Date()) {
+    return res.status(200).json({
+        ok: false,
+        reply: "⏰ دوره آزمایشی ۳ روزه شما به پایان رسیده. برای ادامه استفاده، لطفاً از پنل خود پلن تهیه کنید. 🌸",
+        expired: true,
+    });
+}  
       }
     }
 
