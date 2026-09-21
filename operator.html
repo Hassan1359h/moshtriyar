@@ -107,19 +107,26 @@ async function init() {
             }
         });
 }
-
 function setStatus(online) {
     const dot = document.getElementById('statusDot');
     const text = document.getElementById('statusText');
     if (online) {
         dot.className = 'dot online';
         text.textContent = 'آنلاین — آماده دریافت تماس';
+
+        let debugEl = document.getElementById('debugChannel');
+        if (!debugEl) {
+            debugEl = document.createElement('div');
+            debugEl.id = 'debugChannel';
+            debugEl.style.cssText = 'font-size:10px;opacity:.7;margin-top:10px;direction:ltr;word-break:break-all;background:rgba(0,0,0,.2);padding:6px;border-radius:6px;text-align:left;';
+            document.querySelector('.header').appendChild(debugEl);
+        }
+        debugEl.textContent = 'Operator Channel: calls-' + (currentUser?.id || '-');
     } else {
         dot.className = 'dot offline';
         text.textContent = 'آفلاین';
     }
 }
-
 function handleIncomingCall({ payload }) {
     if (currentCall) {
         channel.send({
