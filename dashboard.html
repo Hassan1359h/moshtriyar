@@ -84,6 +84,7 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;li
 <div class="loading" id="loading">در حال بارگذاری...</div>
 
 <div class="container hidden" id="main">
+    <div id="trialBanner" style="display:none;"></div>
     <div class="welcome">
         <h1>سلام <span id="userName">👋</span></h1>
         <p id="welcomeText">به داشبورد مشتری‌یار خوش آمدید</p>
@@ -97,7 +98,7 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;li
         </div>
         <div id="todoList"></div>
     </div>
-
+    
     <!-- آمار -->
     <div class="card">
         <div class="card-title">📊 این ماه</div>
@@ -396,6 +397,102 @@ $('logoutBtn').onclick = async () => {
 };
 
 init();
+   
+// ⏰ هشدار دوره آزمایشی
+async function showTrialWarning() {
+    try {
+        const { data } = await supabase.auth.getSession();
+        if (!data?.session) return;
+
+        const user = data.session.user;
+        const plan = user.user_metadata?.plan || 'trial';
+        const expiresAt = user.user_metadata?.plan_expires_at;
+
+        if (plan !== 'trial' || !expiresAt) return;
+
+        const now = new Date();
+        const expires = new Date(expiresAt);
+        const diffMs = expires - now;
+        const hoursLeft = Math.ceil(diffMs / (1000 * 60 * 60));
+        const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+        let banner = null;
+
+        if (diffMs <= 0) {
+            banner = {
+                color: '#991b1b', bg: '#fee2e2', border: '#dc2626',
+                icon: '🔒',
+                title: 'دوره آزمایشی شما به پایان رسیده',
+                text: 'برای ادامه استفاده از دستیار هوشمند، یکی از پلن‌ها رو تهیه کنید.',
+                cta: '🎁 مشاهده پلن‌ها', ctaLink: 'index.html#plans'
+            };
+        } else if (hoursLeft <= 24) {
+            banner = {
+                color: '#92400e', bg: '#fef3c7', border: '#f59e0b',
+                icon: '⚠️',
+                title: 'آخرین روز اشتراک آزمایشی!',
+                text: 'فقط ' + hoursLeft + ' ساعت تا پایان دوره آزمایشی مونده.',
+                cta: '🎁 ارتقا پلن', ctaLink: 'index.html#plans'
+            };
+        } else if (daysLeft <= 2) {
+            banner = {
+                color: '#92400e', bg: '#fef3c7', border: '#f59e0b',
+                icon: '💡',
+                title: daysLeft + ' روز از دوره آزمایشی مونده',
+                text: 'برای ادامه بدون وقفه، از قبل پلن تهیه کنید.',
+                cta: 'مشاهده پلن‌ها', ctaLink: 'index.html#plans'
+            };
+        } else if (daysLeft <= 3) {
+            banner = {
+                color: '#065f46', bg: '#d1fae5', border: '#10b981',
+                icon: '✨',
+                title: 'دوره آزمایشی ' + daysLeft + ' روزه فعال است',
+                text: 'همه امکانات مشتری‌یار در دسترس شماست.',
+                cta: null, ctaLink: null
+            };
+        }
+
+        if (banner) renderTrialBanner(banner);
+    } catch (err) {
+        console.error('Trial warning error:', err);
+    }
+}
+
+function renderTrialBanner(banner) {
+    const el = document.getElementById('trialBanner');
+    if (!el) return;
+
+    el.style.cssText =
+        'display: flex; justify-content: space-between; align-items: center;' +
+        'gap: 15px; flex-wrap: wrap;' +
+        'background: ' + banner.bg + '; color: ' + banner.color + ';' +
+        'padding: 16px 20px; border-radius: 14px;' +
+        'border-right: 5px solid ' + banner.border + ';' +
+        'margin-bottom: 20px; font-size: 14px;';
+
+    var ctaHtml = '';
+    if (banner.cta) {
+        ctaHtml = '<a href="' + banner.ctaLink + '" style="' +
+            'background: ' + banner.color + '; color: #fff;' +
+            'padding: 10px 18px; border-radius: 10px;' +
+            'text-decoration: none; font-weight: 800;' +
+            'font-size: 13px; white-space: nowrap;">' +
+            banner.cta + '</a>';
+    }
+
+    el.innerHTML =
+        '<div style="flex: 1; min-width: 200px;">' +
+            '<div style="font-weight: 800; margin-bottom: 4px;">' +
+                banner.icon + ' ' + banner.title +
+            '</div>' +
+            '<div style="font-size: 12px; opacity: .85;">' +
+                banner.text +
+            '</div>' +
+        '</div>' +
+        ctaHtml;
+}
+
+showTrialWarning(); 
 </script>
    <nav id="bottomNav" style="position:fixed;bottom:0;right:0;left:0;background:#fff;box-shadow:0 -2px 10px rgba(0,0,0,.05);display:flex;justify-content:space-around;padding:8px 0;z-index:100;">
 
