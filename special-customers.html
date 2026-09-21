@@ -261,6 +261,23 @@ body{
     opacity:.6;
     cursor:not-allowed;
     }
+    .btn-delete{
+    flex:0 0 auto;
+    border:none;
+    background:#fee2e2;
+    color:#991b1b;
+    padding:10px 14px;
+    border-radius:10px;
+    font-family:inherit;
+    font-size:13px;
+    font-weight:800;
+    cursor:pointer;
+}
+
+.btn-delete:disabled{
+    opacity:.6;
+    cursor:not-allowed;
+}
 @media(max-width:600px){
 
     .stats{
@@ -846,18 +863,25 @@ function render(){
                 </div>
 
             </div>
-            </div>
 
             <div class="actions">
 
-                <button
-                    class="btn-extend"
-                    data-user-id="${esc(user.id)}"
-                >
-                    ➕ تمدید اشتراک
-                </button>
+    <button
+        class="btn-extend"
+        data-user-id="${esc(user.id)}"
+    >
+        ➕ تمدید اشتراک
+    </button>
 
-            </div>
+    <button
+        class="btn-delete"
+        data-user-id="${esc(user.id)}"
+        data-user-name="${esc(user.full_name || user.email || '')}"
+    >
+        🗑️
+    </button>
+
+</div>
 
         `;
 
@@ -870,6 +894,66 @@ function render(){
 
 list.addEventListener('click', async (event) => {
 
+    // 🗑️ دکمه حذف
+    const deleteBtn =
+        event.target.closest('.btn-delete');
+
+    if(deleteBtn){
+
+        const userId =
+            deleteBtn.dataset.userId;
+
+        const userName =
+            deleteBtn.dataset.userName;
+
+        if(!confirm('⚠️ حذف کاربر «' + userName + '»؟\n\nاین عمل قابل بازگشت نیست!')) return;
+        if(!confirm('آیا مطمئنی؟\nهمه اطلاعات کاربر (اشتراک، سایت‌ها، پرداخت‌ها) حذف می‌شه.')) return;
+
+        deleteBtn.disabled = true;
+        deleteBtn.textContent = '⏳';
+
+        try {
+
+            const { data: { session } } =
+                await supabase.auth.getSession();
+
+            if(!session){
+                throw new Error('جلسه مدیر منقضی شده است.');
+            }
+
+            const response =
+                await fetch('/api/admin/delete-user', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + session.access_token
+                    },
+                    body: JSON.stringify({ userId })
+                });
+
+            const result =
+                await response.json();
+
+            if(!response.ok || !result.ok){
+                throw new Error(result.error || 'حذف انجام نشد.');
+            }
+
+            alert('✅ کاربر با موفقیت حذف شد');
+            await loadCustomers();
+
+        } catch (error) {
+
+            console.error('Delete user error:', error);
+            alert('❌ خطا در حذف:\n' + error.message);
+
+            deleteBtn.disabled = false;
+            deleteBtn.textContent = '🗑️';
+        }
+
+        return;
+    }
+
+    // ➕ دکمه تمدید
     const button =
         event.target.closest('.btn-extend');
 
