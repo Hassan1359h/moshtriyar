@@ -91,7 +91,14 @@ async function init() {
 
     currentUser = data.session.user;
     console.log('Operator:', currentUser.email);
-
+    // 🔔 درخواست اجازه اعلان
+if ('Notification' in window && Notification.permission === 'default') {
+    try {
+        await Notification.requestPermission();
+    } catch (e) {
+        console.log('Notification permission denied');
+    }
+}
     channel = supabase.channel(`calls-${currentUser.id}`, {
         config: { broadcast: { self: false } }
     });
@@ -136,7 +143,42 @@ function handleIncomingCall({ payload }) {
         });
         return;
     }
+// 🔔 اعلان مرورگر
+if ('Notification' in window && Notification.permission === 'granted') {
+    try {
+        const notif = new Notification('📞 تماس ورودی', {
+            body: 'مشتری درخواست تماس صوتی دارد',
+            icon: '/icon-192.png',
+            tag: 'incoming-call',
+            requireInteraction: true
+        });
 
+        notif.onclick = () => {
+            window.focus();
+            notif.close();
+        };
+    } catch (e) {
+        console.log('Notification error:', e);
+    }
+}
+
+// 📱 لرزش گوشی
+if (navigator.vibrate) {
+    navigator.vibrate([200, 100, 200, 100, 200]);
+}
+
+// 🔔 چشمک تب
+var originalTitle = document.title;
+var blinkCount = 0;
+var blinkInterval = setInterval(function() {
+    document.title = blinkCount % 2 === 0 
+        ? '📞 تماس ورودی...' 
+        : originalTitle;
+    blinkCount++;
+}, 800);
+
+window.__blinkInterval = blinkInterval;
+window.__originalTitle = originalTitle;
     console.log('تماس ورودی:', payload);
     currentCall = payload;
 
@@ -300,7 +342,14 @@ window.endCall = function() {
 function resetCall() {
     if (timerInterval) clearInterval(timerInterval);
     if (pc) { pc.close(); pc = null; }
-
+// 🛑 توقف چشمک تب
+if (window.__blinkInterval) {
+    clearInterval(window.__blinkInterval);
+    window.__blinkInterval = null;
+}
+if (window.__originalTitle) {
+    document.title = window.__originalTitle;
+}
     currentCall = null;
     callStartTime = null;
     pendingIceCandidates = [];
