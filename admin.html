@@ -58,7 +58,6 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f1f5f9;color:#0f172a;li
 .loading{text-align:center;padding:40px;color:#64748b}
 .hidden{display:none!important}
 
-/* 🆕 استایل کلیدهای Gemini */
 .key-item{background:#f8fafc;border-radius:12px;padding:14px;margin-bottom:10px}
 .key-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 .key-name{font-weight:800;font-size:14px}
@@ -74,7 +73,6 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f1f5f9;color:#0f172a;li
 .key-btn.disable{background:#fee2e2;color:#991b1b}
 .key-btn.enable{background:#dcfce7;color:#166534}
 
-/* 🆕 استایل سایت‌ها */
 .site-item{background:#f8fafc;border-radius:12px;padding:14px;margin-bottom:10px}
 .site-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
 .site-name{font-weight:800;font-size:14px}
@@ -83,6 +81,25 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f1f5f9;color:#0f172a;li
 .site-plan.business{background:#dbeafe;color:#1e40af}
 .site-domain{font-size:12px;color:#64748b;margin-bottom:8px}
 .site-key{font-size:11px;color:#94a3b8;direction:ltr;text-align:left;font-family:monospace}
+
+.notif-btn{position:relative;background:rgba(255,255,255,.15);border:none;color:#fff;padding:8px 12px;border-radius:10px;font-size:18px;cursor:pointer;font-family:inherit}
+.notif-btn:hover{background:rgba(255,255,255,.25)}
+.notif-badge{position:absolute;top:-4px;left:-4px;background:#ef4444;color:#fff;font-size:10px;font-weight:800;padding:2px 6px;border-radius:10px;min-width:18px;text-align:center}
+.notif-panel{position:fixed;top:70px;left:20px;right:20px;max-width:400px;margin:auto;background:#fff;border-radius:14px;box-shadow:0 15px 45px rgba(0,0,0,.25);z-index:999;max-height:450px;overflow:hidden;display:none;border:1px solid #e2e8f0}
+.notif-panel.open{display:block}
+.notif-head{padding:14px 16px;border-bottom:1px solid #f0f0f0;display:flex;justify-content:space-between;align-items:center}
+.notif-head h3{font-size:14px;font-weight:800;color:#1e293b;margin:0}
+.notif-mark{font-size:11px;color:#2563eb;cursor:pointer;font-weight:700;background:none;border:none;font-family:inherit}
+.notif-list{max-height:380px;overflow-y:auto;padding:8px}
+.notif-item{padding:12px;border-radius:10px;margin-bottom:6px;background:#f8fafc;display:flex;gap:10px;align-items:flex-start;cursor:pointer;transition:.2s}
+.notif-item:hover{background:#f1f5f9}
+.notif-item.unread{background:#eff6ff;border-right:3px solid #2563eb}
+.notif-icon{font-size:20px;flex-shrink:0}
+.notif-body{flex:1;min-width:0}
+.notif-title{font-size:13px;font-weight:700;color:#1e293b;margin-bottom:3px}
+.notif-message{font-size:11px;color:#64748b;line-height:1.6}
+.notif-time{font-size:10px;color:#94a3b8;margin-top:5px}
+.notif-empty{text-align:center;padding:40px 20px;color:#94a3b8;font-size:13px}
 
 @media(max-width:600px){
 .stats,.settings{grid-template-columns:1fr}
@@ -102,17 +119,31 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f1f5f9;color:#0f172a;li
         👑 مشتریان ویژه
     </a>
 
+    <button class="notif-btn" id="notifBtn" onclick="toggleNotifications()">
+        🔔
+        <span class="notif-badge" id="notifBadge" style="display:none;">0</span>
+    </button>
+
     <a href="dashboard.html">
         ← داشبورد
     </a>
 </header>
+
+<div class="notif-panel" id="notifPanel">
+    <div class="notif-head">
+        <h3>🔔 اعلان‌ها</h3>
+        <button class="notif-mark" onclick="markAllRead()">همه رو خوندم</button>
+    </div>
+    <div class="notif-list" id="notifList">
+        <div class="notif-empty">در حال بارگذاری...</div>
+    </div>
+</div>
 
 <div class="container" id="app">
     <div class="loading">
         در حال بارگذاری...
     </div>
 </div>
-
 <script type="module">
 import { supabase } from './js/supabase.js';
 
@@ -212,7 +243,6 @@ async function loadPayments() {
 }
 
 
-// 🆕 کلیدهای Gemini
 async function loadGeminiKeys() {
     try {
         const { data, error } = await supabase
@@ -271,7 +301,7 @@ async function loadGeminiKeys() {
     }
 }
 
-// 🆕 سایت‌های متصل
+
 async function loadSites() {
     const container = document.getElementById('sitesList');
     if (!container) return;
@@ -293,15 +323,10 @@ async function loadSites() {
         let profilesMap = {};
 
         if (userIds.length > 0) {
-            const { data: profiles, error: profError } = await supabase
-    .from('profiles')
-    .select('id, email, full_name')
-    .in('id', userIds);
-
-console.log('Profiles fetched:', profiles, profError);
-
-
-
+            const { data: profiles } = await supabase
+                .from('profiles')
+                .select('id, email, full_name')
+                .in('id', userIds);
 
             (profiles || []).forEach(p => {
                 profilesMap[p.id] = p;
@@ -310,7 +335,7 @@ console.log('Profiles fetched:', profiles, profError);
 
         container.innerHTML = connections.map(conn => {
             const profile = profilesMap[conn.user_id] || {};
-            const plan = 'trial'; // فعلاً همه trial
+            const plan = 'trial';
             const planLabel = plan === 'pro' ? '💎 حرفه‌ای'
                 : plan === 'business' ? '🏢 کسب‌وکار'
                 : '🆓 تست';
@@ -352,7 +377,7 @@ console.log('Profiles fetched:', profiles, profError);
     }
 }
 
-// 🆕 تغییر وضعیت کلید
+
 window.toggleGeminiKey = async function(keyId, active) {
     if (!confirm(active ? 'کلید فعال شود؟' : 'کلید غیرفعال شود؟')) return;
 
@@ -417,7 +442,6 @@ function renderUI() {
             <p class="msg" id="saveMsg"></p>
         </div>
 
-        <!-- 🆕 کلیدهای Gemini -->
         <div class="card">
             <h2>🔑 کلیدهای Gemini</h2>
             <div id="keysList" style="display:flex;flex-direction:column;">
@@ -425,7 +449,6 @@ function renderUI() {
             </div>
         </div>
 
-        <!-- 🆕 سایت‌های متصل -->
         <div class="card">
             <h2>🌐 سایت‌های متصل</h2>
             <div id="sitesList" style="display:flex;flex-direction:column;">
@@ -457,7 +480,6 @@ function renderUI() {
     updateStats();
     renderList();
 
-    // 🆕 دوباره لود کن چون DOM جدید ساخته شده
     loadGeminiKeys();
     loadSites();
 }
@@ -691,11 +713,189 @@ async function reject(paymentId, btn) {
         btn.textContent = '❌ رد';
     }
 }
+   
 
+// ==========================================
+// 🔔 سیستم اعلان‌ها
+// ==========================================
 
+let notifications = [];
+let notifPollInterval = null;
+let lastUnreadCount = 0;
+
+async function notifApi(method, body) {
+    const { data } = await supabase.auth.getSession();
+    const token = data?.session?.access_token;
+    if (!token) return null;
+
+    const opts = {
+        headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
+        }
+    };
+
+    if (method === 'GET') {
+        const res = await fetch('/api/notifications', opts);
+        return res.json();
+    } else {
+        opts.method = method;
+        opts.body = JSON.stringify(body || {});
+        const res = await fetch('/api/notifications', opts);
+        return res.json();
+    }
+}
+
+async function loadNotifications() {
+    try {
+        const data = await notifApi('GET');
+        if (!data || !data.ok) return;
+        notifications = data.notifications || [];
+        lastUnreadCount = data.unreadCount || 0;
+        updateBadge(data.unreadCount || 0);
+        renderNotifications();
+    } catch (err) {
+        console.error('Load notifications error:', err);
+    }
+}
+
+function updateBadge(count) {
+    const badge = document.getElementById('notifBadge');
+    if (!badge) return;
+    if (count > 0) {
+        badge.textContent = count > 99 ? '99+' : count;
+        badge.style.display = 'block';
+    } else {
+        badge.style.display = 'none';
+    }
+}
+
+function renderNotifications() {
+    const list = document.getElementById('notifList');
+    if (!list) return;
+
+    if (notifications.length === 0) {
+        list.innerHTML = '<div class="notif-empty">📭 اعلان جدیدی نیست</div>';
+        return;
+    }
+
+    list.innerHTML = notifications.map(n => {
+        const date = n.created_at
+            ? new Date(n.created_at).toLocaleString('fa-IR', {
+                month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            })
+            : '';
+
+        return '<div class="notif-item ' + (n.read ? '' : 'unread') + '" ' +
+               'onclick="handleNotifClick(' + n.id + ', \'' + (n.link || '').replace(/'/g, "\\'") + '\')">' +
+               '<div class="notif-icon">' + (n.icon || '🔔') + '</div>' +
+               '<div class="notif-body">' +
+               '<div class="notif-title">' + escapeHtml(n.title) + '</div>' +
+               (n.message ? '<div class="notif-message">' + escapeHtml(n.message) + '</div>' : '') +
+               '<div class="notif-time">' + date + '</div>' +
+               '</div></div>';
+    }).join('');
+}
+
+async function handleNotifClick(id, link) {
+    try {
+        await notifApi('PATCH', { id: id });
+        if (link && link.trim()) {
+            location.href = link;
+            return;
+        }
+        await loadNotifications();
+    } catch (err) {
+        console.error('Mark read error:', err);
+    }
+}
+
+async function markAllRead() {
+    try {
+        await notifApi('PATCH', { markAll: true });
+        await loadNotifications();
+    } catch (err) {
+        console.error('Mark all error:', err);
+    }
+}
+
+function toggleNotifications() {
+    const panel = document.getElementById('notifPanel');
+    if (!panel) return;
+    panel.classList.toggle('open');
+    if (panel.classList.contains('open')) loadNotifications();
+}
+
+document.addEventListener('click', function(e) {
+    const panel = document.getElementById('notifPanel');
+    const btn = document.getElementById('notifBtn');
+    if (panel && btn && !panel.contains(e.target) && !btn.contains(e.target)) {
+        panel.classList.remove('open');
+    }
+});
+
+if ('Notification' in window && Notification.permission === 'default') {
+    setTimeout(function() { Notification.requestPermission(); }, 3000);
+}
+
+async function checkNewNotifications() {
+    try {
+        const data = await notifApi('GET');
+        if (!data || !data.ok) return;
+
+        const newCount = data.unreadCount || 0;
+
+        if (newCount > lastUnreadCount && lastUnreadCount > 0) {
+            const newest = data.notifications && data.notifications[0];
+            if (newest && 'Notification' in window && Notification.permission === 'granted') {
+                try {
+                    const notif = new Notification((newest.icon || '🔔') + ' ' + newest.title, {
+                        body: newest.message || '',
+                        icon: '/icon-192.png',
+                        tag: 'moshtriyar-' + newest.id
+                    });
+                    notif.onclick = function() { window.focus(); notif.close(); };
+                } catch (e) {}
+            }
+        }
+
+        lastUnreadCount = newCount;
+        notifications = data.notifications || [];
+        updateBadge(newCount);
+        renderNotifications();
+    } catch (err) {}
+}
+
+setTimeout(function() {
+    loadNotifications().then(function() {
+        notifPollInterval = setInterval(checkNewNotifications, 30000);
+    });
+}, 1500);
+
+window.addEventListener('beforeunload', function() {
+    if (notifPollInterval) clearInterval(notifPollInterval);
+});
+
+function escapeHtml(str) {
+    return String(str || '').replace(/[&<>"']/g, function(m) {
+        return {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        }[m];
+    });
+}
+
+window.toggleNotifications = toggleNotifications;
+window.markAllRead = markAllRead;
+window.handleNotifClick = handleNotifClick;
+
+// 🚀 شروع
 init();
 
 </script>
 
 </body>
-</html>
+</html> 
