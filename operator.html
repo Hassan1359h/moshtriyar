@@ -146,11 +146,15 @@ function handleIncomingCall({ payload }) {
         <div class="call-card">
             <div style="font-size:60px;">📞</div>
             <h2>تماس ورودی</h2>
-            <div class="visitor">
-                ${escapeHtml(payload.visitorName || 'کاربر سایت')}
-                <br>
-                <small style="opacity:.7;">${escapeHtml(payload.siteUrl || '')}</small>
-            </div>
+            <div class="visitor" style="font-size:15px;font-weight:800;">
+    ${escapeHtml(
+        (payload.siteUrl || '').replace(/^https?:\/\//, '').replace(/\/$/, '')
+    ) || 'کاربر سایت'}
+    <br>
+    <small style="opacity:.8;font-weight:400;font-size:12px;">
+        مشتری درخواست تماس صوتی دارد
+    </small>
+</div>
             <div class="actions">
                 <button class="btn btn-reject" onclick="rejectCall()">❌ رد</button>
                 <button class="btn btn-accept" onclick="acceptCall()">✅ پاسخ</button>
