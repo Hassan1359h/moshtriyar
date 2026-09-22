@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>راهنما و مستندات | مشتری‌یار</title>
+<link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
+<link rel="icon" href="icon-192.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f1f5f9;color:#0f172a;line-height:1.9;padding-bottom:40px}
+.header{background:#1e293b;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;gap:8px;position:sticky;top:0;z-index:100}
+.header h1{font-size:16px;font-weight:800;margin-left:auto}
+.header a{color:#fff;text-decoration:none;background:#334155;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:700}
+.header a.blue{background:#2563eb}
+
+.hero{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;padding:50px 20px;text-align:center}
+.hero h2{font-size:28px;margin-bottom:12px;font-weight:900}
+.hero p{opacity:.9;font-size:15px;max-width:600px;margin:auto}
+.hero .search{margin-top:25px;max-width:500px;margin-left:auto;margin-right:auto;position:relative}
+.hero .search input{width:100%;padding:16px 50px 16px 20px;border:none;border-radius:14px;font-family:inherit;font-size:14px;outline:none;box-shadow:0 8px 25px rgba(0,0,0,.15)}
+.hero .search::before{content:"🔍";position:absolute;right:18px;top:50%;transform:translateY(-50%);font-size:18px}
+
+.container{max-width:900px;margin:auto;padding:30px 20px}
+
+.toc{background:#fff;border-radius:16px;padding:25px;margin-bottom:25px;box-shadow:0 2px 10px rgba(0,0,0,.04)}
+.toc h3{font-size:16px;margin-bottom:15px;font-weight:800;color:#1e293b}
+.toc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.toc-item{display:flex;align-items:center;gap:10px;padding:12px 14px;background:#f8fafc;border-radius:10px;text-decoration:none;color:#334155;font-size:13px;font-weight:700;transition:.2s;cursor:pointer}
+.toc-item:hover{background:#eff6ff;color:#2563eb}
+.toc-item .icon{font-size:20px}
+
+.section{background:#fff;border-radius:16px;padding:30px;margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,.04);scroll-margin-top:80px}
+.section h2{font-size:20px;color:#1e293b;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #f1f5f9;font-weight:900;display:flex;align-items:center;gap:12px}
+.section h2 .icon{font-size:28px}
+.section h3{font-size:16px;color:#1e293b;margin:20px 0 10px;font-weight:800}
+.section h3:first-of-type{margin-top:0}
+.section p{margin-bottom:12px;font-size:14px;color:#334155;line-height:1.9}
+
+.steps{counter-reset:step;list-style:none;margin:15px 0}
+.steps li{position:relative;padding-right:50px;padding-bottom:20px;counter-increment:step}
+.steps li::before{content:counter(step);position:absolute;right:0;top:0;width:36px;height:36px;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px}
+.steps li::after{content:"";position:absolute;right:17px;top:40px;bottom:0;width:2px;background:#e2e8f0}
+.steps li:last-child::after{display:none}
+.steps li strong{display:block;color:#1e293b;margin-bottom:4px;font-size:14px}
+.steps li span{color:#64748b;font-size:13px}
+
+.code-block{background:#1e293b;color:#e2e8f0;padding:16px 20px;border-radius:12px;font-family:'Courier New',monospace;font-size:12px;overflow-x:auto;direction:ltr;text-align:left;margin:15px 0;white-space:pre;line-height:1.7}
+.code-block .tag{color:#7dd3fc}
+.code-block .attr{color:#fbbf24}
+.code-block .val{color:#86efac}
+
+.callout{padding:15px 20px;border-radius:12px;margin:15px 0;font-size:13px;display:flex;gap:12px;align-items:flex-start}
+.callout .icon{font-size:20px;flex-shrink:0}
+.callout.info{background:#dbeafe;color:#1e40af;border-right:4px solid #2563eb}
+.callout.success{background:#d1fae5;color:#065f46;border-right:4px solid #10b981}
+.callout.warning{background:#fef3c7;color:#92400e;border-right:4px solid #f59e0b}
+
+.faq-item{background:#f8fafc;border-radius:12px;margin-bottom:10px;overflow:hidden}
+.faq-question{padding:16px 20px;font-weight:800;font-size:14px;color:#1e293b;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.faq-question:hover{background:#f1f5f9}
+.faq-question .arrow{color:#64748b;transition:.3s;font-size:18px}
+.faq-item.open .faq-question .arrow{transform:rotate(180deg)}
+.faq-answer{padding:0 20px;max-height:0;overflow:hidden;transition:.3s;font-size:13px;color:#475569;line-height:1.9}
+.faq-item.open .faq-answer{padding:0 20px 18px;max-height:500px}
+
+.support{background:linear-gradient(135deg,#10b981,#059669);color:#fff;border-radius:16px;padding:30px;text-align:center;margin-top:25px}
+.support h3{font-size:20px;margin-bottom:10px;font-weight:900}
+.support p{opacity:.9;font-size:14px;margin-bottom:20px}
+.support-btn{display:inline-block;background:#fff;color:#059669;padding:14px 30px;border-radius:12px;text-decoration:none;font-weight:900;font-size:14px}
+
+@media(max-width:600px){
+.hero h2{font-size:22px}
+.section{padding:22px 18px}
+.section h2{font-size:17px}
+.toc-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+    <h1>📚 راهنما</h1>
+    <a class="blue" href="dashboard.html">داشبورد</a>
+    <a href="index.html">← صفحه اصلی</a>
+</header>
+
+<div class="hero">
+    <h2>📚 مرکز راهنمای مشتری‌یار</h2>
+    <p>هر چیزی که برای شروع کار با مشتری‌یار نیاز داری، اینجاست.</p>
+    <div class="search">
+        <input id="searchBox" type="search" placeholder="جستجو در راهنما...">
+    </div>
+</div>
+
+<div class="container">
+
+    <div class="toc">
+        <h3>📋 فهرست مطالب</h3>
+        <div class="toc-grid">
+            <a class="toc-item" onclick="scrollToSection('start')"><span class="icon">🚀</span> شروع سریع</a>
+            <a class="toc-item" onclick="scrollToSection('wordpress')"><span class="icon">🔌</span> نصب افزونه وردپرس</a>
+            <a class="toc-item" onclick="scrollToSection('dashboard')"><span class="icon">📊</span> پنل کاربری</a>
+            <a class="toc-item" onclick="scrollToSection('ai')"><span class="icon">🤖</span> دستیار هوشمند</a>
+            <a class="toc-item" onclick="scrollToSection('voice')"><span class="icon">📞</span> تماس صوتی</a>
+            <a class="toc-item" onclick="scrollToSection('plans')"><span class="icon">💎</span> پلن‌ها</a>
+            <a class="toc-item" onclick="scrollToSection('faq')"><span class="icon">❓</span> سوالات متداول</a>
+            <a class="toc-item" onclick="scrollToSection('support')"><span class="icon">📞</span> پشتیبانی</a>
+        </div>
+    </div>
+
+    <!-- بخش ۱: شروع سریع -->
+    <div class="section" id="start">
+        <h2><span class="icon">🚀</span> شروع سریع</h2>
+        <p>در ۴ مرحله ساده، مشتری‌یار رو روی سایتت راه‌اندازی کن:</p>
+
+        <ol class="steps">
+            <li>
+                <strong>ثبت‌نام و ورود</strong>
+                <span>از صفحه اصلی، روی «شروع رایگان» بزن و اطلاعاتت رو وارد کن.</span>
+            </li>
+            <li>
+                <strong>دوره آزمایشی ۳ روزه</strong>
+                <span>بعد از ثبت‌نام، ۳ روز رایگان همه امکانات فعاله.</span>
+            </li>
+            <li>
+                <strong>اتصال سایت وردپرسی</strong>
+                <span>افزونه مشتری‌یار رو دانلود کن و در وردپرس نصب کن.</span>
+            </li>
+            <li>
+                <strong>فعال‌سازی دستیار</strong>
+                <span>افزونه رو فعال کن و مشتری‌یار خودکار روی سایتت ظاهر می‌شه.</span>
+            </li>
+        </ol>
+
+        <div class="callout success">
+            <span class="icon">✅</span>
+            <div>در کمتر از ۵ دقیقه می‌تونی دستیار هوشمند رو روی سایتت فعال کنی!</div>
+        </div>
+    </div>
+
+    <!-- بخش ۲: نصب افزونه وردپرس -->
+    <div class="section" id="wordpress">
+        <h2><span class="icon">🔌</span> نصب افزونه وردپرس</h2>
+
+        <h3>📥 دانلود افزونه</h3>
+        <p>وارد داشبورد مشتری‌یار شو و از بخش «اتصال وب‌سایت»، افزونه وردپرس رو دانلود کن.</p>
+
+        <h3>📤 نصب در وردپرس</h3>
+        <ol class="steps">
+            <li>
+                <strong>ورود به پیشخوان وردپرس</strong>
+                <span>وارد پنل مدیریت وردپرس سایتت شو.</span>
+            </li>
+            <li>
+                <strong>افزونه‌ها → افزودن → بارگذاری افزونه</strong>
+                <span>فایل ZIP رو انتخاب و نصب کن.</span>
+            </li>
+            <li>
+                <strong>فعال‌سازی افزونه</strong>
+                <span>روی «فعال کردن» بزن. سایت خودکار به مشتری‌یار متصل می‌شه.</span>
+            </li>
+            <li>
+                <strong>بررسی وضعیت اتصال</strong>
+                <span>باید پیام «✅ مشتری‌یار با موفقیت متصل شد» رو ببینی.</span>
+            </li>
+        </ol>
+
+        <div class="callout info">
+            <span class="icon">💡</span>
+            <div>اگر وردپرس نداری، می‌تونی از <strong>کد اتصال مستقیم</strong> استفاده کنی که در داشبورد نمایش داده می‌شه.</div>
+        </div>
+    </div>
+
+    <!-- بخش ۳: پنل کاربری -->
+    <div class="section" id="dashboard">
+        <h2><span class="icon">📊</span> پنل کاربری</h2>
+
+        <h3>🎛️ بخش‌های مختلف</h3>
+        <p>در داشبورد مشتری‌یار، این بخش‌ها رو می‌بینی:</p>
+
+        <p><strong>📊 آمار این ماه:</strong> تعداد مشتریان، فروش، مشتریان جدید</p>
+        <p><strong>💳 وضعیت اشتراک:</strong> پلن فعلی و تاریخ انقضا</p>
+        <p><strong>📞 پنل اپراتور:</strong> دریافت تماس‌های صوتی از مشتریان سایت</p>
+        <p><strong>🌐 اتصال وب‌سایت:</strong> دریافت افزونه و تنظیمات</p>
+
+        <h3>🔗 کد اتصال مستقیم</h3>
+        <p>در بخش «اتصال وب‌سایت»، یک کد بهت داده می‌شه که می‌تونی در هر سایت (نه فقط وردپرس) قرار بدی:</p>
+
+        <div class="code-block">&lt;<span class="tag">script</span>
+  <span class="attr">src</span>=<span class="val">"https://moshtriyar.ir/api/website-agent.js"</span>
+  <span class="attr">data-user-id</span>=<span class="val">"YOUR-USER-ID"</span>
+  <span class="attr">data-site</span>=<span class="val">"https://yoursite.ir"</span>
+  <span class="attr">data-color</span>=<span class="val">"#2563eb"</span>
+  <span class="attr">data-title</span>=<span class="val">"دستیار هوشمند"</span>
+  <span class="attr">data-enabled</span>=<span class="val">"true"</span>&gt;
+&lt;/<span class="tag">script</span>&gt;</div>
+
+        <div class="callout warning">
+            <span class="icon">⚠️</span>
+            <div>این کد رو قبل از <strong>&lt;/body&gt;</strong> در HTML سایتت قرار بده.</div>
+        </div>
+    </div>
+
+    <!-- بخش ۴: دستیار هوشمند -->
+    <div class="section" id="ai">
+        <h2><span class="icon">🤖</span> دستیار هوشمند</h2>
+
+        <h3>✨ چی می‌تونه بکنه؟</h3>
+        <p>دستیار هوشمند مشتری‌یار بر پایه هوش مصنوعی Gemini کار می‌کنه و می‌تونه:</p>
+        <ul style="margin:15px 20px;font-size:14px;line-height:2;color:#334155">
+            <li>به سوالات مشتریان درباره محصولات پاسخ بده</li>
+            <li>وضعیت سفارش رو توضیح بده</li>
+            <li>راهنمای خرید ارائه بده</li>
+            <li>مشکل‌های رایج رو حل کنه</li>
+            <li>وقتی لازمه، کاربر رو به پشتیبان انسانی ارجاع بده</li>
+        </ul>
+
+        <h3>🎨 شخصی‌سازی</h3>
+        <p>در بخش «اتصال وب‌سایت» می‌تونی این‌ها رو تنظیم کنی:</p>
+        <p>• <strong>رنگ ویجت:</strong> رنگ دکمه و هدر دستیار</p>
+        <p>• <strong>عنوان دستیار:</strong> متنی که بالای چت نمایش داده می‌شه</p>
+        <p>• <strong>پیام خوش‌آمدگویی:</strong> اولین پیامی که کاربر می‌بینه</p>
+        <p>• <strong>وضعیت فعال/غیرفعال:</strong> روشن یا خاموش کردن دستیار</p>
+
+        <div class="callout info">
+            <span class="icon">💡</span>
+            <div>دستیار هوشمند خودکار به فارسی پاسخ می‌ده. اگر کاربر به زبان دیگه‌ای سوال بپرسه، همون زبان پاسخ می‌ده.</div>
+        </div>
+    </div>
+
+    <!-- بخش ۵: تماس صوتی -->
+    <div class="section" id="voice">
+        <h2><span class="icon">📞</span> تماس صوتی</h2>
+
+        <h3>🎙️ چطور کار می‌کنه؟</h3>
+        <p>مشتریان سایتت می‌تونن با کلیک روی دکمه 📞 در ویجت چت، درخواست تماس صوتی بدن. تماس مستقیم به پنل اپراتور شما (صاحب سایت) میاد.</p>
+
+        <h3>📋 راه‌اندازی پنل اپراتور</h3>
+        <ol class="steps">
+            <li>
+                <strong>باز کردن پنل اپراتور</strong>
+                <span>از داشبورد، روی «پنل اپراتور من» بزن یا مستقیم به <code style="background:#f1f5f9;padding:2px 8px;border-radius:6px;font-family:monospace;direction:ltr;display:inline-block">moshtriyar.ir/operator.html</code> برو.</span>
+            </li>
+            <li>
+                <strong>اجازه دسترسی به میکروفون</strong>
+                <span>مرورگر ازت اجازه میکروفون می‌خواد. قبول کن.</span>
+            </li>
+            <li>
+                <strong>اجازه اعلان</strong>
+                <span>برای اینکه تماس‌ها رو از دست ندی، اجازه اعلان هم بده.</span>
+            </li>
+            <li>
+                <strong>باز نگه داشتن صفحه</strong>
+                <span>این صفحه رو در یک تب باز نگه دار تا تماس‌ها دریافت بشن.</span>
+            </li>
+        </ol>
+
+        <div class="callout warning">
+            <span class="icon">📱</span>
+            <div>برای دریافت تماس‌ها، حتماً صدا و لرزش گوشی رو روشن کن.</div>
+        </div>
+    </div>
+
+    <!-- بخش ۶: پلن‌ها -->
+    <div class="section" id="plans">
+        <h2><span class="icon">💎</span> پلن‌ها و اشتراک</h2>
+
+        <h3>🆓 پلن تست (۳ روز رایگان)</h3>
+        <p>همه امکانات، محدود به ۳ روز. فقط یک بار برای هر کاربر.</p>
+
+        <h3>💎 پلن حرفه‌ای</h3>
+        <p>مناسب کسب‌وکارهای کوچک و متوسط. امکانات کامل + پشتیبانی ایمیلی.</p>
+
+        <h3>🏢 پلن کسب‌وکار</h3>
+        <p>برای کسب‌وکارهای بزرگ. مشتریان نامحدود + پشتیبانی تلفنی ۲۴/۷ + API.</p>
+
+        <h3>📅 تمدید اشتراک</h3>
+        <p>برای تمدید، از داشبورد روی «تجدید اشتراک» بزن و پرداخت رو انجام بده. اشتراکت بعد از تایید، خودکار فعال می‌شه.</p>
+
+        <div class="callout info">
+            <span class="icon">💡</span>
+            <div>برای تغییر پلن، از داشبورد با پشتیبانی تماس بگیر.</div>
+        </div>
+    </div>
+
+    <!-- بخش ۷: سوالات متداول -->
+    <div class="section" id="faq">
+        <h2><span class="icon">❓</span> سوالات متداول</h2>
+
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleFaq(this)">
+                <span>🤔 مشتری‌یار چطور کار می‌کنه؟</span>
+                <span class="arrow">▼</span>
+            </div>
+            <div class="faq-answer">
+                مشتری‌یار یک اسکریپت کوچیک به سایت شما اضافه می‌کنه که یک ویجت چت در گوشه صفحه نمایش می‌ده. مشتریان از این ویجت سوال می‌پرسن و هوش مصنوعی Gemini به صورت خودکار پاسخ می‌ده.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleFaq(this)">
+                <span>💻 آیا فقط برای وردپرس کار می‌کنه؟</span>
+                <span class="arrow">▼</span>
+            </div>
+            <div class="faq-answer">
+                نه! مشتری‌یار روی هر سایتی (وردپرس، HTML، React، Next.js، ...) کار می‌کنه. برای وردپرس افزونه داریم و برای بقیه سایت‌ها کد اتصال مستقیم.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleFaq(this)">
+                <span>🌐 چطور سایت خودم رو وصل کنم؟</span>
+                <span class="arrow">▼</span>
+            </div>
+            <div class="faq-answer">
+                وارد داشبورد شو → بخش «اتصال وب‌سایت» → کد اتصال رو کپی کن و قبل از تگ &lt;/body&gt; در HTML سایتت قرار بده.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleFaq(this)">
+                <span>🔒 اطلاعات مشتریانم امن هست؟</span>
+                <span class="arrow">▼</span>
+            </div>
+            <div class="faq-answer">
+                بله. تمام ارتباطات با HTTPS رمزنگاری می‌شن. اطلاعات در سرورهای امن ذخیره می‌شه و ما از Row Level Security (RLS) برای محدودیت دسترسی استفاده می‌کنیم.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleFaq(this)">
+                <span>💰 چطور پرداخت کنم؟</span>
+                <span class="arrow">▼</span>
+            </div>
+            <div class="faq-answer">
+                از داشبورد → «تجدید اشتراک» → کارت‌به‌کارت. بعد از پرداخت، اطلاعات کارت و کد پیگیری رو وارد کن. ادمین ظرف چند ساعت تایید می‌کنه.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleFaq(this)">
+                <span>📞 تماس صوتی چطور کار می‌کنه؟</span>
+                <span class="arrow">▼</span>
+            </div>
+            <div class="faq-answer">
+                مشتری از ویجت چت روی 📞 می‌زنه. تماس به پنل اپراتور شما میاد. شما پاسخ می‌دید و مکالمه صوتی بین شما و مشتری برقرار می‌شه.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleFaq(this)">
+                <span>🔄 می‌تونم پلنم رو تغییر بدم؟</span>
+                <span class="arrow">▼</span>
+            </div>
+            <div class="faq-answer">
+                بله. برای ارتقا یا تنزل پلن، از داشبورد با پشتیبانی تماس بگیر. تغییر پلن از دوره بعدی اعمال می‌شه.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleFaq(this)">
+                <span>🗑️ می‌تونم حسابم رو حذف کنم؟</span>
+                <span class="arrow">▼</span>
+            </div>
+            <div class="faq-answer">
+                بله. از داشبورد → تنظیمات → «حذف حساب کاربری». تمام اطلاعات پس از ۳۰ روز به‌طور کامل حذف می‌شه.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleFaq(this)">
+                <span>💬 پاسخ‌های AI قابل تنظیمه؟</span>
+                <span class="arrow">▼</span>
+            </div>
+            <div class="faq-answer">
+                بله، به‌زودی قابلیت شخصی‌سازی پرامپت اضافه می‌شه. الان می‌تونی عنوان، رنگ و پیام خوش‌آمدگویی رو تغییر بدی.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleFaq(this)">
+                <span>⚡ سرعت پاسخگویی چطوره؟</span>
+                <span class="arrow">▼</span>
+            </div>
+            <div class="faq-answer">
+                معمولاً کمتر از ۳ ثانیه. ما از چندین کلید Gemini استفاده می‌کنیم تا همیشه پاسخ سریع دریافت کنی.
+            </div>
+        </div>
+
+    </div>
+
+    <!-- پشتیبانی -->
+    <div class="support" id="support">
+        <h3>📞 نیاز به کمک داری؟</h3>
+        <p>تیم پشتیبانی مشتری‌یار آماده کمک به شماست</p>
+        <a href="index.html" class="support-btn">تماس با پشتیبانی</a>
+    </div>
+
+</div>
+
+<script>
+    // اسکرول نرم به بخش
+    function scrollToSection(id) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    // باز/بسته کردن سوالات متداول
+    function toggleFaq(el) {
+        const item = el.parentElement;
+        item.classList.toggle('open');
+    }
+
+    // جستجو
+    document.getElementById('searchBox').addEventListener('input', function(e) {
+        const q = e.target.value.trim().toLowerCase();
+        const sections = document.querySelectorAll('.section');
+
+        if (!q) {
+            sections.forEach(s => s.style.display = 'block');
+            return;
+        }
+
+        sections.forEach(s => {
+            const text = s.textContent.toLowerCase();
+            s.style.display = text.includes(q) ? 'block' : 'none';
+        });
+    });
+</script>
+
+</body>
+                  </html>
