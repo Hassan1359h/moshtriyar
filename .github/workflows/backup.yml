@@ -1,0 +1,55 @@
+name: 🛡️ Daily Backup
+
+on:
+  schedule:
+    - cron: '30 23 * * *'
+  workflow_dispatch:
+
+jobs:
+  backup-db:
+    name: 🗄️ Database Backup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🐘 Install PostgreSQL Client
+        run: sudo apt-get install -y postgresql-client
+
+      - name: 💾 Dump Database
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          TIMESTAMP=$(date +"%Y-%m-%d_%H-%M")
+          mkdir -p backups
+          pg_dump "$DATABASE_URL" --no-owner --no-acl > "backups/db_${TIMESTAMP}.sql"
+          gzip "backups/db_${TIMESTAMP}.sql"
+          echo "✅ Backup: db_${TIMESTAMP}.sql.gz"
+
+      - name: 📤 Upload Backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ github.run_number }}
+          path: backups/*.sql.gz
+          retention-days: 30
+
+  backup-code:
+    name: 📦 Code Backup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 📦 Archive Code
+        run: |
+          TIMESTAMP=$(date +"%Y-%m-%d")
+          mkdir -p backups
+          git archive --format=tar.gz -o "backups/code_${TIMESTAMP}.tar.gz" HEAD
+          echo "✅ Backup: code_${TIMESTAMP}.tar.gz"
+
+      - name: 📤 Upload Code
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-backup-${{ github.run_number }}
+          path: backups/*.tar.gz
+          retention-days: 30
