@@ -1,4 +1,4 @@
-name: 🛡️ Daily Backup
+name: Daily Backup
 
 on:
   schedule:
@@ -7,15 +7,19 @@ on:
 
 jobs:
   backup-db:
-    name: 🗄️ Database Backup
+    name: Database Backup
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: 🐘 Install PostgreSQL Client
-        run: sudo apt-get install -y postgresql-client
+      - name: Install PostgreSQL 17 Client
+        run: |
+          sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-17
 
-      - name: 💾 Dump Database
+      - name: Dump Database
         env:
           DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
@@ -23,9 +27,9 @@ jobs:
           mkdir -p backups
           pg_dump "$DATABASE_URL" --no-owner --no-acl > "backups/db_${TIMESTAMP}.sql"
           gzip "backups/db_${TIMESTAMP}.sql"
-          echo "✅ Backup: db_${TIMESTAMP}.sql.gz"
+          echo "Backup: db_${TIMESTAMP}.sql.gz"
 
-      - name: 📤 Upload Backup
+      - name: Upload Backup
         uses: actions/upload-artifact@v4
         with:
           name: db-backup-${{ github.run_number }}
@@ -33,21 +37,21 @@ jobs:
           retention-days: 30
 
   backup-code:
-    name: 📦 Code Backup
+    name: Code Backup
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: 📦 Archive Code
+      - name: Archive Code
         run: |
           TIMESTAMP=$(date +"%Y-%m-%d")
           mkdir -p backups
           git archive --format=tar.gz -o "backups/code_${TIMESTAMP}.tar.gz" HEAD
-          echo "✅ Backup: code_${TIMESTAMP}.tar.gz"
+          echo "Backup: code_${TIMESTAMP}.tar.gz"
 
-      - name: 📤 Upload Code
+      - name: Upload Code
         uses: actions/upload-artifact@v4
         with:
           name: code-backup-${{ github.run_number }}
