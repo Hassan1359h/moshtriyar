@@ -801,6 +801,8 @@ export default async function handler(req, res) {
                             '<div style="font-size:50px;">😔</div>' +
                             '<h2 style="margin:15px 0;font-size:18px;">پشتیبان در دسترس نیست</h2>' +
                             '<p style="font-size:13px;opacity:.9;">لطفاً از طریق چت پیام بگذارید</p>'
+                            '<p style="font-size:11px;opacity:.7;margin-top:10px;direction:ltr;">User ID: ' + config.userId.slice(0, 8) + '...</p>' +
+'<p style="font-size:11px;opacity:.7;direction:ltr;">Channel: calls-' + config.userId.slice(0, 8) + '...</p>' +
                         );
 
                         setTimeout(
