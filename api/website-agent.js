@@ -325,7 +325,7 @@ export default async function handler(req, res) {
             try {
 
                 var response = await fetch(
-                    "https://moshtriyar.ir/api/website-chat",
+                    /api/website-chat
                     {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
