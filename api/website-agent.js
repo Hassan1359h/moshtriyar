@@ -23,20 +23,11 @@ export default async function handler(req, res) {
     var scriptTag = document.currentScript;
 
     var config = {
-        userId:
-            scriptTag?.getAttribute("data-user-id") || "",
-
-        site:
-            scriptTag?.getAttribute("data-site") || "",
-
-        color:
-            scriptTag?.getAttribute("data-color") || "#2563eb",
-
-        title:
-            scriptTag?.getAttribute("data-title") || "دستیار هوشمند",
-
-        enabled:
-            scriptTag?.getAttribute("data-enabled") !== "false"
+        userId: scriptTag?.getAttribute("data-user-id") || "",
+        site: scriptTag?.getAttribute("data-site") || "",
+        color: scriptTag?.getAttribute("data-color") || "#2563eb",
+        title: scriptTag?.getAttribute("data-title") || "دستیار هوشمند",
+        enabled: scriptTag?.getAttribute("data-enabled") !== "false"
     };
 
     var SUPABASE_URL = "${SUPABASE_URL}";
@@ -82,7 +73,6 @@ export default async function handler(req, res) {
             return;
         }
 
-
         var button = document.createElement("button");
 
         button.id = "moshtiryar-ai-agent";
@@ -90,17 +80,10 @@ export default async function handler(req, res) {
         button.innerHTML = "🤖";
 
         button.style.cssText =
-            "position:fixed;" +
-            "bottom:20px;" +
-            "right:20px;" +
-            "width:58px;" +
-            "height:58px;" +
-            "border:none;" +
-            "border-radius:50%;" +
-            "background:" + config.color + ";" +
-            "color:#fff;" +
-            "font-size:26px;" +
-            "cursor:pointer;" +
+            "position:fixed;bottom:20px;right:20px;" +
+            "width:58px;height:58px;border:none;" +
+            "border-radius:50%;background:" + config.color + ";" +
+            "color:#fff;font-size:26px;cursor:pointer;" +
             "z-index:2147483647;" +
             "box-shadow:0 8px 25px rgba(0,0,0,.22);";
 
@@ -110,22 +93,14 @@ export default async function handler(req, res) {
         box.id = "moshtiryar-ai-box";
 
         box.style.cssText =
-            "display:none;" +
-            "position:fixed;" +
-            "bottom:90px;" +
-            "right:20px;" +
-            "width:340px;" +
-            "max-width:calc(100vw - 30px);" +
-            "height:480px;" +
-            "max-height:calc(100vh - 120px);" +
-            "background:#fff;" +
-            "border-radius:18px;" +
-            "overflow:hidden;" +
+            "display:none;position:fixed;bottom:90px;right:20px;" +
+            "width:340px;max-width:calc(100vw - 30px);" +
+            "height:480px;max-height:calc(100vh - 120px);" +
+            "background:#fff;border-radius:18px;overflow:hidden;" +
             "z-index:2147483646;" +
             "box-shadow:0 15px 45px rgba(15,23,42,.25);" +
             "border:1px solid #e2e8f0;" +
-            "font-family:Tahoma,Arial,sans-serif;" +
-            "direction:rtl;";
+            "font-family:Tahoma,Arial,sans-serif;direction:rtl;";
 
 
         var header = document.createElement("div");
@@ -133,20 +108,14 @@ export default async function handler(req, res) {
         header.style.cssText =
             "height:58px;" +
             "background:linear-gradient(135deg,#2563eb,#7c3aed);" +
-            "color:#fff;" +
-            "display:flex;" +
-            "align-items:center;" +
+            "color:#fff;display:flex;align-items:center;" +
             "justify-content:space-between;" +
-            "padding:0 14px;" +
-            "font-weight:900;";
+            "padding:0 14px;font-weight:900;";
 
         header.innerHTML =
             '<span>🤖 دستیار هوشمند مشتری‌یار</span>' +
-            '<button id="moshtiryar-ai-close" ' +
-            'type="button" ' +
-            'style="border:none;background:transparent;color:#fff;font-size:22px;cursor:pointer;">' +
-            '×' +
-            '</button>';
+            '<button id="moshtiryar-ai-close" type="button" ' +
+            'style="border:none;background:transparent;color:#fff;font-size:22px;cursor:pointer;">×</button>';
 
 
         var messages = document.createElement("div");
@@ -154,23 +123,16 @@ export default async function handler(req, res) {
         messages.id = "moshtiryar-ai-messages";
 
         messages.style.cssText =
-            "height:360px;" +
-            "overflow-y:auto;" +
-            "padding:14px;" +
-            "background:#f8fafc;" +
-            "font-size:13px;" +
-            "line-height:1.9;" +
+            "height:360px;overflow-y:auto;padding:14px;" +
+            "background:#f8fafc;font-size:13px;line-height:1.9;" +
             "position:relative;";
 
 
         var welcome = document.createElement("div");
 
         welcome.style.cssText =
-            "background:#fff;" +
-            "border:1px solid #e2e8f0;" +
-            "border-radius:13px;" +
-            "padding:11px;" +
-            "margin-bottom:10px;" +
+            "background:#fff;border:1px solid #e2e8f0;" +
+            "border-radius:13px;padding:11px;margin-bottom:10px;" +
             "color:#334155;";
 
         welcome.textContent =
@@ -182,11 +144,8 @@ export default async function handler(req, res) {
         var footer = document.createElement("div");
 
         footer.style.cssText =
-            "display:flex;" +
-            "gap:7px;" +
-            "padding:10px;" +
-            "border-top:1px solid #e2e8f0;" +
-            "background:#fff;" +
+            "display:flex;gap:7px;padding:10px;" +
+            "border-top:1px solid #e2e8f0;background:#fff;" +
             "align-items:center;";
 
 
@@ -197,15 +156,10 @@ export default async function handler(req, res) {
         input.placeholder = "پیام خود را بنویسید...";
 
         input.style.cssText =
-            "flex:1;" +
-            "min-width:0;" +
-            "border:1px solid #cbd5e1;" +
-            "border-radius:10px;" +
-            "padding:10px;" +
-            "outline:none;" +
+            "flex:1;min-width:0;border:1px solid #cbd5e1;" +
+            "border-radius:10px;padding:10px;outline:none;" +
             "font-family:Tahoma,Arial,sans-serif;" +
-            "font-size:12px;" +
-            "direction:rtl;";
+            "font-size:12px;direction:rtl;";
 
 
         var callBtn = document.createElement("button");
@@ -216,14 +170,9 @@ export default async function handler(req, res) {
         callBtn.title = "تماس صوتی با پشتیبان";
 
         callBtn.style.cssText =
-            "width:45px;" +
-            "height:40px;" +
-            "border:none;" +
-            "border-radius:10px;" +
-            "background:#10b981;" +
-            "color:#fff;" +
-            "font-size:18px;" +
-            "cursor:pointer;";
+            "width:45px;height:40px;border:none;" +
+            "border-radius:10px;background:#10b981;" +
+            "color:#fff;font-size:18px;cursor:pointer;";
 
 
         var send = document.createElement("button");
@@ -233,14 +182,9 @@ export default async function handler(req, res) {
         send.textContent = "➤";
 
         send.style.cssText =
-            "width:45px;" +
-            "height:40px;" +
-            "border:none;" +
-            "border-radius:10px;" +
-            "background:#2563eb;" +
-            "color:#fff;" +
-            "font-size:18px;" +
-            "cursor:pointer;";
+            "width:45px;height:40px;border:none;" +
+            "border-radius:10px;background:#2563eb;" +
+            "color:#fff;font-size:18px;cursor:pointer;";
 
 
         footer.appendChild(input);
@@ -275,23 +219,16 @@ export default async function handler(req, res) {
             var item = document.createElement("div");
 
             item.style.cssText =
-                "padding:10px;" +
-                "border-radius:12px;" +
-                "margin-bottom:8px;" +
-                "max-width:90%;" +
-                "white-space:pre-wrap;" +
-                "word-break:break-word;" +
+                "padding:10px;border-radius:12px;" +
+                "margin-bottom:8px;max-width:90%;" +
+                "white-space:pre-wrap;word-break:break-word;" +
                 (
                     type === "user"
                     ?
-                    "margin-right:auto;" +
-                    "background:#dbeafe;" +
-                    "color:#1e3a8a;"
+                    "margin-right:auto;background:#dbeafe;color:#1e3a8a;"
                     :
-                    "margin-left:auto;" +
-                    "background:#fff;" +
-                    "border:1px solid #e2e8f0;" +
-                    "color:#334155;"
+                    "margin-left:auto;background:#fff;" +
+                    "border:1px solid #e2e8f0;color:#334155;"
                 );
 
             item.textContent = text;
@@ -325,7 +262,7 @@ export default async function handler(req, res) {
             try {
 
                 var response = await fetch(
-                    /api/website-chat
+                    "/api/website-chat",
                     {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
@@ -393,17 +330,11 @@ export default async function handler(req, res) {
             callOverlay = document.createElement("div");
 
             callOverlay.style.cssText =
-                "position:absolute;" +
-                "top:0;left:0;right:0;bottom:0;" +
+                "position:absolute;top:0;left:0;right:0;bottom:0;" +
                 "background:linear-gradient(135deg,#10b981,#059669);" +
-                "color:#fff;" +
-                "display:flex;" +
-                "flex-direction:column;" +
-                "align-items:center;" +
-                "justify-content:center;" +
-                "padding:20px;" +
-                "text-align:center;" +
-                "z-index:10;" +
+                "color:#fff;display:flex;flex-direction:column;" +
+                "align-items:center;justify-content:center;" +
+                "padding:20px;text-align:center;z-index:10;" +
                 "border-radius:18px;";
 
             callOverlay.innerHTML = html;
@@ -431,11 +362,10 @@ export default async function handler(req, res) {
                     '<div style="font-size:50px;">📞</div>' +
                     '<h2 style="margin:15px 0;font-size:18px;">در حال تماس...</h2>' +
                     '<p style="font-size:13px;opacity:.9;">منتظر پاسخ پشتیبان هستیم</p>' +
-                    '<p style="font-size:10px;opacity:.9;margin-top:10px;direction:ltr;background:rgba(0,0,0,.2);padding:6px;border-radius:6px;word-break:break-all;">' +
-                    'ID: ' + config.userId +
-                    '</p>' +
                     '<button id="moshtiryar-cancel-call" ' +
-                    'style="margin-top:20px;padding:10px 20px;border:none;border-radius:30px;background:#ef4444;color:#fff;font-family:inherit;font-weight:800;cursor:pointer;">' +
+                    'style="margin-top:20px;padding:10px 20px;border:none;' +
+                    'border-radius:30px;background:#ef4444;color:#fff;' +
+                    'font-family:inherit;font-weight:800;cursor:pointer;">' +
                     '❌ لغو' +
                     '</button>'
                 );
@@ -643,9 +573,9 @@ export default async function handler(req, res) {
                 '<h2 style="margin:15px 0;font-size:18px;">تماس برقرار است</h2>' +
                 '<div id="moshtiryar-call-timer" style="font-size:32px;font-weight:900;font-family:monospace;margin:10px 0;">00:00</div>' +
                 '<button id="moshtiryar-end-call" ' +
-                'style="margin-top:15px;width:60px;height:60px;border:none;border-radius:50%;background:#ef4444;color:#fff;font-size:24px;cursor:pointer;">' +
-                '📵' +
-                '</button>'
+                'style="margin-top:15px;width:60px;height:60px;border:none;' +
+                'border-radius:50%;background:#ef4444;color:#fff;' +
+                'font-size:24px;cursor:pointer;">📵</button>'
             );
 
             document.getElementById("moshtiryar-end-call").onclick = function () {
@@ -744,5 +674,3 @@ export default async function handler(req, res) {
     res.status(200).send(script);
 
 }
-
-            
