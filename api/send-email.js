@@ -67,31 +67,69 @@ export default async function handler(req, res) {
 
   if (req.method === "OPTIONS") return res.status(200).end();
 
-  // 🧪 تست از مرورگر
-  if (req.method === "GET") {
-    if (!RESEND_API_KEY) {
-      return res.status(200).json({
-        ok: false,
-        message: "⚠️ RESEND_API_KEY تنظیم نشده",
-      });
-    }
+  
+// 🧪 تست از مرورگر
+if (req.method === "GET") {
+  if (!RESEND_API_KEY) {
+    return res.status(200).json({
+      ok: false,
+      message: "⚠️ RESEND_API_KEY تنظیم نشده",
+    });
+  }
+
+  // اگه test پارامتر داشت → ایمیل تستی بفرست
+  const testEmail = req.query?.test;
+
+  if (!testEmail) {
     return res.status(200).json({
       ok: true,
       message: "API is working ✅",
       envOk: true,
-      usage: "POST with { to, type, data }",
+      usage: "برای تست ایمیل: /api/send-email?test=YOUR_EMAIL@gmail.com",
       types: ["welcome", "payment_approved", "payment_rejected", "expiry_warning"]
     });
   }
 
-  if (req.method !== "POST") {
-    return res.status(405).json({ ok: false, error: "POST only" });
-  }
+  try {
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${RESEND_API_KEY}`,
+      },
+      body: JSON.stringify({
+        from: "مشتری‌یار <noreply@moshtriyar.ir>",
+        to: [testEmail],
+        subject: "🎉 تست ایمیل مشتری‌یار",
+        html: `
+          <div style="font-family:Tahoma,sans-serif;direction:rtl;text-align:right;padding:30px;background:#f8fafc;max-width:600px;margin:auto;border-radius:16px;">
+            <h1 style="color:#2563eb;text-align:center;">✅ تست موفق!</h1>
+            <p style="color:#475569;line-height:1.9;font-size:14px;">
+              اگه این ایمیل رو می‌بینی، یعنی سیستم ایمیل مشتری‌یار کاملاً کار می‌کنه. 🎉
+            </p>
+            <p style="color:#94a3b8;font-size:12px;text-align:center;margin-top:20px;">
+              © ۱۴۰۵ مشتری‌یار
+            </p>
+          </div>
+        `,
+      }),
+    });
 
-  if (!RESEND_API_KEY) {
-    return res.status(500).json({ ok: false, error: "RESEND_API_KEY missing" });
-  }
+    const result = await response.json();
 
+    if (!response.ok) {
+      return res.status(500).json({ ok: false, error: result?.message });
+    }
+
+    return res.status(200).json({
+      ok: true,
+      message: "✅ ایمیل تست ارسال شد!",
+      id: result.id
+    });
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message });
+  }
+}
   try {
     const { to, type, data } = req.body || {};
 
