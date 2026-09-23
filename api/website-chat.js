@@ -300,7 +300,7 @@ if (expiresAt && new Date(expiresAt) < new Date()) {
     if (!data) {
       return res.status(200).json({
         ok: false,
-        reply: "⚠️ سرویس الان شلوغه. لطفاً دوباره تلاش کنید.",
+        reply: "⚠️ سرویس الان شلوغه. خطا: " + (lastError || "نامشخص"),
         error: lastError,
       });
     }
