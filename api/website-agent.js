@@ -43,9 +43,7 @@ export default async function handler(req, res) {
     var SUPABASE_ANON_KEY = "${SUPABASE_ANON_KEY}";
 
     if (!config.userId) {
-        console.error(
-            "Moshtriyar: data-user-id is missing."
-        );
+        console.error("Moshtriyar: data-user-id is missing.");
         return;
     }
 
@@ -63,19 +61,15 @@ export default async function handler(req, res) {
                 return;
             }
 
-            var s =
-                document.createElement("script");
+            var s = document.createElement("script");
 
-            s.src =
-                "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+            s.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
 
-            s.onload =
-                function () {
-                    resolve(window.supabase);
-                };
+            s.onload = function () {
+                resolve(window.supabase);
+            };
 
-            s.onerror =
-                reject;
+            s.onerror = reject;
 
             document.head.appendChild(s);
         });
@@ -91,15 +85,9 @@ export default async function handler(req, res) {
 
         var button = document.createElement("button");
 
-        button.id =
-            "moshtiryar-ai-agent";
-
-        button.type =
-            "button";
-
-        button.innerHTML =
-            "🤖";
-
+        button.id = "moshtiryar-ai-agent";
+        button.type = "button";
+        button.innerHTML = "🤖";
 
         button.style.cssText =
             "position:fixed;" +
@@ -117,12 +105,9 @@ export default async function handler(req, res) {
             "box-shadow:0 8px 25px rgba(0,0,0,.22);";
 
 
-        var box =
-            document.createElement("div");
+        var box = document.createElement("div");
 
-        box.id =
-            "moshtiryar-ai-box";
-
+        box.id = "moshtiryar-ai-box";
 
         box.style.cssText =
             "display:none;" +
@@ -143,8 +128,7 @@ export default async function handler(req, res) {
             "direction:rtl;";
 
 
-        var header =
-            document.createElement("div");
+        var header = document.createElement("div");
 
         header.style.cssText =
             "height:58px;" +
@@ -156,7 +140,6 @@ export default async function handler(req, res) {
             "padding:0 14px;" +
             "font-weight:900;";
 
-
         header.innerHTML =
             '<span>🤖 دستیار هوشمند مشتری‌یار</span>' +
             '<button id="moshtiryar-ai-close" ' +
@@ -166,12 +149,9 @@ export default async function handler(req, res) {
             '</button>';
 
 
-        var messages =
-            document.createElement("div");
+        var messages = document.createElement("div");
 
-        messages.id =
-            "moshtiryar-ai-messages";
-
+        messages.id = "moshtiryar-ai-messages";
 
         messages.style.cssText =
             "height:360px;" +
@@ -183,8 +163,7 @@ export default async function handler(req, res) {
             "position:relative;";
 
 
-        var welcome =
-            document.createElement("div");
+        var welcome = document.createElement("div");
 
         welcome.style.cssText =
             "background:#fff;" +
@@ -194,16 +173,13 @@ export default async function handler(req, res) {
             "margin-bottom:10px;" +
             "color:#334155;";
 
-
         welcome.textContent =
             "سلام 👋 خوش آمدید. چطور می‌توانم به شما کمک کنم؟";
-
 
         messages.appendChild(welcome);
 
 
-        var footer =
-            document.createElement("div");
+        var footer = document.createElement("div");
 
         footer.style.cssText =
             "display:flex;" +
@@ -214,18 +190,11 @@ export default async function handler(req, res) {
             "align-items:center;";
 
 
-        var input =
-            document.createElement("input");
+        var input = document.createElement("input");
 
-        input.id =
-            "moshtiryar-ai-input";
-
-        input.type =
-            "text";
-
-        input.placeholder =
-            "پیام خود را بنویسید...";
-
+        input.id = "moshtiryar-ai-input";
+        input.type = "text";
+        input.placeholder = "پیام خود را بنویسید...";
 
         input.style.cssText =
             "flex:1;" +
@@ -239,21 +208,12 @@ export default async function handler(req, res) {
             "direction:rtl;";
 
 
-        var callBtn =
-            document.createElement("button");
+        var callBtn = document.createElement("button");
 
-        callBtn.id =
-            "moshtiryar-ai-call";
-
-        callBtn.type =
-            "button";
-
-        callBtn.innerHTML =
-            "📞";
-
-        callBtn.title =
-            "تماس صوتی با پشتیبان";
-
+        callBtn.id = "moshtiryar-ai-call";
+        callBtn.type = "button";
+        callBtn.innerHTML = "📞";
+        callBtn.title = "تماس صوتی با پشتیبان";
 
         callBtn.style.cssText =
             "width:45px;" +
@@ -266,18 +226,11 @@ export default async function handler(req, res) {
             "cursor:pointer;";
 
 
-        var send =
-            document.createElement("button");
+        var send = document.createElement("button");
 
-        send.id =
-            "moshtiryar-ai-send";
-
-        send.type =
-            "button";
-
-        send.textContent =
-            "➤";
-
+        send.id = "moshtiryar-ai-send";
+        send.type = "button";
+        send.textContent = "➤";
 
         send.style.cssText =
             "width:45px;" +
@@ -291,64 +244,35 @@ export default async function handler(req, res) {
 
 
         footer.appendChild(input);
-
         footer.appendChild(callBtn);
-
         footer.appendChild(send);
 
         box.appendChild(header);
-
         box.appendChild(messages);
-
         box.appendChild(footer);
 
         document.body.appendChild(button);
-
         document.body.appendChild(box);
 
 
-        button.onclick =
-            function () {
-
-                if (
-                    box.style.display ===
-                    "none"
-                ) {
-
-                    box.style.display =
-                        "block";
-
-                    input.focus();
-
-                } else {
-
-                    box.style.display =
-                        "none";
-
-                }
-
-            };
+        button.onclick = function () {
+            if (box.style.display === "none") {
+                box.style.display = "block";
+                input.focus();
+            } else {
+                box.style.display = "none";
+            }
+        };
 
 
-        document.getElementById(
-            "moshtiryar-ai-close"
-        ).onclick =
-            function () {
-
-                box.style.display =
-                    "none";
-
-            };
+        document.getElementById("moshtiryar-ai-close").onclick = function () {
+            box.style.display = "none";
+        };
 
 
-        function addMessage(
-            text,
-            type
-        ) {
+        function addMessage(text, type) {
 
-            var item =
-                document.createElement("div");
-
+            var item = document.createElement("div");
 
             item.style.cssText =
                 "padding:10px;" +
@@ -370,183 +294,82 @@ export default async function handler(req, res) {
                     "color:#334155;"
                 );
 
-
-            item.textContent =
-                text;
-
+            item.textContent = text;
 
             messages.appendChild(item);
-
-            messages.scrollTop =
-                messages.scrollHeight;
-
+            messages.scrollTop = messages.scrollHeight;
         }
 
 
         async function sendMessage() {
 
-            var text =
-                input.value.trim();
+            var text = input.value.trim();
 
+            if (!text) return;
 
-            if (!text) {
-                return;
-            }
-
-
-            addMessage(
-                text,
-                "user"
-            );
-
+            addMessage(text, "user");
 
             input.value = "";
-
             send.disabled = true;
-
             send.textContent = "⏳";
 
+            var loading = document.createElement("div");
 
-            var loading =
-                document.createElement("div");
+            loading.id = "moshtiryar-loading";
+            loading.style.cssText = "padding:10px;color:#64748b;font-size:12px;";
+            loading.textContent = "در حال بررسی...";
 
-            loading.id =
-                "moshtiryar-loading";
-
-            loading.style.cssText =
-                "padding:10px;" +
-                "color:#64748b;" +
-                "font-size:12px;";
-
-            loading.textContent =
-                "در حال بررسی...";
-
-            messages.appendChild(
-                loading
-            );
-
-            messages.scrollTop =
-                messages.scrollHeight;
-
+            messages.appendChild(loading);
+            messages.scrollTop = messages.scrollHeight;
 
             try {
 
-                var response =
-                    await fetch(
-                        "https://moshtriyar.vercel.app/api/website-chat",
-                        {
-                            method:"POST",
+                var response = await fetch(
+                    "https://moshtriyar.ir/api/website-chat",
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            userId: config.userId,
+                            site: config.site,
+                            message: text
+                        })
+                    }
+                );
 
-                            headers:{
-                                "Content-Type":
-                                    "application/json"
-                            },
+                var data = await response.json();
 
-                            body:JSON.stringify({
+                if (loading.parentNode) loading.remove();
 
-                                userId:
-                                    config.userId,
-
-                                site:
-                                    config.site,
-
-                                message:
-                                    text
-
-                            })
-
-                        }
-                    );
-
-
-                var data =
-                    await response.json();
-
-
-                if (
-                    loading.parentNode
-                ) {
-
-                    loading.remove();
-
-                }
-
-
-                if (
-                    response.ok &&
-                    data.reply
-                ) {
-
-                    addMessage(
-                        data.reply,
-                        "agent"
-                    );
-
+                if (response.ok && data.reply) {
+                    addMessage(data.reply, "agent");
                 } else {
-
-                    addMessage(
-                        "فعلاً امکان پاسخ‌گویی وجود ندارد.",
-                        "agent"
-                    );
-
+                    addMessage("فعلاً امکان پاسخ‌گویی وجود ندارد.", "agent");
                 }
-
 
             } catch (error) {
 
-                console.error(
-                    "Moshtriyar agent error:",
-                    error
-                );
+                console.error("Moshtriyar agent error:", error);
 
+                if (loading.parentNode) loading.remove();
 
-                if (
-                    loading.parentNode
-                ) {
-
-                    loading.remove();
-
-                }
-
-
-                addMessage(
-                    "ارتباط با دستیار برقرار نشد.",
-                    "agent"
-                );
-
+                addMessage("ارتباط با دستیار برقرار نشد.", "agent");
             }
 
-
             send.disabled = false;
-
             send.textContent = "➤";
-
             input.focus();
-
         }
 
 
-        send.onclick =
-            sendMessage;
+        send.onclick = sendMessage;
 
-
-        input.addEventListener(
-            "keydown",
-            function (event) {
-
-                if (
-                    event.key ===
-                    "Enter"
-                ) {
-
-                    event.preventDefault();
-
-                    sendMessage();
-
-                }
-
+        input.addEventListener("keydown", function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                sendMessage();
             }
-        );
+        });
 
 
         // ==========================================
@@ -565,12 +388,9 @@ export default async function handler(req, res) {
 
         function showCallOverlay(html) {
 
-            if (callOverlay) {
-                callOverlay.remove();
-            }
+            if (callOverlay) callOverlay.remove();
 
-            callOverlay =
-                document.createElement("div");
+            callOverlay = document.createElement("div");
 
             callOverlay.style.cssText =
                 "position:absolute;" +
@@ -586,15 +406,13 @@ export default async function handler(req, res) {
                 "z-index:10;" +
                 "border-radius:18px;";
 
-            callOverlay.innerHTML =
-                html;
+            callOverlay.innerHTML = html;
 
             box.appendChild(callOverlay);
         }
 
 
         function hideCallOverlay() {
-
             if (callOverlay) {
                 callOverlay.remove();
                 callOverlay = null;
@@ -613,120 +431,73 @@ export default async function handler(req, res) {
                     '<div style="font-size:50px;">📞</div>' +
                     '<h2 style="margin:15px 0;font-size:18px;">در حال تماس...</h2>' +
                     '<p style="font-size:13px;opacity:.9;">منتظر پاسخ پشتیبان هستیم</p>' +
-                    '<p style="font-size:11px;opacity:.9;margin-top:10px;direction:ltr;background:rgba(0,0,0,.2);padding:6px;border-radius:6px;">' +
-'User ID: ' + config.userId + '<br>' +
-'Channel: calls-' + config.userId +
-'</p>' +
+                    '<p style="font-size:10px;opacity:.9;margin-top:10px;direction:ltr;background:rgba(0,0,0,.2);padding:6px;border-radius:6px;word-break:break-all;">' +
+                    'ID: ' + config.userId +
+                    '</p>' +
                     '<button id="moshtiryar-cancel-call" ' +
                     'style="margin-top:20px;padding:10px 20px;border:none;border-radius:30px;background:#ef4444;color:#fff;font-family:inherit;font-weight:800;cursor:pointer;">' +
                     '❌ لغو' +
                     '</button>'
                 );
 
-                document.getElementById(
-                    "moshtiryar-cancel-call"
-                ).onclick =
-                    function () {
-                        endCall(true);
-                    };
+                document.getElementById("moshtiryar-cancel-call").onclick = function () {
+                    endCall(true);
+                };
 
 
-                // 🎤 دسترسی به میکروفون
-                var stream =
-                    await navigator.mediaDevices
-                        .getUserMedia({ audio: true });
+                var stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-
-                // 🔌 اتصال به Supabase
                 var sb = await loadSupabase();
 
-                var client =
-                    sb.createClient(
-                        SUPABASE_URL,
-                        SUPABASE_ANON_KEY
-                    );
+                var client = sb.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+                currentSessionId = "call_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
 
-                currentSessionId =
-                    "call_" +
-                    Date.now() +
-                    "_" +
-                    Math.random().toString(36).slice(2, 8);
-
-
-                // 🔗 کانال به نام userId اپراتور
-                callChannel =
-                    client.channel(
-                        "calls-" + config.userId,
-                        { config: { broadcast: { self: false } } }
-                    );
-
-
-                // 📡 ساخت PeerConnection
-                callPc =
-                    new RTCPeerConnection({
-                        iceServers: [
-                            { urls: "stun:stun.l.google.com:19302" },
-                            { urls: "stun:stun1.l.google.com:19302" }
-                        ]
-                    });
-
-
-                stream.getTracks().forEach(
-                    function (track) {
-                        callPc.addTrack(track, stream);
-                    }
+                callChannel = client.channel(
+                    "calls-" + config.userId,
+                    { config: { broadcast: { self: false } } }
                 );
 
+                callPc = new RTCPeerConnection({
+                    iceServers: [
+                        { urls: "stun:stun.l.google.com:19302" },
+                        { urls: "stun:stun1.l.google.com:19302" }
+                    ]
+                });
 
-                callPc.ontrack =
-                    function (event) {
-                        var audio =
-                            new Audio();
-                        audio.srcObject =
-                            event.streams[0];
-                        audio.play();
-                    };
+                stream.getTracks().forEach(function (track) {
+                    callPc.addTrack(track, stream);
+                });
 
+                callPc.ontrack = function (event) {
+                    var audio = new Audio();
+                    audio.srcObject = event.streams[0];
+                    audio.play();
+                };
 
-                callPc.onicecandidate =
-                    function (event) {
+                callPc.onicecandidate = function (event) {
+                    if (event.candidate && callChannel) {
+                        callChannel.send({
+                            type: "broadcast",
+                            event: "webrtc-ice-visitor",
+                            payload: {
+                                sessionId: currentSessionId,
+                                candidate: event.candidate
+                            }
+                        });
+                    }
+                };
 
-                        if (event.candidate && callChannel) {
-
-                            callChannel.send({
-                                type: "broadcast",
-                                event: "webrtc-ice-visitor",
-                                payload: {
-                                    sessionId: currentSessionId,
-                                    candidate: event.candidate
-                                }
-                            });
-
-                        }
-
-                    };
-
-
-                // 📤 ساخت Offer
-                var offer =
-                    await callPc.createOffer();
-
+                var offer = await callPc.createOffer();
                 await callPc.setLocalDescription(offer);
 
 
-                // 📥 دریافت پاسخ‌ها
                 callChannel.on(
                     "broadcast",
                     { event: "webrtc-answer" },
                     async function ({ payload }) {
 
-                        if (
-                            payload.sessionId !==
-                            currentSessionId
-                        ) {
-                            return;
-                        }
+                        if (payload.sessionId !== currentSessionId) return;
 
                         await callPc.setRemoteDescription(
                             new RTCSessionDescription(payload.answer)
@@ -734,12 +505,7 @@ export default async function handler(req, res) {
 
                         hasRemoteDescription = true;
 
-                        // اضافه کردن ICE معطل‌مونده
-                        for (
-                            var i = 0;
-                            i < pendingIceCandidates.length;
-                            i++
-                        ) {
+                        for (var i = 0; i < pendingIceCandidates.length; i++) {
                             try {
                                 await callPc.addIceCandidate(
                                     new RTCIceCandidate(pendingIceCandidates[i])
@@ -749,10 +515,8 @@ export default async function handler(req, res) {
 
                         pendingIceCandidates = [];
 
-                        // ✅ شروع تماس
                         callStartTime = Date.now();
                         showActiveCall();
-
                     }
                 );
 
@@ -762,29 +526,17 @@ export default async function handler(req, res) {
                     { event: "webrtc-ice-operator" },
                     async function ({ payload }) {
 
-                        if (
-                            payload.sessionId !==
-                            currentSessionId
-                        ) {
-                            return;
-                        }
+                        if (payload.sessionId !== currentSessionId) return;
 
                         if (hasRemoteDescription) {
-
                             try {
                                 await callPc.addIceCandidate(
                                     new RTCIceCandidate(payload.candidate)
                                 );
                             } catch (e) {}
-
                         } else {
-
-                            pendingIceCandidates.push(
-                                payload.candidate
-                            );
-
+                            pendingIceCandidates.push(payload.candidate);
                         }
-
                     }
                 );
 
@@ -794,28 +546,17 @@ export default async function handler(req, res) {
                     { event: "call-rejected" },
                     function ({ payload }) {
 
-                        if (
-                            payload.sessionId !==
-                            currentSessionId
-                        ) {
-                            return;
-                        }
+                        if (payload.sessionId !== currentSessionId) return;
 
                         showCallOverlay(
                             '<div style="font-size:50px;">😔</div>' +
                             '<h2 style="margin:15px 0;font-size:18px;">پشتیبان در دسترس نیست</h2>' +
                             '<p style="font-size:13px;opacity:.9;">لطفاً از طریق چت پیام بگذارید</p>'
-                            '<p style="font-size:11px;opacity:.7;margin-top:10px;direction:ltr;">User ID: ' + config.userId.slice(0, 8) + '...</p>' +
-'<p style="font-size:11px;opacity:.7;direction:ltr;">Channel: calls-' + config.userId.slice(0, 8) + '...</p>' +
                         );
 
-                        setTimeout(
-                            function () {
-                                endCall();
-                            },
-                            2500
-                        );
-
+                        setTimeout(function () {
+                            endCall();
+                        }, 2500);
                     }
                 );
 
@@ -825,20 +566,13 @@ export default async function handler(req, res) {
                     { event: "call-ended" },
                     function ({ payload }) {
 
-                        if (
-                            payload.sessionId !==
-                            currentSessionId
-                        ) {
-                            return;
-                        }
+                        if (payload.sessionId !== currentSessionId) return;
 
                         endCall();
-
                     }
                 );
 
 
-                // 🔔 Subscribe
                 callChannel.subscribe(
                     async function (status) {
 
@@ -854,38 +588,29 @@ export default async function handler(req, res) {
                                     offer: callPc.localDescription
                                 }
                             });
-
                         }
-
                     }
                 );
 
 
-                // ⏰ Timeout 30 ثانیه
-                callTimer =
-                    setTimeout(
-                        function () {
+                callTimer = setTimeout(
+                    function () {
 
-                            if (!hasRemoteDescription) {
+                        if (!hasRemoteDescription) {
 
-                                showCallOverlay(
-                                    '<div style="font-size:50px;">⏰</div>' +
-                                    '<h2 style="margin:15px 0;font-size:18px;">پاسخی دریافت نشد</h2>' +
-                                    '<p style="font-size:13px;opacity:.9;">پشتیبان الان پاسخ نداد</p>'
-                                );
+                            showCallOverlay(
+                                '<div style="font-size:50px;">⏰</div>' +
+                                '<h2 style="margin:15px 0;font-size:18px;">پاسخی دریافت نشد</h2>' +
+                                '<p style="font-size:13px;opacity:.9;">پشتیبان الان پاسخ نداد</p>'
+                            );
 
-                                setTimeout(
-                                    function () {
-                                        endCall();
-                                    },
-                                    2000
-                                );
-
-                            }
-
-                        },
-                        30000
-                    );
+                            setTimeout(function () {
+                                endCall();
+                            }, 2000);
+                        }
+                    },
+                    30000
+                );
 
 
             } catch (err) {
@@ -900,20 +625,14 @@ export default async function handler(req, res) {
                     '</p>'
                 );
 
-                setTimeout(
-                    function () {
-                        endCall();
-                    },
-                    2500
-                );
+                setTimeout(function () {
+                    endCall();
+                }, 2500);
 
             } finally {
-
                 callBtn.disabled = false;
                 callBtn.innerHTML = "📞";
-
             }
-
         }
 
 
@@ -929,50 +648,24 @@ export default async function handler(req, res) {
                 '</button>'
             );
 
-            document.getElementById(
-                "moshtiryar-end-call"
-            ).onclick =
+            document.getElementById("moshtiryar-end-call").onclick = function () {
+                endCall();
+            };
+
+            if (callTimer) clearTimeout(callTimer);
+
+            callTimer = setInterval(
                 function () {
-                    endCall();
-                };
 
-            if (callTimer) {
-                clearTimeout(callTimer);
-            }
+                    var elapsed = Math.floor((Date.now() - callStartTime) / 1000);
+                    var mins = String(Math.floor(elapsed / 60)).padStart(2, "0");
+                    var secs = String(elapsed % 60).padStart(2, "0");
 
-            callTimer =
-                setInterval(
-                    function () {
-
-                        var elapsed =
-                            Math.floor(
-                                (Date.now() - callStartTime) / 1000
-                            );
-
-                        var mins =
-                            String(
-                                Math.floor(elapsed / 60)
-                            ).padStart(2, "0");
-
-                        var secs =
-                            String(
-                                elapsed % 60
-                            ).padStart(2, "0");
-
-                        var timerEl =
-                            document.getElementById(
-                                "moshtiryar-call-timer"
-                            );
-
-                        if (timerEl) {
-                            timerEl.textContent =
-                                mins + ":" + secs;
-                        }
-
-                    },
-                    1000
-                );
-
+                    var timerEl = document.getElementById("moshtiryar-call-timer");
+                    if (timerEl) timerEl.textContent = mins + ":" + secs;
+                },
+                1000
+            );
         }
 
 
@@ -990,9 +683,7 @@ export default async function handler(req, res) {
                     callChannel.send({
                         type: "broadcast",
                         event: "call-ended",
-                        payload: {
-                            sessionId: currentSessionId
-                        }
+                        payload: { sessionId: currentSessionId }
                     });
                 } catch (e) {}
 
@@ -1006,13 +697,9 @@ export default async function handler(req, res) {
             if (callPc) {
 
                 try {
-                    callPc.getSenders().forEach(
-                        function (sender) {
-                            if (sender.track) {
-                                sender.track.stop();
-                            }
-                        }
-                    );
+                    callPc.getSenders().forEach(function (sender) {
+                        if (sender.track) sender.track.stop();
+                    });
                     callPc.close();
                 } catch (e) {}
 
@@ -1027,43 +714,23 @@ export default async function handler(req, res) {
             hideCallOverlay();
 
             if (!silent) {
-                addMessage(
-                    "📵 تماس پایان یافت.",
-                    "agent"
-                );
+                addMessage("📵 تماس پایان یافت.", "agent");
             }
-
         }
 
 
-        callBtn.onclick =
-            function () {
-
-                if (currentSessionId) {
-                    return;
-                }
-
-                startCall();
-
-            };
+        callBtn.onclick = function () {
+            if (currentSessionId) return;
+            startCall();
+        };
 
     }
 
 
-    if (
-        document.readyState ===
-        "loading"
-    ) {
-
-        document.addEventListener(
-            "DOMContentLoaded",
-            createAgent
-        );
-
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", createAgent);
     } else {
-
         createAgent();
-
     }
 
 })();
@@ -1071,16 +738,11 @@ export default async function handler(req, res) {
 `;
 
 
-    res.setHeader(
-        "Content-Type",
-        "application/javascript; charset=utf-8"
-    );
-
-    res.setHeader(
-        "Cache-Control",
-        "no-store"
-    );
+    res.setHeader("Content-Type", "application/javascript; charset=utf-8");
+    res.setHeader("Cache-Control", "no-store");
 
     res.status(200).send(script);
 
 }
+
+            
