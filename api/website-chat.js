@@ -9,9 +9,9 @@ const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const GEMINI_MODELS = [
   "gemini-flash-latest",
+  "gemini-3.5-flash-lite",
   "gemini-2.0-flash",
   "gemini-2.0-flash-001",
-  "gemini-2.5-flash-lite",
 ];
 
 const GEMINI_BASE_URL =
