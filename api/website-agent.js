@@ -613,6 +613,10 @@ export default async function handler(req, res) {
                     '<div style="font-size:50px;">📞</div>' +
                     '<h2 style="margin:15px 0;font-size:18px;">در حال تماس...</h2>' +
                     '<p style="font-size:13px;opacity:.9;">منتظر پاسخ پشتیبان هستیم</p>' +
+                    '<p style="font-size:11px;opacity:.9;margin-top:10px;direction:ltr;background:rgba(0,0,0,.2);padding:6px;border-radius:6px;">' +
+'User ID: ' + config.userId + '<br>' +
+'Channel: calls-' + config.userId +
+'</p>' +
                     '<button id="moshtiryar-cancel-call" ' +
                     'style="margin-top:20px;padding:10px 20px;border:none;border-radius:30px;background:#ef4444;color:#fff;font-family:inherit;font-weight:800;cursor:pointer;">' +
                     '❌ لغو' +
