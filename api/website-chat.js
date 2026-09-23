@@ -53,6 +53,8 @@ async function supabase(path, options = {}) {
 // 🔑 انتخاب بهترین کلید Gemini
 // ==========================================================
 async function getBestGeminiKey(websiteId) {
+  const today = new Date().toISOString().split("T")[0];
+
   // 1️⃣ کلید اختصاصی سایت
   if (websiteId) {
     const site = await supabase(
@@ -60,7 +62,6 @@ async function getBestGeminiKey(websiteId) {
     );
     const key = site?.[0]?.gemini_keys;
     if (key && key.active) {
-      const today = new Date().toISOString().split("T")[0];
       if (key.last_reset !== today) {
         await supabase(`/gemini_keys?id=eq.${key.id}`, {
           method: "PATCH",
@@ -74,26 +75,22 @@ async function getBestGeminiKey(websiteId) {
     }
   }
 
-  // 2️⃣ بهترین کلید از استخر
-  const today = new Date().toISOString().split("T")[0];
-  const keys = await supabase(
-    `/gemini_keys?active=eq.true&last_reset=eq.${today}&used_today=lt.daily_limit&order=used_today.asc&limit=1`
+  // 2️⃣ بهترین کلید از استخر (اول امروز رو چک کن)
+  const todayKeys = await supabase(
+    `/gemini_keys?active=eq.true&used_today=lt.daily_limit&order=used_today.asc&limit=1`
   );
-  if (keys?.[0]) return { key: keys[0].api_key, keyId: keys[0].id };
-
-  // 3️⃣ کلیدهای ریست‌نشده
-  const staleKeys = await supabase(
-    `/gemini_keys?active=eq.true&last_reset=lt.${today}&order=id.asc&limit=1`
-  );
-  if (staleKeys?.[0]) {
-    await supabase(`/gemini_keys?id=eq.${staleKeys[0].id}`, {
-      method: "PATCH",
-      body: JSON.stringify({ used_today: 0, last_reset: today }),
-    });
-    return { key: staleKeys[0].api_key, keyId: staleKeys[0].id };
+  if (todayKeys?.[0]) {
+    // اگه last_reset قدیمیه، ریستش کن
+    if (todayKeys[0].last_reset !== today) {
+      await supabase(`/gemini_keys?id=eq.${todayKeys[0].id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ used_today: 0, last_reset: today }),
+      });
+    }
+    return { key: todayKeys[0].api_key, keyId: todayKeys[0].id };
   }
 
-  // 4️⃣ Fallback از env
+  // 3️⃣ Fallback از env
   if (GEMINI_API_KEY) return { key: GEMINI_API_KEY, keyId: null };
   return null;
 }
