@@ -673,7 +673,6 @@ renderUI();
     }
 }
 
-
 async function reject(paymentId, btn) {
     if (!confirm('این پرداخت رد شود؟')) return;
 
@@ -684,6 +683,9 @@ async function reject(paymentId, btn) {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) throw new Error('جلسه ورود مدیر منقضی شده است.');
 
+        // اطلاعات پرداخت رو قبل از تغییر وضعیت بگیر
+        const payment = all.find(p => p.id === paymentId);
+
         const { error } = await supabase
             .from('payments')
             .update({ status: 'rejected' })
@@ -691,8 +693,27 @@ async function reject(paymentId, btn) {
 
         if (error) throw error;
 
-        alert('❌ پرداخت رد شد');
+        // 📧 ارسال ایمیل رد پرداخت
+        try {
+            if (payment?.prof?.email) {
+                await fetch('/api/send-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        to: payment.prof.email,
+                        type: 'payment_rejected',
+                        data: {
+                            name: payment.prof.full_name || 'کاربر'
+                        }
+                    })
+                });
+                console.log('✅ Rejection email sent to:', payment.prof.email);
+            }
+        } catch (emailErr) {
+            console.warn('⚠️ Rejection email failed:', emailErr);
+        }
 
+        alert('❌ پرداخت رد شد');
         await loadPayments();
         renderUI();
 
@@ -703,7 +724,6 @@ async function reject(paymentId, btn) {
         btn.textContent = '❌ رد';
     }
 }
-
 
 init();
 
