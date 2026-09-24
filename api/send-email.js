@@ -43,6 +43,7 @@ const EMAIL_TEMPLATES = {
       <div style="font-family:Tahoma,sans-serif;direction:rtl;text-align:right;padding:30px;background:#f8fafc;max-width:600px;margin:auto;border-radius:16px;">
         <h1 style="color:#dc2626;text-align:center;">❌ پرداخت تایید نشد</h1>
         <p style="color:#475569;font-size:14px;">با پشتیبانی تماس بگیر.</p>
+        <p style="color:#94a3b8;font-size:12px;text-align:center;">© ۱۴۰۵ مشتری‌یار</p>
       </div>
     `
   },
@@ -53,11 +54,102 @@ const EMAIL_TEMPLATES = {
       <div style="font-family:Tahoma,sans-serif;direction:rtl;text-align:right;padding:30px;background:#f8fafc;max-width:600px;margin:auto;border-radius:16px;">
         <h1 style="color:#d97706;text-align:center;">⏰ ${data.daysLeft || 3} روز مونده</h1>
         <p style="color:#475569;font-size:14px;">اشتراکت رو تمدید کن.</p>
+        <p style="color:#94a3b8;font-size:12px;text-align:center;">© ۱۴۰۵ مشتری‌یار</p>
       </div>
     `
   }
 
 };
+
+
+async function sendExpiryReminders() {
+  const now = new Date();
+  const threeDaysLater = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+
+  const profilesRes = await fetch(
+    `${process.env.SUPABASE_URL}/rest/v1/profiles?plan_expires_at=gte.${now.toISOString()}&plan_expires_at=lte.${threeDaysLater.toISOString()}&select=id,email,full_name,plan_expires_at,expiry_reminded_at`,
+    {
+      headers: {
+        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+      },
+    }
+  );
+  const profiles = await profilesRes.json();
+
+  if (!profiles || profiles.length === 0) {
+    return { ok: true, message: "هیچ کاربری در ۳ روز آینده منقضی نمی‌شه.", sent: 0 };
+  }
+
+  const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const toRemind = profiles.filter(p => !p.expiry_reminded_at || new Date(p.expiry_reminded_at) < oneDayAgo);
+
+  const results = [];
+  for (const user of toRemind) {
+    try {
+      const expiresAt = new Date(user.plan_expires_at);
+      const daysLeft = Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+      const r = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${RESEND_API_KEY}`,
+        },
+        body: JSON.stringify({
+          from: "مشتری‌یار <noreply@moshtriyar.ir>",
+          to: [user.email],
+          subject: `⏰ فقط ${daysLeft} روز از اشتراکت مونده`,
+          html: `
+            <div style="font-family:Tahoma,sans-serif;direction:rtl;text-align:right;padding:30px;background:#f8fafc;max-width:600px;margin:auto;border-radius:16px;">
+              <h1 style="color:#d97706;text-align:center;font-size:24px;margin:0;">⏰ ${daysLeft} روز مونده</h1>
+              <h2 style="color:#1e293b;font-size:18px;margin-top:25px;">سلام ${user.full_name || ''} 👋</h2>
+              <p style="color:#475569;line-height:1.9;font-size:14px;">
+                اشتراک مشتری‌یار شما <strong style="color:#d97706;">${daysLeft} روز</strong> دیگه تموم می‌شه.
+                <br>برای ادامه بدون وقفه، تمدید کن.
+              </p>
+              <div style="text-align:center;margin:30px 0;">
+                <a href="https://moshtriyar.ir/billing.html" style="display:inline-block;background:#d97706;color:#fff;padding:14px 30px;border-radius:12px;text-decoration:none;font-weight:800;">
+                  💳 تمدید اشتراک
+                </a>
+              </div>
+              <p style="color:#94a3b8;font-size:12px;text-align:center;">© ۱۴۰۵ مشتری‌یار</p>
+            </div>
+          `,
+        }),
+      });
+
+      if (r.ok) {
+        await fetch(
+          `${process.env.SUPABASE_URL}/rest/v1/profiles?id=eq.${user.id}`,
+          {
+            method: "PATCH",
+            headers: {
+              apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+              Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ expiry_reminded_at: now.toISOString() }),
+          }
+        );
+        results.push({ email: user.email, ok: true, daysLeft });
+      } else {
+        results.push({ email: user.email, ok: false });
+      }
+    } catch (err) {
+      results.push({ email: user.email, ok: false, error: err.message });
+    }
+  }
+
+  const successCount = results.filter(r => r.ok).length;
+  return {
+    ok: true,
+    message: `${successCount} ایمیل یادآوری ارسال شد.`,
+    sent: successCount,
+    total: toRemind.length,
+    results
+  };
+}
 
 
 export default async function handler(req, res) {
@@ -67,69 +159,72 @@ export default async function handler(req, res) {
 
   if (req.method === "OPTIONS") return res.status(200).end();
 
-  
-// 🧪 تست از مرورگر
-if (req.method === "GET") {
-  if (!RESEND_API_KEY) {
-    return res.status(200).json({
-      ok: false,
-      message: "⚠️ RESEND_API_KEY تنظیم نشده",
-    });
-  }
-
-  // اگه test پارامتر داشت → ایمیل تستی بفرست
-  const testEmail = req.query?.test;
-
-  if (!testEmail) {
-    return res.status(200).json({
-      ok: true,
-      message: "API is working ✅",
-      envOk: true,
-      usage: "برای تست ایمیل: /api/send-email?test=YOUR_EMAIL@gmail.com",
-      types: ["welcome", "payment_approved", "payment_rejected", "expiry_warning"]
-    });
-  }
-
-  try {
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: "مشتری‌یار <noreply@moshtriyar.ir>",
-        to: [testEmail],
-        subject: "🎉 تست ایمیل مشتری‌یار",
-        html: `
-          <div style="font-family:Tahoma,sans-serif;direction:rtl;text-align:right;padding:30px;background:#f8fafc;max-width:600px;margin:auto;border-radius:16px;">
-            <h1 style="color:#2563eb;text-align:center;">✅ تست موفق!</h1>
-            <p style="color:#475569;line-height:1.9;font-size:14px;">
-              اگه این ایمیل رو می‌بینی، یعنی سیستم ایمیل مشتری‌یار کاملاً کار می‌کنه. 🎉
-            </p>
-            <p style="color:#94a3b8;font-size:12px;text-align:center;margin-top:20px;">
-              © ۱۴۰۵ مشتری‌یار
-            </p>
-          </div>
-        `,
-      }),
-    });
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      return res.status(500).json({ ok: false, error: result?.message });
+  // 🧪 GET: تست + Cron reminders
+  if (req.method === "GET") {
+    if (!RESEND_API_KEY) {
+      return res.status(200).json({ ok: false, message: "RESEND_API_KEY تنظیم نشده" });
     }
 
-    return res.status(200).json({
-      ok: true,
-      message: "✅ ایمیل تست ارسال شد!",
-      id: result.id
-    });
-  } catch (err) {
-    return res.status(500).json({ ok: false, error: err.message });
+    const action = req.query?.action;
+
+    // 🕐 Cron: یادآوری انقضا
+    if (action === "reminders") {
+      const secret = req.query?.secret;
+      const expectedSecret = process.env.CRON_SECRET || "moshtriyar-cron-2026-secret";
+
+      if (secret !== expectedSecret) {
+        return res.status(401).json({ ok: false, error: "Unauthorized" });
+      }
+
+      try {
+        const result = await sendExpiryReminders();
+        return res.status(200).json(result);
+      } catch (err) {
+        return res.status(500).json({ ok: false, error: err.message });
+      }
+    }
+
+    // تست عادی
+    const testEmail = req.query?.test;
+    if (!testEmail) {
+      return res.status(200).json({
+        ok: true,
+        message: "API is working ✅",
+        envOk: true,
+        usage: "POST {to,type,data} | GET ?action=reminders&secret=... | GET ?test=email@gmail.com",
+      });
+    }
+
+    try {
+      const r = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${RESEND_API_KEY}`,
+        },
+        body: JSON.stringify({
+          from: "مشتری‌یار <noreply@moshtriyar.ir>",
+          to: [testEmail],
+          subject: "🎉 تست ایمیل مشتری‌یار",
+          html: `<h1 style="text-align:center;">✅ تست موفق!</h1><p style="text-align:center;">سیستم ایمیل مشتری‌یار کار می‌کنه.</p>`,
+        }),
+      });
+
+      const result = await r.json();
+      return res.status(200).json({ ok: true, message: "✅ ایمیل تست ارسال شد!", id: result.id });
+    } catch (err) {
+      return res.status(500).json({ ok: false, error: err.message });
+    }
   }
-}
+
+  if (req.method !== "POST") {
+    return res.status(405).json({ ok: false, error: "POST only" });
+  }
+
+  if (!RESEND_API_KEY) {
+    return res.status(500).json({ ok: false, error: "RESEND_API_KEY missing" });
+  }
+
   try {
     const { to, type, data } = req.body || {};
 
