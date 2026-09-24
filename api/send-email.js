@@ -1,5 +1,6 @@
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 import { checkRateLimit, getClientIP } from "../lib/rate-limit.js";
+
 const EMAIL_TEMPLATES = {
 
   welcome: {
@@ -61,16 +62,15 @@ const EMAIL_TEMPLATES = {
 
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
-res.setHeader("CDN-Cache-Control", "no-store");
-res.setHeader("Cloudflare-CDN-Cache-Control", "no-store");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+  res.setHeader("CDN-Cache-Control", "no-store");
+  res.setHeader("Cloudflare-CDN-Cache-Control", "no-store");
 
   if (req.method === "OPTIONS") return res.status(200).end();
-
-  // ==========================================================
-  // 🧪 GET: تست + Cron reminders
+    // ==========================================================
+  // 🧪 GET
   // ==========================================================
   if (req.method === "GET") {
     if (!RESEND_API_KEY) {
@@ -78,20 +78,23 @@ res.setHeader("Cloudflare-CDN-Cache-Control", "no-store");
     }
 
     const action = req.query?.action;
-    // 🛡️ محدودیت نرخ برای GET (فقط برای reminders نباشه)
-if (action !== "reminders") {
-  const clientIP = getClientIP(req);
-  const rateCheck = await checkRateLimit(clientIP, "send-email-get", 2, 60);
-  if (!rateCheck.allowed) {
-    return res.status(429).json({
-      ok: false,
-      error: `محدودیت ارسال. ${rateCheck.retryAfter} ثانیه دیگر تلاش کنید.`,
-      retryAfter: rateCheck.retryAfter,
-    });
-  }
-}
 
+    // 🛡️ محدودیت نرخ (به‌جز reminders)
+    if (action !== "reminders") {
+      const clientIP = getClientIP(req);
+      const rateCheck = await checkRateLimit(clientIP, "send-email-get", 10, 60);
+      if (!rateCheck.allowed) {
+        return res.status(429).json({
+          ok: false,
+          error: `محدودیت ارسال. ${rateCheck.retryAfter} ثانیه دیگر تلاش کنید.`,
+          retryAfter: rateCheck.retryAfter,
+        });
+      }
+    }
+
+    // ==========================================================
     // 🕐 Cron: یادآوری انقضا
+    // ==========================================================
     if (action === "reminders") {
       const secret = req.query?.secret;
       const expectedSecret = process.env.CRON_SECRET || "moshtriyar-cron-2026-secret";
@@ -211,17 +214,62 @@ if (action !== "reminders") {
       }
     }
 
+    // ==========================================================
+    // ⚙️ خواندن تنظیمات سایت (برای ویجت)
+    // ==========================================================
+    if (action === "settings") {
+      const userId = req.query?.userId;
+      if (!userId) {
+        return res.status(400).json({ ok: false, error: "userId required" });
+      }
+
+      try {
+        const sitesRes = await fetch(
+          `${process.env.SUPABASE_URL}/rest/v1/websites?user_id=eq.${userId}&active=eq.true&select=id&limit=1`,
+          {
+            headers: {
+              apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+              Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+            },
+          }
+        );
+        const sitesData = await sitesRes.json();
+
+        if (!sitesData?.[0]) {
+          return res.status(200).json({ ok: true, settings: null, message: "no site" });
+        }
+
+        const settingsRes = await fetch(
+          `${process.env.SUPABASE_URL}/rest/v1/site_settings?website_id=eq.${sitesData[0].id}&select=*&limit=1`,
+          {
+            headers: {
+              apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+              Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+            },
+          }
+        );
+        const settingsData = await settingsRes.json();
+
+        return res.status(200).json({
+          ok: true,
+          settings: settingsData?.[0] || null,
+        });
+      } catch (err) {
+        return res.status(500).json({ ok: false, error: err.message });
+      }
+    }
+
     // تست عادی
     return res.status(200).json({
       ok: true,
       message: "API is working ✅",
       envOk: true,
-      usage: "POST {to,type,data} | GET ?action=reminders&secret=...",
+      usage: "POST {to,type,data} | GET ?action=reminders | GET ?action=settings&userId=...",
     });
   }
 
   // ==========================================================
-  // 📨 POST: ارسال ایمیل
+  // 📨 POST
   // ==========================================================
   if (req.method !== "POST") {
     return res.status(405).json({ ok: false, error: "POST only" });
@@ -230,19 +278,127 @@ if (action !== "reminders") {
   if (!RESEND_API_KEY) {
     return res.status(500).json({ ok: false, error: "RESEND_API_KEY missing" });
   }
-  
-// 🛡️ محدودیت نرخ: ۵ ایمیل در دقیقه
-const clientIP = getClientIP(req);
-const rateCheck = await checkRateLimit(clientIP, "send-email-post", 5, 60);
 
-if (!rateCheck.allowed) {
-  return res.status(429).json({
-    ok: false,
-    error: `محدودیت ارسال. ${rateCheck.retryAfter} ثانیه دیگر تلاش کنید.`,
-    retryAfter: rateCheck.retryAfter,
-  });
-}
+  // ==========================================================
+  // ⚙️ POST با action=settings → ذخیره تنظیمات
+  // ==========================================================
+  const postAction = req.query?.action;
 
+  if (postAction === "settings") {
+    const token = req.headers.authorization?.replace("Bearer ", "");
+    if (!token) return res.status(401).json({ ok: false, error: "No token" });
+
+    const userRes = await fetch(
+      `${process.env.SUPABASE_URL}/auth/v1/user`,
+      {
+        headers: {
+          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    if (!userRes.ok) {
+      return res.status(401).json({ ok: false, error: "Invalid token" });
+    }
+    const user = await userRes.json();
+
+    try {
+      const { websiteId, settings } = req.body || {};
+      if (!websiteId || !settings) {
+        return res.status(400).json({ ok: false, error: "websiteId and settings required" });
+      }
+
+      const sitesRes = await fetch(
+        `${process.env.SUPABASE_URL}/rest/v1/websites?id=eq.${websiteId}&user_id=eq.${user.id}&select=id`,
+        {
+          headers: {
+            apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+            Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+          },
+        }
+      );
+      const sites = await sitesRes.json();
+      if (!sites?.[0]) {
+        return res.status(403).json({ ok: false, error: "Access denied" });
+      }
+
+      const data = {
+        website_id: websiteId,
+        color: settings.color || "#2563eb",
+        title: settings.title || "دستیار هوشمند",
+        welcome_message: settings.welcome_message || "سلام 👋 چطور می‌تونم کمکتون کنم؟",
+        operator_name: settings.operator_name || null,
+        position: settings.position || "right",
+        enabled: settings.enabled !== false,
+        updated_at: new Date().toISOString(),
+      };
+
+      const existingRes = await fetch(
+        `${process.env.SUPABASE_URL}/rest/v1/site_settings?website_id=eq.${websiteId}&select=id`,
+        {
+          headers: {
+            apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+            Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+          },
+        }
+      );
+      const existing = await existingRes.json();
+
+      let resultRes;
+      if (existing?.[0]) {
+        resultRes = await fetch(
+          `${process.env.SUPABASE_URL}/rest/v1/site_settings?id=eq.${existing[0].id}`,
+          {
+            method: "PATCH",
+            headers: {
+              apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+              Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+              "Content-Type": "application/json",
+              Prefer: "return=representation",
+            },
+            body: JSON.stringify(data),
+          }
+        );
+      } else {
+        resultRes = await fetch(
+          `${process.env.SUPABASE_URL}/rest/v1/site_settings`,
+          {
+            method: "POST",
+            headers: {
+              apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+              Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+              "Content-Type": "application/json",
+              Prefer: "return=representation",
+            },
+            body: JSON.stringify(data),
+          }
+        );
+      }
+
+      const result = await resultRes.json();
+      return res.status(200).json({ ok: true, settings: result?.[0] });
+    } catch (err) {
+      return res.status(500).json({ ok: false, error: err.message });
+    }
+  }
+
+  // ==========================================================
+  // 📧 محدودیت نرخ برای POST معمولی
+  // ==========================================================
+  const clientIP = getClientIP(req);
+  const rateCheck = await checkRateLimit(clientIP, "send-email-post", 5, 60);
+
+  if (!rateCheck.allowed) {
+    return res.status(429).json({
+      ok: false,
+      error: `محدودیت ارسال. ${rateCheck.retryAfter} ثانیه دیگر تلاش کنید.`,
+      retryAfter: rateCheck.retryAfter,
+    });
+  }
+
+  // ==========================================================
+  // 📨 POST: ارسال ایمیل معمولی
+  // ==========================================================
   try {
     const { to, type, data } = req.body || {};
 
