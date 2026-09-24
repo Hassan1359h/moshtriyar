@@ -90,7 +90,7 @@ export default async function handler(req, res) {
         const threeDaysLater = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
 
         const profilesRes = await fetch(
-          `${process.env.SUPABASE_URL}/rest/v1/profiles?plan_expires_at=gte.${now.toISOString()}&plan_expires_at=lte.${threeDaysLater.toISOString()}&select=id,email,full_name,plan_expires_at,expiry_reminded_at`,
+          `${process.env.SUPABASE_URL}/rest/v1/profiles?subscription_end_date=gte.${now.toISOString()}&subscription_end_date=lte.${threeDaysLater.toISOString()}&select=id,email,full_name,subscription_end_date,expiry_reminded_at`,
           {
             headers: {
               apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
@@ -126,7 +126,7 @@ export default async function handler(req, res) {
 
         for (const user of toRemind) {
           try {
-            const expiresAt = new Date(user.plan_expires_at);
+            const expiresAt = new Date(user.subscription_end_date);
             const daysLeft = Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
             const r = await fetch("https://api.resend.com/emails", {
