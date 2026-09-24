@@ -315,7 +315,7 @@ document.getElementById('saveBtn').addEventListener('click', async () => {
     try {
         const { data: { session } } = await supabase.auth.getSession();
 
-        const res = await fetch('/api/site-settings', {
+        const res = await fetch('/api/send-email?action=settings', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
