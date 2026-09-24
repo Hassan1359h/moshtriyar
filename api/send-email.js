@@ -1,5 +1,5 @@
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-
+import { checkRateLimit, getClientIP } from "../lib/rate-limit.js";
 const EMAIL_TEMPLATES = {
 
   welcome: {
@@ -75,6 +75,18 @@ export default async function handler(req, res) {
     }
 
     const action = req.query?.action;
+    // 🛡️ محدودیت نرخ برای GET (فقط برای reminders نباشه)
+if (action !== "reminders") {
+  const clientIP = getClientIP(req);
+  const rateCheck = await checkRateLimit(clientIP, "send-email-get", 5, 60);
+  if (!rateCheck.allowed) {
+    return res.status(429).json({
+      ok: false,
+      error: `محدودیت ارسال. ${rateCheck.retryAfter} ثانیه دیگر تلاش کنید.`,
+      retryAfter: rateCheck.retryAfter,
+    });
+  }
+}
 
     // 🕐 Cron: یادآوری انقضا
     if (action === "reminders") {
@@ -215,6 +227,18 @@ export default async function handler(req, res) {
   if (!RESEND_API_KEY) {
     return res.status(500).json({ ok: false, error: "RESEND_API_KEY missing" });
   }
+  
+// 🛡️ محدودیت نرخ: ۵ ایمیل در دقیقه
+const clientIP = getClientIP(req);
+const rateCheck = await checkRateLimit(clientIP, "send-email-post", 5, 60);
+
+if (!rateCheck.allowed) {
+  return res.status(429).json({
+    ok: false,
+    error: `محدودیت ارسال. ${rateCheck.retryAfter} ثانیه دیگر تلاش کنید.`,
+    retryAfter: rateCheck.retryAfter,
+  });
+}
 
   try {
     const { to, type, data } = req.body || {};
