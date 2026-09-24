@@ -76,7 +76,16 @@ async function sendExpiryReminders() {
     }
   );
   const profiles = await profilesRes.json();
+  
+console.log("Profiles response:", JSON.stringify(profiles));
 
+if (!Array.isArray(profiles)) {
+  return res.status(500).json({
+    ok: false,
+    error: "Supabase response invalid",
+    raw: profiles,
+  });
+}
   if (!profiles || profiles.length === 0) {
     return { ok: true, message: "هیچ کاربری در ۳ روز آینده منقضی نمی‌شه.", sent: 0 };
   }
