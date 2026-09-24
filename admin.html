@@ -623,24 +623,47 @@ async function approve(paymentId, btn) {
         if (!session) throw new Error('جلسه ورود مدیر منقضی شده است.');
 
         const response = await fetch('/api/approve-payment', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + session.access_token
+    },
+    body: JSON.stringify({ paymentId: paymentId })
+});
+
+const result = await response.json().catch(() => ({}));
+
+if (!response.ok || !result.success) {
+    throw new Error(result.error || 'خطا در تایید پرداخت');
+}
+
+alert('✅ پرداخت تایید شد');
+
+// 📧 ارسال ایمیل تایید پرداخت
+try {
+    const payment = all.find(p => p.id === paymentId);
+    if (payment?.prof?.email) {
+        await fetch('/api/send-email', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + session.access_token
-            },
-            body: JSON.stringify({ paymentId: paymentId })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                to: payment.prof.email,
+                type: 'payment_approved',
+                data: {
+                    name: payment.prof.full_name || 'کاربر',
+                    plan: payment.plan_name || 'حرفه‌ای',
+                    expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('fa-IR')
+                }
+            })
         });
+        console.log('✅ Payment approved email sent');
+    }
+} catch (emailErr) {
+    console.warn('⚠️ Payment email failed:', emailErr);
+}
 
-        const result = await response.json().catch(() => ({}));
-
-        if (!response.ok || !result.success) {
-            throw new Error(result.error || 'خطا در تایید پرداخت');
-        }
-
-        alert('✅ پرداخت تایید شد');
-
-        await loadPayments();
-        renderUI();
+await loadPayments();
+renderUI();
 
     } catch (error) {
         console.error('Approve error:', error);
