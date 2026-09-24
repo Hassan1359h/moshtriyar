@@ -1,0 +1,16 @@
+name: Expiry Reminders
+
+on:
+  schedule:
+    - cron: '30 5 * * *'
+  workflow_dispatch:
+
+jobs:
+  send-reminders:
+    name: Send Expiry Reminders
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Reminders
+        run: |
+          curl -X GET "https://moshtriyar.ir/api/send-expiry-reminders?secret=${{ secrets.CRON_SECRET }}" \
+            -H "Accept: application/json"
