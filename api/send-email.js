@@ -78,7 +78,7 @@ export default async function handler(req, res) {
     // 🛡️ محدودیت نرخ برای GET (فقط برای reminders نباشه)
 if (action !== "reminders") {
   const clientIP = getClientIP(req);
-  const rateCheck = await checkRateLimit(clientIP, "send-email-get", 5, 60);
+  const rateCheck = await checkRateLimit(clientIP, "send-email-get", 2, 60);
   if (!rateCheck.allowed) {
     return res.status(429).json({
       ok: false,
