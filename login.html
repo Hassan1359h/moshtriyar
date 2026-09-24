@@ -320,7 +320,24 @@
                         }
                     });
                     if (error) throw error;
-                    showMessage('✅ ثبت‌نام موفق! حالا وارد شوید.', 'success');
+
+// 📧 ارسال ایمیل خوش‌آمد
+try {
+    await fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            to: email,
+            type: 'welcome',
+            data: { name: fullName }
+        })
+    });
+    console.log('✅ Welcome email sent');
+} catch (emailErr) {
+    console.warn('⚠️ Welcome email failed:', emailErr);
+}
+
+showMessage('✅ ثبت‌نام موفق! حالا وارد شوید.', 'success');
                     setTimeout(() => setMode('login'), 1500);
                 }
             } catch (err) {
