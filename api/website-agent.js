@@ -22,36 +22,17 @@ export default async function handler(req, res) {
 
     var scriptTag = document.currentScript;
 
-    
-var config = {
-    userId: scriptTag?.getAttribute("data-user-id") || "",
-    site: scriptTag?.getAttribute("data-site") || "",
-    color: scriptTag?.getAttribute("data-color") || "#2563eb",
-    title: scriptTag?.getAttribute("data-title") || "دستیار هوشمند",
-    enabled: scriptTag?.getAttribute("data-enabled") !== "false"
-};
+    var config = {
+        userId: scriptTag?.getAttribute("data-user-id") || "",
+        site: scriptTag?.getAttribute("data-site") || "",
+        color: scriptTag?.getAttribute("data-color") || "#2563eb",
+        title: scriptTag?.getAttribute("data-title") || "دستیار هوشمند",
+        welcomeMessage: "سلام 👋 چطور می‌تونم کمکتون کنم؟",
+        operatorName: "",
+        position: "right",
+        enabled: scriptTag?.getAttribute("data-enabled") !== "false"
+    };
 
-// 🎨 دریافت تنظیمات اختصاصی از سرور
-(async function loadCustomSettings() {
-    if (!config.userId) return;
-    try {
-        var res = await fetch(
-            "https://moshtriyar.ir/api/site-settings?userId=" + encodeURIComponent(config.userId)
-        );
-        var data = await res.json();
-        if (data.ok && data.settings) {
-            var s = data.settings;
-            if (s.color) config.color = s.color;
-            if (s.title) config.title = s.title;
-            if (s.welcome_message) config.welcomeMessage = s.welcome_message;
-            if (s.operator_name) config.operatorName = s.operator_name;
-            if (s.position) config.position = s.position;
-            if (s.enabled === false) config.enabled = false;
-        }
-    } catch (e) {
-        console.warn("Moshtriyar: custom settings load failed", e);
-    }
-})();
     var SUPABASE_URL = "${SUPABASE_URL}";
     var SUPABASE_ANON_KEY = "${SUPABASE_ANON_KEY}";
 
@@ -65,25 +46,59 @@ var config = {
     }
 
 
+    // ==========================================================
+    // 📥 دریافت تنظیمات اختصاصی از سرور
+    // ==========================================================
+    function loadCustomSettings() {
+        return new Promise(function (resolve) {
+            if (!config.userId) {
+                resolve(config);
+                return;
+            }
+
+            fetch("https://moshtriyar.ir/api/send-email?action=settings&userId=" + encodeURIComponent(config.userId) + "&t=" + Date.now())
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (data && data.ok && data.settings) {
+                        var s = data.settings;
+                        if (s.color) config.color = s.color;
+                        if (s.title) config.title = s.title;
+                        if (s.welcome_message) config.welcomeMessage = s.welcome_message;
+                        if (s.operator_name) config.operatorName = s.operator_name;
+                        if (s.position) config.position = s.position;
+                        if (s.enabled === false) {
+                            config.enabled = false;
+                        }
+                        console.log("✅ Moshtriyar: custom settings loaded", {
+                            color: config.color,
+                            title: config.title,
+                            operator: config.operatorName,
+                            position: config.position
+                        });
+                    } else {
+                        console.log("ℹ️ Moshtriyar: no custom settings, using defaults");
+                    }
+                    resolve(config);
+                })
+                .catch(function (err) {
+                    console.warn("Moshtriyar: settings load failed", err);
+                    resolve(config);
+                });
+        });
+    }
+
+
     function loadSupabase() {
-
         return new Promise(function (resolve, reject) {
-
             if (window.supabase) {
                 resolve(window.supabase);
                 return;
             }
 
             var s = document.createElement("script");
-
             s.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
-
-            s.onload = function () {
-                resolve(window.supabase);
-            };
-
+            s.onload = function () { resolve(window.supabase); };
             s.onerror = reject;
-
             document.head.appendChild(s);
         });
     }
@@ -95,118 +110,188 @@ var config = {
             return;
         }
 
-        var button = document.createElement("button");
+        // 🎯 اگه دستیار غیرفعاله، هیچی نشون نده
+        if (!config.enabled) {
+            console.log("Moshtriyar: agent disabled by settings");
+            return;
+        }
 
+        var positionSide = config.position === "left" ? "left" : "right";
+        var oppositeSide = positionSide === "left" ? "right" : "left";
+
+        // ==========================================================
+        // 🤖 دکمه شناور
+        // ==========================================================
+        var button = document.createElement("button");
         button.id = "moshtiryar-ai-agent";
         button.type = "button";
         button.innerHTML = "🤖";
 
         button.style.cssText =
-            "position:fixed;bottom:20px;right:20px;" +
-            "width:58px;height:58px;border:none;" +
-            "border-radius:50%;background:" + config.color + ";" +
-            "color:#fff;font-size:26px;cursor:pointer;" +
+            "position:fixed;" +
+            "bottom:20px;" +
+            positionSide + ":20px;" +
+            oppositeSide + ":auto;" +
+            "width:58px;" +
+            "height:58px;" +
+            "border:none;" +
+            "border-radius:50%;" +
+            "background:" + config.color + ";" +
+            "color:#fff;" +
+            "font-size:26px;" +
+            "cursor:pointer;" +
             "z-index:2147483647;" +
             "box-shadow:0 8px 25px rgba(0,0,0,.22);";
 
 
+        // ==========================================================
+        // 💬 باکس چت
+        // ==========================================================
         var box = document.createElement("div");
-
         box.id = "moshtiryar-ai-box";
 
         box.style.cssText =
-            "display:none;position:fixed;bottom:90px;right:20px;" +
-            "width:340px;max-width:calc(100vw - 30px);" +
-            "height:480px;max-height:calc(100vh - 120px);" +
-            "background:#fff;border-radius:18px;overflow:hidden;" +
+            "display:none;" +
+            "position:fixed;" +
+            "bottom:90px;" +
+            positionSide + ":20px;" +
+            oppositeSide + ":auto;" +
+            "width:340px;" +
+            "max-width:calc(100vw - 30px);" +
+            "height:480px;" +
+            "max-height:calc(100vh - 120px);" +
+            "background:#fff;" +
+            "border-radius:18px;" +
+            "overflow:hidden;" +
             "z-index:2147483646;" +
             "box-shadow:0 15px 45px rgba(15,23,42,.25);" +
             "border:1px solid #e2e8f0;" +
-            "font-family:Tahoma,Arial,sans-serif;direction:rtl;";
+            "font-family:Tahoma,Arial,sans-serif;" +
+            "direction:rtl;";
 
 
+        // ==========================================================
+        // 🎨 هدر (با رنگ سفارشی)
+        // ==========================================================
         var header = document.createElement("div");
 
         header.style.cssText =
             "height:58px;" +
-            "background:linear-gradient(135deg,#2563eb,#7c3aed);" +
-            "color:#fff;display:flex;align-items:center;" +
+            "background:linear-gradient(135deg," + config.color + "," + config.color + "dd);" +
+            "color:#fff;" +
+            "display:flex;" +
+            "align-items:center;" +
             "justify-content:space-between;" +
-            "padding:0 14px;font-weight:900;";
+            "padding:0 14px;" +
+            "font-weight:900;";
 
         header.innerHTML =
-            '<span>🤖 دستیار هوشمند مشتری‌یار</span>' +
-            '<button id="moshtiryar-ai-close" type="button" ' +
-            'style="border:none;background:transparent;color:#fff;font-size:22px;cursor:pointer;">×</button>';
+            '<span>🤖 ' + config.title + '</span>' +
+            '<button id="moshtiryar-ai-close" ' +
+            'type="button" ' +
+            'style="border:none;background:transparent;color:#fff;font-size:22px;cursor:pointer;">' +
+            '×' +
+            '</button>';
 
 
+        // ==========================================================
+        // 📨 ناحیه پیام‌ها
+        // ==========================================================
         var messages = document.createElement("div");
-
         messages.id = "moshtiryar-ai-messages";
 
         messages.style.cssText =
-            "height:360px;overflow-y:auto;padding:14px;" +
-            "background:#f8fafc;font-size:13px;line-height:1.9;" +
+            "height:360px;" +
+            "overflow-y:auto;" +
+            "padding:14px;" +
+            "background:#f8fafc;" +
+            "font-size:13px;" +
+            "line-height:1.9;" +
             "position:relative;";
 
 
         var welcome = document.createElement("div");
 
         welcome.style.cssText =
-            "background:#fff;border:1px solid #e2e8f0;" +
-            "border-radius:13px;padding:11px;margin-bottom:10px;" +
+            "background:#fff;" +
+            "border:1px solid #e2e8f0;" +
+            "border-radius:13px;" +
+            "padding:11px;" +
+            "margin-bottom:10px;" +
             "color:#334155;";
 
-        welcome.textContent =
-            "سلام 👋 خوش آمدید. چطور می‌توانم به شما کمک کنم؟";
+        welcome.textContent = config.welcomeMessage;
 
         messages.appendChild(welcome);
 
 
+        // ==========================================================
+        // 📝 فوتر (input + دکمه تماس + ارسال)
+        // ==========================================================
         var footer = document.createElement("div");
 
         footer.style.cssText =
-            "display:flex;gap:7px;padding:10px;" +
-            "border-top:1px solid #e2e8f0;background:#fff;" +
+            "display:flex;" +
+            "gap:7px;" +
+            "padding:10px;" +
+            "border-top:1px solid #e2e8f0;" +
+            "background:#fff;" +
             "align-items:center;";
 
 
         var input = document.createElement("input");
-
         input.id = "moshtiryar-ai-input";
         input.type = "text";
         input.placeholder = "پیام خود را بنویسید...";
 
         input.style.cssText =
-            "flex:1;min-width:0;border:1px solid #cbd5e1;" +
-            "border-radius:10px;padding:10px;outline:none;" +
+            "flex:1;" +
+            "min-width:0;" +
+            "border:1px solid #cbd5e1;" +
+            "border-radius:10px;" +
+            "padding:10px;" +
+            "outline:none;" +
             "font-family:Tahoma,Arial,sans-serif;" +
-            "font-size:12px;direction:rtl;";
+            "font-size:12px;" +
+            "direction:rtl;";
 
 
         var callBtn = document.createElement("button");
-
         callBtn.id = "moshtiryar-ai-call";
         callBtn.type = "button";
         callBtn.innerHTML = "📞";
-        callBtn.title = "تماس صوتی با پشتیبان";
+        callBtn.title = config.operatorName ? "تماس با " + config.operatorName : "تماس صوتی";
 
         callBtn.style.cssText =
-            "width:45px;height:40px;border:none;" +
-            "border-radius:10px;background:#10b981;" +
-            "color:#fff;font-size:18px;cursor:pointer;";
+            "width:45px;" +
+            "height:40px;" +
+            "border:none;" +
+            "border-radius:10px;" +
+            "background:#10b981;" +
+            "color:#fff;" +
+            "font-size:18px;" +
+            "cursor:pointer;";
+
+        // 🎯 اگه اپراتور تنظیم نشده، دکمه تماس رو مخفی کن
+        if (!config.operatorName) {
+            callBtn.style.display = "none";
+        }
 
 
         var send = document.createElement("button");
-
         send.id = "moshtiryar-ai-send";
         send.type = "button";
         send.textContent = "➤";
 
         send.style.cssText =
-            "width:45px;height:40px;border:none;" +
-            "border-radius:10px;background:#2563eb;" +
-            "color:#fff;font-size:18px;cursor:pointer;";
+            "width:45px;" +
+            "height:40px;" +
+            "border:none;" +
+            "border-radius:10px;" +
+            "background:" + config.color + ";" +
+            "color:#fff;" +
+            "font-size:18px;" +
+            "cursor:pointer;";
 
 
         footer.appendChild(input);
@@ -221,6 +306,9 @@ var config = {
         document.body.appendChild(box);
 
 
+        // ==========================================================
+        // 🔘 باز/بستن باکس
+        // ==========================================================
         button.onclick = function () {
             if (box.style.display === "none") {
                 box.style.display = "block";
@@ -230,27 +318,35 @@ var config = {
             }
         };
 
-
         document.getElementById("moshtiryar-ai-close").onclick = function () {
             box.style.display = "none";
         };
 
 
+        // ==========================================================
+        // 📨 اضافه کردن پیام به چت
+        // ==========================================================
         function addMessage(text, type) {
-
             var item = document.createElement("div");
 
             item.style.cssText =
-                "padding:10px;border-radius:12px;" +
-                "margin-bottom:8px;max-width:90%;" +
-                "white-space:pre-wrap;word-break:break-word;" +
+                "padding:10px;" +
+                "border-radius:12px;" +
+                "margin-bottom:8px;" +
+                "max-width:90%;" +
+                "white-space:pre-wrap;" +
+                "word-break:break-word;" +
                 (
                     type === "user"
                     ?
-                    "margin-right:auto;background:#dbeafe;color:#1e3a8a;"
+                    "margin-right:auto;" +
+                    "background:#dbeafe;" +
+                    "color:#1e3a8a;"
                     :
-                    "margin-left:auto;background:#fff;" +
-                    "border:1px solid #e2e8f0;color:#334155;"
+                    "margin-left:auto;" +
+                    "background:#fff;" +
+                    "border:1px solid #e2e8f0;" +
+                    "color:#334155;"
                 );
 
             item.textContent = text;
@@ -260,6 +356,9 @@ var config = {
         }
 
 
+        // ==========================================================
+        // 💬 ارسال پیام به AI
+        // ==========================================================
         async function sendMessage() {
 
             var text = input.value.trim();
@@ -273,7 +372,6 @@ var config = {
             send.textContent = "⏳";
 
             var loading = document.createElement("div");
-
             loading.id = "moshtiryar-loading";
             loading.style.cssText = "padding:10px;color:#64748b;font-size:12px;";
             loading.textContent = "در حال بررسی...";
@@ -282,19 +380,15 @@ var config = {
             messages.scrollTop = messages.scrollHeight;
 
             try {
-
-                var response = await fetch(
-                    "/api/website-chat",
-                    {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            userId: config.userId,
-                            site: config.site,
-                            message: text
-                        })
-                    }
-                );
+                var response = await fetch("/api/website-chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        userId: config.userId,
+                        site: config.site,
+                        message: text
+                    })
+                });
 
                 var data = await response.json();
 
@@ -307,11 +401,8 @@ var config = {
                 }
 
             } catch (error) {
-
                 console.error("Moshtriyar agent error:", error);
-
                 if (loading.parentNode) loading.remove();
-
                 addMessage("ارتباط با دستیار برقرار نشد.", "agent");
             }
 
@@ -331,10 +422,9 @@ var config = {
         });
 
 
-        // ==========================================
+        // ==========================================================
         // 📞 تماس صوتی WebRTC
-        // ==========================================
-
+        // ==========================================================
         var callChannel = null;
         var callPc = null;
         var currentSessionId = null;
@@ -346,21 +436,24 @@ var config = {
 
 
         function showCallOverlay(html) {
-
             if (callOverlay) callOverlay.remove();
 
             callOverlay = document.createElement("div");
-
             callOverlay.style.cssText =
-                "position:absolute;top:0;left:0;right:0;bottom:0;" +
+                "position:absolute;" +
+                "top:0;left:0;right:0;bottom:0;" +
                 "background:linear-gradient(135deg,#10b981,#059669);" +
-                "color:#fff;display:flex;flex-direction:column;" +
-                "align-items:center;justify-content:center;" +
-                "padding:20px;text-align:center;z-index:10;" +
+                "color:#fff;" +
+                "display:flex;" +
+                "flex-direction:column;" +
+                "align-items:center;" +
+                "justify-content:center;" +
+                "padding:20px;" +
+                "text-align:center;" +
+                "z-index:10;" +
                 "border-radius:18px;";
 
             callOverlay.innerHTML = html;
-
             box.appendChild(callOverlay);
         }
 
@@ -376,7 +469,6 @@ var config = {
         async function startCall() {
 
             try {
-
                 callBtn.disabled = true;
                 callBtn.innerHTML = "⏳";
 
@@ -400,7 +492,6 @@ var config = {
                 var stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
                 var sb = await loadSupabase();
-
                 var client = sb.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
                 currentSessionId = "call_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
@@ -448,7 +539,6 @@ var config = {
                     "broadcast",
                     { event: "webrtc-answer" },
                     async function ({ payload }) {
-
                         if (payload.sessionId !== currentSessionId) return;
 
                         await callPc.setRemoteDescription(
@@ -477,7 +567,6 @@ var config = {
                     "broadcast",
                     { event: "webrtc-ice-operator" },
                     async function ({ payload }) {
-
                         if (payload.sessionId !== currentSessionId) return;
 
                         if (hasRemoteDescription) {
@@ -497,7 +586,6 @@ var config = {
                     "broadcast",
                     { event: "call-rejected" },
                     function ({ payload }) {
-
                         if (payload.sessionId !== currentSessionId) return;
 
                         showCallOverlay(
@@ -506,9 +594,7 @@ var config = {
                             '<p style="font-size:13px;opacity:.9;">لطفاً از طریق چت پیام بگذارید</p>'
                         );
 
-                        setTimeout(function () {
-                            endCall();
-                        }, 2500);
+                        setTimeout(function () { endCall(); }, 2500);
                     }
                 );
 
@@ -517,9 +603,7 @@ var config = {
                     "broadcast",
                     { event: "call-ended" },
                     function ({ payload }) {
-
                         if (payload.sessionId !== currentSessionId) return;
-
                         endCall();
                     }
                 );
@@ -527,9 +611,7 @@ var config = {
 
                 callChannel.subscribe(
                     async function (status) {
-
                         if (status === "SUBSCRIBED") {
-
                             await callChannel.send({
                                 type: "broadcast",
                                 event: "call-request",
@@ -547,18 +629,14 @@ var config = {
 
                 callTimer = setTimeout(
                     function () {
-
                         if (!hasRemoteDescription) {
-
                             showCallOverlay(
                                 '<div style="font-size:50px;">⏰</div>' +
                                 '<h2 style="margin:15px 0;font-size:18px;">پاسخی دریافت نشد</h2>' +
                                 '<p style="font-size:13px;opacity:.9;">پشتیبان الان پاسخ نداد</p>'
                             );
 
-                            setTimeout(function () {
-                                endCall();
-                            }, 2000);
+                            setTimeout(function () { endCall(); }, 2000);
                         }
                     },
                     30000
@@ -566,7 +644,6 @@ var config = {
 
 
             } catch (err) {
-
                 console.error("Call error:", err);
 
                 showCallOverlay(
@@ -577,9 +654,7 @@ var config = {
                     '</p>'
                 );
 
-                setTimeout(function () {
-                    endCall();
-                }, 2500);
+                setTimeout(function () { endCall(); }, 2500);
 
             } finally {
                 callBtn.disabled = false;
@@ -589,7 +664,6 @@ var config = {
 
 
         function showActiveCall() {
-
             showCallOverlay(
                 '<div style="font-size:50px;">🎙️</div>' +
                 '<h2 style="margin:15px 0;font-size:18px;">تماس برقرار است</h2>' +
@@ -608,7 +682,6 @@ var config = {
 
             callTimer = setInterval(
                 function () {
-
                     var elapsed = Math.floor((Date.now() - callStartTime) / 1000);
                     var mins = String(Math.floor(elapsed / 60)).padStart(2, "0");
                     var secs = String(elapsed % 60).padStart(2, "0");
@@ -630,7 +703,6 @@ var config = {
             }
 
             if (callChannel && currentSessionId) {
-
                 try {
                     callChannel.send({
                         type: "broadcast",
@@ -639,22 +711,17 @@ var config = {
                     });
                 } catch (e) {}
 
-                try {
-                    callChannel.unsubscribe();
-                } catch (e) {}
-
+                try { callChannel.unsubscribe(); } catch (e) {}
                 callChannel = null;
             }
 
             if (callPc) {
-
                 try {
                     callPc.getSenders().forEach(function (sender) {
                         if (sender.track) sender.track.stop();
                     });
                     callPc.close();
                 } catch (e) {}
-
                 callPc = null;
             }
 
@@ -679,11 +746,18 @@ var config = {
     }
 
 
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", createAgent);
-    } else {
-        createAgent();
-    }
+    // ==========================================================
+    // 🚀 شروع
+    // ==========================================================
+    (async function boot() {
+        await loadCustomSettings();
+
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", createAgent);
+        } else {
+            createAgent();
+        }
+    })();
 
 })();
 
