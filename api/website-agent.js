@@ -22,14 +22,36 @@ export default async function handler(req, res) {
 
     var scriptTag = document.currentScript;
 
-    var config = {
-        userId: scriptTag?.getAttribute("data-user-id") || "",
-        site: scriptTag?.getAttribute("data-site") || "",
-        color: scriptTag?.getAttribute("data-color") || "#2563eb",
-        title: scriptTag?.getAttribute("data-title") || "دستیار هوشمند",
-        enabled: scriptTag?.getAttribute("data-enabled") !== "false"
-    };
+    
+var config = {
+    userId: scriptTag?.getAttribute("data-user-id") || "",
+    site: scriptTag?.getAttribute("data-site") || "",
+    color: scriptTag?.getAttribute("data-color") || "#2563eb",
+    title: scriptTag?.getAttribute("data-title") || "دستیار هوشمند",
+    enabled: scriptTag?.getAttribute("data-enabled") !== "false"
+};
 
+// 🎨 دریافت تنظیمات اختصاصی از سرور
+(async function loadCustomSettings() {
+    if (!config.userId) return;
+    try {
+        var res = await fetch(
+            "https://moshtriyar.ir/api/site-settings?userId=" + encodeURIComponent(config.userId)
+        );
+        var data = await res.json();
+        if (data.ok && data.settings) {
+            var s = data.settings;
+            if (s.color) config.color = s.color;
+            if (s.title) config.title = s.title;
+            if (s.welcome_message) config.welcomeMessage = s.welcome_message;
+            if (s.operator_name) config.operatorName = s.operator_name;
+            if (s.position) config.position = s.position;
+            if (s.enabled === false) config.enabled = false;
+        }
+    } catch (e) {
+        console.warn("Moshtriyar: custom settings load failed", e);
+    }
+})();
     var SUPABASE_URL = "${SUPABASE_URL}";
     var SUPABASE_ANON_KEY = "${SUPABASE_ANON_KEY}";
 
