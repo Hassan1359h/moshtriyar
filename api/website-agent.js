@@ -380,15 +380,17 @@ fetch("https://moshtriyar.ir/api/send-email?action=settings&userId=" + encodeURI
             messages.scrollTop = messages.scrollHeight;
 
             try {
-                var response = await fetch("https://moshtriyar.ir/api/website-chat"
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        userId: config.userId,
-                        site: config.site,
-                        message: text
-                    })
-                });
+                var response = await fetch("https://moshtriyar.ir/api/website-chat", {
+    method: "POST",
+    headers: {
+        "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+        userId: config.userId,
+        site: config.site,
+        message: text
+    })
+});
 
                 var data = await response.json();
 
