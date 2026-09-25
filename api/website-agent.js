@@ -398,17 +398,21 @@ callBtn.style.display = "none";
 
                 if (loading.parentNode) loading.remove();
 
-                if (response.ok && data.reply) {
-                    addMessage(data.reply, "agent");
-                } else {
-                    addMessage("فعلاً امکان پاسخ‌گویی وجود ندارد.", "agent");
-                }
+               if (response.ok && data.reply) {
+    addMessage(data.reply, "agent");
+} else {
+    var dbg = "⚠️ سرور: status=" + response.status + " | ";
+    try { dbg += JSON.stringify(data); } catch(e) { dbg += "بدون پاسخ"; }
+    addMessage(dbg, "agent");
+} 
 
             } catch (error) {
-                console.error("Moshtriyar agent error:", error);
-                if (loading.parentNode) loading.remove();
-                addMessage("ارتباط با دستیار برقرار نشد.", "agent");
-            }
+    console.error("Moshtriyar agent error:", error);
+    if (loading.parentNode) loading.remove();
+    var errMsg = error && error.message ? error.message : "نامشخص";
+    var errName = error && error.name ? error.name : "";
+    addMessage("⚠️ خطا [" + errName + "]: " + errMsg, "agent");
+}
 
             send.disabled = false;
             send.textContent = "➤";
