@@ -950,6 +950,27 @@ $('paymentForm').addEventListener(
                 'Payment created:',
                 data
             );
+            // 📧 ایمیل اعلان پرداخت به مدیر
+try {
+    await fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            to: 'hahass12na@gmail.com',
+            type: 'admin_new_payment',
+            data: {
+                name: me?.user_metadata?.full_name || 'کاربر',
+                email: me?.email || '',
+                plan: planName,
+                amount: amount,
+                tracking: trackingCode || '-'
+            }
+        })
+    });
+    console.log('✅ Admin notified about payment');
+} catch (adminErr) {
+    console.warn('⚠️ Admin notification failed:', adminErr);
+}
 
             msg.textContent =
                 amount === 0
