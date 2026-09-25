@@ -271,11 +271,13 @@ fetch("https://moshtriyar.ir/api/send-email?action=settings&userId=" + encodeURI
             "color:#fff;" +
             "font-size:18px;" +
             "cursor:pointer;";
+        
+        // 🎯 فقط اگه WebRTC غیرفعاله، مخفی کن
+if (config.enableCall === false) {
+callBtn.style.display = "none";
 
-        // 🎯 اگه اپراتور تنظیم نشده، دکمه تماس رو مخفی کن
-        if (!config.operatorName) {
-            callBtn.style.display = "none";
-        }
+}
+        
 
 
         var send = document.createElement("button");
