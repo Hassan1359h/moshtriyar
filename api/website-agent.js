@@ -55,7 +55,7 @@ export default async function handler(req, res) {
                 resolve(config);
                 return;
             }
-fetch("https://moshtriyar.ir/api/send-email?action=settings&userId=" + encodeURIComponent(config.userId))
+fetch("https://moshtriyar.vercel.app/api/send-email?action=settings&userId=" + encodeURIComponent(config.userId))
             
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
@@ -382,7 +382,7 @@ callBtn.style.display = "none";
             messages.scrollTop = messages.scrollHeight;
 
             try {
-                var response = await fetch("https://moshtriyar.ir/api/website-chat", {
+                var response = await fetch("https://moshtriyar.vercel.app/api/website-chat", {
     method: "POST",
     headers: {
         "Content-Type": "application/json"
