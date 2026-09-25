@@ -380,7 +380,7 @@ export default async function handler(req, res) {
             messages.scrollTop = messages.scrollHeight;
 
             try {
-                var response = await fetch("/api/website-chat", {
+                var response = await fetch("https://moshtriyar.ir/api/website-chat"
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
