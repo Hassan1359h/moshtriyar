@@ -336,7 +336,26 @@ try {
 } catch (emailErr) {
     console.warn('⚠️ Welcome email failed:', emailErr);
 }
-
+// 📧 ایمیل اعلان به مدیر
+try {
+    await fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            to: 'hahass12na@gmail.com',
+            type: 'admin_new_user',
+            data: {
+                name: fullName,
+                email: email,
+                time: new Date().toLocaleString('fa-IR')
+            }
+        })
+    });
+    console.log('✅ Admin notified about new user');
+} catch (adminErr) {
+    console.warn('⚠️ Admin notification failed:', adminErr);
+        }
+                    
 showMessage('✅ ثبت‌نام موفق! حالا وارد شوید.', 'success');
                     setTimeout(() => setMode('login'), 1500);
                 }
