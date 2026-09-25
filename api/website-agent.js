@@ -55,8 +55,8 @@ export default async function handler(req, res) {
                 resolve(config);
                 return;
             }
-
-            fetch("https://moshtriyar.ir/api/send-email?action=settings&userId=" + encodeURIComponent(config.userId) + "&t=" + Date.now())
+fetch("https://moshtriyar.ir/api/send-email?action=settings&userId=" + encodeURIComponent(config.userId))
+            
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
                     if (data && data.ok && data.settings) {
