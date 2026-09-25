@@ -55,10 +55,71 @@ const EMAIL_TEMPLATES = {
         <p style="color:#475569;font-size:14px;">اشتراکت رو تمدید کن.</p>
       </div>
     `
+  
+  },
+
+  admin_new_user: {
+    subject: "🆕 کاربر جدید در مشتری‌یار!",
+    html: (data) => `
+      <div style="font-family:Tahoma,sans-serif;direction:rtl;text-align:right;padding:30px;background:#f8fafc;max-width:600px;margin:auto;border-radius:16px;">
+        <h1 style="color:#2563eb;text-align:center;">🆕 کاربر جدید</h1>
+        <h2 style="color:#1e293b;font-size:16px;">یک کاربر جدید ثبت‌نام کرد</h2>
+        <div style="background:#eff6ff;padding:15px;border-radius:10px;margin:20px 0;font-size:14px;">
+          <p style="margin:5px 0;"><strong>👤 نام:</strong> ${data.name || 'نامشخص'}</p>
+          <p style="margin:5px 0;"><strong>📧 ایمیل:</strong> ${data.email || 'نامشخص'}</p>
+          <p style="margin:5px 0;"><strong>🕐 زمان:</strong> ${data.time || ''}</p>
+        </div>
+        <div style="text-align:center;margin:25px 0;">
+          <a href="https://moshtriyar.ir/admin.html" style="display:inline-block;background:#2563eb;color:#fff;padding:12px 25px;border-radius:10px;text-decoration:none;font-weight:800;">
+            📊 پنل ادمین
+          </a>
+        </div>
+      </div>
+    `
+  },
+
+  admin_new_payment: {
+    subject: "💰 پرداخت جدید در مشتری‌یار!",
+    html: (data) => `
+      <div style="font-family:Tahoma,sans-serif;direction:rtl;text-align:right;padding:30px;background:#f8fafc;max-width:600px;margin:auto;border-radius:16px;">
+        <h1 style="color:#16a34a;text-align:center;">💰 پرداخت جدید</h1>
+        <h2 style="color:#1e293b;font-size:16px;">یک پرداخت جدید ثبت شد</h2>
+        <div style="background:#dcfce7;padding:15px;border-radius:10px;margin:20px 0;font-size:14px;">
+          <p style="margin:5px 0;"><strong>👤 کاربر:</strong> ${data.name || 'نامشخص'}</p>
+          <p style="margin:5px 0;"><strong>📧 ایمیل:</strong> ${data.email || 'نامشخص'}</p>
+          <p style="margin:5px 0;"><strong>💎 پلن:</strong> ${data.plan || '-'}</p>
+          <p style="margin:5px 0;"><strong>💵 مبلغ:</strong> ${data.amount ? Number(data.amount).toLocaleString('fa-IR') + ' تومان' : '-'}</p>
+          <p style="margin:5px 0;"><strong>🔖 کد پیگیری:</strong> ${data.tracking || '-'}</p>
+        </div>
+        <div style="text-align:center;margin:25px 0;">
+          <a href="https://moshtriyar.ir/admin.html" style="display:inline-block;background:#16a34a;color:#fff;padding:12px 25px;border-radius:10px;text-decoration:none;font-weight:800;">
+            ✅ بررسی و تایید
+          </a>
+        </div>
+      </div>
+    `
+  },
+
+  admin_missed_call: {
+    subject: "📞 تماس از دست رفته!",
+    html: (data) => `
+      <div style="font-family:Tahoma,sans-serif;direction:rtl;text-align:right;padding:30px;background:#f8fafc;max-width:600px;margin:auto;border-radius:16px;">
+        <h1 style="color:#dc2626;text-align:center;">📞 تماس از دست رفته</h1>
+        <h2 style="color:#1e293b;font-size:16px;">مشتری درخواست تماس کرد ولی پاسخ داده نشد</h2>
+        <div style="background:#fee2e2;padding:15px;border-radius:10px;margin:20px 0;font-size:14px;">
+          <p style="margin:5px 0;"><strong>🌐 سایت:</strong> ${data.site || 'نامشخص'}</p>
+          <p style="margin:5px 0;"><strong>🕐 زمان:</strong> ${data.time || ''}</p>
+        </div>
+        <div style="text-align:center;margin:25px 0;">
+          <a href="https://moshtriyar.ir/operator.html" style="display:inline-block;background:#dc2626;color:#fff;padding:12px 25px;border-radius:10px;text-decoration:none;font-weight:800;">
+            🎧 پنل اپراتور
+          </a>
+        </div>
+      </div>
+    `
   }
 
 };
-
 
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
