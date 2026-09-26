@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مشتری‌یار — دستیار هوشمند کسب‌وکار</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: Tahoma, Arial, sans-serif;
+    background: #000;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    direction: rtl;
+  }
+  
+  .scene {
+    position: fixed;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 20px;
+    text-align: center;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+  
+  .scene.active { display: flex; opacity: 1; }
+  
+  #scene1 { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
+  #scene1 .big-number {
+    font-size: 56px; font-weight: 900; color: #ef4444;
+    margin-bottom: 15px; animation: pulse 1.5s infinite;
+  }
+  #scene1 .text { font-size: 17px; color: #fff; line-height: 1.7; max-width: 90%; }
+  
+  #scene2 { background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%); }
+  #scene2 .item {
+    font-size: 15px; color: #fff; margin: 8px 0;
+    padding: 10px 16px; background: rgba(0,0,0,0.3);
+    border-radius: 10px; border-right: 3px solid #ef4444;
+    animation: slideIn 0.5s ease forwards; opacity: 0;
+    max-width: 88%;
+  }
+  #scene2 .item:nth-child(1) { animation-delay: 0.2s; }
+  #scene2 .item:nth-child(2) { animation-delay: 0.6s; }
+  #scene2 .item:nth-child(3) { animation-delay: 1.0s; }
+  
+  #scene3 { background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); }
+  #scene3 .logo { font-size: 64px; margin-bottom: 15px; animation: bounce 1s infinite; }
+  #scene3 .title { font-size: 32px; font-weight: 900; color: #fff; margin-bottom: 12px; }
+  #scene3 .subtitle { font-size: 15px; color: #dbeafe; max-width: 90%; line-height: 1.7; }
+  
+  #scene4 { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); }
+  #scene4 .feature {
+    display: flex; align-items: center; gap: 10px;
+    background: rgba(255,255,255,0.05); padding: 11px 14px;
+    border-radius: 12px; margin: 6px 0; width: 90%; max-width: 340px;
+    border: 1px solid rgba(255,255,255,0.1);
+    animation: slideUp 0.5s ease forwards; opacity: 0;
+  }
+  #scene4 .feature:nth-child(1) { animation-delay: 0.2s; }
+  #scene4 .feature:nth-child(2) { animation-delay: 0.7s; }
+  #scene4 .feature:nth-child(3) { animation-delay: 1.2s; }
+  #scene4 .feature:nth-child(4) { animation-delay: 1.7s; }
+  #scene4 .icon { font-size: 22px; flex-shrink: 0; }
+  #scene4 .feature-text { color: #fff; font-size: 13px; text-align: right; line-height: 1.5; }
+  
+  #scene5 { background: linear-gradient(135deg, #059669 0%, #065f46 100%); }
+  #scene5 .item {
+    font-size: 16px; color: #fff; margin: 8px 0;
+    padding: 11px 22px; background: rgba(255,255,255,0.15);
+    border-radius: 50px; animation: scaleIn 0.4s ease forwards; opacity: 0;
+  }
+  #scene5 .item:nth-child(1) { animation-delay: 0.2s; }
+  #scene5 .item:nth-child(2) { animation-delay: 0.6s; }
+  #scene5 .item:nth-child(3) { animation-delay: 1.0s; }
+  
+  #scene6 { background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); }
+  #scene6 .logo { font-size: 56px; margin-bottom: 15px; }
+  #scene6 .brand { font-size: 34px; font-weight: 900; color: #fff; margin-bottom: 12px; }
+  #scene6 .url {
+    font-size: 19px; color: #fff; background: rgba(255,255,255,0.2);
+    padding: 11px 28px; border-radius: 50px; margin-top: 15px;
+    font-weight: 700; direction: ltr;
+  }
+  #scene6 .cta { font-size: 14px; color: #fef3c7; margin-top: 20px; font-weight: 700; }
+  
+  @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+  @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+  @keyframes slideIn { from { transform: translateX(-25px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  @keyframes slideUp { from { transform: translateY(15px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes scaleIn { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+</style>
+</head>
+<body>
+
+<div class="scene" id="scene1" data-duration="5">
+  <div class="big-number">۹۳٪</div>
+  <div class="text">مشتری‌ها از سایتی که<br>پاسخ نمی‌گیرن، خرید نمی‌کنن.</div>
+</div>
+
+<div class="scene" id="scene2" data-duration="6">
+  <div class="item">❌ پشتیبانی ۲۴ ساعته گرونه</div>
+  <div class="item">❌ اپراتور همیشه بیدار نیست</div>
+  <div class="item">❌ مشتری منتظر نمی‌مونه</div>
+</div>
+
+<div class="scene" id="scene3" data-duration="8">
+  <div class="logo">🤖</div>
+  <div class="title">مشتری‌یار</div>
+  <div class="subtitle">دستیار هوشمند فارسی<br>برای کسب‌وکار شما</div>
+</div>
+
+<div class="scene" id="scene4" data-duration="10">
+  <div class="feature"><div class="icon">⚡</div><div class="feature-text">نصب ۱ دقیقه‌ای روی وردپرس</div></div>
+  <div class="feature"><div class="icon">💬</div><div class="feature-text">پاسخ خودکار فارسی با AI</div></div>
+  <div class="feature"><div class="icon">📞</div><div class="feature-text">انتقال خودکار به اپراتور</div></div>
+  <div class="feature"><div class="icon">📊</div><div class="feature-text">آمار دقیق مکالمات</div></div>
+</div>
+
+<div class="scene" id="scene5" data-duration="5">
+  <div class="item">✅ ۳ روز تست رایگان</div>
+  <div class="item">✅ بدون کارت بانکی</div>
+  <div class="item">✅ لغو در هر زمان</div>
+</div>
+
+<div class="scene" id="scene6" data-duration="6">
+  <div class="logo">🤖</div>
+  <div class="brand">مشتری‌یار</div>
+  <div class="url">moshtriyar.ir</div>
+  <div class="cta">همین حالا شروع کن</div>
+</div>
+
+<script>
+  const scenes = document.querySelectorAll('.scene');
+  let currentScene = 0;
+  
+  function showScene(index) {
+    scenes.forEach(s => s.classList.remove('active'));
+    if (scenes[index]) scenes[index].classList.add('active');
+  }
+  
+  function nextScene() {
+    if (currentScene < scenes.length - 1) {
+      currentScene++;
+      showScene(currentScene);
+      const duration = parseInt(scenes[currentScene].dataset.duration) * 1000;
+      setTimeout(nextScene, duration);
+    } else {
+      currentScene = 0;
+      showScene(0);
+      setTimeout(nextScene, parseInt(scenes[0].dataset.duration) * 1000);
+    }
+  }
+  
+  showScene(0);
+  setTimeout(nextScene, parseInt(scenes[0].dataset.duration) * 1000);
+</script>
+
+</body>
+  </html>
