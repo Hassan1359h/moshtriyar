@@ -299,29 +299,32 @@
         function getCaptchaToken() {
             return document.querySelector('[name="cf-turnstile-response"]')?.value || '';
         }
-
-        // 🎯 فراموشی رمز عبور با کپچا
         document.getElementById('forgotLink').addEventListener('click', async (e) => {
-            e.preventDefault();
-            const email = prompt('ایمیل خود را وارد کنید تا لینک بازیابی ارسال شود:');
-            if (!email) return;
-            
-            const captchaToken = getCaptchaToken();
-            if (!captchaToken) {
-                alert('❌ لطفاً ابتدا کپچا را تایید کنید.');
-                return;
-            }
+    e.preventDefault();
+    const email = prompt('ایمیل خود را وارد کنید تا لینک بازیابی ارسال شود:');
+    if (!email) return;
+    
+    const captchaToken = getCaptchaToken();
+    if (!captchaToken) {
+        alert('❌ لطفاً ابتدا کپچا را تایید کنید.');
+        return;
+    }
 
-            const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: window.location.origin + window.location.pathname.replace('login.html', 'reset-password.html'),
-                captchaToken: captchaToken // ارسال توکن کپچا
-            });
-            if (error) {
-                alert('❌ خطا: ' + error.message);
-            } else {
-                alert('✅ لینک بازیابی به ایمیل شما ارسال شد.');
-            }
-        }); 
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + window.location.pathname.replace('login.html', 'reset-password.html'),
+        captchaToken: captchaToken
+    });
+    
+    if (error) {
+        alert('❌ خطا: ' + error.message);
+        // 🎯 اضافه کردن این خط برای ریست کردن کپچا بعد از خطا
+        if (window.turnstile) {
+            window.turnstile.reset();
+        }
+    } else {
+        alert('✅ لینک بازیابی به ایمیل شما ارسال شد.');
+    }
+}); 
 
         authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -417,6 +420,17 @@
                     errorMsg = 'کپچا تایید نشد. لطفاً دوباره تلاش کنید.';
                 }
                 showMessage('❌ ' + errorMsg, 'error');
+                } catch (err) {
+    // ... کدهای ترجمه خطا ...
+    showMessage('❌ ' + errorMsg, 'error');
+
+    // 🎯 اضافه کردن این خط برای ریست کردن کپچا بعد از هر خطا
+    if (window.turnstile) {
+        window.turnstile.reset();
+    }
+} finally {
+    submitBtn.disabled = false;
+}
             } finally {
                 submitBtn.disabled = false;
             }
