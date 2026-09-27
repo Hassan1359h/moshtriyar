@@ -7,6 +7,8 @@
     <title>ورود / ثبت‌نام | مشتری‌یار</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <link rel="icon" href="icon-192.png">
+    <!-- 🎯 اسکریپت Cloudflare Turnstile -->
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -162,6 +164,12 @@
         .plan-badge.show {
             display: block;
         }
+        /* 🎯 استایل برای وسط چین کردن کپچا */
+        .captcha-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
         @media (max-width: 480px) {
             .box { padding: 30px 22px; }
             h1 { font-size: 20px; }
@@ -211,10 +219,17 @@
                 <label>رمز عبور</label>
                 <input type="password" id="password" required placeholder="حداقل ۶ کاراکتر" minlength="6">
             </div>
+            
+            <!-- 🎯 ویجت کپچا Cloudflare Turnstile -->
+            <div class="captcha-container">
+                <!-- ⚠️ به جای YOUR_SITE_KEY_HERE کلید سایت خود را قرار دهید -->
+                <div class="cf-turnstile" data-sitekey="YOUR_SITE_KEY_HERE"></div>
+            </div>
+
             <button type="submit" class="btn-main" id="submitBtn">ورود</button>
             <p class="message" id="message"></p>
             <p style="text-align:left; margin-top:-8px; margin-bottom:16px;">
-    <a href="#" id="forgotLink" style="color:#2563eb; font-size:13px; font-weight:600;">فراموشی رمز؟</a>
+                <a href="#" id="forgotLink" style="color:#2563eb; font-size:13px; font-weight:600;">فراموشی رمز؟</a>
             </p>
         </form>
 
@@ -279,19 +294,34 @@
             message.textContent = text;
             message.className = 'message ' + type;
         }
-     document.getElementById('forgotLink').addEventListener('click', async (e) => {
-    e.preventDefault();
-    const email = prompt('ایمیل خود را وارد کنید تا لینک بازیابی ارسال شود:');
-    if (!email) return;
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + window.location.pathname.replace('login.html', 'reset-password.html')
-    });
-    if (error) {
-        alert('❌ خطا: ' + error.message);
-    } else {
-        alert('✅ لینک بازیابی به ایمیل شما ارسال شد.');
-    }
-}); 
+
+        // 🎯 تابع کمکی برای گرفتن توکن کپچا
+        function getCaptchaToken() {
+            return document.querySelector('[name="cf-turnstile-response"]')?.value || '';
+        }
+
+        // 🎯 فراموشی رمز عبور با کپچا
+        document.getElementById('forgotLink').addEventListener('click', async (e) => {
+            e.preventDefault();
+            const email = prompt('ایمیل خود را وارد کنید تا لینک بازیابی ارسال شود:');
+            if (!email) return;
+            
+            const captchaToken = getCaptchaToken();
+            if (!captchaToken) {
+                alert('❌ لطفاً ابتدا کپچا را تایید کنید.');
+                return;
+            }
+
+            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: window.location.origin + window.location.pathname.replace('login.html', 'reset-password.html'),
+                captchaToken: captchaToken // ارسال توکن کپچا
+            });
+            if (error) {
+                alert('❌ خطا: ' + error.message);
+            } else {
+                alert('✅ لینک بازیابی به ایمیل شما ارسال شد.');
+            }
+        }); 
 
         authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -303,8 +333,19 @@
             showMessage('در حال پردازش...', 'info');
 
             try {
+                // 🎯 دریافت توکن کپچا قبل از ارسال به Supabase
+                const captchaToken = getCaptchaToken();
+                if (!captchaToken) {
+                    throw new Error('لطفاً کپچا را تایید کنید.');
+                }
+
                 if (mode === 'login') {
-                    const { error } = await supabase.auth.signInWithPassword({ email, password });
+                    // 🎯 ارسال کپچا در ورود
+                    const { error } = await supabase.auth.signInWithPassword({ 
+                        email, 
+                        password,
+                        options: { captchaToken: captchaToken } 
+                    });
                     if (error) throw error;
                     showMessage('ورود موفق! در حال انتقال...', 'success');
                     setTimeout(() => { window.location.href = 'dashboard.html'; }, 800);
@@ -312,51 +353,53 @@
                     if (!fullName) {
                         throw new Error('لطفاً نام و نام خانوادگی را وارد کنید.');
                     }
+                    // 🎯 ارسال کپچا در ثبت‌نام
                     const { error } = await supabase.auth.signUp({
                         email,
                         password,
                         options: {
-                            data: { full_name: fullName }
+                            data: { full_name: fullName },
+                            captchaToken: captchaToken 
                         }
                     });
                     if (error) throw error;
 
-// 📧 ارسال ایمیل خوش‌آمد
-try {
-    await fetch('/api/send-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            to: email,
-            type: 'welcome',
-            data: { name: fullName }
-        })
-    });
-    console.log('✅ Welcome email sent');
-} catch (emailErr) {
-    console.warn('⚠️ Welcome email failed:', emailErr);
-}
-// 📧 ایمیل اعلان به مدیر
-try {
-    await fetch('/api/send-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            to: 'hahass12na@gmail.com',
-            type: 'admin_new_user',
-            data: {
-                name: fullName,
-                email: email,
-                time: new Date().toLocaleString('fa-IR')
-            }
-        })
-    });
-    console.log('✅ Admin notified about new user');
-} catch (adminErr) {
-    console.warn('⚠️ Admin notification failed:', adminErr);
-        }
+                    // 📧 ارسال ایمیل خوش‌آمد
+                    try {
+                        await fetch('/api/send-email', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                to: email,
+                                type: 'welcome',
+                                data: { name: fullName }
+                            })
+                        });
+                        console.log('✅ Welcome email sent');
+                    } catch (emailErr) {
+                        console.warn('⚠️ Welcome email failed:', emailErr);
+                    }
+                    // 📧 ایمیل اعلان به مدیر
+                    try {
+                        await fetch('/api/send-email', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                to: 'hahass12na@gmail.com',
+                                type: 'admin_new_user',
+                                data: {
+                                    name: fullName,
+                                    email: email,
+                                    time: new Date().toLocaleString('fa-IR')
+                                }
+                            })
+                        });
+                        console.log('✅ Admin notified about new user');
+                    } catch (adminErr) {
+                        console.warn('⚠️ Admin notification failed:', adminErr);
+                    }
                     
-showMessage('✅ ثبت‌نام موفق! حالا وارد شوید.', 'success');
+                    showMessage('✅ ثبت‌نام موفق! حالا وارد شوید.', 'success');
                     setTimeout(() => setMode('login'), 1500);
                 }
             } catch (err) {
@@ -370,6 +413,8 @@ showMessage('✅ ثبت‌نام موفق! حالا وارد شوید.', 'succes
                     errorMsg = 'رمز عبور باید حداقل ۶ کاراکتر باشد.';
                 } else if (errorMsg.includes('Unable to validate email')) {
                     errorMsg = 'ایمیل وارد شده معتبر نیست.';
+                } else if (errorMsg.includes('captcha')) {
+                    errorMsg = 'کپچا تایید نشد. لطفاً دوباره تلاش کنید.';
                 }
                 showMessage('❌ ' + errorMsg, 'error');
             } finally {
@@ -378,4 +423,4 @@ showMessage('✅ ثبت‌نام موفق! حالا وارد شوید.', 'succes
         });
     </script>
 </body>
-                  </html>
+    </html>
