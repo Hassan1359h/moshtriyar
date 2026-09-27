@@ -230,18 +230,66 @@
         </div>
     </section>
 
-    <div class="payment-box">
-        <h3>💳 پرداخت کارت‌به‌کارت</h3>
-        <p>لطفاً مبلغ پلن انتخابی را به کارت زیر واریز کنید و سپس کد پیگیری را در داشبورد ثبت کنید.</p>
-        <div class="card-info">
-            <p><strong>بانک:</strong> سامان</p>
-            <p><strong>به نام:</strong> حسن نادریان</p>
-            <p><span class="card-number">6219-8618-2849-2446</span></p>
-        </div>
-        <p class="payment-note">پس از واریز، کد پیگیری را در داشبورد ثبت کنید.</p>
-    </div>
-
     <footer>© مشتری‌یار - تمام حقوق محفوظ است</footer>
+    <!-- 🎯 مودال پرداخت (فقط بعد از انتخاب پلن نمایش داده می‌شه) -->
+<div id="payment-modal" class="payment-modal" style="display:none;">
+    <div class="payment-modal-content">
+        <button class="payment-modal-close" onclick="closePayment()">×</button>
+        
+        <div class="payment-modal-header">
+            <div class="payment-icon">💳</div>
+            <h2 id="modal-plan-title">پرداخت پلن</h2>
+            <p id="modal-plan-period" class="modal-period">-</p>
+        </div>
+        
+        <div class="modal-amount-box">
+            <span class="amount-label">مبلغ قابل پرداخت:</span>
+            <span class="amount-value" id="modal-amount">-</span>
+            <span class="amount-currency">تومان</span>
+        </div>
+        
+        <div class="modal-card-section">
+            <h3>اطلاعات کارت برای واریز</h3>
+            <div class="modal-card-info">
+                <div class="info-row">
+                    <span class="info-label">بانک:</span>
+                    <span class="info-value">سامان</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">به نام:</span>
+                    <span class="info-value">حسن نادریان</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">شماره کارت:</span>
+                </div>
+                <div class="card-number-display" id="card-number-to-copy">
+                    6219-8618-2849-2446
+                </div>
+                <button class="copy-card-btn" onclick="copyCardNumber(this)">
+                    📋 کپی شماره کارت
+                </button>
+            </div>
+        </div>
+        
+        <div class="modal-tracking-section">
+            <h3>ثبت کد پیگیری</h3>
+            <p class="tracking-hint">پس از واریز، کد پیگیری را وارد کنید:</p>
+            <input 
+                type="text" 
+                id="modal-tracking-code" 
+                class="tracking-input" 
+                placeholder="کد پیگیری را وارد کنید..."
+            />
+            <button class="submit-tracking-btn" onclick="submitTracking()">
+                ✅ ثبت کد پیگیری
+            </button>
+        </div>
+        
+        <div class="modal-footer-note">
+            ⚠️ پس از تأیید پرداخت توسط تیم، پلن شما فعال می‌شود.
+        </div>
+    </div>
+</div>
 
     <script type="module">
         import { supabase } from './js/supabase.js';
