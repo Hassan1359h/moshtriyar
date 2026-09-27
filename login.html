@@ -406,35 +406,36 @@
                     setTimeout(() => setMode('login'), 1500);
                 }
             } catch (err) {
-                let errorMsg = err.message || 'خطای نامشخص';
-                // ترجمه خطاهای رایج Supabase
-                if (errorMsg.includes('Invalid login credentials')) {
-                    errorMsg = 'ایمیل یا رمز عبور اشتباه است.';
-                } else if (errorMsg.includes('User already registered')) {
-                    errorMsg = 'این ایمیل قبلاً ثبت‌نام کرده است.';
-                } else if (errorMsg.includes('Password should be at least')) {
-                    errorMsg = 'رمز عبور باید حداقل ۶ کاراکتر باشد.';
-                } else if (errorMsg.includes('Unable to validate email')) {
-                    errorMsg = 'ایمیل وارد شده معتبر نیست.';
-                } else if (errorMsg.includes('captcha')) {
-                    errorMsg = 'کپچا تایید نشد. لطفاً دوباره تلاش کنید.';
-                }
-                showMessage('❌ ' + errorMsg, 'error');
-                } catch (err) {
-    // ... کدهای ترجمه خطا ...
+    let errorMsg = err.message || 'خطای نامشخص';
+    // ترجمه خطاهای رایج Supabase
+    if (errorMsg.includes('Invalid login credentials')) {
+        errorMsg = 'ایمیل یا رمز عبور اشتباه است.';
+    } else if (errorMsg.includes('User already registered')) {
+        errorMsg = 'این ایمیل قبلاً ثبت‌نام کرده است.';
+    } else if (errorMsg.includes('Password should be at least')) {
+        errorMsg = 'رمز عبور باید حداقل ۶ کاراکتر باشد.';
+    } else if (errorMsg.includes('Unable to validate email')) {
+        errorMsg = 'ایمیل وارد شده معتبر نیست.';
+    } else if (errorMsg.includes('captcha')) {
+        errorMsg = 'کپچا تایید نشد. لطفاً دوباره تلاش کنید.';
+    }
+    
     showMessage('❌ ' + errorMsg, 'error');
 
-    // 🎯 اضافه کردن این خط برای ریست کردن کپچا بعد از هر خطا
+    // 🎯 ریست کردن کپچا با تأخیر و به صورت امن
     if (window.turnstile) {
-        window.turnstile.reset();
+        setTimeout(() => {
+            try {
+                window.turnstile.reset();
+            } catch (e) {
+                console.warn('Turnstile reset failed:', e);
+            }
+        }, 1500);
     }
+    
 } finally {
     submitBtn.disabled = false;
 }
-            } finally {
-                submitBtn.disabled = false;
-            }
-        });
     </script>
 </body>
     </html>
