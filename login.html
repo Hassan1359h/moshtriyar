@@ -7,8 +7,17 @@
     <title>ورود / ثبت‌نام | مشتری‌یار</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <link rel="icon" href="icon-192.png">
-    <!-- 🎯 اسکریپت Cloudflare Turnstile -->
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<!-- 🎯 ویجت کپچا Cloudflare Turnstile -->
+<div class="captcha-container">
+    <div id="turnstile-widget"></div>
+</div>
+            <button type="submit" class="btn-main" id="submitBtn">ورود</button>
+            <p class="message" id="message"></p>
+            <p style="text-align:left; margin-top:-8px; margin-bottom:16px;">
+                <a href="#" id="forgotLink" style="
+
+
+    
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -221,10 +230,9 @@
             </div>
             
             <!-- 🎯 ویجت کپچا Cloudflare Turnstile -->
-            <div class="captcha-container">
-                <!-- ⚠️ به جای YOUR_SITE_KEY_HERE کلید سایت خود را قرار دهید -->
-                <div class="cf-turnstile" data-sitekey="0x4AAAAAAFFcLOx_YxUy2aw8"></div>
-            </div>
+<div class="captcha-container">
+    <div id="turnstile-widget"></div>
+</div>
 
             <button type="submit" class="btn-main" id="submitBtn">ورود</button>
             <p class="message" id="message"></p>
@@ -299,6 +307,22 @@
         function getCaptchaToken() {
             return document.querySelector('[name="cf-turnstile-response"]')?.value || '';
         }
+        // 🎯 رندر صریح کپچا (برای حل مشکل عدم نمایش در بار اول)
+window.onloadTurnstileCallback = function () {
+    if (document.getElementById('turnstile-widget')) {
+        window.turnstile.render('#turnstile-widget', {
+            sitekey: 'YOUR_SITE_KEY_HERE', // ⬅️ کلید سایت خود را اینجا قرار دهید
+            callback: function (token) {
+                console.log('✅ Captcha verified');
+            },
+        });
+    }
+};
+
+// اگر اسکریپت Turnstile قبلاً لود شده باشد
+if (window.turnstile) {
+    window.onloadTurnstileCallback();
+}
         document.getElementById('forgotLink').addEventListener('click', async (e) => {
     e.preventDefault();
     const email = prompt('ایمیل خود را وارد کنید تا لینک بازیابی ارسال شود:');
