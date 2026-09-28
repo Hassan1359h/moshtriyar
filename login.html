@@ -433,9 +433,26 @@
         }, 3000);
     }
     
-} finally {
-    submitBtn.disabled = false;
-}
+            } finally {
+                // 🎯 غیرفعال کردن دکمه تا زمانی که کپچا دوباره سبز شود
+                submitBtn.disabled = true;
+                
+                const checkCaptcha = setInterval(() => {
+                    if (getCaptchaToken()) {
+                        submitBtn.disabled = false;
+                        clearInterval(checkCaptcha);
+                    }
+                }, 500);
+                
+                // 🎯 اگر بعد از ۱۰ ثانیه کپچا سبز نشد، دکمه را فعال کن (برای اطمینان)
+                setTimeout(() => {
+                    if (!getCaptchaToken()) {
+                        submitBtn.disabled = false;
+                        clearInterval(checkCaptcha);
+                    }
+                }, 10000);
+            }
+        });
     </script>
 </body>
-    </html>
+</html>
