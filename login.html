@@ -7,7 +7,8 @@
     <title>ورود / ثبت‌نام | مشتری‌یار</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <link rel="icon" href="icon-192.png">
-    <style>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: Vazirmatn, Tahoma, sans-serif;
@@ -300,7 +301,7 @@
 window.onloadTurnstileCallback = function () {
     if (document.getElementById('turnstile-widget')) {
         window.turnstile.render('#turnstile-widget', {
-            sitekey: 'YOUR_SITE_KEY_HERE', // ⬅️ کلید سایت خود را اینجا قرار دهید
+            sitekey: '0x4AAAAAAFFcLOx_YxUy2aw8',
             callback: function (token) {
                 console.log('✅ Captcha verified');
             },
