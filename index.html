@@ -631,7 +631,7 @@ window.copyCardNumber = function(btn) {
     }
 };
 
-window.submitTracking = function() {
+window.submitTracking = async function() {
     const code = document.getElementById('modal-tracking-code').value.trim();
     
     if (!code || code.length < 5) {
@@ -639,12 +639,58 @@ window.submitTracking = function() {
         return;
     }
     
-    localStorage.setItem('pending_tracking_code', code);
-    localStorage.setItem('pending_plan', window.selectedPlan || '');
+    const plan = window.selectedPlan || 'pro';
+    const planData = {
+        pro: { name: 'حرفه‌ای', amount: 490000, days: 30 },
+        business: { name: 'کسب‌وکار', amount: 990000, days: 30 }
+    }[plan];
     
-    alert('✅ کد پیگیری ثبت شد.\n\nبرای تکمیل فرآیند، وارد حساب خود شوید.');
+    if (!planData) {
+        alert('⚠️ پلن انتخابی نامشخص است.');
+        return;
+    }
     
-    window.location.href = 'login.html?plan=' + (window.selectedPlan || 'pro') + '&tracking=' + encodeURIComponent(code);
+    // 🎯 چک لاگین کاربر
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+        // کاربر لاگین نیست → ذخیره موقت + برو لاگین
+        localStorage.setItem('pending_tracking_code', code);
+        localStorage.setItem('pending_plan', plan);
+        alert('✅ کد پیگیری ثبت شد.\n\nبرای تکمیل فرآیند، وارد حساب خود شوید.');
+        window.location.href = 'login.html?plan=' + plan + '&tracking=' + encodeURIComponent(code);
+        return;
+    }
+    
+    // 🎯 کاربر لاگین هست → ثبت توی payments
+    try {
+        const { error } = await supabase
+            .from('payments')
+            .insert({
+                user_id: session.user.id,
+                plan_name: planData.name,
+                amount: planData.amount,
+                days: planData.days,
+                tracking_code: code,
+                description: 'ثبت از طریق سایت',
+                status: 'pending'
+            });
+        
+        if (error) throw error;
+        
+        // پاک کردن localStorage
+        localStorage.removeItem('pending_tracking_code');
+        localStorage.removeItem('pending_plan');
+        
+        alert('✅ کد پیگیری با موفقیت ثبت شد!\n\nپس از تأیید توسط تیم مشتری‌یار (حداکثر ۲۴ ساعت)، پلن شما فعال می‌شود.\n\nشماره کارت و کد پیگیری شما محفوظ است.');
+        
+        // برگشت به locked.html
+        window.location.href = 'locked.html';
+        
+    } catch (err) {
+        console.error('Payment submit error:', err);
+        alert('⚠️ خطا در ثبت کد پیگیری:\n' + (err.message || 'لطفاً دوباره تلاش کنید یا با پشتیبانی تماس بگیرید.'));
+    }
 };
 
 document.getElementById('payment-modal')?.addEventListener('click', (e) => {
