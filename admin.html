@@ -612,7 +612,7 @@ async function saveSettings() {
 }
 
 
-async function approve(paymentId, btn) {
+   window.approve = async function(paymentId, btn) {
     if (!confirm('این پرداخت تایید و اشتراک کاربر فعال شود؟')) return;
 
     btn.disabled = true;
@@ -673,7 +673,7 @@ renderUI();
     }
 }
 
-async function reject(paymentId, btn) {
+window.reject = async function(paymentId, btn) {
     if (!confirm('این پرداخت رد شود؟')) return;
 
     btn.disabled = true;
