@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#dc2626">
+<title>پلن منقضی شده | مشتری‌یار</title>
+<link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+<link rel="icon" href="icon-192.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Vazirmatn,Tahoma,sans-serif;background:linear-gradient(135deg,#fef2f2 0%,#fee2e2 100%);color:#0f172a;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;line-height:1.8}
+.box{background:#fff;border-radius:24px;box-shadow:0 20px 60px rgba(220,38,38,.15);width:100%;max-width:480px;padding:40px 28px;text-align:center;border-top:6px solid #dc2626}
+.icon{font-size:72px;margin-bottom:20px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+h1{font-size:24px;font-weight:900;color:#991b1b;margin-bottom:12px}
+.subtitle{color:#64748b;font-size:15px;margin-bottom:24px;line-height:1.8}
+.info-box{background:#fef2f2;border:2px solid #fecaca;border-radius:14px;padding:18px;margin-bottom:24px;text-align:right}
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #fecaca;font-size:14px}
+.info-row:last-child{border-bottom:none}
+.info-label{color:#64748b;font-weight:600}
+.info-value{color:#991b1b;font-weight:800}
+.btn-renew{display:block;width:100%;padding:16px;background:linear-gradient(135deg,#dc2626,#991b1b);color:#fff;text-decoration:none;text-align:center;border-radius:14px;font-weight:900;font-size:16px;margin-bottom:12px;box-shadow:0 8px 20px rgba(220,38,38,.3);transition:transform .2s}
+.btn-renew:hover{transform:translateY(-2px)}
+.btn-contact{display:block;width:100%;padding:14px;background:#f1f5f9;color:#475569;text-decoration:none;text-align:center;border-radius:14px;font-weight:700;font-size:14px;margin-bottom:12px}
+.btn-contact:hover{background:#e2e8f0}
+.btn-logout{display:block;width:100%;padding:12px;background:transparent;color:#94a3b8;text-decoration:none;text-align:center;border:none;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer}
+.btn-logout:hover{color:#64748b}
+.features{background:#f8fafc;border-radius:14px;padding:16px;margin-top:20px;text-align:right;font-size:13px;color:#64748b;line-height:2}
+.features strong{color:#1e293b}
+</style>
+</head>
+<body>
+
+<div class="box">
+    <div class="icon">🔒</div>
+    <h1>پلن شما منقضی شده است</h1>
+    <p class="subtitle">برای ادامه استفاده از امکانات مشتری‌یار، لطفاً پلن خود را تمدید کنید.</p>
+    
+    <div class="info-box" id="infoBox">
+        <div class="info-row">
+            <span class="info-label">پلن فعلی:</span>
+            <span class="info-value" id="planName">-</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">تاریخ انقضا:</span>
+            <span class="info-value" id="expiryDate">-</span>
+        </div>
+    </div>
+    
+    <a href="index.html?plan=pro" class="btn-renew">💳 همین حالا تمدید کن</a>
+    <a href="help.html" class="btn-contact">📞 تماس با پشتیبانی</a>
+    <button class="btn-logout" id="logoutBtn">← خروج از حساب</button>
+    
+    <div class="features">
+        <strong>با تمدید پلن، این امکانات برمی‌گرده:</strong><br>
+        ✅ چت هوشمند با AI فارسی<br>
+        ✅ مدیریت مشتریان و فروش<br>
+        ✅ پنل اپراتور و تماس صوتی<br>
+        ✅ گزارش‌های دقیق و آمار<br>
+        ✅ افزونه وردپرس و وبسایت
+    </div>
+</div>
+
+<script type="module">
+import { supabase } from './js/supabase.js';
+
+const $ = id => document.getElementById(id);
+
+async function init() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+        window.location.href = 'login.html';
+        return;
+    }
+    
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('plan, subscription_end_date, full_name')
+        .eq('id', session.user.id)
+        .maybeSingle();
+    
+    if (profile?.plan === 'admin') {
+        window.location.href = 'dashboard.html';
+        return;
+    }
+    
+    const expiresAt = profile?.subscription_end_date;
+    
+    if (expiresAt && new Date(expiresAt) > new Date()) {
+        window.location.href = 'dashboard.html';
+        return;
+    }
+    
+    const planNames = {
+        'trial': 'دوره آزمایشی',
+        'pro': 'پلن حرفه‌ای',
+        'business': 'پلن کسب‌وکار'
+    };
+    
+    $('planName').textContent = planNames[profile?.plan] || 'نامشخص';
+    
+    if (expiresAt) {
+        const date = new Date(expiresAt);
+        $('expiryDate').textContent = date.toLocaleDateString('fa-IR', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    } else {
+        $('expiryDate').textContent = 'نامشخص';
+    }
+}
+
+$('logoutBtn').onclick = async () => {
+    await supabase.auth.signOut();
+    window.location.href = 'index.html';
+};
+
+init();
+</script>
+
+</body>
+</html>
