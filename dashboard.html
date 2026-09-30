@@ -178,24 +178,36 @@ async function init() {
     if (!session) { window.location.href = 'login.html'; return; }
     me = session.user;
     
-const isAdmin =
-    me.user_metadata?.role === 'admin';
+    // 🎯 چک انقضای پلن — اگه منقضی، برو به locked.html
+    const { data: profileCheck } = await supabase
+        .from('profiles')
+        .select('plan, subscription_end_date')
+        .eq('id', me.id)
+        .maybeSingle();
+    
+    if (profileCheck && profileCheck.plan !== 'admin') {
+        const expiresAt = profileCheck.subscription_end_date;
+        if (expiresAt && new Date(expiresAt) < new Date()) {
+            window.location.href = 'locked.html';
+            return;
+        }
+    }
+    // پایان چک انقضا
+    
+    const isAdmin = profileCheck?.plan === 'admin';
 
-if (isAdmin) {
-    $('adminCard').classList.remove('hidden');
-}
-if (me.user_metadata?.role === 'admin') {
-    $('adminNav').style.display = 'flex';
-}
+    if (isAdmin) {
+        $('adminCard').classList.remove('hidden');
+        $('adminNav').style.display = 'flex';
+    }
 
-await loadProfile();
+    await loadProfile();
     await loadCustomers();
     await loadSubscription();
 
     $('loading').classList.add('hidden');
     $('main').classList.remove('hidden');
 }
-
 async function loadProfile() {
     const { data: profile } = await supabase
         .from('profiles')
