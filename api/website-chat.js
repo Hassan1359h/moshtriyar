@@ -204,14 +204,18 @@ if (userId) {
   
   if (profile?.[0]) {
     plan = profile[0].plan || "trial";
-    const expiresAt = profile[0].subscription_end_date;
     
-    if (expiresAt && new Date(expiresAt) < new Date()) {
-      return res.status(200).json({
-        ok: false,
-        reply: "⏰ پلن شما به پایان رسیده. برای ادامه استفاده، لطفاً از پنل خود پلن تهیه کنید. 🌸",
-        expired: true,
-      });
+    // 🎯 ادمین همیشه دسترسی داره (بدون چک تاریخ)
+    if (plan !== "admin") {
+      const expiresAt = profile[0].subscription_end_date;
+      
+      if (expiresAt && new Date(expiresAt) < new Date()) {
+        return res.status(200).json({
+          ok: false,
+          reply: "⏰ پلن شما به پایان رسیده. برای ادامه استفاده، لطفاً از پنل خود پلن تهیه کنید. 🌸",
+          expired: true,
+        });
+      }
     }
   } else {
     console.warn("Profile not found for userId:", userId);
