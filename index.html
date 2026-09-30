@@ -656,6 +656,17 @@ document.getElementById('payment-modal')?.addEventListener('click', (e) => {
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') window.closePayment();
 });
+    // 🎯 اگه از locked.html با ?plan=pro اومدی، خودکار مودال باز کن
+(function autoOpenModal() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const plan = urlParams.get('plan');
+    if (plan && ['pro', 'business'].includes(plan)) {
+        // کمی صبر کن تا صفحه لود بشه
+        setTimeout(() => {
+            window.openPayment(plan);
+        }, 500);
+    }
+})();    
      </script>
 
     <!-- مشتری‌یار | AI Website Assistant -->
