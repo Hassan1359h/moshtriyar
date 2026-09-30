@@ -187,8 +187,7 @@ res.setHeader("Cloudflare-CDN-Cache-Control", "no-store");
   }
 
   try {
-    const { message, history, siteApiKey } = req.body || {};
-
+    const { message, history, siteApiKey, userId } = req.body || {};
     if (!message || !message.trim()) {
       return res.status(400).json({ ok: false, reply: "پیام خالی است." });
     }
@@ -196,16 +195,18 @@ res.setHeader("Cloudflare-CDN-Cache-Control", "no-store");
     // 🔍 شناسایی سایت
     let websiteId = null;
     let plan = "trial";
+let websiteId = null;
+let plan = "trial";
 
-    if (siteApiKey) {
-  const site = await supabase(
-    `/websites?api_key=eq.${siteApiKey}&active=eq.true&select=id,user_id,profiles(subscription_end_date)`
+// 🎯 چک انقضا با userId (چون ویجت userId می‌فرسته)
+if (userId) {
+  const profile = await supabase(
+    `/profiles?id=eq.${userId}&select=plan,subscription_end_date&limit=1`
   );
   
-  if (site?.[0]) {
-    websiteId = site[0].id;
-    plan = "trial"; // موقت: بعداً از عمود plan استفاده می‌کنیم
-    const expiresAt = site[0].profiles?.subscription_end_date;
+  if (profile?.[0]) {
+    plan = profile[0].plan || "trial";
+    const expiresAt = profile[0].subscription_end_date;
     
     if (expiresAt && new Date(expiresAt) < new Date()) {
       return res.status(200).json({
@@ -214,6 +215,20 @@ res.setHeader("Cloudflare-CDN-Cache-Control", "no-store");
         expired: true,
       });
     }
+  } else {
+    console.warn("Profile not found for userId:", userId);
+  }
+}
+
+// 🎯 همچنان siteApiKey رو چک کن (برای سایت‌هایی که کلید دارن)
+if (siteApiKey) {
+  const site = await supabase(
+    `/websites?api_key=eq.${siteApiKey}&active=eq.true&select=id,user_id`
+  );
+  if (site?.[0]) {
+    websiteId = site[0].id;
+  }
+}
   } else {
     console.warn("Website not found for siteApiKey:", siteApiKey);
   }
