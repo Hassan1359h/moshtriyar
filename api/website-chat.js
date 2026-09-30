@@ -195,8 +195,6 @@ res.setHeader("Cloudflare-CDN-Cache-Control", "no-store");
     // 🔍 شناسایی سایت
     let websiteId = null;
     let plan = "trial";
-let websiteId = null;
-let plan = "trial";
 
 // 🎯 چک انقضا با userId (چون ویجت userId می‌فرسته)
 if (userId) {
@@ -229,10 +227,6 @@ if (siteApiKey) {
     websiteId = site[0].id;
   }
 }
-  } else {
-    console.warn("Website not found for siteApiKey:", siteApiKey);
-  }
-    }
 
     // 📊 چک محدودیت
     const limitCheck = await checkSiteLimit(websiteId, plan);
