@@ -399,23 +399,27 @@ $('logoutBtn').onclick = async () => {
 
 init();
    
-// ⏰ هشدار دوره آزمایشی
+// ⏰ هشدار دوره آزمایشی (از profiles دیتابیس)
 async function showTrialWarning() {
     try {
-        const { data } = await supabase.auth.getSession();
-        if (!data?.session) return;
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
 
-        const user = data.session.user;
-        const plan = user.user_metadata?.plan || 'trial';
-        const expiresAt = user.user_metadata?.plan_expires_at;
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('plan, subscription_end_date')
+            .eq('id', session.user.id)
+            .maybeSingle();
 
-        if (plan !== 'trial' || !expiresAt) return;
+        if (!profile) return;
+        if (profile.plan === 'admin') return;
+        if (!profile.subscription_end_date) return;
 
         const now = new Date();
-        const expires = new Date(expiresAt);
+        const expires = new Date(profile.subscription_end_date);
         const diffMs = expires - now;
-        const hoursLeft = Math.ceil(diffMs / (1000 * 60 * 60));
-        const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+        const hoursLeft = Math.floor(diffMs / (1000 * 60 * 60));
+        const daysLeft = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
         let banner = null;
 
@@ -423,35 +427,41 @@ async function showTrialWarning() {
             banner = {
                 color: '#991b1b', bg: '#fee2e2', border: '#dc2626',
                 icon: '🔒',
-                title: 'دوره آزمایشی شما به پایان رسیده',
-                text: 'برای ادامه استفاده از دستیار هوشمند، یکی از پلن‌ها رو تهیه کنید.',
-                cta: '🎁 مشاهده پلن‌ها', ctaLink: 'index.html#plans'
+                title: 'پلن شما منقضی شده است',
+                text: 'برای ادامه استفاده از مشتری‌یار، لطفاً پلن خود را تمدید کنید.',
+                cta: '💳 تمدید پلن', ctaLink: 'index.html?plan=pro'
             };
         } else if (hoursLeft <= 24) {
             banner = {
-                color: '#92400e', bg: '#fef3c7', border: '#f59e0b',
+                color: '#991b1b', bg: '#fee2e2', border: '#dc2626',
                 icon: '⚠️',
-                title: 'آخرین روز اشتراک آزمایشی!',
-                text: 'فقط ' + hoursLeft + ' ساعت تا پایان دوره آزمایشی مونده.',
-                cta: '🎁 ارتقا پلن', ctaLink: 'index.html#plans'
-            };
-        } else if (daysLeft <= 2) {
-            banner = {
-                color: '#92400e', bg: '#fef3c7', border: '#f59e0b',
-                icon: '💡',
-                title: daysLeft + ' روز از دوره آزمایشی مونده',
-                text: 'برای ادامه بدون وقفه، از قبل پلن تهیه کنید.',
-                cta: 'مشاهده پلن‌ها', ctaLink: 'index.html#plans'
+                title: 'آخرین روز پلن شما!',
+                text: 'فقط ' + hoursLeft + ' ساعت تا پایان اشتراک مونده. همین حالا تمدید کن.',
+                cta: '🚀 تمدید فوری', ctaLink: 'index.html?plan=pro'
             };
         } else if (daysLeft <= 3) {
             banner = {
-                color: '#065f46', bg: '#d1fae5', border: '#10b981',
-                icon: '✨',
-                title: 'دوره آزمایشی ' + daysLeft + ' روزه فعال است',
-                text: 'همه امکانات مشتری‌یار در دسترس شماست.',
-                cta: null, ctaLink: null
+                color: '#92400e', bg: '#fef3c7', border: '#f59e0b',
+                icon: '🔥',
+                title: daysLeft + ' روز تا پایان پلن',
+                text: 'برای ادامه بدون وقفه، از قبل تمدید کنید.',
+                cta: 'مشاهده پلن‌ها', ctaLink: 'index.html?plan=pro'
+            };
+        } else if (daysLeft <= 7) {
+            banner = {
+                color: '#92400e', bg: '#fffbeb', border: '#f59e0b',
+                icon: '⏰',
+                title: daysLeft + ' روز تا پایان پلن',
+                text: 'به‌زودی باید پلن خود را تمدید کنید.',
+                cta: 'تمدید پلن', ctaLink: 'index.html?plan=pro'
             };
         }
+
+        if (banner) renderTrialBanner(banner);
+    } catch (err) {
+        console.error('Trial warning error:', err);
+    }
+    }
 
         if (banner) renderTrialBanner(banner);
     } catch (err) {
