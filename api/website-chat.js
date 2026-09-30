@@ -198,21 +198,25 @@ res.setHeader("Cloudflare-CDN-Cache-Control", "no-store");
     let plan = "trial";
 
     if (siteApiKey) {
-      const site = await supabase(
-        `/websites?api_key=eq.${siteApiKey}&active=eq.true&select=id,user_id,profiles(plan,plan_expires_at)`
-      );
-      if (site?.[0]) {
-        websiteId = site[0].id;
-        plan = site[0].profiles?.plan || "trial";
-        const expiresAt = site[0].profiles?.plan_expires_at;
-if (expiresAt && new Date(expiresAt) < new Date()) {
-    return res.status(200).json({
+  const site = await supabase(
+    `/websites?api_key=eq.${siteApiKey}&active=eq.true&select=id,user_id,profiles(subscription_end_date)`
+  );
+  
+  if (site?.[0]) {
+    websiteId = site[0].id;
+    plan = "trial"; // موقت: بعداً از عمود plan استفاده می‌کنیم
+    const expiresAt = site[0].profiles?.subscription_end_date;
+    
+    if (expiresAt && new Date(expiresAt) < new Date()) {
+      return res.status(200).json({
         ok: false,
-        reply: "⏰ دوره آزمایشی ۳ روزه شما به پایان رسیده. برای ادامه استفاده، لطفاً از پنل خود پلن تهیه کنید. 🌸",
+        reply: "⏰ پلن شما به پایان رسیده. برای ادامه استفاده، لطفاً از پنل خود پلن تهیه کنید. 🌸",
         expired: true,
-    });
-}  
-      }
+      });
+    }
+  } else {
+    console.warn("Website not found for siteApiKey:", siteApiKey);
+  }
     }
 
     // 📊 چک محدودیت
