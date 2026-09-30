@@ -463,12 +463,6 @@ async function showTrialWarning() {
     }
     }
 
-        if (banner) renderTrialBanner(banner);
-    } catch (err) {
-        console.error('Trial warning error:', err);
-    }
-}
-
 function renderTrialBanner(banner) {
     const el = document.getElementById('trialBanner');
     if (!el) return;
