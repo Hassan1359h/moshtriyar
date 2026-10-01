@@ -351,12 +351,18 @@ input:focus,select:focus{
 <script type="module">
 
 import { supabase } from './js/supabase.js';
+import { checkPlanGuard } from './js/check-plan.js';
+
+// 🎯 چک انقضای پلن قبل از هر کاری
+if (!(await checkPlanGuard())) {
+    throw new Error('Plan expired');
+}
 
 let itemCount = 0;
 let products = [];
 let customers = [];
 let me = null;
-let editingInvoiceId = null;   
+let editingInvoiceId = null;
 async function loadInvoiceArchive(){
 
     const archive = $("invoiceArchive");
