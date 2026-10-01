@@ -126,6 +126,7 @@ function stopRingtone() {
     }
 }
 
+
 async function init() {
     const { data } = await supabase.auth.getSession();
     if (!data?.session) {
@@ -136,6 +137,21 @@ async function init() {
     currentUser = data.session.user;
     console.log('Operator:', currentUser.email);
 
+    // 🎯 چک انقضای پلن — اگه منقضی، برو به locked.html
+    const { data: profileCheck } = await supabase
+        .from('profiles')
+        .select('plan, subscription_end_date')
+        .eq('id', currentUser.id)
+        .maybeSingle();
+
+    if (profileCheck && profileCheck.plan !== 'admin') {
+        const expiresAt = profileCheck.subscription_end_date;
+        if (expiresAt && new Date(expiresAt) < new Date()) {
+            location.href = '/locked.html';
+            return;
+        }
+    }
+    // 🎯 پایان چک انقضا
     // 🔔 درخواست اجازه اعلان
     if ('Notification' in window && Notification.permission === 'default') {
         try {
