@@ -18,9 +18,10 @@
       }
     },
     "production": {
-      "android": {
-        "buildType": "apk"
-      }
+  "distribution": "store",
+  "android": {
+    "buildType": "apk"
+  }
     }
   },
   "submit": {
