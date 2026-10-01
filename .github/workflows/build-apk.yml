@@ -44,7 +44,7 @@ jobs:
       - name: Build APK Locally
         working-directory: ./app
         run: |
-          eas build --platform android --profile preview --local --non-interactive --output=./build-output.apk
+          eas build --platform android --profile production --local --non-interactive --output=./build-output.apk
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
       
