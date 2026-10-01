@@ -5,12 +5,12 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-"userInterfaceStyle": "light",
-"splash": {
-  "image": "./assets/icon.png",
-  "resizeMode": "contain",
-  "backgroundColor": "#2563eb"
-},
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#2563eb"
+    },
     "assetBundlePatterns": [
       "**/*"
     ],
@@ -19,12 +19,12 @@
       "bundleIdentifier": "ir.moshtriyar.app"
     },
     "android": {
-  "package": "ir.moshtriyar.app",
-  "versionCode": 1,
-  "adaptiveIcon": {
-    "foregroundImage": "./assets/icon.png",
-    "backgroundColor": "#2563eb"
-  },
+      "package": "ir.moshtriyar.app",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#2563eb"
+      },
       "permissions": [
         "android.permission.INTERNET",
         "android.permission.RECORD_AUDIO",
@@ -36,7 +36,13 @@
         "android.permission.WAKE_LOCK"
       ]
     },
-    
-"web": {
-  "favicon": "./assets/icon.png"
-},
+    "web": {
+      "favicon": "./assets/icon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "679f789f-6968-45a1-8bd7-67e7e3252247"
+      }
+    }
+  }
+}
