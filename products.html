@@ -79,6 +79,12 @@ body{font-family:Vazirmatn,sans-serif;background:#f1f5f9;margin:0;padding:20px;p
 
 <script type="module">
 import { supabase } from './js/supabase.js';
+import { checkPlanGuard } from './js/check-plan.js';
+
+// 🎯 چک انقضای پلن قبل از هر کاری
+if (!(await checkPlanGuard())) {
+    throw new Error('Plan expired');
+}
 
 let products = [];
 let me = null;
