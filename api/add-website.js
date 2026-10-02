@@ -4,7 +4,7 @@
 // هدف: اضافه کردن دستی سایت (برای غیروردپرسی‌ها)
 // ==========================================================
 
-import crypto from "crypto";
+import crypto from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
