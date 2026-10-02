@@ -441,12 +441,7 @@ async function handleConnect() {
 
         if (error) throw error;
 
-        msg.textContent = '✅ سایت متصل شد! در حال بازخوانی...';
-        msg.style.color = '#16a34a';
-
-        setTimeout(() => {
-            location.reload();
-        }, 1200);
+    showScriptPage(origin, apiKey);
 
     } catch (err) {
         console.error('Connect error:', err);
@@ -456,7 +451,110 @@ async function handleConnect() {
         btn.textContent = '🔌 اتصال سایت';
     }
 }
+// ==========================================================
+// ✅ صفحه موفقیت + کد اسکریپت + راهنما
+// ==========================================================
+function showScriptPage(domain, apiKey) {
+    const scriptCode = `<script src="https://moshtriyar.vercel.app/api/website-agent.js"
+    data-user-id="${currentUser.id}"
+    data-site="${domain}"
+    data-color="#2563eb"
+    data-title="پشتیبانی مشتری‌یار"
+    data-enabled="true"><\/script>`;
 
+    document.querySelector('.container').innerHTML = `
+        <div class="card" style="text-align:center;padding:30px 20px;background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px solid #86efac;">
+            <div style="font-size:64px;margin-bottom:10px;">✅</div>
+            <h2 style="color:#166534;margin-bottom:10px;">سایت با موفقیت متصل شد!</h2>
+            <p class="desc" style="color:#15803d;">
+                <strong>${domain}</strong> با موفقیت ثبت شد.
+                حالا کد زیر رو در سایتت قرار بده.
+            </p>
+        </div>
+
+        <div class="card">
+            <h2>📋 کد اتصال (این کد را کپی کن)</h2>
+            <p class="desc">
+                این کد رو در سایتت قرار بده تا ویجت مشتری‌یار فعال بشه.
+            </p>
+
+            <div style="background:#0f172a;color:#e2e8f0;padding:16px;border-radius:12px;font-family:monospace;font-size:12px;direction:ltr;text-align:left;white-space:pre-wrap;word-break:break-all;line-height:1.6;margin-bottom:14px;max-height:220px;overflow:auto;">${scriptCode.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/&lt;\/script&gt;/g, '&lt;/script&gt;')}</div>
+
+            <button class="btn-save" id="copyScriptBtn" style="background:linear-gradient(135deg,#16a34a,#059669);">📋 کپی کد</button>
+            <p class="msg" id="copyMsg"></p>
+        </div>
+
+        <div class="card">
+            <h2>📚 راهنمای نصب</h2>
+
+            <div style="background:#f8fafc;border-radius:12px;padding:16px;margin-bottom:10px;border-right:4px solid #2563eb;">
+                <h3 style="font-size:14px;font-weight:800;margin-bottom:8px;">🅦 وردپرس</h3>
+                <ol style="padding-right:20px;font-size:13px;line-height:1.9;color:#475569;">
+                    <li>وارد پنل وردپرس شو</li>
+                    <li>برو <strong>نمایش → ویرایشگر پوسته</strong></li>
+                    <li>فایل <strong>footer.php</strong> رو باز کن</li>
+                    <li>کد بالا رو قبل از <code>&lt;/body&gt;</code> پیست کن</li>
+                    <li>ذخیره کن</li>
+                </ol>
+            </div>
+
+            <div style="background:#f8fafc;border-radius:12px;padding:16px;margin-bottom:10px;border-right:4px solid #7c3aed;">
+                <h3 style="font-size:14px;font-weight:800;margin-bottom:8px;">📄 HTML ساده</h3>
+                <ol style="padding-right:20px;font-size:13px;line-height:1.9;color:#475569;">
+                    <li>فایل <strong>index.html</strong> رو باز کن</li>
+                    <li>کد بالا رو قبل از <code>&lt;/body&gt;</code> پیست کن</li>
+                    <li>ذخیره کن</li>
+                </ol>
+            </div>
+
+            <div style="background:#f8fafc;border-radius:12px;padding:16px;margin-bottom:10px;border-right:4px solid #d97706;">
+                <h3 style="font-size:14px;font-weight:800;margin-bottom:8px;">⚛️ React / Next.js</h3>
+                <ol style="padding-right:20px;font-size:13px;line-height:1.9;color:#475569;">
+                    <li>فایل <strong>public/index.html</strong> یا <strong>pages/_document.js</strong></li>
+                    <li>کد رو قبل از بستن body قرار بده</li>
+                </ol>
+            </div>
+
+            <div style="background:#f8fafc;border-radius:12px;padding:16px;border-right:4px solid #0891b2;">
+                <h3 style="font-size:14px;font-weight:800;margin-bottom:8px;">🌐 سایت‌ساز (Wix, Squarespace, ...)</h3>
+                <ol style="padding-right:20px;font-size:13px;line-height:1.9;color:#475569;">
+                    <li>از تنظیمات سایت‌ساز، بخش <strong>Custom Code</strong> رو پیدا کن</li>
+                    <li>کد رو قبل از <code>&lt;/body&gt;</code> پیست کن</li>
+                </ol>
+            </div>
+        </div>
+
+        <a href="dashboard.html" style="display:block;text-align:center;background:#2563eb;color:#fff;padding:14px;border-radius:12px;text-decoration:none;font-weight:800;font-size:14px;margin-top:16px;">
+            → برگشت به داشبورد
+        </a>
+    `;
+
+    // 📋 دکمه کپی
+    document.getElementById('copyScriptBtn').addEventListener('click', async () => {
+        const btn = document.getElementById('copyScriptBtn');
+        const msg = document.getElementById('copyMsg');
+
+        try {
+            await navigator.clipboard.writeText(scriptCode);
+            btn.textContent = '✅ کپی شد!';
+            btn.style.background = 'linear-gradient(135deg,#059669,#047857)';
+            msg.textContent = 'کد کپی شد — الان توی سایتت پیستش کن.';
+            msg.style.color = '#16a34a';
+
+            setTimeout(() => {
+                btn.textContent = '📋 کپی کد';
+                btn.style.background = 'linear-gradient(135deg,#16a34a,#059669)';
+                msg.textContent = '';
+            }, 3000);
+        } catch (err) {
+            msg.textContent = '❌ کپی نشد — دستی انتخاب کن';
+            msg.style.color = '#dc2626';
+        }
+    });
+
+    // 📜 اسکرول به بالا
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 init();
 </script>
 
