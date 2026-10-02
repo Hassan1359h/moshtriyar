@@ -135,7 +135,18 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;li
         </label>
     </div>
 </div>
-
+<div class="card" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px solid #86efac;">
+    <h2>🟢 نصب آسان وردپرس</h2>
+    <p class="desc">
+        اگه سایتت با وردپرس ساخته شده، با یه کلیک افزونه مخصوص خودت رو دریافت کن.
+        بعد نصب و فعال‌سازی، اتصال خودکار انجام می‌شه.
+    </p>
+    <button class="btn-save" id="wpInstallBtn" style="background:linear-gradient(135deg,#16a34a,#059669);">
+        🟢 دریافت افزونه وردپرس
+    </button>
+    <p class="msg" id="wpMsg"></p>
+</div>
+    
 <div class="card">
     <h2>📋 کد اتصال سایت</h2>
     <p class="desc">
@@ -573,8 +584,91 @@ document.getElementById('showScriptBtn')?.addEventListener('click', () => {
         alert('❌ آدرس سایت پیدا نشد');
     }
 });
- 
+
+// 🟢 دریافت و نصب افزونه وردپرس
+document.getElementById('wpInstallBtn')?.addEventListener('click', async () => {
+    const btn = document.getElementById('wpInstallBtn');
+    const msg = document.getElementById('wpMsg');
+
+    if (!currentWebsite?.domain) {
+        msg.textContent = '❌ آدرس سایت پیدا نشد';
+        msg.style.color = '#dc2626';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = '⏳ در حال ساخت افزونه...';
+    msg.textContent = '';
+    msg.style.color = '';
+
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) throw new Error('جلسه ورود منقضی شده');
+
+        msg.textContent = '🔑 دریافت توکن امن...';
+        msg.style.color = '#2563eb';
+
+        const connectRes = await fetch('/api/wordpress-connect', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + session.access_token
+            },
+            body: JSON.stringify({ siteUrl: currentWebsite.domain })
+        });
+
+        const connectData = await connectRes.json();
+
+        if (!connectRes.ok || !connectData.token) {
+            throw new Error(connectData.error || 'خطا در دریافت توکن');
+        }
+
+        msg.textContent = '📦 در حال ساخت افزونه...';
+        msg.style.color = '#2563eb';
+
+        const pluginRes = await fetch('/api/wordpress-plugin', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + session.access_token
+            },
+            body: JSON.stringify({
+                token: connectData.token,
+                siteUrl: currentWebsite.domain
+            })
+        });
+
+        if (!pluginRes.ok) {
+            throw new Error('خطا در ساخت افزونه');
+        }
+
+        const blob = await pluginRes.blob();
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'moshtriyar-ai-agent.zip';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        msg.textContent = '✅ افزونه دانلود شد! حالا توی وردپرس نصبش کن.';
+        msg.style.color = '#16a34a';
+        btn.textContent = '✅ دانلود شد — دوباره دریافت';
+
+    } catch (err) {
+        console.error('WP install error:', err);
+        msg.textContent = '❌ ' + (err.message || 'خطا در دریافت افزونه');
+        msg.style.color = '#dc2626';
+        btn.textContent = '🟢 دریافت افزونه وردپرس';
+    } finally {
+        btn.disabled = false;
+    }
+});
+
 init();
+    
 </script>
 
 </body>
