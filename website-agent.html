@@ -125,18 +125,28 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;li
             <div class="position-option" data-position="left">⬅️ چپ</div>
         </div>
     </div>
-
+    
     <div class="card">
-        <h2>🔄 وضعیت</h2>
-        <div class="field">
-            <label>
-                <input type="checkbox" id="enabledInput" checked style="width:auto;margin-left:8px;">
-                دستیار فعال باشد
-            </label>
-        </div>
+    <h2>🔄 وضعیت</h2>
+    <div class="field">
+        <label>
+            <input type="checkbox" id="enabledInput" checked style="width:auto;margin-left:8px;">
+            دستیار فعال باشد
+        </label>
     </div>
+</div>
 
-    <button class="btn-save" id="saveBtn">💾 ذخیره تنظیمات</button>
+<div class="card">
+    <h2>📋 کد اتصال سایت</h2>
+    <p class="desc">
+        کد اسکریپت مشتری‌یار رو ببین و توی سایتت قرار بده.
+    </p>
+    <button class="btn-save" id="showScriptBtn" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);">
+        📋 نمایش کد اتصال
+    </button>
+</div>
+
+<button class="btn-save" id="saveBtn">💾 ذخیره تنظیمات</button>
     <p class="msg" id="saveMsg"></p>
 
 </div>
@@ -555,6 +565,15 @@ function showScriptPage(domain, apiKey) {
     // 📜 اسکرول به بالا
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+  // 📋 نمایش کد اتصال در صفحه تنظیمات
+document.getElementById('showScriptBtn')?.addEventListener('click', () => {
+    if (currentWebsite?.domain) {
+        showScriptPage(currentWebsite.domain);
+    } else {
+        alert('❌ آدرس سایت پیدا نشد');
+    }
+});
+ 
 init();
 </script>
 
