@@ -509,12 +509,34 @@ callBtn.style.display = "none";
                     { config: { broadcast: { self: false } } }
                 );
 
-                callPc = new RTCPeerConnection({
-                    iceServers: [
-                        { urls: "stun:stun.l.google.com:19302" },
-                        { urls: "stun:stun1.l.google.com:19302" }
-                    ]
-                });
+            
+               callPc = new RTCPeerConnection({
+    iceServers: [
+        { urls: "stun:stun.l.google.com:19302" },
+        { urls: "stun:stun.relay.metered.ca:80" },
+        {
+            urls: "turn:global.relay.metered.ca:80",
+            username: "94e9856e0aa637b860a3902d",
+            credential: "5gXJQ3bnwf/sQbb1"
+        },
+        {
+            urls: "turn:global.relay.metered.ca:80?transport=tcp",
+            username: "94e9856e0aa637b860a3902d",
+            credential: "5gXJQ3bnwf/sQbb1"
+        },
+        {
+            urls: "turn:global.relay.metered.ca:443",
+            username: "94e9856e0aa637b860a3902d",
+            credential: "5gXJQ3bnwf/sQbb1"
+        },
+        {
+            urls: "turns:global.relay.metered.ca:443?transport=tcp",
+            username: "94e9856e0aa637b860a3902d",
+            credential: "5gXJQ3bnwf/sQbb1"
+        }
+    ],
+    iceCandidatePoolSize: 10
+});     
 
                 stream.getTracks().forEach(function (track) {
                     callPc.addTrack(track, stream);
