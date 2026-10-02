@@ -170,18 +170,9 @@ async function init() {
         .limit(1);
 
     if (!sites || sites.length === 0) {
-        document.querySelector('.container').innerHTML = `
-            <div class="card" style="text-align:center;padding:60px 20px;">
-                <div style="font-size:64px;margin-bottom:20px;opacity:.3;">🌐</div>
-                <h2>هنوز سایتی متصل نکردی</h2>
-                <p class="desc">برای استفاده از این بخش، اول یه سایت وصل کن.</p>
-                <a href="dashboard.html" style="display:inline-block;background:#2563eb;color:#fff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:700;margin-top:10px;">
-                    → برو به داشبورد
-                </a>
-            </div>
-        `;
-        return;
-    }
+    showConnectForm();
+    return;
+}
 
     currentWebsite = sites[0];
 
@@ -349,6 +340,122 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
     await supabase.auth.signOut();
     location.href = 'index.html';
 });
+// ==========================================================
+// 🌐 فرم اتصال وب‌سایت (اگه کاربر سایت نداره)
+// ==========================================================
+function showConnectForm() {
+    document.querySelector('.container').innerHTML = `
+        <div class="card" style="text-align:center;padding:20px;">
+            <div style="font-size:64px;margin-bottom:10px;">🌐</div>
+            <h2>اتصال وب‌سایت به مشتری‌یار</h2>
+            <p class="desc">
+                برای استفاده از دستیار هوشمند روی سایتت،
+                اطلاعات سایت رو وارد کن.
+            </p>
+        </div>
+
+        <div class="card">
+            <h2>📝 اطلاعات سایت</h2>
+
+            <div class="field">
+                <label>نام سایت یا کسب‌وکار</label>
+                <input type="text" id="connectName" placeholder="مثلاً: بانه بابا" maxlength="60">
+            </div>
+
+            <div class="field">
+                <label>آدرس سایت (با https://)</label>
+                <input type="url" id="connectUrl" placeholder="https://example.com" dir="ltr" style="text-align:left;font-family:monospace;">
+            </div>
+
+            <button class="btn-save" id="connectBtn">🔌 اتصال سایت</button>
+            <p class="msg" id="connectMsg"></p>
+        </div>
+    `;
+
+    document.getElementById('connectBtn').onclick = handleConnect;
+
+    document.getElementById('connectUrl').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') handleConnect();
+    });
+}
+
+// 🔑 تولید API Key
+function generateApiKey() {
+    const bytes = new Uint8Array(20);
+    crypto.getRandomValues(bytes);
+    return 'cst_live_' + Array.from(bytes)
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+}
+
+// 📤 ارسال فرم
+async function handleConnect() {
+    const name = document.getElementById('connectName').value.trim();
+    const url = document.getElementById('connectUrl').value.trim();
+    const btn = document.getElementById('connectBtn');
+    const msg = document.getElementById('connectMsg');
+
+    if (!name) {
+        msg.textContent = '❌ نام سایت را وارد کن';
+        msg.style.color = '#dc2626';
+        return;
+    }
+
+    if (!url) {
+        msg.textContent = '❌ آدرس سایت را وارد کن';
+        msg.style.color = '#dc2626';
+        return;
+    }
+
+    let origin;
+    try {
+        const parsed = new URL(url);
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+            throw new Error('protocol');
+        }
+        origin = parsed.origin;
+    } catch {
+        msg.textContent = '❌ آدرس سایت معتبر نیست (مثال: https://example.com)';
+        msg.style.color = '#dc2626';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = '⏳ در حال اتصال...';
+    msg.textContent = '';
+
+    try {
+        const apiKey = generateApiKey();
+
+        const { data, error } = await supabase
+            .from('websites')
+            .insert({
+                user_id: currentUser.id,
+                name: name,
+                domain: origin,
+                api_key: apiKey,
+                active: true
+            })
+            .select('id, name, domain, api_key, active')
+            .single();
+
+        if (error) throw error;
+
+        msg.textContent = '✅ سایت متصل شد! در حال بازخوانی...';
+        msg.style.color = '#16a34a';
+
+        setTimeout(() => {
+            location.reload();
+        }, 1200);
+
+    } catch (err) {
+        console.error('Connect error:', err);
+        msg.textContent = '❌ ' + (err.message || 'خطا در اتصال سایت');
+        msg.style.color = '#dc2626';
+        btn.disabled = false;
+        btn.textContent = '🔌 اتصال سایت';
+    }
+}
 
 init();
 </script>
