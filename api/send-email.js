@@ -279,45 +279,57 @@ export default async function handler(req, res) {
     // ⚙️ خواندن تنظیمات سایت (برای ویجت)
     // ==========================================================
     if (action === "settings") {
-      const userId = req.query?.userId;
-      if (!userId) {
-        return res.status(400).json({ ok: false, error: "userId required" });
+  const userId = req.query?.userId;
+  if (!userId) {
+    return res.status(400).json({ ok: false, error: "userId required" });
+  }
+
+  try {
+    // 🎨 برند + تنظیمات رو یکجا بگیر
+    const sitesRes = await fetch(
+      `${process.env.SUPABASE_URL}/rest/v1/websites?user_id=eq.${userId}&active=eq.true&select=id,brand_name,brand_logo_url&limit=1`,
+      {
+        headers: {
+          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+        },
       }
+    );
+    const sitesData = await sitesRes.json();
 
-      try {
-        const sitesRes = await fetch(
-          `${process.env.SUPABASE_URL}/rest/v1/websites?user_id=eq.${userId}&active=eq.true&select=id&limit=1`,
-          {
-            headers: {
-              apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
-              Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-            },
-          }
-        );
-        const sitesData = await sitesRes.json();
+    if (!sitesData?.[0]) {
+      return res.status(200).json({ ok: true, settings: null, message: "no site" });
+    }
 
-        if (!sitesData?.[0]) {
-          return res.status(200).json({ ok: true, settings: null, message: "no site" });
-        }
+    const siteId = sitesData[0].id;
+    const brandName = sitesData[0].brand_name || null;
+    const brandLogoUrl = sitesData[0].brand_logo_url || null;
 
-        const settingsRes = await fetch(
-          `${process.env.SUPABASE_URL}/rest/v1/site_settings?website_id=eq.${sitesData[0].id}&select=*&limit=1`,
-          {
-            headers: {
-              apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
-              Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-            },
-          }
-        );
-        const settingsData = await settingsRes.json();
-
-        return res.status(200).json({
-          ok: true,
-          settings: settingsData?.[0] || null,
-        });
-      } catch (err) {
-        return res.status(500).json({ ok: false, error: err.message });
+    const settingsRes = await fetch(
+      `${process.env.SUPABASE_URL}/rest/v1/site_settings?website_id=eq.${siteId}&select=*&limit=1`,
+      {
+        headers: {
+          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+        },
       }
+    );
+    const settingsData = await settingsRes.json();
+
+    // 🎯 تنظیمات + برند رو با هم برگردون
+    const mergedSettings = {
+      ...(settingsData?.[0] || {}),
+      brand_name: brandName,
+      brand_logo_url: brandLogoUrl,
+    };
+
+    return res.status(200).json({
+      ok: true,
+      settings: mergedSettings,
+    });
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message });
+  }
     }
 
     // تست عادی
