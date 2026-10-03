@@ -21,18 +21,21 @@ export default async function handler(req, res) {
     window.__MOSHTRIYAR_AGENT__ = true;
 
     var scriptTag = document.currentScript;
-
+    
     var config = {
-        userId: scriptTag?.getAttribute("data-user-id") || "",
-        site: scriptTag?.getAttribute("data-site") || "",
-        color: scriptTag?.getAttribute("data-color") || "#2563eb",
-        title: scriptTag?.getAttribute("data-title") || "دستیار هوشمند",
-        welcomeMessage: "سلام 👋 چطور می‌تونم کمکتون کنم؟",
-        operatorName: "",
-        position: "right",
-        enabled: scriptTag?.getAttribute("data-enabled") !== "false"
-    };
+    userId: scriptTag?.getAttribute("data-user-id") || "",
+    site: scriptTag?.getAttribute("data-site") || "",
+    color: scriptTag?.getAttribute("data-color") || "#2563eb",
+    title: scriptTag?.getAttribute("data-title") || "دستیار هوشمند",
+    welcomeMessage: "سلام 👋 چطور می‌تونم کمکتون کنم؟",
+    operatorName: "",
+    position: "right",
+    enabled: scriptTag?.getAttribute("data-enabled") !== "false",
+    brandName: "",
+    brandLogoUrl: ""
+};
 
+        
     var SUPABASE_URL = "${SUPABASE_URL}";
     var SUPABASE_ANON_KEY = "${SUPABASE_ANON_KEY}";
 
@@ -69,6 +72,8 @@ fetch("https://moshtriyar.vercel.app/api/send-email?action=settings&userId=" + e
                         if (s.enabled === false) {
                             config.enabled = false;
                         }
+                        if (s.brand_name) config.brandName = s.brand_name;
+                       if (s.brand_logo_url) config.brandLogoUrl = s.brand_logo_url;
                         console.log("✅ Moshtriyar: custom settings loaded", {
                             color: config.color,
                             title: config.title,
@@ -173,26 +178,32 @@ fetch("https://moshtriyar.vercel.app/api/send-email?action=settings&userId=" + e
         // ==========================================================
         // 🎨 هدر (با رنگ سفارشی)
         // ==========================================================
-        var header = document.createElement("div");
-
         header.style.cssText =
-            "height:58px;" +
-            "background:linear-gradient(135deg," + config.color + "," + config.color + "dd);" +
-            "color:#fff;" +
-            "display:flex;" +
-            "align-items:center;" +
-            "justify-content:space-between;" +
-            "padding:0 14px;" +
-            "font-weight:900;";
+    "height:58px;" +
+    "background:linear-gradient(135deg," + config.color + "," + config.color + "dd);" +
+    "color:#fff;" +
+    "display:flex;" +
+    "align-items:center;" +
+    "justify-content:space-between;" +
+    "padding:0 14px;" +
+    "font-weight:900;";
 
-        header.innerHTML =
-            '<span>🤖 ' + config.title + '</span>' +
-            '<button id="moshtiryar-ai-close" ' +
-            'type="button" ' +
-            'style="border:none;background:transparent;color:#fff;font-size:22px;cursor:pointer;">' +
-            '×' +
-            '</button>';
+// 🎨 لوگو + اسم برند
+var brandTitle = config.brandName || config.title || "دستیار هوشمند";
+var brandIcon = config.brandLogoUrl
+    ? '<img src="' + config.brandLogoUrl + '" style="width:28px;height:28px;border-radius:6px;object-fit:cover;background:#fff;" alt="">'
+    : '<span style="font-size:18px;">🤖</span>';
 
+header.innerHTML =
+    '<span style="display:flex;align-items:center;gap:8px;">' +
+        brandIcon +
+        '<span>' + brandTitle + '</span>' +
+    '</span>' +
+    '<button id="moshtiryar-ai-close" ' +
+    'type="button" ' +
+    'style="border:none;background:transparent;color:#fff;font-size:22px;cursor:pointer;">' +
+    '×' +
+    '</button>';
 
         // ==========================================================
         // 📨 ناحیه پیام‌ها
