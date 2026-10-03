@@ -364,7 +364,7 @@ export default async function handler(req, res) {
     const user = await userRes.json();
 
     try {
-      const { websiteId, settings } = req.body || {};
+      const { websiteId, settings, brandName } = req.body || {};
       if (!websiteId || !settings) {
         return res.status(400).json({ ok: false, error: "websiteId and settings required" });
       }
@@ -393,7 +393,25 @@ export default async function handler(req, res) {
         enabled: settings.enabled !== false,
         updated_at: new Date().toISOString(),
       };
-
+      // 🎨 ذخیره اسم برند توی جدول websites
+if (brandName !== undefined) {
+  await fetch(
+    `${process.env.SUPABASE_URL}/rest/v1/websites?id=eq.${websiteId}`,
+    {
+      method: "PATCH",
+      headers: {
+        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify({
+        brand_name: String(brandName || "").trim() || null,
+      }),
+    }
+  );
+}
+      
       const existingRes = await fetch(
         `${process.env.SUPABASE_URL}/rest/v1/site_settings?website_id=eq.${websiteId}&select=id`,
         {
