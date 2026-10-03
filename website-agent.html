@@ -508,15 +508,16 @@ document.getElementById('removeLogoBtn')?.addEventListener('click', async () => 
     }
 });
 
-// 💾 ذخیره
-document.getElementById('saveBtn').addEventListener('click', async () => {
+// 🚪 خروج
 document.getElementById('logoutBtn').addEventListener('click', async () => {
     await supabase.auth.signOut();
     location.href = 'index.html';
 });
+
 // ==========================================================
 // 🌐 فرم اتصال وب‌سایت (اگه کاربر سایت نداره)
 // ==========================================================
+    
 function showConnectForm() {
     document.querySelector('.container').innerHTML = `
         <div class="card" style="text-align:center;padding:20px;">
