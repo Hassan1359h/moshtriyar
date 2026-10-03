@@ -175,10 +175,12 @@ fetch("https://moshtriyar.vercel.app/api/send-email?action=settings&userId=" + e
             "direction:rtl;";
 
 
-        // ==========================================================
         // 🎨 هدر (با رنگ سفارشی)
-        // ==========================================================
-        header.style.cssText =
+// ==========================================================
+var header = document.createElement("div");
+
+header.style.cssText =
+        
     "height:58px;" +
     "background:linear-gradient(135deg," + config.color + "," + config.color + "dd);" +
     "color:#fff;" +
