@@ -117,7 +117,28 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;li
             <input type="text" id="operatorInput" placeholder="مثلاً: حسین شهابی" maxlength="40">
         </div>
     </div>
+<!-- 🎨 برندینگ فروشگاه -->
+<div class="card" style="background:linear-gradient(135deg,#fef3c7,#fde68a);border:2px solid #fbbf24;">
+    <h2>🎨 برندینگ فروشگاه</h2>
+    <p class="desc">
+        لوگو و اسم فروشگاهت رو اینجا بذار تا توی ویجت، فاکتور و ایمیل‌ها نمایش داده بشه.
+    </p>
 
+    <div class="field">
+        <label>اسم فروشگاه / کسب‌وکار</label>
+        <input type="text" id="brandNameInput" placeholder="مثلاً: فروشگاه آسمان" maxlength="50">
+    </div>
+
+    <div class="field">
+        <label>لوگوی فروشگاه (حداکثر ۱۵۰ KB)</label>
+        <input type="file" id="brandLogoInput" accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml" style="padding:8px;background:#fff;">
+        <div id="brandLogoPreview" style="margin-top:10px;display:none;">
+            <img id="brandLogoImg" style="max-width:120px;max-height:120px;border-radius:12px;border:2px solid #fbbf24;padding:4px;background:#fff;">
+            <button type="button" id="removeLogoBtn" style="background:#fee2e2;color:#dc2626;border:none;padding:6px 12px;border-radius:8px;font-family:inherit;font-weight:700;font-size:12px;cursor:pointer;margin-right:10px;">🗑️ حذف لوگو</button>
+        </div>
+        <p class="msg" id="brandLogoMsg"></p>
+    </div>
+</div>
     <div class="card">
         <h2>📍 موقعیت ویجت</h2>
         <div class="position-picker" id="positionPicker">
@@ -167,6 +188,8 @@ import { supabase } from './js/supabase.js';
 
 let currentUser = null;
 let currentWebsite = null;
+let currentBrandLogoUrl = null;
+let currentBrandName = '';
 let settings = {
     color: "#2563eb",
     title: "دستیار هوشمند",
@@ -196,6 +219,23 @@ async function init() {
 }
 
     currentWebsite = sites[0];
+    // 🎨 لود برند
+currentBrandName = currentWebsite.brand_name || '';
+currentBrandLogoUrl = currentWebsite.brand_logo_url || '';
+
+const brandNameInput = document.getElementById('brandNameInput');
+if (brandNameInput && currentBrandName) {
+    brandNameInput.value = currentBrandName;
+}
+
+if (currentBrandLogoUrl) {
+    const preview = document.getElementById('brandLogoPreview');
+    const img = document.getElementById('brandLogoImg');
+    if (preview && img) {
+        img.src = currentBrandLogoUrl;
+        preview.style.display = 'block';
+    }
+}
 
     // 📥 گرفتن تنظیمات قبلی
     const { data: existing } = await supabase
@@ -334,9 +374,10 @@ document.getElementById('saveBtn').addEventListener('click', async () => {
                 'Authorization': 'Bearer ' + session.access_token,
             },
             body: JSON.stringify({
-                websiteId: currentWebsite.id,
-                settings: settings,
-            }),
+    websiteId: currentWebsite.id,
+    settings: settings,
+    brandName: currentBrandName,
+}),
         });
 
         const result = await res.json();
@@ -356,7 +397,119 @@ document.getElementById('saveBtn').addEventListener('click', async () => {
         btn.textContent = '💾 ذخیره تنظیمات';
     }
 });
+// 🎨 آپلود لوگو به Supabase Storage
+async function uploadBrandLogo(file) {
+    const msg = document.getElementById('brandLogoMsg');
+    
+    // چک حجم
+    if (file.size > 150 * 1024) {
+        msg.textContent = '❌ حجم لوگو بیشتر از ۱۵۰ KB است';
+        msg.style.color = '#dc2626';
+        return null;
+    }
 
+    // چک نوع
+    const allowed = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/svg+xml'];
+    if (!allowed.includes(file.type)) {
+        msg.textContent = '❌ فقط تصویر (PNG, JPG, WebP, SVG) مجاز است';
+        msg.style.color = '#dc2626';
+        return null;
+    }
+
+    try {
+        const ext = file.name.split('.').pop().toLowerCase();
+        const fileName = `${currentUser.id}/${Date.now()}.${ext}`;
+
+        msg.textContent = '⏳ در حال آپلود...';
+        msg.style.color = '#2563eb';
+
+        // حذف لوگوی قبلی اگه بود
+        if (currentBrandLogoUrl) {
+            const oldPath = currentBrandLogoUrl.split('/brand-logos/')[1];
+            if (oldPath) {
+                await supabase.storage.from('brand-logos').remove([oldPath]);
+            }
+        }
+
+        // آپلود
+        const { error } = await supabase.storage
+            .from('brand-logos')
+            .upload(fileName, file, { upsert: true, contentType: file.type });
+
+        if (error) throw error;
+
+        // گرفتن URL عمومی
+        const { data } = supabase.storage.from('brand-logos').getPublicUrl(fileName);
+        const publicUrl = data.publicUrl;
+
+        // ذخیره توی دیتابیس
+        await supabase
+            .from('websites')
+            .update({ brand_logo_url: publicUrl })
+            .eq('id', currentWebsite.id);
+
+        currentBrandLogoUrl = publicUrl;
+
+        // نمایش پیش‌نمایش
+        const preview = document.getElementById('brandLogoPreview');
+        const img = document.getElementById('brandLogoImg');
+        img.src = publicUrl + '?t=' + Date.now();
+        preview.style.display = 'block';
+
+        msg.textContent = '✅ لوگو با موفقیت آپلود شد';
+        msg.style.color = '#16a34a';
+
+        return publicUrl;
+    } catch (err) {
+        console.error('Upload error:', err);
+        msg.textContent = '❌ خطا: ' + (err.message || 'آپلود نشد');
+        msg.style.color = '#dc2626';
+        return null;
+    }
+}
+
+// 🎨 رویدادهای برندینگ
+document.getElementById('brandLogoInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        await uploadBrandLogo(file);
+    }
+});
+
+document.getElementById('brandNameInput').addEventListener('input', (e) => {
+    currentBrandName = e.target.value.trim();
+});
+
+document.getElementById('removeLogoBtn')?.addEventListener('click', async () => {
+    if (!confirm('لوگو حذف شود؟')) return;
+
+    try {
+        if (currentBrandLogoUrl) {
+            const oldPath = currentBrandLogoUrl.split('/brand-logos/')[1];
+            if (oldPath) {
+                await supabase.storage.from('brand-logos').remove([oldPath]);
+            }
+        }
+
+        await supabase
+            .from('websites')
+            .update({ brand_logo_url: null })
+            .eq('id', currentWebsite.id);
+
+        currentBrandLogoUrl = null;
+        document.getElementById('brandLogoPreview').style.display = 'none';
+        document.getElementById('brandLogoInput').value = '';
+        document.getElementById('brandLogoMsg').textContent = '✅ لوگو حذف شد';
+        document.getElementById('brandLogoMsg').style.color = '#16a34a';
+    } catch (err) {
+        console.error(err);
+        document.getElementById('brandLogoMsg').textContent = '❌ خطا در حذف';
+        document.getElementById('brandLogoMsg').style.color = '#dc2626';
+    }
+});
+
+// 💾 ذخیره
+document.getElementById('saveBtn').addEventListener('click', async () => {
 document.getElementById('logoutBtn').addEventListener('click', async () => {
     await supabase.auth.signOut();
     location.href = 'index.html';
@@ -451,16 +604,17 @@ async function handleConnect() {
         const { data, error } = await supabase
             .from('websites')
             .insert({
-                user_id: currentUser.id,
-                name: name,
-                domain: origin,
-                api_key: apiKey,
-                active: true
-            })
-            .select('id, name, domain, api_key, active')
-            .single();
+        user_id: currentUser.id,
+        name: name,
+        domain: origin,
+        api_key: apiKey,
+        brand_name: name,
+        active: true
+    })
+    .select('id, name, domain, api_key, active, brand_name, brand_logo_url')
+    .single();
 
-        if (error) throw error;
+if (error) throw error;
 
     showScriptPage(origin, apiKey);
 
