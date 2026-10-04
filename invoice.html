@@ -363,6 +363,8 @@ let products = [];
 let customers = [];
 let me = null;
 let editingInvoiceId = null;
+    let brandName = '';
+let brandLogoUrl = '';
 async function loadInvoiceArchive(){
 
     const archive = $("invoiceArchive");
@@ -604,12 +606,17 @@ div.querySelector(".archive-edit").onclick = () => {
 }
     
 
+    function buildSavedInvoiceText(invoice){
 
-function buildSavedInvoiceText(invoice){
+    let text = "";
 
-    let text =
-        "🧾 فاکتور هوشمند مشتری‌یار\n" +
-        "━━━━━━━━━━━━━━\n";
+    // 🎨 لوگو + اسم برند
+    if (brandName) {
+        text += "🏢 " + brandName + "\n";
+    } else {
+        text += "🧾 فاکتور هوشمند مشتری‌یار\n";
+    }
+    text += "━━━━━━━━━━━━━━\n";
 
     text +=
         "شماره فاکتور: " +
@@ -654,18 +661,18 @@ function buildSavedInvoiceText(invoice){
     });
 
     text +=
-        "\n━━━━━━━━━━━━━━\n" +
-        "جمع کالاها: " +
-        money(invoice.subtotal) +
-        "\n" +
-        "تخفیف: " +
-        money(invoice.discount) +
-        "\n" +
-        "مبلغ نهایی: " +
-        money(invoice.total) +
-        "\n\n" +
-        "مشتری‌یار";
-
+    "\n━━━━━━━━━━━━━━\n" +
+    "جمع کالاها: " +
+    money(calc.subtotal) +
+    "\n" +
+    "تخفیف: " +
+    money(calc.discount) +
+    "\n" +
+    "مبلغ نهایی: " +
+    money(calc.total) +
+    "\n\n" +
+    "ساخته شده با 🤖 مشتری‌یار\n" +
+    "moshtriyar.ir";
     return text;
 
     }
@@ -750,6 +757,22 @@ async function init(){
         loadCustomers(),
         loadProducts()
     ]);
+    // 🎨 لود برند فروشگاه
+try {
+    const { data: siteData } = await supabase
+        .from('websites')
+        .select('brand_name, brand_logo_url')
+        .eq('user_id', me.id)
+        .eq('active', true)
+        .maybeSingle();
+
+    if (siteData) {
+        brandName = siteData.brand_name || '';
+        brandLogoUrl = siteData.brand_logo_url || '';
+    }
+} catch (e) {
+    console.warn('Brand load failed:', e);
+}
 await loadInvoiceArchive();
     
     $("invoiceNumber").value = invoiceNumber();
@@ -1079,16 +1102,22 @@ function calculate(){
 }
 
 
-function invoiceText(){
+    function invoiceText(){
 
     const customer =
         $("customer").value.trim();
 
     const calc = calculate();
 
-    let text =
-        "🧾 فاکتور هوشمند مشتری‌یار\n" +
-        "━━━━━━━━━━━━━━\n";
+    let text = "";
+
+    // 🎨 لوگو + اسم برند
+    if (brandName) {
+        text += "🏢 " + brandName + "\n";
+    } else {
+        text += "🧾 فاکتور هوشمند مشتری‌یار\n";
+    }
+    text += "━━━━━━━━━━━━━━\n";
 
 
     text +=
@@ -1165,17 +1194,18 @@ function invoiceText(){
 
 
     text +=
-        "\n━━━━━━━━━━━━━━\n" +
-        "جمع کالاها: " +
-        money(calc.subtotal) +
-        "\n" +
-        "تخفیف: " +
-        money(calc.discount) +
-        "\n" +
-        "مبلغ نهایی: " +
-        money(calc.total) +
-        "\n\n" +
-        "مشتری‌یار";
+    "\n━━━━━━━━━━━━━━\n" +
+    "جمع کالاها: " +
+    money(invoice.subtotal) +
+    "\n" +
+    "تخفیف: " +
+    money(invoice.discount) +
+    "\n" +
+    "مبلغ نهایی: " +
+    money(invoice.total) +
+    "\n\n" +
+    "ساخته شده با 🤖 مشتری‌یار\n" +
+    "moshtriyar.ir";
 
 
     return text;
