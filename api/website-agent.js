@@ -394,6 +394,23 @@ callBtn.style.display = "none";
             messages.appendChild(loading);
             messages.scrollTop = messages.scrollHeight;
 
+                        // 🎯 تشخیص شماره موبایل در پیام کاربر
+            var phoneMatch = text.match(/(?:^|[^0-9])(0?9[0-9]{9})(?:[^0-9]|$)/);
+            if (phoneMatch && phoneMatch[1]) {
+                var detectedPhone = phoneMatch[1];
+                if (detectedPhone.indexOf('0') !== 0) detectedPhone = '0' + detectedPhone;
+                try {
+                    localStorage.setItem('moshtriyar_phone_' + config.userId, detectedPhone);
+                    console.log('✅ Moshtriyar: customer phone saved');
+                } catch (e) {}
+            }
+
+            // خواندن شماره ذخیره‌شده
+            var savedPhone = '';
+            try {
+                savedPhone = localStorage.getItem('moshtriyar_phone_' + config.userId) || '';
+            } catch (e) {}
+
             try {
                 var response = await fetch("https://moshtriyar.vercel.app/api/website-chat", {
     method: "POST",
@@ -403,7 +420,8 @@ callBtn.style.display = "none";
     body: JSON.stringify({
         userId: config.userId,
         site: config.site,
-        message: text
+        message: text,
+        customerPhone: savedPhone
     })
 });
 
