@@ -150,8 +150,8 @@ async function incrementSiteUsage(websiteId) {
 // ==========================================================
 // 🎭 پرامپت
 // ==========================================================
-function buildSystemPrompt() {
-  return `تو «مشتری‌یار» هستی؛ یک دستیار پشتیبانی هوشمند، مودب، صبور و حرفه‌ای فارسی‌زبان که در وب‌سایت مشغول کمک به مشتریان است.
+function buildSystemPrompt(customerContext) {
+    let base = `تو «مشتری‌یار» هستی؛ یک دستیار پشتیبانی هوشمند، مودب، صبور و حرفه‌ای فارسی‌زبان که در وب‌سایت مشغول کمک به مشتریان است.
 
 وظایف تو:
 - پاسخ دادن به سوالات مشتریان درباره محصولات، خدمات، سفارش‌ها، قیمت‌ها، ارسال و پیگیری
@@ -159,7 +159,33 @@ function buildSystemPrompt() {
 - برخورد محترمانه، گرم و صمیمی
 - پاسخ‌ها را کوتاه، مفید و دقیق بده
 - همیشه فارسی پاسخ بده
-- از ایموجی‌های مناسب استفاده کن
+- از ایموجی‌های مناسب استفاده کن`;
+
+    if (customerContext) {
+        base += `
+
+🎯 اطلاعات مشتری (شناسایی شده بر اساس شماره):
+- نام: ${customerContext.name || 'نامشخص'}
+- وضعیت: ${customerContext.status || 'نامشخص'}
+- تعداد خرید: ${customerContext.total_purchase || 0}
+- آخرین تماس: ${customerContext.last_contact_at ? new Date(customerContext.last_contact_at).toLocaleDateString('fa-IR') : 'نامشخص'}
+${customerContext.notes ? `- یادداشت: ${customerContext.notes}` : ''}
+
+🌺 رفتار تو با این مشتری (مهم!):
+- با نامش سلام کن: «سلام ${customerContext.name} جان»
+- بگو «خوش برگشتی» یا مشابه
+- از اطلاعاتش توی جواب استفاده کن
+- شخصی‌سازی کن (نه جواب عمومی)
+- اگه ۳۰ روز یا بیشتر خرید نکرده: با احترام پیشنهاد تخفیف یا محصول جدید بده`;
+    } else {
+        base += `
+
+📝 اگه کاربر شماره موبایلش رو داد:
+- ازش تشکر کن
+- بگو «شماره‌ت ثبت شد»`;
+    }
+
+    base += `
 
 🚨 درخواست پشتیبان انسانی:
 هر وقت کاربر درخواست «پشتیبان انسانی»، «اپراتور»، «تماس با پشتیبانی» یا «شکایت» داشت، پاسخ بده:
@@ -167,6 +193,8 @@ function buildSystemPrompt() {
 «برای ارتباط با تیم پشتیبانی، لطفاً از 📩 فرم تماس با ما در سایت استفاده کنید. همکاران ما در اسرع وقت پاسخ می‌دهند. 🌸»
 
 ⚠️ هرگز شماره، ایمیل یا آدرس از خودت نساز.`;
+
+    return base;
 }
 
 // ==========================================================
@@ -187,7 +215,7 @@ res.setHeader("Cloudflare-CDN-Cache-Control", "no-store");
   }
 
   try {
-    const { message, history, siteApiKey, userId } = req.body || {};
+    const { message, history, siteApiKey, userId, customerPhone } = req.body || {};
     if (!message || !message.trim()) {
       return res.status(400).json({ ok: false, reply: "پیام خالی است." });
     }
@@ -232,6 +260,35 @@ if (siteApiKey) {
   }
 }
 
+    // 🎯 فاز ۱: AI مشتری‌شناس — جستجوی مشتری بر اساس شماره
+let customerContext = null;
+let ownerUserId = null;
+
+// اگه siteApiKey داریم → user_id فروشگاه رو بگیر
+if (siteApiKey) {
+    const site = await supabase(
+        `/websites?api_key=eq.${siteApiKey}&active=eq.true&select=user_id`
+    );
+    if (site?.[0]) ownerUserId = site[0].user_id;
+}
+
+// اگه userId فرستاده شده، اون رو priority بده
+if (!ownerUserId && userId) ownerUserId = userId;
+
+// جستجوی مشتری بر اساس شماره تلفن
+if (ownerUserId && customerPhone) {
+    const cleanPhone = String(customerPhone).replace(/[^0-9]/g, '');
+    if (cleanPhone.length >= 10) {
+        const found = await supabase(
+            `/customers?user_id=eq.${ownerUserId}&phone=ilike.*${cleanPhone.slice(-10)}*&select=name,phone,status,notes,total_purchase,last_contact_at&limit=1`
+        );
+        if (found?.[0]) {
+            customerContext = found[0];
+            console.log('✅ AI: customer found:', customerContext.name);
+        }
+    }
+}
+    
     // 📊 چک محدودیت
     const limitCheck = await checkSiteLimit(websiteId, plan);
     if (limitCheck.exceeded) {
@@ -262,7 +319,7 @@ if (siteApiKey) {
     contents.push({ role: "user", parts: [{ text: message.trim() }] });
 
     const requestBody = {
-      systemInstruction: { parts: [{ text: buildSystemPrompt() }] },
+      systemInstruction: { parts: [{ text: buildSystemPrompt(customerContext) }] },
       contents,
       generationConfig: {
         temperature: 0.8,
