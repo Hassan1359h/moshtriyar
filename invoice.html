@@ -924,7 +924,7 @@ function renderInvoiceArchive(list) {
             '<div class="archive-actions">' +
                 '<button class="btn btn-purple archive-send" type="button">📤 ارسال</button>' +
                 '<button class="btn btn-blue archive-edit" type="button">✏️ ویرایش</button>' +
-                '<button class="btn btn-orange archive-doc" type="button">📥 DOC</button>' +
+                '<button class="btn btn-orange archive-pdf" type="button">📥 PDF</button>' +
                 '<button class="btn btn-red archive-delete" type="button">🗑️ حذف</button>' +
             '</div>';
 
@@ -967,21 +967,25 @@ function renderInvoiceArchive(list) {
             $("shareMenu").classList.add("active");
         };
 
-        div.querySelector(".archive-doc").onclick = () => {
-            // بارگذاری در فرم و سپس دانلود
-            $("invoiceNumber").value = invoice.invoice_number || "";
-            $("invoiceDate").value = invoice.invoice_date || "";
-            $("customer").value = invoice.customer_name || "";
-            $("customerPhone").value = invoice.customer_phone || "";
-            $("discountPercent").value = 0;
-            $("discountFixed").value = Number(invoice.discount) || 0;
-            $("items").innerHTML = "";
-            itemCount = 0;
-            (invoice.items || []).forEach(it => addItem(it));
-            if ((invoice.items || []).length === 0) addItem();
-            calculate();
-            $("downloadDocBtn").click();
-        };
+        div.querySelector(".archive-pdf").onclick = () => {
+    // بارگذاری در فرم و سپس باز کردن پنجره چاپ PDF
+    $("invoiceNumber").value = invoice.invoice_number || "";
+    $("invoiceDate").value = invoice.invoice_date || "";
+    $("customer").value = invoice.customer_name || "";
+    $("customer").dataset.customerId = invoice.customer_id || "";
+    $("customerPhone").value = invoice.customer_phone || "";
+    $("discountPercent").value = 0;
+    $("discountFixed").value = Number(invoice.discount) || 0;
+    $("items").innerHTML = "";
+    itemCount = 0;
+    (invoice.items || []).forEach(it => addItem(it));
+    if ((invoice.items || []).length === 0) addItem();
+    calculate({ skipPreview: true });
+    renderPreview();
+    setTimeout(() => {
+        $("downloadPdfBtn").click();
+    }, 300);
+};
 
         div.querySelector(".archive-delete").onclick = async () => {
             if (!confirm("این فاکتور حذف شود؟")) return;
