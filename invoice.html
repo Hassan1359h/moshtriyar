@@ -369,11 +369,18 @@ function renderCustomers() {
 
 $("customerSelect").onchange = () => {
     const id = $("customerSelect").value;
-    if (!id) return;
+    if (!id) {
+        $("customer").value = "";
+        $("customerPhone").value = "";
+        $("customer").dataset.customerId = "";
+        renderPreview();
+        return;
+    }
     const customer = customers.find(c => c.id === id);
     if (customer) {
         $("customer").value = customer.name || "";
         $("customerPhone").value = customer.phone || "";
+        $("customer").dataset.customerId = customer.id;
     }
     renderPreview();
 };
@@ -635,7 +642,7 @@ $("saveBtn").onclick = async () => {
             user_id: me.id,
             invoice_number: $("invoiceNumber").value,
             invoice_date: $("invoiceDate").value,
-            customer_id: $("customerSelect").value || null,
+            customer_id: $("customer").dataset.customerId || $("customerSelect").value || null,
             customer_name: customerName || null,
             customer_phone: customerPhone || null,
             items: items,
@@ -831,6 +838,7 @@ function resetInvoice() {
     editingInvoiceId = null;
     $("customerSelect").value = "";
     $("customer").value = "";
+    $("customer").dataset.customerId = "";
     $("customerPhone").value = "";
     $("invoiceNote").value = "";
     $("discountPercent").value = 0;
@@ -905,6 +913,7 @@ function renderInvoiceArchive(list) {
             $("invoiceDate").value = invoice.invoice_date || "";
             $("customerSelect").value = invoice.customer_id || "";
             $("customer").value = invoice.customer_name || "";
+            $("customer").dataset.customerId = invoice.customer_id || "";
             $("customerPhone").value = invoice.customer_phone || "";
             $("invoiceNote").value = invoice.note || "";
             $("discountPercent").value = 0;
