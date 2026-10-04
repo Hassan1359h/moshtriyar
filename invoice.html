@@ -1219,30 +1219,134 @@ $("discountPercent").oninput = calculate;
 
 $("discountFixed").oninput = calculate;
 
+// 📄 دانلود فاکتور به صورت Word (.doc)
+$("copyBtn").onclick = () => {
+    try {
+        const calc = calculate();
+        const customerName = $("customer").value.trim() || 'بدون نام';
+        const invNumber = $("invoiceNumber").value;
+        const invDate = $("invoiceDate").value;
 
-$("copyBtn").onclick = async () => {
+        // 🎯 ساخت ردیف‌های محصولات
+        let itemsRows = '';
+        let i = 0;
+        document.querySelectorAll(".item").forEach(item => {
+            const productName = item.querySelector(".productSelect")
+                ?.selectedOptions[0]?.textContent
+                ?.split(" - ")[0]?.trim() || "محصول";
 
-    try{
+            const quantity = Number(item.querySelector(".quantity").value) || 0;
+            const price = Number(item.querySelector(".price").value) || 0;
 
-        await navigator.clipboard.writeText(
-            invoiceText()
-        );
+            if (quantity > 0 && price > 0) {
+                i++;
+                itemsRows += `
+                    <tr>
+                        <td style="border:1px solid #ccc;padding:8px;text-align:center;">${i}</td>
+                        <td style="border:1px solid #ccc;padding:8px;">${productName}</td>
+                        <td style="border:1px solid #ccc;padding:8px;text-align:center;">${quantity}</td>
+                        <td style="border:1px solid #ccc;padding:8px;text-align:center;">${money(price)}</td>
+                        <td style="border:1px solid #ccc;padding:8px;text-align:center;">${money(quantity * price)}</td>
+                    </tr>
+                `;
+            }
+        });
 
-        message(
-            "فاکتور کپی شد.",
-            "success"
-        );
+        // 🎯 لوگو
+        const logoHtml = brandLogoUrl
+            ? `<img src="${brandLogoUrl}" style="max-width:120px;max-height:80px;margin-bottom:10px;">`
+            : '';
+        const brandHtml = brandName
+            ? `<h2 style="color:#2563eb;margin:0 0 5px;">${brandName}</h2>`
+            : `<h2 style="color:#2563eb;margin:0 0 5px;">مشتری‌یار</h2>`;
 
-    }catch(e){
+        const htmlContent = `
+            <!DOCTYPE html>
+            <html dir="rtl" lang="fa">
+            <head>
+                <meta charset="UTF-8">
+                <title>فاکتور ${invNumber}</title>
+                <style>
+                    body { font-family: Tahoma, Arial, sans-serif; direction: rtl; padding: 30px; }
+                    .header { text-align: center; border-bottom: 3px solid #2563eb; padding-bottom: 15px; margin-bottom: 25px; }
+                    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                    th { background: #2563eb; color: #fff; padding: 10px; border: 1px solid #1d4ed8; }
+                    .summary { background: #f8fafc; padding: 15px; border-radius: 10px; margin-top: 15px; }
+                    .summary p { margin: 6px 0; font-size: 14px; }
+                    .total { font-weight: 900; color: #2563eb; font-size: 16px; border-top: 2px solid #2563eb; padding-top: 8px; }
+                    .footer { text-align: center; color: #94a3b8; font-size: 11px; margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 15px; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    ${logoHtml}
+                    ${brandHtml}
+                    <p style="color:#64748b;font-size:13px;margin:5px 0;">فاکتور فروش</p>
+                </div>
 
-        message(
-            "کپی در این مرورگر انجام نشد.",
-            "error"
-        );
+                <table style="margin-bottom:20px;">
+                    <tr>
+                        <td style="padding:8px;border:1px solid #ccc;"><strong>شماره فاکتور:</strong></td>
+                        <td style="padding:8px;border:1px solid #ccc;">${invNumber}</td>
+                        <td style="padding:8px;border:1px solid #ccc;"><strong>تاریخ:</strong></td>
+                        <td style="padding:8px;border:1px solid #ccc;">${invDate}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:8px;border:1px solid #ccc;"><strong>مشتری:</strong></td>
+                        <td colspan="3" style="padding:8px;border:1px solid #ccc;">${customerName}</td>
+                    </tr>
+                </table>
 
+                <h3 style="color:#1e293b;margin-bottom:10px;">📦 محصولات</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>نام محصول</th>
+                            <th>تعداد</th>
+                            <th>قیمت واحد</th>
+                            <th>جمع</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${itemsRows || '<tr><td colspan="5" style="text-align:center;padding:15px;color:#94a3b8;">هیچ محصولی ثبت نشده</td></tr>'}
+                    </tbody>
+                </table>
+
+                <div class="summary">
+                    <p>جمع کالاها: <strong>${money(calc.subtotal)}</strong></p>
+                    <p>تخفیف: <strong>${money(calc.discount)}</strong></p>
+                    <p class="total">مبلغ نهایی: ${money(calc.total)}</p>
+                </div>
+
+                <div class="footer">
+                    ساخته شده با 🤖 مشتری‌یار — moshtriyar.ir
+                </div>
+            </body>
+            </html>
+        `;
+
+        // 🎯 دانلود به صورت .doc
+        const fileName = 'factor-' + invNumber + '.doc';
+        const blob = new Blob([htmlContent], { type: 'application/msword' });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        message("✅ فاکتور Word دانلود شد.", "success");
+
+    } catch (err) {
+        console.error('Invoice download error:', err);
+        message("❌ خطا در دانلود فاکتور", "error");
     }
-
 };
+    
 
 
 $("shareBtn").onclick = async () => {
