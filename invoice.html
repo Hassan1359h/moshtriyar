@@ -292,21 +292,45 @@ function message(text, type) {
 // ———————————————————————————
 // بارگذاری برندینگ فروشگاه
 // ———————————————————————————
+
 async function loadBranding() {
     try {
-        const { data, error } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", me.id)
-            .maybeSingle();
+        // 🎯 اول از جدول websites بخون (همون که تنظیمات دستیار استفاده می‌کنه)
+        const { data: sites } = await supabase
+            .from("websites")
+            .select("brand_name, brand_logo_url, name")
+            .eq("user_id", me.id)
+            .eq("active", true)
+            .limit(1);
 
-        if (error || !data) return;
-        myProfile = data;
+        let storeName = null;
+        let logoUrl = null;
 
-        const storeName = data[STORE_NAME_COL] || "فروشگاه شما";
-        const logoUrl = data[STORE_LOGO_COL];
+        if (sites && sites.length > 0) {
+            storeName = sites[0].brand_name || sites[0].name || null;
+            logoUrl = sites[0].brand_logo_url || null;
+        }
 
-        $("brandName").textContent = storeName;
+        // 🎯 اگه تو websites نبود، از profiles امتحان کن (پشتیبان)
+        if (!storeName && !logoUrl) {
+            const { data: profile } = await supabase
+                .from("profiles")
+                .select("*")
+                .eq("id", me.id)
+                .maybeSingle();
+
+            if (profile) {
+                storeName = profile[STORE_NAME_COL] || null;
+                logoUrl = profile[STORE_LOGO_COL] || null;
+            }
+        }
+
+        myProfile = {
+            store_name: storeName,
+            logo_url: logoUrl
+        };
+
+        $("brandName").textContent = storeName || "فروشگاه شما";
 
         if (logoUrl) {
             const img = document.createElement("img");
@@ -321,7 +345,6 @@ async function loadBranding() {
         console.error("Branding error:", e);
     }
 }
-
 function getStoreName() {
     return myProfile?.[STORE_NAME_COL] || "فروشگاه شما";
 }
