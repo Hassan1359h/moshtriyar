@@ -5,1544 +5,1018 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta name="theme-color" content="#2563eb">
 <title>🧾 فاکتور هوشمند | مشتری‌یار</title>
-
 <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
-
 <style>
 *{box-sizing:border-box}
-body{
-    margin:0;
-    font-family:Vazirmatn,Tahoma,Arial,sans-serif;
-    background:#f1f5f9;
-    color:#0f172a;
-}
-.container{
-    max-width:900px;
-    margin:auto;
-    padding:15px;
-}
-.header{
-    background:linear-gradient(135deg,#2563eb,#4f46e5);
-    color:#fff;
-    padding:20px;
-    border-radius:18px;
-    margin-bottom:15px;
-}
-.header h1{
-    margin:0 0 7px;
-    font-size:22px;
-}
-.header p{
-    margin:0;
-    font-size:13px;
-    opacity:.9;
-}
-.card{
-    background:#fff;
-    border-radius:16px;
-    padding:16px;
-    margin-bottom:15px;
-    box-shadow:0 3px 15px rgba(0,0,0,.06);
-}
-.title{
-    font-size:16px;
-    font-weight:800;
-    margin-bottom:14px;
-}
-.grid{
-    display:grid;
-    grid-template-columns:repeat(2,1fr);
-    gap:10px;
-}
-@media(max-width:600px){
-    .grid{grid-template-columns:1fr}
-}
-label{
-    display:block;
-    font-size:12px;
-    font-weight:700;
-    margin-bottom:6px;
-}
-input,select{
-    width:100%;
-    border:1px solid #cbd5e1;
-    border-radius:10px;
-    padding:11px;
-    font-family:inherit;
-    font-size:13px;
-    background:#fff;
-}
-input:focus,select:focus{
-    outline:none;
-    border-color:#2563eb;
-}
-.items{
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-}
-.item{
-    border:1px solid #e2e8f0;
-    border-radius:14px;
-    padding:12px;
-    background:#f8fafc;
-}
-.item-head{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:9px;
-}
-.item-number{
-    font-weight:800;
-    font-size:13px;
-}
-.remove{
-    border:0;
-    background:#fee2e2;
-    color:#b91c1c;
-    width:32px;
-    height:32px;
-    border-radius:9px;
-    cursor:pointer;
-    font-size:18px;
-}
-.item-grid{
-    display:grid;
-    grid-template-columns:2fr 1fr 1.5fr;
-    gap:8px;
-}
-@media(max-width:600px){
-    .item-grid{
-        grid-template-columns:1fr 1fr;
-    }
-    .item-grid select{
-        grid-column:1/-1;
-    }
-}
-.btn{
-    border:0;
-    border-radius:11px;
-    padding:12px 15px;
-    font-family:inherit;
-    font-size:13px;
-    font-weight:800;
-    cursor:pointer;
-}
-.btn-blue{
-    background:#2563eb;
-    color:#fff;
-}
-.btn-green{
-    background:#16a34a;
-    color:#fff;
-}
-.btn-gray{
-    background:#e2e8f0;
-    color:#0f172a;
-}
-.btn-red{
-    background:#dc2626;
-    color:#fff;
-}
-.buttons{
-    display:grid;
-    grid-template-columns:repeat(2,1fr);
-    gap:9px;
-}
-@media(max-width:600px){
-    .buttons{grid-template-columns:1fr}
-}
-.add-btn{
-    width:100%;
-    margin-top:12px;
-}
-.summary{
-    border-top:1px solid #e2e8f0;
-    margin-top:15px;
-    padding-top:15px;
-}
-.sum-row{
-    display:flex;
-    justify-content:space-between;
-    padding:7px 0;
-    font-size:13px;
-}
-.total{
-    font-size:18px;
-    font-weight:900;
-    color:#2563eb;
-    border-top:2px solid #e2e8f0;
-    margin-top:7px;
-    padding-top:12px;
-}
-.message{
-    padding:12px;
-    border-radius:10px;
-    font-size:12px;
-    margin-bottom:12px;
-    display:none;
-}
-.success{
-    display:block;
-    background:#dcfce7;
-    color:#166534;
-}
-.error{
-    display:block;
-    background:#fee2e2;
-    color:#991b1b;
-}
-.info{
-    display:block;
-    background:#dbeafe;
-    color:#1e40af;
-}
-.loading{
-    text-align:center;
-    color:#64748b;
-    padding:20px;
+body{margin:0;font-family:Vazirmatn,Tahoma,Arial,sans-serif;background:#f1f5f9;color:#0f172a;padding-bottom:90px}
+.container{max-width:900px;margin:auto;padding:15px}
+.header{background:linear-gradient(135deg,#2563eb,#4f46e5);color:#fff;padding:20px;border-radius:18px;margin-bottom:15px}
+.header h1{margin:0 0 7px;font-size:22px}
+.header p{margin:0;font-size:13px;opacity:.9}
+.card{background:#fff;border-radius:16px;padding:16px;margin-bottom:15px;box-shadow:0 3px 15px rgba(0,0,0,.06)}
+.title{font-size:16px;font-weight:800;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media(max-width:600px){.grid{grid-template-columns:1fr}}
+label{display:block;font-size:12px;font-weight:700;margin-bottom:6px}
+input,select,textarea{width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:11px;font-family:inherit;font-size:13px;background:#fff}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#2563eb}
+.items{display:flex;flex-direction:column;gap:10px}
+.item{border:1px solid #e2e8f0;border-radius:14px;padding:12px;background:#f8fafc}
+.item-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+.item-number{font-weight:800;font-size:13px}
+.remove{border:0;background:#fee2e2;color:#b91c1c;width:32px;height:32px;border-radius:9px;cursor:pointer;font-size:18px}
+.item-grid{display:grid;grid-template-columns:2fr 1fr 1.5fr;gap:8px}
+@media(max-width:600px){.item-grid{grid-template-columns:1fr 1fr}.item-grid select{grid-column:1/-1}}
+.btn{border:0;border-radius:11px;padding:12px 15px;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;transition:.15s}
+.btn:active{transform:scale(.98)}
+.btn-blue{background:#2563eb;color:#fff}
+.btn-green{background:#16a34a;color:#fff}
+.btn-gray{background:#e2e8f0;color:#0f172a}
+.btn-red{background:#dc2626;color:#fff}
+.btn-purple{background:#7c3aed;color:#fff}
+.btn-orange{background:#ea580c;color:#fff}
+.buttons{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+@media(max-width:600px){.buttons{grid-template-columns:1fr}}
+.add-btn{width:100%;margin-top:12px}
+.summary{border-top:1px solid #e2e8f0;margin-top:15px;padding-top:15px}
+.sum-row{display:flex;justify-content:space-between;padding:7px 0;font-size:13px}
+.total{font-size:18px;font-weight:900;color:#2563eb;border-top:2px solid #e2e8f0;margin-top:7px;padding-top:12px}
+.message{padding:12px;border-radius:10px;font-size:12px;margin-bottom:12px;display:none}
+.success{display:block;background:#dcfce7;color:#166534}
+.error{display:block;background:#fee2e2;color:#991b1b}
+.info{display:block;background:#dbeafe;color:#1e40af}
+.loading{text-align:center;color:#64748b;padding:20px}
+.brand-box{background:linear-gradient(135deg,#fffbeb,#fff);border:2px solid #fde68a;border-radius:14px;padding:14px;margin-bottom:14px;display:flex;align-items:center;gap:14px}
+.brand-logo{width:60px;height:60px;border-radius:12px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:26px;object-fit:cover;flex-shrink:0;border:1px solid #e2e8f0}
+.brand-info{flex:1}
+.brand-name{font-weight:800;font-size:15px;color:#92400e}
+.brand-hint{font-size:11px;color:#a16207;margin-top:3px}
+.brand-hint a{color:#2563eb;font-weight:700}
+.share-menu{position:fixed;inset:0;background:rgba(15,23,42,.6);display:none;align-items:flex-end;justify-content:center;z-index:999}
+.share-menu.active{display:flex}
+.share-box{background:#fff;width:100%;max-width:500px;border-radius:20px 20px 0 0;padding:20px;animation:slideUp .25s ease-out}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.share-box h3{margin:0 0 6px;font-size:17px;font-weight:800}
+.share-box p{margin:0 0 16px;font-size:12px;color:#64748b}
+.share-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}
+.share-item{border:0;border-radius:14px;padding:16px 10px;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;color:#fff}
+.share-item .ic{font-size:26px}
+.share-item.wa{background:#25d366}
+.share-item.tg{background:#229ed9}
+.share-item.it{background:#ef7e25}
+.share-item.sms{background:#475569}
+.share-item:hover{opacity:.9}
+.share-cancel{width:100%;background:#e2e8f0;color:#0f172a;border:0;border-radius:12px;padding:13px;font-family:inherit;font-weight:800;font-size:14px;cursor:pointer}
+.archive-item{border:1px solid #e2e8f0;border-radius:14px;padding:12px;margin-bottom:10px;background:#f8fafc}
+.archive-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.archive-actions .btn{padding:8px 12px;font-size:12px}
+.invoice-preview{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:20px;margin-top:12px;font-size:13px}
+.inv-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #2563eb;padding-bottom:14px;margin-bottom:14px;gap:14px;flex-wrap:wrap}
+.inv-logo{width:70px;height:70px;border-radius:12px;object-fit:cover;background:#f1f5f9}
+.inv-store{flex:1;min-width:180px}
+.inv-store h2{margin:0 0 4px;font-size:18px;color:#1e293b}
+.inv-store p{margin:0;font-size:12px;color:#64748b}
+.inv-meta{text-align:left;font-size:12px;color:#475569}
+.inv-meta b{color:#1e293b}
+.inv-table{width:100%;border-collapse:collapse;margin-bottom:14px;font-size:12px}
+.inv-table th{background:#f1f5f9;padding:9px 6px;text-align:right;font-weight:800;border-bottom:2px solid #cbd5e1}
+.inv-table td{padding:9px 6px;border-bottom:1px solid #e2e8f0}
+.inv-totals{background:#f8fafc;border-radius:10px;padding:12px}
+.inv-totals .row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px}
+.inv-totals .row.final{border-top:2px solid #cbd5e1;margin-top:6px;padding-top:10px;font-size:16px;font-weight:900;color:#2563eb}
+.inv-footer{text-align:center;padding-top:16px;border-top:1px dashed #cbd5e1;margin-top:16px;font-size:12px;color:#64748b}
+.inv-footer b{color:#2563eb;font-size:13px}
+@media print{
+    body *{visibility:hidden}
+    #invoicePreviewBox,#invoicePreviewBox *{visibility:visible}
+    #invoicePreviewBox{position:absolute;left:0;top:0;width:100%;border:0;padding:0}
+    .no-print{display:none!important}
 }
 </style>
 </head>
-
 <body>
 
 <main class="container">
 
-<div class="header">
+<div class="header no-print">
     <h1>🧾 فاکتور هوشمند</h1>
     <p>ساخت سریع فاکتور با مشتریان و محصولات مشتری‌یار</p>
 </div>
 
-<div id="message" class="message"></div>
+<div id="message" class="message no-print"></div>
 
-<section class="card">
-
-<div class="title">📋 اطلاعات فاکتور</div>
-
-<div class="grid">
-
-<div>
-<label>شماره فاکتور</label>
-<input id="invoiceNumber" readonly>
-</div>
-
-<div>
-<label>تاریخ شمسی</label>
-<input id="invoiceDate" readonly>
-</div>
-
-<div>
-<label>👥 مشتری</label>
-<select id="customerSelect">
-<option value="">در حال بارگذاری مشتریان...</option>
-</select>
-</div>
-
-<div>
-<label>نام مشتری</label>
-<input id="customer" placeholder="یا نام را دستی وارد کنید">
-</div>
-
-</div>
-
+<!-- برندینگ فروشگاه -->
+<section class="card no-print">
+    <div class="brand-box" id="brandBox">
+        <div class="brand-logo" id="brandLogo">🏪</div>
+        <div class="brand-info">
+            <div class="brand-name" id="brandName">فروشگاه شما</div>
+            <div class="brand-hint">برای تغییر لوگو و نام فروشگاه <a href="operator.html">اینجا</a> کلیک کن (بخش تنظیمات دستیار → برندینگ فروشگاه)</div>
+        </div>
+    </div>
 </section>
 
-<section class="card">
-
-<div class="title">📦 محصولات</div>
-
-<div id="items" class="items">
-    <div class="loading">در حال آماده‌سازی...</div>
-</div>
-
-<button id="addItem" class="btn btn-blue add-btn">
-➕ افزودن محصول
-</button>
-
+<!-- اطلاعات فاکتور -->
+<section class="card no-print">
+    <div class="title">📋 اطلاعات فاکتور</div>
+    <div class="grid">
+        <div>
+            <label>شماره فاکتور</label>
+            <input id="invoiceNumber" readonly>
+        </div>
+        <div>
+            <label>تاریخ شمسی</label>
+            <input id="invoiceDate" readonly>
+        </div>
+        <div>
+            <label>👥 مشتری</label>
+            <select id="customerSelect">
+                <option value="">در حال بارگذاری...</option>
+            </select>
+        </div>
+        <div>
+            <label>نام مشتری</label>
+            <input id="customer" placeholder="یا نام را دستی وارد کنید">
+        </div>
+        <div>
+            <label>شماره تماس مشتری (برای ارسال)</label>
+            <input id="customerPhone" type="tel" placeholder="مثلاً 09121234567">
+        </div>
+        <div>
+            <label>توضیحات (اختیاری)</label>
+            <input id="invoiceNote" placeholder="مثلاً: تسویه نقدی">
+        </div>
+    </div>
 </section>
 
-<section class="card">
-
-<div class="title">💰 تخفیف</div>
-
-<div class="grid">
-
-<div>
-<label>درصد تخفیف</label>
-<input id="discountPercent" type="number" min="0" max="100" value="0">
-</div>
-
-<div>
-<label>تخفیف ثابت (تومان)</label>
-<input id="discountFixed" type="number" min="0" value="0">
-</div>
-
-</div>
-
-<div class="summary">
-
-<div class="sum-row">
-<span>جمع کالاها</span>
-<strong id="subtotal">۰ تومان</strong>
-</div>
-
-<div class="sum-row">
-<span>تخفیف</span>
-<strong id="discount">۰ تومان</strong>
-</div>
-
-<div class="sum-row total">
-<span>مبلغ نهایی</span>
-<strong id="total">۰ تومان</strong>
-</div>
-
-</div>
-
+<!-- محصولات -->
+<section class="card no-print">
+    <div class="title">📦 محصولات</div>
+    <div id="items" class="items">
+        <div class="loading">در حال آماده‌سازی...</div>
+    </div>
+    <button id="addItem" class="btn btn-blue add-btn">➕ افزودن محصول</button>
 </section>
 
+<!-- تخفیف -->
+<section class="card no-print">
+    <div class="title">💰 تخفیف</div>
+    <div class="grid">
+        <div>
+            <label>درصد تخفیف</label>
+            <input id="discountPercent" type="number" min="0" max="100" value="0">
+        </div>
+        <div>
+            <label>تخفیف ثابت (تومان)</label>
+            <input id="discountFixed" type="number" min="0" value="0">
+        </div>
+    </div>
+    <div class="summary">
+        <div class="sum-row"><span>جمع کالاها</span><strong id="subtotal">۰ تومان</strong></div>
+        <div class="sum-row"><span>تخفیف</span><strong id="discount">۰ تومان</strong></div>
+        <div class="sum-row total"><span>مبلغ نهایی</span><strong id="total">۰ تومان</strong></div>
+    </div>
+</section>
+
+<!-- پیش‌نمایش فاکتور -->
 <section class="card">
+    <div class="title no-print">👁️ پیش‌نمایش فاکتور</div>
+    <div id="invoicePreviewBox" class="invoice-preview"></div>
+</section>
 
-<div class="title">⚡ عملیات فاکتور</div>
+<!-- عملیات -->
+<section class="card no-print">
+    <div class="title">⚡ عملیات فاکتور</div>
+    <div class="buttons">
+        <button id="saveBtn" class="btn btn-green">💾 ذخیره در حساب</button>
+        <button id="sendBtn" class="btn btn-purple">📤 ارسال فاکتور</button>
+        <button id="downloadDocBtn" class="btn btn-blue">📥 دانلود DOC</button>
+        <button id="downloadPdfBtn" class="btn btn-orange">🖨️ دانلود PDF / پرینت</button>
+        <button id="aiBtn" class="btn btn-gray">✨ بهبود متن با AI</button>
+        <button id="clearBtn" class="btn btn-red">🗑️ فاکتور جدید</button>
+    </div>
+</section>
 
-<div class="buttons">
-
-<button id="saveBtn" class="btn btn-green">
-💾 ذخیره در حساب
-</button>
-
-<button id="copyBtn" class="btn btn-blue">
-📋 کپی فاکتور
-</button>
-
-<button id="shareBtn" class="btn btn-gray">
-📤 اشتراک‌گذاری
-</button>
-
-<button id="clearBtn" class="btn btn-red">
-🗑️ فاکتور جدید
-</button>
-
-</div>
-
+<!-- آرشیو -->
+<section class="card no-print">
+    <div class="title">📚 آرشیو فاکتورها</div>
+    <div style="margin-bottom:12px;">
+        <input id="invoiceSearch" type="text" placeholder="🔎 جستجو با شماره فاکتور یا نام مشتری...">
+    </div>
+    <div id="invoiceArchive">
+        <div class="loading">در حال دریافت فاکتورها...</div>
+    </div>
 </section>
 
 </main>
-<section class="card">
 
-    <div class="title">📚 آرشیو فاکتورها</div>
-
-    <div style="margin-bottom:12px;">
-        <input
-            id="invoiceSearch"
-            type="text"
-            placeholder="🔎 جستجو با شماره فاکتور یا نام مشتری..."
-        >
-    </div>
-
-    <div id="invoiceArchive">
-        <div class="loading">
-            در حال دریافت فاکتورها...
+<!-- منوی ارسال -->
+<div class="share-menu no-print" id="shareMenu">
+    <div class="share-box">
+        <h3>📤 ارسال فاکتور</h3>
+        <p>متن فاکتور ارسال می‌شود. برای ارسال فایل، اول DOC یا PDF را دانلود کن.</p>
+        <div class="share-grid">
+            <button class="share-item wa" data-share="whatsapp"><span class="ic">💬</span>واتساپ</button>
+            <button class="share-item tg" data-share="telegram"><span class="ic">✈️</span>تلگرام</button>
+            <button class="share-item it" data-share="eitaa"><span class="ic">📨</span>ایتا</button>
+            <button class="share-item sms" data-share="sms"><span class="ic">📱</span>پیامک</button>
         </div>
+        <button class="share-cancel" id="shareCancel">انصراف</button>
     </div>
+</div>
 
-</section>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html-docx-js/0.3.1/html-docx.min.js"></script>
 <script type="module">
 
 import { supabase } from './js/supabase.js';
 import { checkPlanGuard } from './js/check-plan.js';
 
-// 🎯 چک انقضای پلن قبل از هر کاری
+// 🎯 چک انقضای پلن
 if (!(await checkPlanGuard())) {
     throw new Error('Plan expired');
 }
+
+// 🔧 اسم ستون‌های profiles — اگه فرق داشت این‌ها رو عوض کن
+const STORE_NAME_COL = 'store_name';
+const STORE_LOGO_COL = 'logo_url';
+const OPERATOR_PHONE_COL = 'phone';
+
+const $ = id => document.getElementById(id);
+const money = n => new Intl.NumberFormat("fa-IR").format(Math.round(Number(n) || 0)) + " تومان";
+const moneyNum = n => new Intl.NumberFormat("fa-IR").format(Math.round(Number(n) || 0));
 
 let itemCount = 0;
 let products = [];
 let customers = [];
 let me = null;
+let myProfile = null;
 let editingInvoiceId = null;
-async function loadInvoiceArchive(){
 
-    const archive = $("invoiceArchive");
-
-    if(!me){
-        archive.innerHTML =
-            '<div class="loading">کاربر وارد حساب نشده است.</div>';
-        return;
-    }
-
-    const {
-        data,
-        error
-    } = await supabase
-        .from("invoices")
-        .select("*")
-        .eq("user_id",me.id)
-        .order("created_at",{ascending:false});
-
-    if(error){
-
-        console.error(error);
-
-        archive.innerHTML =
-            '<div class="message error" style="display:block;">خطا در دریافت فاکتورها.</div>';
-
-        return;
-
-    }
-
-    window.invoiceArchiveData = data || [];
-renderInvoiceArchive(window.invoiceArchiveData);
-
+// ———————————————————————————
+// ابزار
+// ———————————————————————————
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
 
-
-function renderInvoiceArchive(list){
-
-    const archive = $("invoiceArchive");
-
-    if(!list.length){
-
-        archive.innerHTML =
-            '<div class="loading">هنوز فاکتوری ذخیره نشده است.</div>';
-
-        return;
-
+function todayShamsi() {
+    try {
+        return new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
+            year: "numeric", month: "2-digit", day: "2-digit"
+        }).format(new Date());
+    } catch (e) {
+        return new Date().toLocaleDateString("fa-IR");
     }
+}
 
-    archive.innerHTML = "";
+function invoiceNumber() {
+    const d = new Date();
+    return "INV-" + d.getFullYear() +
+        String(d.getMonth() + 1).padStart(2, "0") +
+        String(d.getDate()).padStart(2, "0") + "-" +
+        String(d.getHours()).padStart(2, "0") +
+        String(d.getMinutes()).padStart(2, "0") +
+        String(d.getSeconds()).padStart(2, "0");
+}
 
-    list.forEach(invoice => {
+function message(text, type) {
+    const box = $("message");
+    box.textContent = text;
+    box.className = "message " + type;
+    setTimeout(() => { box.className = "message"; }, 3500);
+}
 
-        const div = document.createElement("div");
+// ———————————————————————————
+// بارگذاری برندینگ فروشگاه
+// ———————————————————————————
+async function loadBranding() {
+    try {
+        const { data, error } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", me.id)
+            .maybeSingle();
 
-        div.style.cssText =
-            "border:1px solid #e2e8f0;" +
-            "border-radius:14px;" +
-            "padding:12px;" +
-            "margin-bottom:10px;" +
-            "background:#f8fafc;";
+        if (error || !data) return;
+        myProfile = data;
 
-        div.innerHTML =
+        const storeName = data[STORE_NAME_COL] || "فروشگاه شما";
+        const logoUrl = data[STORE_LOGO_COL];
 
-            '<div style="font-weight:900;margin-bottom:7px;">' +
-            "🧾 " +
-            escapeHtml(invoice.invoice_number) +
-            "</div>" +
+        $("brandName").textContent = storeName;
 
-            '<div style="font-size:12px;color:#64748b;margin-bottom:5px;">' +
-            "📅 " +
-            escapeHtml(invoice.invoice_date) +
-            "</div>" +
+        if (logoUrl) {
+            const img = document.createElement("img");
+            img.src = logoUrl;
+            img.className = "brand-logo";
+            img.alt = "لوگو";
+            const old = $("brandLogo");
+            old.replaceWith(img);
+            img.id = "brandLogo";
+        }
+    } catch (e) {
+        console.error("Branding error:", e);
+    }
+}
 
-            '<div style="font-size:13px;margin-bottom:5px;">' +
-            "👥 مشتری: " +
-            escapeHtml(invoice.customer_name || "بدون نام") +
-            "</div>" +
+function getStoreName() {
+    return myProfile?.[STORE_NAME_COL] || "فروشگاه شما";
+}
 
-            '<div style="font-size:13px;font-weight:800;color:#2563eb;margin-bottom:10px;">' +
-            "💰 " +
-            money(invoice.total) +
-            "</div>" +
+function getStoreLogo() {
+    return myProfile?.[STORE_LOGO_COL] || null;
+}
 
-            '<button class="btn btn-blue archive-copy" type="button">' +
-"📋 کپی فاکتور" +
-"</button>" +
+function getStorePhone() {
+    return myProfile?.[OPERATOR_PHONE_COL] || "";
+}
 
-'<button class="btn btn-green archive-edit" type="button" style="margin-right:6px;">' +
-"✏️ ویرایش" +
-"</button>" +
+// ———————————————————————————
+// بارگذاری مشتریان و محصولات
+// ———————————————————————————
+async function loadCustomers() {
+    const { data, error } = await supabase
+        .from("customers")
+        .select("id,name,phone")
+        .eq("user_id", me.id)
+        .order("created_at", { ascending: false });
 
-'<button class="btn btn-red archive-delete" type="button" style="margin-right:6px;">' +
-"🗑️ حذف" +
-"</button>";
+    if (error) {
+        $("customerSelect").innerHTML = '<option value="">خطا در دریافت مشتریان</option>';
+        console.error(error);
+        return;
+    }
+    customers = data || [];
+    renderCustomers();
+}
 
-        div.querySelector(".archive-copy").onclick =
-            async () => {
-
-                const text =
-                    buildSavedInvoiceText(invoice);
-
-                try{
-
-                    await navigator.clipboard.writeText(text);
-
-                    message(
-                        "فاکتور کپی شد.",
-                        "success"
-                    );
-
-                }catch(e){
-
-                    message(
-                        "کپی انجام نشد.",
-                        "error"
-                    );
-
-                }
-
-            };
-div.querySelector(".archive-edit").onclick = () => {
-
-    editingInvoiceId = invoice.id;
-
-    $("invoiceNumber").value =
-        invoice.invoice_number || "";
-
-    $("invoiceDate").value =
-        invoice.invoice_date || "";
-
-    $("customerSelect").value =
-        invoice.customer_id || "";
-
-    $("customer").value =
-        invoice.customer_name || "";
-
-    $("discountPercent").value = 0;
-    $("discountFixed").value =
-        Number(invoice.discount) || 0;
-
-    $("items").innerHTML = "";
-    itemCount = 0;
-
-    const items =
-        Array.isArray(invoice.items)
-            ? invoice.items
-            : [];
-
-    items.forEach(savedItem => {
-
-        addItem();
-
-        const item =
-            $("items").lastElementChild;
-
-        const productSelect =
-            item.querySelector(".productSelect");
-
-        const quantity =
-            item.querySelector(".quantity");
-
-        const price =
-            item.querySelector(".price");
-
-        productSelect.value =
-            savedItem.product_id || "";
-
-        quantity.value =
-            savedItem.quantity || 1;
-
-        price.value =
-            savedItem.unit_price || 0;
-
+function renderCustomers() {
+    const select = $("customerSelect");
+    select.innerHTML = '<option value="">انتخاب مشتری...</option>';
+    customers.forEach(c => {
+        const option = document.createElement("option");
+        option.value = c.id;
+        option.textContent = c.name + (c.phone ? " - " + c.phone : "");
+        option.dataset.phone = c.phone || "";
+        select.appendChild(option);
     });
+}
 
-    if(items.length === 0){
-        addItem();
+$("customerSelect").onchange = () => {
+    const id = $("customerSelect").value;
+    if (!id) return;
+    const customer = customers.find(c => c.id === id);
+    if (customer) {
+        $("customer").value = customer.name || "";
+        $("customerPhone").value = customer.phone || "";
+    }
+    renderPreview();
+};
+
+async function loadProducts() {
+    const { data, error } = await supabase
+        .from("products")
+        .select("id,name,price")
+        .eq("user_id", me.id)
+        .order("created_at", { ascending: false });
+
+    if (error) {
+        products = [];
+        console.error(error);
+        return;
+    }
+    products = data || [];
+}
+
+function productOptions() {
+    let html = '<option value="">انتخاب محصول...</option>';
+    products.forEach(p => {
+        html += '<option value="' + escapeHtml(p.id) + '">' +
+                escapeHtml(p.name) + " - " + money(p.price) + "</option>";
+    });
+    return html;
+}
+
+// ———————————————————————————
+// ردیف محصول
+// ———————————————————————————
+function addItem(saved) {
+    if (itemCount >= 25) {
+        message("حداکثر ۲۵ ردیف مجاز است.", "error");
+        return;
+    }
+    itemCount++;
+    const id = itemCount;
+
+    const div = document.createElement("div");
+    div.className = "item";
+    div.dataset.id = id;
+    div.innerHTML =
+        '<div class="item-head">' +
+            '<span class="item-number">ردیف ' + moneyNum(id) + '</span>' +
+            '<button class="remove" type="button">×</button>' +
+        '</div>' +
+        '<div class="item-grid">' +
+            '<select class="productSelect">' + productOptions() + '</select>' +
+            '<input class="quantity" type="number" min="1" value="1" placeholder="تعداد">' +
+            '<input class="price" type="number" min="0" value="0" placeholder="قیمت واحد">' +
+        '</div>' +
+        '<div style="margin-top:9px;font-size:12px;font-weight:800;color:#475569">مبلغ ردیف: <span class="rowTotal">۰ تومان</span></div>';
+
+    $("items").appendChild(div);
+
+    const productSelect = div.querySelector(".productSelect");
+    const quantity = div.querySelector(".quantity");
+    const price = div.querySelector(".price");
+
+    productSelect.onchange = () => {
+        const product = products.find(p => p.id === productSelect.value);
+        if (product) price.value = Number(product.price) || 0;
+        calculate();
+    };
+    quantity.oninput = calculate;
+    price.oninput = calculate;
+    div.querySelector(".remove").onclick = () => { div.remove(); calculate(); };
+
+    if (saved) {
+        productSelect.value = saved.product_id || "";
+        quantity.value = saved.quantity || 1;
+        price.value = saved.unit_price || 0;
     }
 
     calculate();
-
-    window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-    });
-
-    message(
-        "فاکتور برای ویرایش آماده شد.",
-        "success"
-    );
-
-};
-        
-
-        div.querySelector(".archive-delete").onclick =
-            async () => {
-
-                if(
-                    !confirm(
-                        "این فاکتور حذف شود؟"
-                    )
-                ) return;
-
-                const {
-                    error
-                } = await supabase
-                    .from("invoices")
-                    .delete()
-                    .eq("id",invoice.id)
-                    .eq("user_id",me.id);
-
-                if(error){
-
-                    console.error(error);
-
-                    message(
-                        "حذف فاکتور انجام نشد.",
-                        "error"
-                    );
-
-                    return;
-
-                }
-
-                message(
-                    "فاکتور حذف شد.",
-                    "success"
-                );
-
-                loadInvoiceArchive();
-
-            };
-
-        archive.appendChild(div);
-
-    });
-
 }
-    
 
+// ———————————————————————————
+// محاسبات
+// ———————————————————————————
+function calculate() {
+    let subtotal = 0;
+    document.querySelectorAll(".item").forEach(item => {
+        const q = Number(item.querySelector(".quantity").value) || 0;
+        const p = Number(item.querySelector(".price").value) || 0;
+        const t = q * p;
+        subtotal += t;
+        item.querySelector(".rowTotal").textContent = money(t);
+    });
 
-function buildSavedInvoiceText(invoice){
+    const percent = Math.min(100, Math.max(0, Number($("discountPercent").value) || 0));
+    const fixed = Math.max(0, Number($("discountFixed").value) || 0);
+    const discount = Math.min(subtotal, subtotal * percent / 100 + fixed);
+    const total = Math.max(0, subtotal - discount);
 
-    let text =
-        "🧾 فاکتور هوشمند مشتری‌یار\n" +
-        "━━━━━━━━━━━━━━\n";
+    $("subtotal").textContent = money(subtotal);
+    $("discount").textContent = money(discount);
+    $("total").textContent = money(total);
 
-    text +=
-        "شماره فاکتور: " +
-        (invoice.invoice_number || "") +
-        "\n";
+    renderPreview();
 
-    text +=
-        "تاریخ: " +
-        (invoice.invoice_date || "") +
-        "\n";
+    return { subtotal, discount, total };
+}
 
-    if(invoice.customer_name){
+// ———————————————————————————
+// جمع‌آوری ردیف‌ها
+// ———————————————————————————
+function collectItems() {
+    const items = [];
+    document.querySelectorAll(".item").forEach(row => {
+        const sel = row.querySelector(".productSelect");
+        const qty = Number(row.querySelector(".quantity").value) || 0;
+        const price = Number(row.querySelector(".price").value) || 0;
+        const productId = sel.value;
+        const product = products.find(p => p.id === productId);
 
-        text +=
-            "مشتری: " +
-            invoice.customer_name +
-            "\n";
+        if (!productId && !product && price === 0) return;
 
+        items.push({
+            product_id: productId || null,
+            product_name: product ? product.name : (sel.options[sel.selectedIndex]?.text?.split(" - ")[0] || "محصول"),
+            quantity: qty,
+            unit_price: price,
+            row_total: qty * price
+        });
+    });
+    return items;
+}
+
+// ———————————————————————————
+// پیش‌نمایش فاکتور
+// ———————————————————————————
+function renderPreview() {
+    const box = $("invoicePreviewBox");
+    if (!box) return;
+
+    const calc = calculate();
+    const items = collectItems();
+    const customerName = $("customer").value.trim();
+    const customerPhone = $("customerPhone").value.trim();
+    const note = $("invoiceNote").value.trim();
+    const logo = getStoreLogo();
+    const storeName = getStoreName();
+    const storePhone = getStorePhone();
+
+    let html =
+        '<div class="inv-head">' +
+            '<div style="display:flex;gap:12px;align-items:center;">' +
+                (logo
+                    ? '<img class="inv-logo" src="' + escapeHtml(logo) + '" alt="لوگو">'
+                    : '<div class="inv-logo" style="display:flex;align-items:center;justify-content:center;font-size:30px;">🏪</div>') +
+                '<div class="inv-store">' +
+                    '<h2>' + escapeHtml(storeName) + '</h2>' +
+                    (storePhone ? '<p>📞 ' + escapeHtml(storePhone) + '</p>' : '') +
+                '</div>' +
+            '</div>' +
+            '<div class="inv-meta">' +
+                '<div><b>شماره:</b> ' + escapeHtml($("invoiceNumber").value) + '</div>' +
+                '<div><b>تاریخ:</b> ' + escapeHtml($("invoiceDate").value) + '</div>' +
+            '</div>' +
+        '</div>';
+
+    html += '<div style="margin-bottom:14px;font-size:12px;color:#475569;">' +
+                '<div><b style="color:#1e293b;">مشتری:</b> ' + (customerName ? escapeHtml(customerName) : '—') + '</div>' +
+                (customerPhone ? '<div><b style="color:#1e293b;">تلفن:</b> ' + escapeHtml(customerPhone) + '</div>' : '') +
+                (note ? '<div><b style="color:#1e293b;">توضیحات:</b> ' + escapeHtml(note) + '</div>' : '') +
+            '</div>';
+
+    html +=
+        '<table class="inv-table">' +
+            '<thead><tr>' +
+                '<th style="width:35px;">#</th>' +
+                '<th>محصول</th>' +
+                '<th style="width:50px;">تعداد</th>' +
+                '<th style="width:90px;">قیمت</th>' +
+                '<th style="width:90px;">جمع</th>' +
+            '</tr></thead><tbody>';
+
+    if (items.length === 0) {
+        html += '<tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:16px;">محصولی اضافه نشده</td></tr>';
+    } else {
+        items.forEach((it, i) => {
+            html += '<tr>' +
+                        '<td>' + moneyNum(i + 1) + '</td>' +
+                        '<td>' + escapeHtml(it.product_name) + '</td>' +
+                        '<td>' + moneyNum(it.quantity) + '</td>' +
+                        '<td>' + money(it.unit_price) + '</td>' +
+                        '<td>' + money(it.row_total) + '</td>' +
+                    '</tr>';
+        });
     }
+    html += '</tbody></table>';
 
+    html +=
+        '<div class="inv-totals">' +
+            '<div class="row"><span>جمع کالاها</span><strong>' + money(calc.subtotal) + '</strong></div>' +
+            '<div class="row"><span>تخفیف</span><strong>' + money(calc.discount) + '</strong></div>' +
+            '<div class="row final"><span>مبلغ نهایی</span><strong>' + money(calc.total) + '</strong></div>' +
+        '</div>';
+
+    html += '<div class="inv-footer">صادر شده توسط <b>مشتری‌یار</b></div>';
+
+    box.innerHTML = html;
+}
+
+// ———————————————————————————
+// ساخت متن فاکتور (برای ارسال و ذخیره)
+// ———————————————————————————
+function buildInvoiceText() {
+    const calc = calculate();
+    const items = collectItems();
+    const customerName = $("customer").value.trim();
+    const customerPhone = $("customerPhone").value.trim();
+    const note = $("invoiceNote").value.trim();
+
+    let text = "🧾 فاکتور " + getStoreName() + "\n";
+    text += "━━━━━━━━━━━━━━\n";
+    text += "شماره فاکتور: " + $("invoiceNumber").value + "\n";
+    text += "تاریخ: " + $("invoiceDate").value + "\n";
+    if (customerName) text += "مشتری: " + customerName + "\n";
+    if (customerPhone) text += "تلفن: " + customerPhone + "\n";
     text += "\n📦 محصولات:\n";
 
-    const items =
-        Array.isArray(invoice.items)
-            ? invoice.items
-            : [];
-
-    items.forEach((item,index) => {
-
-        text +=
-            (index + 1) +
-            ". " +
-            (item.product_name || "محصول") +
-            " | تعداد: " +
-            (item.quantity || 0) +
-            " | قیمت: " +
-            money(item.unit_price) +
-            " | جمع: " +
-            money(item.row_total) +
-            "\n";
-
+    items.forEach((it, i) => {
+        text += (i + 1) + ". " + it.product_name +
+                " | تعداد: " + it.quantity +
+                " | قیمت: " + money(it.unit_price) +
+                " | جمع: " + money(it.row_total) + "\n";
     });
 
-    text +=
-        "\n━━━━━━━━━━━━━━\n" +
-        "جمع کالاها: " +
-        money(invoice.subtotal) +
-        "\n" +
-        "تخفیف: " +
-        money(invoice.discount) +
-        "\n" +
-        "مبلغ نهایی: " +
-        money(invoice.total) +
-        "\n\n" +
-        "مشتری‌یار";
+    text += "\n━━━━━━━━━━━━━━\n";
+    text += "جمع کالاها: " + money(calc.subtotal) + "\n";
+    text += "تخفیف: " + money(calc.discount) + "\n";
+    text += "مبلغ نهایی: " + money(calc.total) + "\n";
+    if (note) text += "\n📝 " + note + "\n";
+    text += "\nصادر شده توسط مشتری‌یار";
 
-    return text;
-
-    }
-const $ = id => document.getElementById(id);
-
-const money = n =>
-    new Intl.NumberFormat("fa-IR")
-    .format(Math.round(Number(n) || 0))
-    + " تومان";
-
-
-function todayShamsi(){
-
-    try{
-
-        return new Intl.DateTimeFormat(
-            "fa-IR-u-ca-persian",
-            {
-                year:"numeric",
-                month:"2-digit",
-                day:"2-digit"
-            }
-        ).format(new Date());
-
-    }catch(e){
-
-        return new Date().toLocaleDateString("fa-IR");
-
-    }
-
+    return { text, calc, items, customerName, customerPhone };
 }
 
+// ———————————————————————————
+// ذخیره در Supabase
+// ———————————————————————————
+$("saveBtn").onclick = async () => {
+    const btn = $("saveBtn");
+    btn.disabled = true;
+    btn.textContent = "⏳ در حال ذخیره...";
 
-function invoiceNumber(){
+    try {
+        const { text, calc, items, customerName, customerPhone } = buildInvoiceText();
 
-    const d = new Date();
-
-    return "INV-" +
-        d.getFullYear() +
-        String(d.getMonth()+1).padStart(2,"0") +
-        String(d.getDate()).padStart(2,"0") +
-        "-" +
-        String(d.getHours()).padStart(2,"0") +
-        String(d.getMinutes()).padStart(2,"0") +
-        String(d.getSeconds()).padStart(2,"0");
-
-}
-
-
-function message(text,type){
-
-    const box = $("message");
-
-    box.textContent = text;
-    box.className = "message " + type;
-
-    setTimeout(() => {
-        box.className = "message";
-    },3500);
-
-}
-
-
-async function init(){
-
-    const {
-        data:{
-            session
+        if (items.length === 0) {
+            message("حداقل یک محصول اضافه کن.", "error");
+            return;
         }
-    } = await supabase.auth.getSession();
 
-    if(!session){
+        const payload = {
+            user_id: me.id,
+            invoice_number: $("invoiceNumber").value,
+            invoice_date: $("invoiceDate").value,
+            customer_id: $("customerSelect").value || null,
+            customer_name: customerName || null,
+            customer_phone: customerPhone || null,
+            items: items,
+            subtotal: calc.subtotal,
+            discount: calc.discount,
+            total: calc.total,
+            text_content: text
+        };
 
+        let error;
+        if (editingInvoiceId) {
+            const res = await supabase
+                .from("invoices")
+                .update(payload)
+                .eq("id", editingInvoiceId)
+                .eq("user_id", me.id);
+            error = res.error;
+        } else {
+            const res = await supabase
+                .from("invoices")
+                .insert(payload);
+            error = res.error;
+        }
+
+        if (error) {
+            console.error(error);
+            message("ذخیره فاکتور انجام نشد: " + (error.message || ""), "error");
+            return;
+        }
+
+        message(
+            editingInvoiceId ? "فاکتور با موفقیت بروزرسانی شد." : "فاکتور با موفقیت ذخیره شد.",
+            "success"
+        );
+
+        editingInvoiceId = null;
+        resetInvoice();
+        await loadInvoiceArchive();
+
+    } catch (e) {
+        console.error(e);
+        message("خطا در ذخیره فاکتور.", "error");
+    } finally {
+        btn.disabled = false;
+        btn.textContent = "💾 ذخیره در حساب";
+    }
+};
+
+// ———————————————————————————
+// دانلود DOC
+// ———————————————————————————
+$("downloadDocBtn").onclick = () => {
+    try {
+        const previewHtml = $("invoicePreviewBox").innerHTML;
+
+        const fullHtml =
+            '<!DOCTYPE html><html dir="rtl" lang="fa"><head><meta charset="UTF-8">' +
+            '<style>' +
+                'body{font-family:Tahoma,Vazirmatn,sans-serif;direction:rtl;padding:20px;color:#0f172a}' +
+                '.inv-head{display:flex;justify-content:space-between;border-bottom:2px solid #2563eb;padding-bottom:14px;margin-bottom:14px}' +
+                '.inv-logo{width:70px;height:70px;object-fit:cover}' +
+                '.inv-store h2{margin:0;font-size:18px}' +
+                '.inv-store p{margin:2px 0;font-size:12px;color:#64748b}' +
+                '.inv-meta{font-size:12px;text-align:left}' +
+                '.inv-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12px}' +
+                '.inv-table th{background:#f1f5f9;padding:8px;border:1px solid #cbd5e1;text-align:right}' +
+                '.inv-table td{padding:8px;border:1px solid #e2e8f0}' +
+                '.inv-totals{background:#f8fafc;padding:12px;border-radius:8px}' +
+                '.inv-totals .row{display:flex;justify-content:space-between;padding:4px 0}' +
+                '.inv-totals .row.final{font-weight:900;color:#2563eb;border-top:1px solid #cbd5e1;margin-top:6px;padding-top:8px}' +
+                '.inv-footer{text-align:center;padding-top:14px;border-top:1px dashed #cbd5e1;margin-top:14px;color:#64748b;font-size:12px}' +
+                '.inv-footer b{color:#2563eb}' +
+            '</style></head><body>' +
+            previewHtml +
+            '</body></html>';
+
+        const blob = window.htmlDocx.asBlob(fullHtml, {
+            orientation: "portrait",
+            margins: { top: 720, right: 720, bottom: 720, left: 720 }
+        });
+
+        const filename = "فاکتور-" + $("invoiceNumber").value + ".doc";
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        message("فایل DOC دانلود شد.", "success");
+    } catch (e) {
+        console.error(e);
+        message("خطا در ساخت فایل DOC.", "error");
+    }
+};
+
+// ———————————————————————————
+// دانلود PDF / پرینت
+// ———————————————————————————
+$("downloadPdfBtn").onclick = () => {
+    message("در پنجره‌ی چاپ، گزینه «Save as PDF» را انتخاب کن.", "info");
+    setTimeout(() => window.print(), 500);
+};
+
+// ———————————————————————————
+// AI بهبود متن
+// ———————————————————————————
+$("aiBtn").onclick = async () => {
+    const btn = $("aiBtn");
+    btn.disabled = true;
+    btn.textContent = "⏳ ...";
+
+    try {
+        const { text } = buildInvoiceText();
+
+        const res = await fetch("/api/ai-generate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                prompt: "این متن فاکتور را با لحن رسمی و محترمانه بازنویسی کن، اطلاعات را حذف نکن، فقط متن پیام آماده برای ارسال به مشتری باشد:\n\n" + text,
+                type: "invoice-message"
+            })
+        });
+
+        const data = await res.json();
+        if (data?.text) {
+            $("invoiceNote").value = data.text;
+            renderPreview();
+            message("متن با AI بهبود یافت (توضیحات).", "success");
+        } else {
+            message("پاسخ AI دریافت نشد.", "error");
+        }
+    } catch (e) {
+        console.error(e);
+        message("AI در دسترس نیست.", "error");
+    } finally {
+        btn.disabled = false;
+        btn.textContent = "✨ بهبود متن با AI";
+    }
+};
+
+// ———————————————————————————
+// منوی ارسال
+// ———————————————————————————
+$("sendBtn").onclick = () => {
+    const items = collectItems();
+    if (items.length === 0) {
+        message("اول محصول اضافه کن.", "error");
+        return;
+    }
+    $("shareMenu").classList.add("active");
+};
+
+$("shareCancel").onclick = () => $("shareMenu").classList.remove("active");
+$("shareMenu").addEventListener("click", (e) => {
+    if (e.target === $("shareMenu")) $("shareMenu").classList.remove("active");
+});
+
+document.querySelectorAll(".share-item").forEach(btn => {
+    btn.onclick = () => {
+        const { text, customerPhone } = buildInvoiceText();
+        const encoded = encodeURIComponent(text);
+        const phone = (customerPhone || "").replace(/[^0-9]/g, "");
+        const intlPhone = phone ? (phone.startsWith("98") ? phone : "98" + phone.replace(/^0/, "")) : "";
+
+        const platform = btn.dataset.share;
+        let url = "";
+
+        if (platform === "whatsapp") {
+            url = intlPhone
+                ? "https://wa.me/" + intlPhone + "?text=" + encoded
+                : "https://wa.me/?text=" + encoded;
+        } else if (platform === "telegram") {
+            url = "https://t.me/share/url?url=" + encodeURIComponent("") + "&text=" + encoded;
+        } else if (platform === "eitaa") {
+            url = "https://eitaa.com/share/url?url=" + encodeURIComponent("") + "&text=" + encoded;
+        } else if (platform === "sms") {
+            url = "sms:" + phone + "?body=" + encoded;
+        }
+
+        if (url) {
+            window.open(url, "_blank");
+            message("در حال باز کردن " + btn.textContent.trim() + " ...", "info");
+            $("shareMenu").classList.remove("active");
+        }
+    };
+});
+
+// ———————————————————————————
+// ریست فاکتور
+// ———————————————————————————
+function resetInvoice() {
+    editingInvoiceId = null;
+    $("customerSelect").value = "";
+    $("customer").value = "";
+    $("customerPhone").value = "";
+    $("invoiceNote").value = "";
+    $("discountPercent").value = 0;
+    $("discountFixed").value = 0;
+    $("items").innerHTML = "";
+    itemCount = 0;
+    $("invoiceNumber").value = invoiceNumber();
+    $("invoiceDate").value = todayShamsi();
+    addItem();
+    calculate();
+}
+
+$("clearBtn").onclick = () => {
+    if (!confirm("فاکتور فعلی پاک شود؟")) return;
+    resetInvoice();
+    message("فاکتور جدید آماده شد.", "success");
+};
+
+// ———————————————————————————
+// آرشیو فاکتورها
+// ———————————————————————————
+async function loadInvoiceArchive() {
+    const archive = $("invoiceArchive");
+    if (!me) {
+        archive.innerHTML = '<div class="loading">کاربر وارد حساب نشده است.</div>';
+        return;
+    }
+
+    const { data, error } = await supabase
+        .from("invoices")
+        .select("*")
+        .eq("user_id", me.id)
+        .order("created_at", { ascending: false });
+
+    if (error) {
+        console.error(error);
+        archive.innerHTML = '<div class="message error" style="display:block;">خطا در دریافت فاکتورها.</div>';
+        return;
+    }
+
+    window.invoiceArchiveData = data || [];
+    renderInvoiceArchive(window.invoiceArchiveData);
+}
+
+function renderInvoiceArchive(list) {
+    const archive = $("invoiceArchive");
+    if (!list.length) {
+        archive.innerHTML = '<div class="loading">هنوز فاکتوری ذخیره نشده است.</div>';
+        return;
+    }
+
+    archive.innerHTML = "";
+    list.forEach(invoice => {
+        const div = document.createElement("div");
+        div.className = "archive-item";
+
+        div.innerHTML =
+            '<div style="font-weight:900;margin-bottom:6px;">🧾 ' + escapeHtml(invoice.invoice_number) + '</div>' +
+            '<div style="font-size:12px;color:#64748b;margin-bottom:4px;">📅 ' + escapeHtml(invoice.invoice_date) + '</div>' +
+            '<div style="font-size:13px;margin-bottom:4px;">👥 ' + escapeHtml(invoice.customer_name || "بدون نام") + '</div>' +
+            '<div style="font-size:13px;font-weight:800;color:#2563eb;">💰 ' + money(invoice.total) + '</div>' +
+            '<div class="archive-actions">' +
+                '<button class="btn btn-purple archive-send" type="button">📤 ارسال</button>' +
+                '<button class="btn btn-blue archive-edit" type="button">✏️ ویرایش</button>' +
+                '<button class="btn btn-orange archive-doc" type="button">📥 DOC</button>' +
+                '<button class="btn btn-red archive-delete" type="button">🗑️ حذف</button>' +
+            '</div>';
+
+        div.querySelector(".archive-edit").onclick = () => {
+            editingInvoiceId = invoice.id;
+            $("invoiceNumber").value = invoice.invoice_number || "";
+            $("invoiceDate").value = invoice.invoice_date || "";
+            $("customerSelect").value = invoice.customer_id || "";
+            $("customer").value = invoice.customer_name || "";
+            $("customerPhone").value = invoice.customer_phone || "";
+            $("invoiceNote").value = invoice.note || "";
+            $("discountPercent").value = 0;
+            $("discountFixed").value = Number(invoice.discount) || 0;
+
+            $("items").innerHTML = "";
+            itemCount = 0;
+            const items = Array.isArray(invoice.items) ? invoice.items : [];
+            items.forEach(it => addItem(it));
+            if (items.length === 0) addItem();
+
+            calculate();
+            window.scrollTo({ top: 0, behavior: "smooth" });
+            message("فاکتور برای ویرایش آماده شد.", "success");
+        };
+
+        div.querySelector(".archive-send").onclick = () => {
+            // فاکتور آرشیوی را در فرم بارگذاری و منوی ارسال را باز می‌کنیم
+            $("invoiceNumber").value = invoice.invoice_number || "";
+            $("invoiceDate").value = invoice.invoice_date || "";
+            $("customer").value = invoice.customer_name || "";
+            $("customerPhone").value = invoice.customer_phone || "";
+            $("discountPercent").value = 0;
+            $("discountFixed").value = Number(invoice.discount) || 0;
+            $("items").innerHTML = "";
+            itemCount = 0;
+            (invoice.items || []).forEach(it => addItem(it));
+            if ((invoice.items || []).length === 0) addItem();
+            calculate();
+            $("shareMenu").classList.add("active");
+        };
+
+        div.querySelector(".archive-doc").onclick = () => {
+            // بارگذاری در فرم و سپس دانلود
+            $("invoiceNumber").value = invoice.invoice_number || "";
+            $("invoiceDate").value = invoice.invoice_date || "";
+            $("customer").value = invoice.customer_name || "";
+            $("customerPhone").value = invoice.customer_phone || "";
+            $("discountPercent").value = 0;
+            $("discountFixed").value = Number(invoice.discount) || 0;
+            $("items").innerHTML = "";
+            itemCount = 0;
+            (invoice.items || []).forEach(it => addItem(it));
+            if ((invoice.items || []).length === 0) addItem();
+            calculate();
+            $("downloadDocBtn").click();
+        };
+
+        div.querySelector(".archive-delete").onclick = async () => {
+            if (!confirm("این فاکتور حذف شود؟")) return;
+            const { error } = await supabase
+                .from("invoices")
+                .delete()
+                .eq("id", invoice.id)
+                .eq("user_id", me.id);
+
+            if (error) {
+                console.error(error);
+                message("حذف فاکتور انجام نشد.", "error");
+                return;
+            }
+            message("فاکتور حذف شد.", "success");
+            loadInvoiceArchive();
+        };
+
+        archive.appendChild(div);
+    });
+}
+
+$("invoiceSearch").addEventListener("input", () => {
+    const query = $("invoiceSearch").value.trim().toLowerCase();
+    const list = window.invoiceArchiveData || [];
+    const filtered = list.filter(inv => {
+        const number = String(inv.invoice_number || "").toLowerCase();
+        const customer = String(inv.customer_name || "").toLowerCase();
+        return number.includes(query) || customer.includes(query);
+    });
+    renderInvoiceArchive(filtered);
+});
+
+// ———————————————————————————
+// راه‌اندازی
+// ———————————————————————————
+async function init() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
         window.location.href = "login.html";
         return;
-
     }
-
     me = session.user;
 
-    await Promise.all([
-        loadCustomers(),
-        loadProducts()
-    ]);
-await loadInvoiceArchive();
-    
+    await Promise.all([loadCustomers(), loadProducts()]);
+    await loadBranding();
+    await loadInvoiceArchive();
+
     $("invoiceNumber").value = invoiceNumber();
     $("invoiceDate").value = todayShamsi();
 
     $("items").innerHTML = "";
-
-    addItem();
-
-    calculate();
-
-}
-
-
-async function loadCustomers(){
-
-    const {
-        data,
-        error
-    } = await supabase
-        .from("customers")
-        .select("id,name,phone")
-        .eq("user_id",me.id)
-        .order("created_at",{ascending:false});
-
-    if(error){
-
-        $("customerSelect").innerHTML =
-            '<option value="">خطا در دریافت مشتریان</option>';
-
-        console.error(error);
-
-        return;
-
-    }
-
-    customers = data || [];
-
-    renderCustomers();
-
-}
-
-
-function renderCustomers(){
-
-    const select = $("customerSelect");
-
-    select.innerHTML =
-        '<option value="">انتخاب مشتری...</option>';
-
-    customers.forEach(c => {
-
-        const option = document.createElement("option");
-
-        option.value = c.id;
-
-        option.textContent =
-            c.name +
-            (c.phone ? " - " + c.phone : "");
-
-        select.appendChild(option);
-
-    });
-
-}
-
-
-$("customerSelect").onchange = () => {
-
-    const id = $("customerSelect").value;
-
-    if(!id) return;
-
-    const customer = customers.find(c => c.id === id);
-
-    if(customer){
-
-        $("customer").value = customer.name || "";
-
-    }
-
-};
-
-
-async function loadProducts(){
-
-    const {
-        data,
-        error
-    } = await supabase
-        .from("products")
-        .select("id,name,price")
-        .eq("user_id",me.id)
-        .order("created_at",{ascending:false});
-
-    if(error){
-
-        products = [];
-
-        console.error(error);
-
-        return;
-
-    }
-
-    products = data || [];
-
-}
-
-
-function productOptions(){
-
-    let html =
-        '<option value="">انتخاب محصول...</option>';
-
-    products.forEach(p => {
-
-        html +=
-            '<option value="' +
-            escapeHtml(p.id) +
-            '">' +
-            escapeHtml(p.name) +
-            " - " +
-            money(p.price) +
-            "</option>";
-
-    });
-
-    return html;
-
-}
-
-
-function escapeHtml(value){
-
-    return String(value ?? "")
-        .replace(/&/g,"&amp;")
-        .replace(/</g,"&lt;")
-        .replace(/>/g,"&gt;")
-        .replace(/"/g,"&quot;")
-        .replace(/'/g,"&#039;");
-
-}
-
-
-function addItem(){
-
-    if(itemCount >= 25){
-
-        message(
-            "حداکثر ۲۵ ردیف مجاز است.",
-            "error"
-        );
-
-        return;
-
-    }
-
-    itemCount++;
-
-    const id = itemCount;
-
-    const div = document.createElement("div");
-
-    div.className = "item";
-    div.dataset.id = id;
-
-    div.innerHTML =
-
-        '<div class="item-head">' +
-
-        '<span class="item-number">' +
-        "ردیف " +
-        new Intl.NumberFormat("fa-IR").format(id) +
-        "</span>" +
-
-        '<button class="remove" type="button">×</button>' +
-
-        "</div>" +
-
-        '<div class="item-grid">' +
-
-        '<select class="productSelect">' +
-        productOptions() +
-        "</select>" +
-
-        '<input class="quantity" type="number" min="1" value="1" placeholder="تعداد">' +
-
-        '<input class="price" type="number" min="0" value="0" placeholder="قیمت واحد">' +
-
-        "</div>" +
-
-        '<div style="margin-top:9px;font-size:12px;font-weight:800;color:#475569">' +
-
-        "مبلغ ردیف: " +
-
-        '<span class="rowTotal">۰ تومان</span>' +
-
-        "</div>";
-
-    $("items").appendChild(div);
-
-
-    const productSelect =
-        div.querySelector(".productSelect");
-
-    const quantity =
-        div.querySelector(".quantity");
-
-    const price =
-        div.querySelector(".price");
-
-
-    productSelect.onchange = () => {
-
-        const product =
-            products.find(
-                p => p.id === productSelect.value
-            );
-
-        if(product){
-
-            price.value =
-                Number(product.price) || 0;
-
-        }
-
-        calculate();
-
-    };
-
-
-    quantity.oninput = calculate;
-    price.oninput = calculate;
-
-
-    div.querySelector(".remove").onclick = () => {
-
-        div.remove();
-
-        calculate();
-
-    };
-
-}
-
-
-function calculate(){
-
-    let subtotal = 0;
-
-    document
-        .querySelectorAll(".item")
-        .forEach(item => {
-
-            const q =
-                Number(
-                    item.querySelector(".quantity").value
-                ) || 0;
-
-            const p =
-                Number(
-                    item.querySelector(".price").value
-                ) || 0;
-
-            const t = q * p;
-
-            subtotal += t;
-
-            item.querySelector(".rowTotal")
-                .textContent = money(t);
-
-        });
-
-
-    const percent =
-        Math.min(
-            100,
-            Math.max(
-                0,
-                Number(
-                    $("discountPercent").value
-                ) || 0
-            )
-        );
-
-
-    const fixed =
-        Math.max(
-            0,
-            Number(
-                $("discountFixed").value
-            ) || 0
-        );
-
-
-    const discount =
-        Math.min(
-            subtotal,
-            subtotal * percent / 100 + fixed
-        );
-
-
-    const total =
-        Math.max(
-            0,
-            subtotal - discount
-        );
-
-
-    $("subtotal").textContent =
-        money(subtotal);
-
-    $("discount").textContent =
-        money(discount);
-
-    $("total").textContent =
-        money(total);
-
-
-    return {
-        subtotal,
-        discount,
-        total
-    };
-
-}
-
-
-function invoiceText(){
-
-    const customer =
-        $("customer").value.trim();
-
-    const calc = calculate();
-
-    let text =
-        "🧾 فاکتور هوشمند مشتری‌یار\n" +
-        "━━━━━━━━━━━━━━\n";
-
-
-    text +=
-        "شماره فاکتور: " +
-        $("invoiceNumber").value +
-        "\n";
-
-
-    text +=
-        "تاریخ: " +
-        $("invoiceDate").value +
-        "\n";
-
-
-    if(customer){
-
-        text +=
-            "مشتری: " +
-            customer +
-            "\n";
-
-    }
-
-
-    text +=
-        "\n📦 محصولات:\n";
-
-
-    let i = 0;
-
-
-    document
-        .querySelectorAll(".item")
-        .forEach(item => {
-
-            const name =
-                item.querySelector(".productSelect")
-                .selectedOptions[0]?.textContent
-                ?.split(" - ")[0]
-                ?.trim() || "";
-
-
-            const q =
-                Number(
-                    item.querySelector(".quantity").value
-                ) || 0;
-
-
-            const p =
-                Number(
-                    item.querySelector(".price").value
-                ) || 0;
-
-
-            if(name || p){
-
-                i++;
-
-                text +=
-                    i +
-                    ". " +
-                    (name || "محصول") +
-                    " | تعداد: " +
-                    q +
-                    " | قیمت: " +
-                    money(p) +
-                    " | جمع: " +
-                    money(q*p) +
-                    "\n";
-
-            }
-
-        });
-
-
-    text +=
-        "\n━━━━━━━━━━━━━━\n" +
-        "جمع کالاها: " +
-        money(calc.subtotal) +
-        "\n" +
-        "تخفیف: " +
-        money(calc.discount) +
-        "\n" +
-        "مبلغ نهایی: " +
-        money(calc.total) +
-        "\n\n" +
-        "مشتری‌یار";
-
-
-    return text;
-
-}
-
-
-$("addItem").onclick = addItem;
-
-$("discountPercent").oninput = calculate;
-
-$("discountFixed").oninput = calculate;
-
-
-$("copyBtn").onclick = async () => {
-
-    try{
-
-        await navigator.clipboard.writeText(
-            invoiceText()
-        );
-
-        message(
-            "فاکتور کپی شد.",
-            "success"
-        );
-
-    }catch(e){
-
-        message(
-            "کپی در این مرورگر انجام نشد.",
-            "error"
-        );
-
-    }
-
-};
-
-
-$("shareBtn").onclick = async () => {
-
-    const text = invoiceText();
-
-    if(navigator.share){
-
-        try{
-
-            await navigator.share({
-                title:"فاکتور مشتری‌یار",
-                text
-            });
-
-        }catch(e){}
-
-    }else{
-
-        try{
-
-            await navigator.clipboard.writeText(text);
-
-            message(
-                "متن فاکتور کپی شد.",
-                "info"
-            );
-
-        }catch(e){
-
-            message(
-                "اشتراک‌گذاری پشتیبانی نمی‌شود.",
-                "error"
-            );
-
-        }
-
-    }
-
-};
-
-$("saveBtn").onclick = async () => {
-
-    if(!me){
-
-        message(
-            "کاربر وارد حساب نشده است.",
-            "error"
-        );
-
-        return;
-
-    }
-
-    const calc = calculate();
-
-    const customerId =
-        $("customerSelect").value || null;
-
-    const customerName =
-        $("customer").value.trim() || null;
-
-    const invoiceData = [];
-
-    document
-        .querySelectorAll(".item")
-        .forEach(item => {
-
-            const productSelect =
-                item.querySelector(".productSelect");
-
-            const quantity =
-                Number(
-                    item.querySelector(".quantity").value
-                ) || 0;
-
-            const price =
-                Number(
-                    item.querySelector(".price").value
-                ) || 0;
-
-            const productId =
-                productSelect.value || null;
-
-            const productName =
-                productSelect
-                .selectedOptions[0]
-                ?.textContent
-                ?.split(" - ")[0]
-                ?.trim() || "محصول";
-
-            if(quantity > 0 && (productId || price > 0)){
-
-                invoiceData.push({
-                    product_id: productId,
-                    product_name: productName,
-                    quantity: quantity,
-                    unit_price: price,
-                    row_total: quantity * price
-                });
-
-            }
-
-        });
-
-    if(invoiceData.length === 0){
-
-        message(
-            "حداقل یک محصول برای ذخیره فاکتور وارد کنید.",
-            "error"
-        );
-
-        return;
-
-    }
-
-    $("saveBtn").disabled = true;
-    $("saveBtn").textContent = "⏳ در حال ذخیره...";
-
-    try{
-
-       let data;
-let error;
-
-if(editingInvoiceId){
-
-    const result =
-        await supabase
-            .from("invoices")
-            .update({
-                invoice_number:
-                    $("invoiceNumber").value,
-                invoice_date:
-                    $("invoiceDate").value,
-                customer_id:
-                    customerId,
-                customer_name:
-                    customerName,
-                items:
-                    invoiceData,
-                subtotal:
-                    calc.subtotal,
-                discount:
-                    calc.discount,
-                total:
-                    calc.total,
-                updated_at:
-                    new Date().toISOString()
-            })
-            .eq("id",editingInvoiceId)
-            .eq("user_id",me.id)
-            .select()
-            .single();
-
-    data = result.data;
-    error = result.error;
-
-}else{
-
-    const result =
-        await supabase
-            .from("invoices")
-            .insert({
-                user_id: me.id,
-                invoice_number:
-                    $("invoiceNumber").value,
-                invoice_date:
-                    $("invoiceDate").value,
-                customer_id:
-                    customerId,
-                customer_name:
-                    customerName,
-                items:
-                    invoiceData,
-                subtotal:
-                    calc.subtotal,
-                discount:
-                    calc.discount,
-                total:
-                    calc.total
-            })
-            .select()
-            .single();
-
-    data = result.data;
-    error = result.error;
-
-    } 
-
-        if(error){
-
-            console.error(error);
-
-            message(
-                "ذخیره فاکتور انجام نشد.",
-                "error"
-            );
-
-            return;
-
-        }
-
-       message(
-    editingInvoiceId
-        ? "فاکتور با موفقیت بروزرسانی شد."
-        : "فاکتور با موفقیت در حساب شما ذخیره شد.",
-    "success"
-);
-
-editingInvoiceId = null;
-
-$("customerSelect").value = "";
-$("customer").value = "";
-
-$("discountPercent").value = 0;
-$("discountFixed").value = 0;
-
-$("items").innerHTML = "";
-
-itemCount = 0;
-
-$("invoiceNumber").value = invoiceNumber();
-$("invoiceDate").value = todayShamsi();
-
-addItem();
-
-calculate();
-
-await loadInvoiceArchive();
-
-console.log(
-    "Saved invoice:",
-    data
-); 
-
-    }catch(error){
-
-        console.error(error);
-
-        message(
-            "خطا در ذخیره فاکتور.",
-            "error"
-        );
-
-    }finally{
-
-        $("saveBtn").disabled = false;
-        $("saveBtn").textContent =
-            "💾 ذخیره در حساب";
-
-    }
-
-};
-
-
-$("clearBtn").onclick = () => {
-
-    if(
-        !confirm(
-            "فاکتور فعلی پاک شود؟"
-        )
-    ) return;
-    
-editingInvoiceId = null;
-
-    $("customerSelect").value = "";
-    $("customer").value = "";
-
-    $("discountPercent").value = 0;
-    $("discountFixed").value = 0;
-
-    $("items").innerHTML = "";
-
     itemCount = 0;
-
-    $("invoiceNumber").value =
-        invoiceNumber();
-
-    $("invoiceDate").value =
-        todayShamsi();
-
     addItem();
 
+    // render preview با تغییرات
+    ["customer", "customerPhone", "invoiceNote", "discountPercent", "discountFixed"]
+        .forEach(id => $(id).addEventListener("input", renderPreview));
+
     calculate();
-
-    message(
-        "فاکتور جدید آماده شد.",
-        "success"
-    );
-
-};
+}
 
 init();
 
-
-$("invoiceSearch").addEventListener("input", () => {
-
-    const query =
-        $("invoiceSearch").value
-            .trim()
-            .toLowerCase();
-
-    const list =
-        window.invoiceArchiveData || [];
-
-    const filtered =
-        list.filter(invoice => {
-
-            const number =
-                String(invoice.invoice_number || "")
-                    .toLowerCase();
-
-            const customer =
-                String(invoice.customer_name || "")
-                    .toLowerCase();
-
-            return (
-                number.includes(query) ||
-                customer.includes(query)
-            );
-
-        });
-
-    renderInvoiceArchive(filtered);
-
-});
-
-
 </script>
 
-
 </body>
-  </html>
+</html>
