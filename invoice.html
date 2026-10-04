@@ -461,7 +461,7 @@ function addItem(saved) {
 // ———————————————————————————
 // محاسبات
 // ———————————————————————————
-function calculate() {
+function calculate(opts = {}) {
     let subtotal = 0;
     document.querySelectorAll(".item").forEach(item => {
         const q = Number(item.querySelector(".quantity").value) || 0;
@@ -480,7 +480,9 @@ function calculate() {
     $("discount").textContent = money(discount);
     $("total").textContent = money(total);
 
-    renderPreview();
+    if (!opts.skipPreview) {
+        renderPreview();
+    }
 
     return { subtotal, discount, total };
 }
@@ -513,11 +515,11 @@ function collectItems() {
 // ———————————————————————————
 // پیش‌نمایش فاکتور
 // ———————————————————————————
-function renderPreview() {
+    function renderPreview() {
     const box = $("invoicePreviewBox");
     if (!box) return;
 
-    const calc = calculate();
+    const calc = calculate({ skipPreview: true });
     const items = collectItems();
     const customerName = $("customer").value.trim();
     const customerPhone = $("customerPhone").value.trim();
