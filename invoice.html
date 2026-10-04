@@ -803,30 +803,50 @@ $("shareMenu").addEventListener("click", (e) => {
 
 document.querySelectorAll(".share-item").forEach(btn => {
     btn.onclick = () => {
-        const { text, customerPhone } = buildInvoiceText();
-        const encoded = encodeURIComponent(text);
-        const phone = (customerPhone || "").replace(/[^0-9]/g, "");
-        const intlPhone = phone ? (phone.startsWith("98") ? phone : "98" + phone.replace(/^0/, "")) : "";
+        try {
+            const { text, customerPhone } = buildInvoiceText();
+            const encoded = encodeURIComponent(text);
+            const phone = (customerPhone || "").replace(/[^0-9]/g, "");
+            const intlPhone = phone
+                ? (phone.startsWith("98") ? phone : "98" + phone.replace(/^0/, ""))
+                : "";
 
-        const platform = btn.dataset.share;
-        let url = "";
+            const platform = btn.dataset.share;
+            let url = "";
 
-        if (platform === "whatsapp") {
-            url = intlPhone
-                ? "https://wa.me/" + intlPhone + "?text=" + encoded
-                : "https://wa.me/?text=" + encoded;
-        } else if (platform === "telegram") {
-            url = "https://t.me/share/url?url=" + encodeURIComponent("") + "&text=" + encoded;
-        } else if (platform === "eitaa") {
-            url = "https://eitaa.com/share/url?url=" + encodeURIComponent("") + "&text=" + encoded;
-        } else if (platform === "sms") {
-            url = "sms:" + phone + "?body=" + encoded;
-        }
+            if (platform === "whatsapp") {
+                url = intlPhone
+                    ? "https://wa.me/" + intlPhone + "?text=" + encoded
+                    : "https://wa.me/?text=" + encoded;
+            } else if (platform === "telegram") {
+                url = "https://t.me/share/url?url=" + encodeURIComponent("https://moshtriyar.ir") + "&text=" + encoded;
+            } else if (platform === "eitaa") {
+                url = "https://eitaa.com/share/url?url=" + encodeURIComponent("https://moshtriyar.ir") + "&text=" + encoded;
+            } else if (platform === "sms") {
+                url = "sms:" + phone + "?body=" + encoded;
+            }
 
-        if (url) {
-            window.open(url, "_blank");
-            message("در حال باز کردن " + btn.textContent.trim() + " ...", "info");
+            if (!url) {
+                message("پلتفرم پشتیبانی نمی‌شود.", "error");
+                return;
+            }
+
+            console.log("Share →", platform, url.slice(0, 100));
+
+            const a = document.createElement("a");
+            a.href = url;
+            a.target = "_blank";
+            a.rel = "noopener noreferrer";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+
+            message("در حال باز کردن " + btn.textContent.trim() + " ...", "success");
             $("shareMenu").classList.remove("active");
+
+        } catch (e) {
+            console.error("Share error:", e);
+            message("خطا در ارسال: " + e.message, "error");
         }
     };
 });
