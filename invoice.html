@@ -802,14 +802,7 @@ $("downloadPdfBtn").onclick = () => {
         const storeName = getStoreName();
         const invNumber = $("invoiceNumber").value || "invoice";
 
-        // ⚠️ مهم: window.open باید مستقیم تو onclick باشه (نه بعد از await)
-        const printWindow = window.open("", "_blank");
-
-        if (!printWindow) {
-            message("پنجره مسدود شد. لطفاً پاپ‌آپ را در مرورگر اجازه بده.", "error");
-            return;
-        }
-
+        // ساخت HTML کامل به صورت Blob
         const fullHtml =
             '<!DOCTYPE html><html dir="rtl" lang="fa"><head><meta charset="UTF-8">' +
             '<meta name="viewport" content="width=device-width,initial-scale=1">' +
@@ -832,21 +825,41 @@ $("downloadPdfBtn").onclick = () => {
                 '.inv-totals .row.final{border-top:2px solid #cbd5e1;margin-top:6px;padding-top:10px;font-size:16px;font-weight:900;color:#2563eb}' +
                 '.inv-footer{text-align:center;padding-top:16px;border-top:1px dashed #cbd5e1;margin-top:16px;font-size:12px;color:#64748b}' +
                 '.inv-footer b{color:#2563eb;font-size:13px}' +
-                '@media print{@page{size:A4;margin:12mm}body{padding:0}.no-print{display:none}}' +
+                '.print-btn{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#2563eb;color:#fff;border:0;padding:14px 28px;border-radius:14px;font-family:inherit;font-weight:800;font-size:15px;box-shadow:0 8px 20px rgba(37,99,235,.4);cursor:pointer;z-index:99}' +
+                '@media print{.print-btn{display:none}body{padding:12px}@page{size:A4;margin:12mm}}' +
             '</style></head><body>' +
             previewHtml +
-            '<scr' + 'ipt>window.onload=function(){setTimeout(function(){window.print();},500);};</scr' + 'ipt>' +
+            '<button class="print-btn" onclick="window.print()">🖨️ چاپ / ذخیره PDF</button>' +
             '</body></html>';
 
-        printWindow.document.open();
-        printWindow.document.write(fullHtml);
-        printWindow.document.close();
+        // ساخت فایل به صورت Blob و باز کردن تو تب جدید با URL
+        const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+        const blobUrl = URL.createObjectURL(blob);
 
-        message("پنجره چاپ باز شد.", "success");
+        // روش‌های مختلف — هر کدوم کار کرد
+        // ۱. امتحان با window.open
+        const win = window.open(blobUrl, '_blank');
+
+        if (!win || win.closed || typeof win.closed === 'undefined') {
+            // ۲. اگه بلاک شد، یه لینک مستقیم بساز
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            message("اگه پنجره باز نشد، پاپ‌آپ رو اجازه بده یا با دکمه زیر (تب جدید) باز کن.", "info");
+        } else {
+            message("پنجره چاپ باز شد. دکمه چاپ رو بزن.", "success");
+        }
+
+        // پاک‌سازی بعد از ۶۰ ثانیه
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
 
     } catch (e) {
         console.error("PDF error:", e);
-        message("خطا: " + e.message, "error");
+        message("خطا: " + (e.message || "نامشخص"), "error");
     }
 };
 // ———————————————————————————
