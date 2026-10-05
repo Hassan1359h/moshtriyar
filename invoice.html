@@ -156,6 +156,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#2563eb}
         <div class="loading">در حال آماده‌سازی...</div>
     </div>
     <button id="addItem" class="btn btn-blue add-btn">➕ افزودن محصول</button>
+    <button id="addManualItem" class="btn btn-gray add-btn" style="margin-top:8px;">✏️ افزودن ردیف دستی (خدمات)</button>
 </section>
 
 <!-- تخفیف -->
@@ -433,24 +434,37 @@ function productOptions() {
 // ———————————————————————————
 // ردیف محصول
 // ———————————————————————————
-function addItem(saved) {
+
+function addItem(saved, isManual) {
     if (itemCount >= 25) {
         message("حداکثر ۲۵ ردیف مجاز است.", "error");
         return;
     }
     itemCount++;
     const id = itemCount;
+    const manual = isManual || (saved && saved.is_manual);
 
     const div = document.createElement("div");
     div.className = "item";
     div.dataset.id = id;
+    div.dataset.type = manual ? "manual" : "product";
+
+    const titleText = manual ? "🩺 خدمت" : "📦 محصول";
+
+    let firstInput;
+    if (manual) {
+        firstInput = '<input class="productName" type="text" placeholder="مثلاً ویزیت دکتر، مشاوره، گارانتی..." value="' + escapeHtml(saved?.product_name || "") + '">';
+    } else {
+        firstInput = '<select class="productSelect">' + productOptions() + '</select>';
+    }
+
     div.innerHTML =
         '<div class="item-head">' +
-            '<span class="item-number">ردیف ' + moneyNum(id) + '</span>' +
+            '<span class="item-number">' + titleText + ' — ردیف ' + moneyNum(id) + '</span>' +
             '<button class="remove" type="button">×</button>' +
         '</div>' +
         '<div class="item-grid">' +
-            '<select class="productSelect">' + productOptions() + '</select>' +
+            firstInput +
             '<input class="quantity" type="number" min="1" value="1" placeholder="تعداد">' +
             '<input class="price" type="number" min="0" value="0" placeholder="قیمت واحد">' +
         '</div>' +
@@ -458,28 +472,37 @@ function addItem(saved) {
 
     $("items").appendChild(div);
 
-    const productSelect = div.querySelector(".productSelect");
     const quantity = div.querySelector(".quantity");
     const price = div.querySelector(".price");
 
-    productSelect.onchange = () => {
-        const product = products.find(p => p.id === productSelect.value);
-        if (product) price.value = Number(product.price) || 0;
-        calculate();
-    };
+    if (!manual) {
+        const productSelect = div.querySelector(".productSelect");
+        productSelect.onchange = () => {
+            const product = products.find(p => p.id === productSelect.value);
+            if (product) price.value = Number(product.price) || 0;
+            calculate();
+        };
+    }
+
     quantity.oninput = calculate;
     price.oninput = calculate;
     div.querySelector(".remove").onclick = () => { div.remove(); calculate(); };
 
     if (saved) {
-        productSelect.value = saved.product_id || "";
+        if (!manual) {
+            div.querySelector(".productSelect").value = saved.product_id || "";
+        }
         quantity.value = saved.quantity || 1;
         price.value = saved.unit_price || 0;
     }
 
     calculate();
 }
+   function addManualItem() {
+    addItem(null, true);
+}
 
+$("addManualItem").onclick = addManualItem; 
 // ———————————————————————————
 // محاسبات
 // ———————————————————————————
@@ -512,28 +535,40 @@ function calculate(opts = {}) {
 // ———————————————————————————
 // جمع‌آوری ردیف‌ها
 // ———————————————————————————
+
 function collectItems() {
     const items = [];
     document.querySelectorAll(".item").forEach(row => {
-        const sel = row.querySelector(".productSelect");
+        const isManual = row.dataset.type === "manual";
         const qty = Number(row.querySelector(".quantity").value) || 0;
         const price = Number(row.querySelector(".price").value) || 0;
-        const productId = sel.value;
-        const product = products.find(p => p.id === productId);
 
-        if (!productId && !product && price === 0) return;
+        let productName, productId;
+
+        if (isManual) {
+            const nameInput = row.querySelector(".productName");
+            productName = nameInput ? nameInput.value.trim() : "";
+            productId = null;
+            if (!productName && price === 0) return;
+        } else {
+            const sel = row.querySelector(".productSelect");
+            productId = sel.value;
+            const product = products.find(p => p.id === productId);
+            if (!productId && !product && price === 0) return;
+            productName = product ? product.name : (sel.options[sel.selectedIndex]?.text?.split(" - ")[0] || "محصول");
+        }
 
         items.push({
-            product_id: productId || null,
-            product_name: product ? product.name : (sel.options[sel.selectedIndex]?.text?.split(" - ")[0] || "محصول"),
+            product_id: productId,
+            product_name: productName || "بدون نام",
             quantity: qty,
             unit_price: price,
-            row_total: qty * price
+            row_total: qty * price,
+            is_manual: isManual
         });
     });
     return items;
 }
-
 // ———————————————————————————
 // پیش‌نمایش فاکتور
 // ———————————————————————————
@@ -1001,7 +1036,7 @@ function renderInvoiceArchive(list) {
     $("discountFixed").value = Number(invoice.discount) || 0;
     $("items").innerHTML = "";
     itemCount = 0;
-    (invoice.items || []).forEach(it => addItem(it));
+    (invoice.items || []).forEach(it => addItem(it, it.is_manual));
     if ((invoice.items || []).length === 0) addItem();
     calculate({ skipPreview: true });
     renderPreview();
