@@ -136,6 +136,15 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;li
             <img id="brandLogoImg" style="max-width:120px;max-height:120px;border-radius:12px;border:2px solid #fbbf24;padding:4px;background:#fff;">
             <button type="button" id="removeLogoBtn" style="background:#fee2e2;color:#dc2626;border:none;padding:6px 12px;border-radius:8px;font-family:inherit;font-weight:700;font-size:12px;cursor:pointer;margin-right:10px;">🗑️ حذف لوگو</button>
         </div>
+        <div class="field" style="margin-top:14px;padding-top:14px;border-top:1px dashed #fbbf24;">
+    <label>🏢 نوع کسب‌وکار</label>
+    <select id="businessTypeInput" style="width:100%;padding:12px;border:2px solid #e2e8f0;border-radius:12px;font-family:inherit;font-size:14px;background:#fff;">
+        <option value="shop">🛒 فروشگاه (محصولات)</option>
+        <option value="service">🩺 خدمات (ویزیت، مشاوره، گارانتی)</option>
+        <option value="both">🎯 هر دو (فروشگاه + خدمات)</option>
+    </select>
+    <p style="font-size:12px;color:#92400e;margin-top:8px;">اگه کلینیک، مشاور یا گارانتی داری، این رو انتخاب کن تا متن‌های فاکتور مناسب بشن.</p>
+        </div>
         <p class="msg" id="brandLogoMsg"></p>
     </div>
 </div>
@@ -190,6 +199,7 @@ let currentUser = null;
 let currentWebsite = null;
 let currentBrandLogoUrl = null;
 let currentBrandName = '';
+let currentBusinessType = 'shop';
 let settings = {
     color: "#2563eb",
     title: "دستیار هوشمند",
@@ -222,6 +232,12 @@ async function init() {
     // 🎨 لود برند
 currentBrandName = currentWebsite.brand_name || '';
 currentBrandLogoUrl = currentWebsite.brand_logo_url || '';
+    // 🏢 نوع کسب‌وکار
+currentBusinessType = currentWebsite.business_type || 'shop';
+const businessTypeInput = document.getElementById('businessTypeInput');
+if (businessTypeInput) {
+    businessTypeInput.value = currentBusinessType;
+}
 
 const brandNameInput = document.getElementById('brandNameInput');
 if (brandNameInput && currentBrandName) {
@@ -385,7 +401,13 @@ document.getElementById('saveBtn').addEventListener('click', async () => {
         if (!res.ok || !result.ok) {
             throw new Error(result.error || 'خطا در ذخیره');
         }
-
+// 🏢 ذخیره‌ی نوع کسب‌وکار تو جدول websites
+if (currentWebsite) {
+    await supabase
+        .from('websites')
+        .update({ business_type: currentBusinessType })
+        .eq('id', currentWebsite.id);
+    }
         msg.textContent = '✅ تنظیمات ذخیره شد! تغییرات تا ۵ دقیقه آینده روی سایت اعمال می‌شن.';
         msg.style.color = '#16a34a';
 
@@ -478,6 +500,9 @@ document.getElementById('brandLogoInput').addEventListener('change', async (e) =
 
 document.getElementById('brandNameInput').addEventListener('input', (e) => {
     currentBrandName = e.target.value.trim();
+});
+    document.getElementById('businessTypeInput')?.addEventListener('change', (e) => {
+    currentBusinessType = e.target.value;
 });
 
 document.getElementById('removeLogoBtn')?.addEventListener('click', async () => {
