@@ -362,23 +362,43 @@ function getStorePhone() {
     
 // 🏢 تابع تنظیم متن‌ها بر اساس نوع کسب‌وکار
 function applyBusinessType() {
-    const sectionTitle = document.querySelector('.card:has(#items) .title');
+    const itemsEl = document.getElementById('items');
+    const card = itemsEl?.closest('.card');
+    const sectionTitle = card?.querySelector('.title');
     const addItemBtn = $("addItem");
     const manualItemBtn = $("addManualItem");
 
     if (businessType === 'service') {
+        // 🩺 فقط خدمات
         if (sectionTitle) sectionTitle.textContent = "🩺 خدمات";
-        if (addItemBtn) addItemBtn.textContent = "➕ افزودن خدمت";
-        if (manualItemBtn) manualItemBtn.textContent = "✏️ افزودن خدمت دستی";
+        if (addItemBtn) addItemBtn.style.display = "none";
+        if (manualItemBtn) {
+            manualItemBtn.style.display = "block";
+            manualItemBtn.textContent = "➕ افزودن خدمت";
+            manualItemBtn.className = "btn btn-blue add-btn";
+            manualItemBtn.style.marginTop = "0";
+        }
     } else if (businessType === 'both') {
+        // 🎯 هر دو
         if (sectionTitle) sectionTitle.textContent = "📦 محصولات و خدمات";
-        if (addItemBtn) addItemBtn.textContent = "➕ افزودن محصول";
-        if (manualItemBtn) manualItemBtn.textContent = "✏️ افزودن خدمت";
+        if (addItemBtn) {
+            addItemBtn.style.display = "block";
+            addItemBtn.textContent = "➕ افزودن محصول";
+        }
+        if (manualItemBtn) {
+            manualItemBtn.style.display = "block";
+            manualItemBtn.textContent = "✏️ افزودن خدمت";
+            manualItemBtn.className = "btn btn-gray add-btn";
+            manualItemBtn.style.marginTop = "8px";
+        }
     } else {
-        // shop (پیش‌فرض)
+        // 🛒 فروشگاه (پیش‌فرض)
         if (sectionTitle) sectionTitle.textContent = "📦 محصولات";
-        if (addItemBtn) addItemBtn.textContent = "➕ افزودن محصول";
-        if (manualItemBtn) manualItemBtn.textContent = "✏️ افزودن ردیف دستی";
+        if (addItemBtn) {
+            addItemBtn.style.display = "block";
+            addItemBtn.textContent = "➕ افزودن محصول";
+        }
+        if (manualItemBtn) manualItemBtn.style.display = "none";
     }
 }
 // ———————————————————————————
@@ -1134,8 +1154,12 @@ await loadInvoiceArchive();
     $("invoiceDate").value = todayShamsi();
 
     $("items").innerHTML = "";
-    itemCount = 0;
-    addItem();
+itemCount = 0;
+if (businessType === 'service') {
+    addItem(null, true); // ردیف خدمت دستی
+} else {
+    addItem(); // ردیف محصول
+}
 
     // render preview با تغییرات
     ["customer", "customerPhone", "invoiceNote", "discountPercent", "discountFixed"]
