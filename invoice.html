@@ -249,6 +249,7 @@ let products = [];
 let customers = [];
 let me = null;
 let myProfile = null;
+let businessType = 'shop';   
 let editingInvoiceId = null;
 
 // ———————————————————————————
@@ -297,20 +298,21 @@ function message(text, type) {
 async function loadBranding() {
     try {
         // 🎯 اول از جدول websites بخون (همون که تنظیمات دستیار استفاده می‌کنه)
-        const { data: sites } = await supabase
-            .from("websites")
-            .select("brand_name, brand_logo_url, name")
-            .eq("user_id", me.id)
-            .eq("active", true)
-            .limit(1);
-
+        
+const { data: sites } = await supabase
+    .from("websites")
+    .select("brand_name, brand_logo_url, name, business_type")
+    .eq("user_id", me.id)
+    .eq("active", true)
+    .limit(1);
         let storeName = null;
         let logoUrl = null;
 
         if (sites && sites.length > 0) {
-            storeName = sites[0].brand_name || sites[0].name || null;
-            logoUrl = sites[0].brand_logo_url || null;
-        }
+    storeName = sites[0].brand_name || sites[0].name || null;
+    logoUrl = sites[0].brand_logo_url || null;
+    businessType = sites[0].business_type || 'shop';
+}
 
         // 🎯 اگه تو websites نبود، از profiles امتحان کن (پشتیبان)
         if (!storeName && !logoUrl) {
@@ -357,7 +359,28 @@ function getStoreLogo() {
 function getStorePhone() {
     return myProfile?.[OPERATOR_PHONE_COL] || "";
 }
+    
+// 🏢 تابع تنظیم متن‌ها بر اساس نوع کسب‌وکار
+function applyBusinessType() {
+    const sectionTitle = document.querySelector('.card:has(#items) .title');
+    const addItemBtn = $("addItem");
+    const manualItemBtn = $("addManualItem");
 
+    if (businessType === 'service') {
+        if (sectionTitle) sectionTitle.textContent = "🩺 خدمات";
+        if (addItemBtn) addItemBtn.textContent = "➕ افزودن خدمت";
+        if (manualItemBtn) manualItemBtn.textContent = "✏️ افزودن خدمت دستی";
+    } else if (businessType === 'both') {
+        if (sectionTitle) sectionTitle.textContent = "📦 محصولات و خدمات";
+        if (addItemBtn) addItemBtn.textContent = "➕ افزودن محصول";
+        if (manualItemBtn) manualItemBtn.textContent = "✏️ افزودن خدمت";
+    } else {
+        // shop (پیش‌فرض)
+        if (sectionTitle) sectionTitle.textContent = "📦 محصولات";
+        if (addItemBtn) addItemBtn.textContent = "➕ افزودن محصول";
+        if (manualItemBtn) manualItemBtn.textContent = "✏️ افزودن ردیف دستی";
+    }
+}
 // ———————————————————————————
 // بارگذاری مشتریان و محصولات
 // ———————————————————————————
@@ -1104,7 +1127,8 @@ async function init() {
 
     await Promise.all([loadCustomers(), loadProducts()]);
     await loadBranding();
-    await loadInvoiceArchive();
+applyBusinessType();
+await loadInvoiceArchive();
 
     $("invoiceNumber").value = invoiceNumber();
     $("invoiceDate").value = todayShamsi();
