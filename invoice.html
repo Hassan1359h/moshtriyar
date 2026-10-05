@@ -752,17 +752,18 @@ $("saveBtn").onclick = async () => {
 // ———————————————————————————
 // دانلود PDF / پرینت
 // ———————————————————————————
-// 🖨️ دانلود PDF (پنجره چاپ جداگانه)
+// 🖨️ دانلود PDF
 $("downloadPdfBtn").onclick = () => {
     try {
         const previewHtml = $("invoicePreviewBox").innerHTML;
         const storeName = getStoreName();
         const invNumber = $("invoiceNumber").value || "invoice";
 
+        // ⚠️ مهم: window.open باید مستقیم تو onclick باشه (نه بعد از await)
         const printWindow = window.open("", "_blank");
 
         if (!printWindow) {
-            message("پنجره چاپ مسدود شد. لطفاً popup را اجازه بده.", "error");
+            message("پنجره مسدود شد. لطفاً پاپ‌آپ را در مرورگر اجازه بده.", "error");
             return;
         }
 
@@ -788,34 +789,40 @@ $("downloadPdfBtn").onclick = () => {
                 '.inv-totals .row.final{border-top:2px solid #cbd5e1;margin-top:6px;padding-top:10px;font-size:16px;font-weight:900;color:#2563eb}' +
                 '.inv-footer{text-align:center;padding-top:16px;border-top:1px dashed #cbd5e1;margin-top:16px;font-size:12px;color:#64748b}' +
                 '.inv-footer b{color:#2563eb;font-size:13px}' +
-                '@media print{@page{size:A4;margin:12mm}body{padding:0}}' +
+                '@media print{@page{size:A4;margin:12mm}body{padding:0}.no-print{display:none}}' +
             '</style></head><body>' +
             previewHtml +
-            '<scr' + 'ipt>window.onload=function(){setTimeout(function(){window.print();},400);};</scr' + 'ipt>' +
+            '<scr' + 'ipt>window.onload=function(){setTimeout(function(){window.print();},500);};</scr' + 'ipt>' +
             '</body></html>';
 
         printWindow.document.open();
         printWindow.document.write(fullHtml);
         printWindow.document.close();
 
-        message("پنجره چاپ باز شد. گزینه «Save as PDF» را بزن.", "success");
+        message("پنجره چاپ باز شد.", "success");
 
     } catch (e) {
         console.error("PDF error:", e);
-        message("خطا در ساخت PDF: " + e.message, "error");
+        message("خطا: " + e.message, "error");
     }
 };
-
 // ———————————————————————————
 // AI بهبود متن
 // ———————————————————————————
+// ✨ بهبود متن با AI
 $("aiBtn").onclick = async () => {
     const btn = $("aiBtn");
+    const oldText = btn.textContent;
     btn.disabled = true;
-    btn.textContent = "⏳ ...";
+    btn.textContent = "⏳ در حال پردازش...";
+
+    message("AI در حال فکر کردن است... (ممکنه ۵-۱۰ ثانیه طول بکشه)", "info");
 
     try {
         const { text } = buildInvoiceText();
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 ثانیه
 
         const res = await fetch("/api/ai-generate", {
             method: "POST",
@@ -823,23 +830,30 @@ $("aiBtn").onclick = async () => {
             body: JSON.stringify({
                 prompt: "این متن فاکتور را با لحن رسمی و محترمانه بازنویسی کن، اطلاعات را حذف نکن، فقط متن پیام آماده برای ارسال به مشتری باشد:\n\n" + text,
                 type: "invoice-message"
-            })
+            }),
+            signal: controller.signal
         });
+
+        clearTimeout(timeoutId);
 
         const data = await res.json();
         if (data?.text) {
             $("invoiceNote").value = data.text;
             renderPreview();
-            message("متن با AI بهبود یافت (توضیحات).", "success");
+            message("متن با AI بهبود یافت.", "success");
         } else {
             message("پاسخ AI دریافت نشد.", "error");
         }
     } catch (e) {
         console.error(e);
-        message("AI در دسترس نیست.", "error");
+        if (e.name === "AbortError") {
+            message("AI خیلی طول کشید (بیشتر از ۳۰ ثانیه). دوباره امتحان کن.", "error");
+        } else {
+            message("خطا در ارتباط با AI: " + e.message, "error");
+        }
     } finally {
         btn.disabled = false;
-        btn.textContent = "✨ بهبود متن با AI";
+        btn.textContent = oldText;
     }
 };
 
