@@ -42,23 +42,18 @@ jobs:
         working-directory: ./app/android
         run: chmod +x gradlew
       
-      - name: Build APK (Release)
+      - name: Build APK
         working-directory: ./app/android
         run: ./gradlew assembleRelease --no-daemon
       
-      - name: Build APK (Debug - fallback)
-        if: failure()
-        working-directory: ./app/android
-        run: ./gradlew assembleDebug --no-daemon
-      
-      - name: Find APK files
+      - name: Find APK
         working-directory: ./app
         run: |
-          echo "=== Searching for APK files ==="
-          find . -name "*.apk" -type f 2>/dev/null || echo "No APK found"
+          echo "=== Searching for APK ==="
+          find . -name "*.apk" -type f 2>/dev/null || echo "No APK"
           mkdir -p /tmp/apk-output
-          find . -name "app-release.apk" -type f -exec cp {} /tmp/apk-output/ \; 2>/dev/null || true
-          find . -name "app-debug.apk" -type f -exec cp {} /tmp/apk-output/ \; 2>/dev/null || true
+          find . -name "app-release.apk" -exec cp {} /tmp/apk-output/ \; 2>/dev/null || true
+          find . -name "app-debug.apk" -exec cp {} /tmp/apk-output/ \; 2>/dev/null || true
           ls -la /tmp/apk-output/
       
       - name: Upload APK
