@@ -27,9 +27,6 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
       
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-      
       - name: Install dependencies
         working-directory: ./app
         run: npm install
@@ -45,6 +42,9 @@ jobs:
       - name: Build APK
         working-directory: ./app/android
         run: ./gradlew assembleRelease --no-daemon
+        env:
+          ANDROID_HOME: /usr/local/lib/android/sdk
+          ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
       
       - name: Find APK
         working-directory: ./app
