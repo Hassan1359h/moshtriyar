@@ -797,61 +797,57 @@ $("saveBtn").onclick = async () => {
 // ———————————————————————————
 // دانلود PDF / پرینت
 // ———————————————————————————
-
-$("downloadPdfBtn").onclick = async () => {
-    const btn = $("downloadPdfBtn");
-    const oldText = btn.textContent;
-    btn.disabled = true;
-    btn.textContent = "⏳ در حال ساخت...";
-
+// 🖨️ دانلود PDF (پنجره چاپ جداگانه)
+$("downloadPdfBtn").onclick = () => {
     try {
-        const element = $("invoicePreviewBox");
-        const canvas = await html2canvas(element, {
-            scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false
-        });
-        const imgData = canvas.toDataURL('image/jpeg', 0.85);
-
-        const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const imgWidth = pdfWidth - 20;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-        let heightLeft = imgHeight;
-        let position = 10;
-        pdf.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight);
-        heightLeft -= (pdf.internal.pageSize.getHeight() - 20);
-
-        while (heightLeft > 0) {
-            position = heightLeft - imgHeight + 10;
-            pdf.addPage();
-            pdf.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight);
-            heightLeft -= (pdf.internal.pageSize.getHeight() - 20);
-        }
-
+        const previewHtml = $("invoicePreviewBox").innerHTML;
+        const storeName = getStoreName();
         const invNumber = $("invoiceNumber").value || "invoice";
-        const filename = "factor-" + invNumber + ".pdf";
-        const base64 = pdf.output('datauristring').split(',')[1];
 
-        // 🎯 چک کن تو اپ هستیم
-        const isInApp = /wv|WebView/i.test(navigator.userAgent) ||
-                        (window.ReactNativeWebView !== undefined);
+        const printWindow = window.open("", "_blank");
 
-        if (isInApp) {
-            // ارسال با URL scheme (روش قطعی)
-            window.location.href = "moshtriyar-save://pdf?filename=" +
-                encodeURIComponent(filename) + "&data=" + encodeURIComponent(base64);
-            message("در حال ذخیره فایل...", "success");
-        } else {
-            pdf.save(filename);
-            message("فایل PDF دانلود شد.", "success");
+        if (!printWindow) {
+            message("پنجره چاپ مسدود شد. لطفاً popup را اجازه بده.", "error");
+            return;
         }
+
+        const fullHtml =
+            '<!DOCTYPE html><html dir="rtl" lang="fa"><head><meta charset="UTF-8">' +
+            '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+            '<title>' + escapeHtml(invNumber) + ' - ' + escapeHtml(storeName) + '</title>' +
+            '<link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">' +
+            '<style>' +
+                '*{box-sizing:border-box}' +
+                'body{font-family:Vazirmatn,Tahoma,sans-serif;direction:rtl;padding:24px;color:#0f172a;background:#fff;margin:0}' +
+                '.inv-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #2563eb;padding-bottom:14px;margin-bottom:14px;gap:14px;flex-wrap:wrap}' +
+                '.inv-logo{width:120px;height:70px;border-radius:10px;object-fit:contain;background:#fff;padding:4px;border:1px solid #e2e8f0;flex-shrink:0}' +
+                '.inv-store h2{margin:0 0 4px;font-size:18px;color:#1e293b}' +
+                '.inv-store p{margin:0;font-size:12px;color:#64748b}' +
+                '.inv-meta{text-align:left;font-size:12px;color:#475569}' +
+                '.inv-meta b{color:#1e293b}' +
+                '.inv-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12px}' +
+                '.inv-table th{background:#f1f5f9;padding:9px 6px;text-align:right;font-weight:800;border-bottom:2px solid #cbd5e1}' +
+                '.inv-table td{padding:9px 6px;border-bottom:1px solid #e2e8f0}' +
+                '.inv-totals{background:#f8fafc;border-radius:10px;padding:12px;margin-top:14px}' +
+                '.inv-totals .row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px}' +
+                '.inv-totals .row.final{border-top:2px solid #cbd5e1;margin-top:6px;padding-top:10px;font-size:16px;font-weight:900;color:#2563eb}' +
+                '.inv-footer{text-align:center;padding-top:16px;border-top:1px dashed #cbd5e1;margin-top:16px;font-size:12px;color:#64748b}' +
+                '.inv-footer b{color:#2563eb;font-size:13px}' +
+                '@media print{@page{size:A4;margin:12mm}body{padding:0}}' +
+            '</style></head><body>' +
+            previewHtml +
+            '<scr' + 'ipt>window.onload=function(){setTimeout(function(){window.print();},400);};</scr' + 'ipt>' +
+            '</body></html>';
+
+        printWindow.document.open();
+        printWindow.document.write(fullHtml);
+        printWindow.document.close();
+
+        message("پنجره چاپ باز شد. گزینه «Save as PDF» را بزن.", "success");
+
     } catch (e) {
-        console.error(e);
-        message("خطا: " + (e.message || "نامشخص"), "error");
-    } finally {
-        btn.disabled = false;
-        btn.textContent = oldText;
+        console.error("PDF error:", e);
+        message("خطا در ساخت PDF: " + e.message, "error");
     }
 };
     
