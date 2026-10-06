@@ -798,72 +798,63 @@ $("saveBtn").onclick = async () => {
 // دانلود PDF / پرینت
 // ———————————————————————————
 
-    $("downloadPdfBtn").onclick = async () => {
+$("downloadPdfBtn").onclick = async () => {
     const btn = $("downloadPdfBtn");
     const oldText = btn.textContent;
     btn.disabled = true;
-    btn.textContent = "⏳ در حال ساخت PDF...";
+    btn.textContent = "⏳ در حال ساخت...";
 
     try {
         const element = $("invoicePreviewBox");
-        if (!element) throw new Error("Preview not found");
-
         const canvas = await html2canvas(element, {
-            scale: 2,
-            useCORS: true,
-            backgroundColor: '#ffffff',
-            logging: false
+            scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false
         });
-
-        const imgData = canvas.toDataURL('image/jpeg', 0.92);
+        const imgData = canvas.toDataURL('image/jpeg', 0.85);
 
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
-
         const imgWidth = pdfWidth - 20;
         const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
         let heightLeft = imgHeight;
         let position = 10;
-
         pdf.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight);
-        heightLeft -= (pdfHeight - 20);
+        heightLeft -= (pdf.internal.pageSize.getHeight() - 20);
 
         while (heightLeft > 0) {
             position = heightLeft - imgHeight + 10;
             pdf.addPage();
             pdf.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight);
-            heightLeft -= (pdfHeight - 20);
+            heightLeft -= (pdf.internal.pageSize.getHeight() - 20);
         }
 
         const invNumber = $("invoiceNumber").value || "invoice";
         const filename = "factor-" + invNumber + ".pdf";
+        const base64 = pdf.output('datauristring').split(',')[1];
 
-        const isInApp = window.ReactNativeWebView && typeof window.ReactNativeWebView.postMessage === "function";
+        // 🎯 چک کن تو اپ هستیم
+        const isInApp = /wv|WebView/i.test(navigator.userAgent) ||
+                        (window.ReactNativeWebView !== undefined);
 
         if (isInApp) {
-            const pdfBase64 = pdf.output('datauristring').split(',')[1];
-            window.ReactNativeWebView.postMessage(JSON.stringify({
-                type: "savePdf",
-                data: pdfBase64,
-                filename: filename
-            }));
-            message("فایل PDF آماده شد. محل ذخیره یا اشتراک‌گذاری رو انتخاب کن.", "success");
+            // ارسال با URL scheme (روش قطعی)
+            window.location.href = "moshtriyar-save://pdf?filename=" +
+                encodeURIComponent(filename) + "&data=" + encodeURIComponent(base64);
+            message("در حال ذخیره فایل...", "success");
         } else {
             pdf.save(filename);
             message("فایل PDF دانلود شد.", "success");
         }
-
     } catch (e) {
-        console.error("PDF error:", e);
-        message("خطا در ساخت PDF: " + (e.message || "نامشخص"), "error");
+        console.error(e);
+        message("خطا: " + (e.message || "نامشخص"), "error");
     } finally {
         btn.disabled = false;
         btn.textContent = oldText;
     }
 };
+    
 // ———————————————————————————
 // AI بهبود متن
 // ———————————————————————————
