@@ -345,29 +345,7 @@ $('aiBtn').onclick = () => {
     if (!name) return;
     window.location.href = 'ai.html?customer=' + encodeURIComponent(name) + '&phone=' + encodeURIComponent(phone || '') + '&channel=' + encodeURIComponent(channel);
 };
-bottom: 3px solid #2563eb;
-' + new Date().toISOString().slice(0, 10) + '.doc';
-
-    // 🎯 روش ۱: Web Share API
-    if (navigator.share && navigator.canShare) {
-        try {
-            const blob = new Blob([htmlContent], { type: 'application/msword' });
-            const file = new File([blob], fileName, { type: 'application/msword' });
-
-            if (navigator.canShare({ files: [file] })) {
-                await navigator.share({
-                    files: [file],
-                    title: 'لیست مشتریان',
-                    text: 'خروجی Word از مشتریان مشتری‌یار'
-                });
-                return;
-            }
-        } catch (err) {
-            if (err.name === 'AbortError') return;
-        }
-    }
-
-   $('exportBtn').onclick = async () => {
+$('exportBtn').onclick = async () => {
     if (!customers.length) {
         alert('هنوز مشتری‌ای نداری که خروجی بگیری.');
         return;
@@ -388,6 +366,7 @@ bottom: 3px solid #2563eb;
         'inperson': '👤 حضوری'
     };
 
+    // ساخت ردیف‌های جدول
     let tableRows = '';
     customers.forEach((c, i) => {
         tableRows += `
@@ -416,63 +395,140 @@ bottom: 3px solid #2563eb;
             <meta charset="UTF-8">
             <title>لیست مشتریان مشتری‌یار</title>
             <style>
-                body { font-family: Tahoma, Arial, sans-serif; direction: rtl; padding: 30px; color: #1e293b; }
-                h1 { text-align: center; color: #2563eb; border-bottom: 3px solid #2563eb; padding-bottom: 15px; margin-bottom: 20px; }
-                .meta { text-align: center; color: #64748b; margin-bottom: 25px; font-size: 14px; }
-                .meta b { color: #1e293b; }
-                table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-                th { background: #2563eb; color: #fff; padding: 10px 8px; font-size: 12px; text-align: right; border: 1px solid #1d4ed8; }
-                td { padding: 9px 8px; font-size: 12px; border: 1px solid #e2e8f0; text-align: right; }
-                tr:nth-child(even) td { background: #f8fafc; }
-                .phones { background: #f0fdf4; border: 2px solid #86efac; border-radius: 12px; padding: 20px; margin-top: 30px; }
-                .phones h2 { color: #166534; font-size: 16px; margin-bottom: 12px; }
-                .phones p { font-family: monospace; font-size: 14px; direction: ltr; text-align: right; line-height: 2.2; }
-                .footer { text-align: center; color: #94a3b8; font-size: 12px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; }
+                body {
+                    font-family: Tahoma, Arial, sans-serif;
+                    direction: rtl;
+                    padding: 30px;
+                    color: #1e293b;
+                }
+                h1 {
+                    text-align: center;
+                    color: #2563eb;
+                    border-bottom: 3px solid #2563eb;
+                    padding-bottom: 15px;
+                    margin-bottom: 20px;
+                }
+                .meta {
+                    text-align: center;
+                    color: #64748b;
+                    margin-bottom: 25px;
+                    font-size: 14px;
+                }
+                .meta b {
+                    color: #1e293b;
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-bottom: 30px;
+                }
+                th {
+                    background: #2563eb;
+                    color: #fff;
+                    padding: 10px 8px;
+                    font-size: 12px;
+                    text-align: right;
+                    border: 1px solid #1d4ed8;
+                }
+                td {
+                    padding: 9px 8px;
+                    font-size: 12px;
+                    border: 1px solid #e2e8f0;
+                    text-align: right;
+                }
+                tr:nth-child(even) td {
+                    background: #f8fafc;
+                }
+                .phones {
+                    background: #f0fdf4;
+                    border: 2px solid #86efac;
+                    border-radius: 12px;
+                    padding: 20px;
+                    margin-top: 30px;
+                }
+                .phones h2 {
+                    color: #166534;
+                    font-size: 16px;
+                    margin-bottom: 12px;
+                }
+                .phones p {
+                    font-family: monospace;
+                    font-size: 14px;
+                    direction: ltr;
+                    text-align: right;
+                    line-height: 2.2;
+                }
+                .footer {
+                    text-align: center;
+                    color: #94a3b8;
+                    font-size: 12px;
+                    margin-top: 30px;
+                    padding-top: 20px;
+                    border-top: 1px solid #e2e8f0;
+                }
             </style>
         </head>
         <body>
             <h1>📋 لیست مشتریان مشتری‌یار</h1>
-            <div class="meta">تاریخ: <b>${today}</b> | تعداد کل: <b>${total} مشتری</b></div>
+            <div class="meta">
+                تاریخ: <b>${today}</b> |
+                تعداد کل: <b>${total} مشتری</b>
+            </div>
+
             <table>
                 <thead>
                     <tr>
-                        <th>#</th><th>نام</th><th>شماره موبایل</th><th>ایمیل</th>
-                        <th>وضعیت</th><th>راه ارتباطی</th><th>آخرین تماس</th>
-                        <th>مجموع خرید</th><th>توضیحات</th>
+                        <th>#</th>
+                        <th>نام</th>
+                        <th>شماره موبایل</th>
+                        <th>ایمیل</th>
+                        <th>وضعیت</th>
+                        <th>راه ارتباطی</th>
+                        <th>آخرین تماس</th>
+                        <th>مجموع خرید</th>
+                        <th>توضیحات</th>
                     </tr>
                 </thead>
-                <tbody>${tableRows}</tbody>
+                <tbody>
+                    ${tableRows}
+                </tbody>
             </table>
+
             <div class="phones">
                 <h2>📱 لیست شماره‌های موبایل</h2>
                 <p>${phoneList || 'شماره‌ای ثبت نشده'}</p>
             </div>
-            <div class="footer">ساخته شده با مشتری‌یار — moshtriyar.ir</div>
+
+            <div class="footer">
+                ساخته شده با مشتری‌یار — moshtriyar.ir
+            </div>
         </body>
         </html>
     `;
 
     const fileName = 'moshtariyan-' + new Date().toISOString().slice(0, 10) + '.doc';
-    const base64 = btoa(unescape(encodeURIComponent(htmlContent)));
 
-    // 🎯 چک کن تو اپ هستیم
-    const isInApp = /wv|WebView/i.test(navigator.userAgent) ||
-                    (window.ReactNativeWebView !== undefined);
+    // 🎯 روش ۱: Web Share API
+    if (navigator.share && navigator.canShare) {
+        try {
+            const blob = new Blob([htmlContent], { type: 'application/msword' });
+            const file = new File([blob], fileName, { type: 'application/msword' });
 
-    if (isInApp) {
-        if (window.ReactNativeWebView && typeof window.ReactNativeWebView.postMessage === 'function') {
-            window.ReactNativeWebView.postMessage(JSON.stringify({
-                type: "saveFile",
-                data: base64,
-                filename: fileName,
-                mimeType: "application/msword"
-            }));
-            alert("✅ لیست مشتریان آماده شد. محل ذخیره رو انتخاب کن.");
-        } else {
-            alert("❌ پل نیتیو در دسترس نیست");
+            if (navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                    files: [file],
+                    title: 'لیست مشتریان',
+                    text: 'خروجی Word از مشتریان مشتری‌یار'
+                });
+                return;
+            }
+        } catch (err) {
+            if (err.name === 'AbortError') return;
         }
-    } else {
-        // تو مرورگر: روش قبلی
+    }
+
+    // 🎯 روش ۲: دانلود سنتی
+    try {
         const blob = new Blob([htmlContent], { type: 'application/msword' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
@@ -486,6 +542,9 @@ bottom: 3px solid #2563eb;
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
         }, 500);
+    } catch (err) {
+        console.error('Export error:', err);
+        alert('❌ خطا در دانلود فایل');
     }
 };
 
