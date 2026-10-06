@@ -21,39 +21,50 @@ jobs:
         with:
           node-version: '20'
       
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+      
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+      
       - name: Install dependencies
         working-directory: ./app
         run: npm install
       
-      - name: Install EAS CLI
-        run: npm install -g eas-cli
-      
-      - name: Build APK with EAS (Cloud)
+      - name: Expo Prebuild
         working-directory: ./app
-        id: build
-        run: |
-          eas build --platform android --profile production --non-interactive --json > build-output.json
-          cat build-output.json
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: npx expo prebuild --platform android --clean
       
-      - name: Get APK URL
-        working-directory: ./app
-        id: get-url
-        run: |
-          APK_URL=$(cat build-output.json | jq -r '.[0].artifacts.buildUrl')
-          echo "APK_URL=$APK_URL" >> $GITHUB_OUTPUT
-          echo "APK URL: $APK_URL"
+      - name: Make gradlew executable
+        working-directory: ./app/android
+        run: chmod +x gradlew
       
-      - name: Download APK
+      - name: Build APK (Release)
+        working-directory: ./app/android
+        run: ./gradlew assembleRelease --no-daemon
+      
+      - name: Build APK (Debug - fallback)
+        if: failure()
+        working-directory: ./app/android
+        run: ./gradlew assembleDebug --no-daemon
+      
+      - name: Find APK files
         working-directory: ./app
         run: |
-          curl -L -o build-output.apk "${{ steps.get-url.outputs.APK_URL }}"
-          ls -la build-output.apk
+          echo "=== Searching for APK files ==="
+          find . -name "*.apk" -type f 2>/dev/null || echo "No APK found"
+          mkdir -p /tmp/apk-output
+          find . -name "app-release.apk" -type f -exec cp {} /tmp/apk-output/ \; 2>/dev/null || true
+          find . -name "app-debug.apk" -type f -exec cp {} /tmp/apk-output/ \; 2>/dev/null || true
+          ls -la /tmp/apk-output/
       
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: moshtriyar-apk-production
-          path: app/build-output.apk
+          name: moshtriyar-apk
+          path: /tmp/apk-output/*.apk
           retention-days: 30
+          if-no-files-found: warn
