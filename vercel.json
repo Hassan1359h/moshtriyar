@@ -61,5 +61,15 @@
         }
       ]
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/download",
+      "destination": "https://github.com/Hassan1359h/moshtriyar/releases/download/v1.0.9/app-release.apk"
+    },
+    {
+      "source": "/download/apk",
+      "destination": "https://github.com/Hassan1359h/moshtriyar/releases/download/v1.0.9/app-release.apk"
+    }
   ]
 }
