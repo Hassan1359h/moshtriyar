@@ -52,7 +52,6 @@ export default function App() {
   const handleMessage = async (event) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
-      console.log('📩 پیام از WebView:', data.type);
       if (data.type === 'saveFile') {
         await saveFileFromWebView(data.data, data.filename, data.mimeType);
       } else if (data.type === 'openUrl') {
