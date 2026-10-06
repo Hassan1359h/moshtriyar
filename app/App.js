@@ -1,8 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { StyleSheet, SafeAreaView, StatusBar, View, Text, TouchableOpacity, BackHandler, Alert, ActivityIndicator, Linking } from 'react-native';
+import { StyleSheet, SafeAreaView, StatusBar, View, Text, TouchableOpacity, BackHandler, Alert, ActivityIndicator } from 'react-native';
 import { WebView } from 'react-native-webview';
-import * as FileSystem from 'expo-file-system';
-import * as Sharing from 'expo-sharing';
 
 const APP_URL = 'https://moshtriyar.ir';
 
@@ -34,89 +32,6 @@ export default function App() {
     if (webViewRef.current) webViewRef.current.reload();
   };
 
-  // 🎯 مدیریت لینک‌ها
-  const handleShouldStartLoad = async (request) => {
-    const url = request.url;
-
-    // 🎯 ذخیره PDF از URL scheme
-    if (url.startsWith('moshtriyar-save://pdf')) {
-      try {
-        const query = url.split('?')[1] || '';
-        const params = {};
-        query.split('&').forEach(p => {
-          const [k, v] = p.split('=');
-          params[k] = decodeURIComponent(v || '');
-        });
-
-        const filename = params.filename || 'factor.pdf';
-        const base64 = params.data || '';
-
-        if (!base64) {
-          Alert.alert('خطا', 'داده PDF خالی است');
-          return false;
-        }
-
-        const uri = FileSystem.documentDirectory + filename;
-        await FileSystem.writeAsStringAsync(uri, base64, {
-          encoding: FileSystem.EncodingType.Base64,
-        });
-
-        if (await Sharing.isAvailableAsync()) {
-          await Sharing.shareAsync(uri, {
-            mimeType: 'application/pdf',
-            dialogTitle: 'ذخیره یا اشتراک‌گذاری فاکتور',
-            UTI: 'com.adobe.pdf',
-          });
-        } else {
-          Alert.alert('موفق', 'فایل ذخیره شد در:\n' + uri);
-        }
-      } catch (err) {
-        Alert.alert('خطا در ذخیره PDF', err.message || 'نامشخص');
-      }
-      return false;
-    }
-
-    // 🎯 لینک‌های داخلی سایت
-    if (url.startsWith('https://moshtriyar.ir') ||
-        url.startsWith('https://moshtriyar.vercel.app') ||
-        url.startsWith('about:blank')) {
-      return true;
-    }
-
-    // 🎯 واتساپ
-    if (url.startsWith('whatsapp://') || url.startsWith('https://wa.me/')) {
-      Linking.openURL(url).catch(() => Alert.alert('خطا', 'واتساپ نصب نیست'));
-      return false;
-    }
-
-    // 🎯 تلگرام
-    if (url.startsWith('tg://') || url.startsWith('https://t.me/')) {
-      Linking.openURL(url).catch(() => Alert.alert('خطا', 'تلگرام نصب نیست'));
-      return false;
-    }
-
-    // 🎯 ایتا
-    if (url.startsWith('eitaa://') || url.startsWith('https://eitaa.com/')) {
-      Linking.openURL(url).catch(() => Alert.alert('خطا', 'ایتا نصب نیست'));
-      return false;
-    }
-
-    // 🎯 پیامک، تلفن، ایمیل
-    if (url.startsWith('sms:') || url.startsWith('tel:') || url.startsWith('mailto:')) {
-      Linking.openURL(url).catch(() => {});
-      return false;
-    }
-
-    // 🎯 blob و data
-    if (url.startsWith('blob:') || url.startsWith('data:')) {
-      return true;
-    }
-
-    // 🎯 بقیه لینک‌ها تو مرورگر خارجی
-    Linking.openURL(url).catch(() => {});
-    return false;
-  };
-
   if (error) {
     return (
       <SafeAreaView style={styles.container}>
@@ -124,9 +39,7 @@ export default function App() {
         <View style={styles.errorBox}>
           <Text style={styles.errorIcon}>📡</Text>
           <Text style={styles.errorTitle}>اتصال برقرار نشد</Text>
-          <Text style={styles.errorText}>
-            لطفاً اتصال اینترنت خود را بررسی کنید
-          </Text>
+          <Text style={styles.errorText}>لطفاً اتصال اینترنت خود را بررسی کنید</Text>
           <TouchableOpacity style={styles.retryBtn} onPress={handleRetry}>
             <Text style={styles.retryText}>🔄 تلاش مجدد</Text>
           </TouchableOpacity>
@@ -150,12 +63,6 @@ export default function App() {
         allowsProtectedMedia={true}
         sharedCookiesEnabled={true}
         thirdPartyCookiesEnabled={true}
-        allowFileAccess={true}
-        originWhitelist={['*']}
-        setSupportMultipleWindows={false}
-        cacheEnabled={true}
-        cacheMode="LOAD_DEFAULT"
-        onShouldStartLoadWithRequest={handleShouldStartLoad}
         userAgent="Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
         onLoadStart={() => setLoading(true)}
         onLoadEnd={() => setLoading(false)}
