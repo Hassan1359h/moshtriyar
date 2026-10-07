@@ -58,10 +58,10 @@ export default function App() {
   // =========================================================
 
   const downloadAPK = () => {
-    Linking.openURL('https://moshtriyar.ir/api/download').catch(() => {
-      Alert.alert('خطا', 'مرورگر باز نشد');
-    });
-  };
+  Linking.openURL('https://moshtriyar.ir/download/moshtriyar.apk').catch(() => {
+    Alert.alert('خطا', 'مرورگر باز نشد');
+  });
+};
 
   // =========================================================
   // ذخیره فایل‌های PDF و خروجی مشتریان
