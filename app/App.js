@@ -62,9 +62,22 @@ export default function App() {
     }
   };
 
-  const handleShouldStartLoad = (request) => {
-    const url = request.url;
-    if (url.startsWith('https://moshtriyar.ir') ||
+  const url = request.url;
+
+  // 🎯 لینک‌های دانلود APK → مرورگر خارجی
+  if (url.includes('/api/download') || 
+      url.includes('app-release.apk') || 
+      url.includes('githubusercontent.com') || 
+      url.endsWith('.apk') ||
+      url.includes('github.com/Hassan1359h/moshtriyar/releases')) {
+    Linking.openURL(url).catch(() => {
+      Alert.alert('خطا', 'مرورگر باز نشد');
+    });
+    return false;
+  }
+
+  if (url.startsWith('https://moshtriyar.ir') ||
+    
         url.startsWith('https://moshtriyar.vercel.app') ||
         url.startsWith('about:blank') ||
         url.startsWith('blob:') ||
