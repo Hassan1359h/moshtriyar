@@ -58,7 +58,7 @@ export default function App() {
   // =========================================================
 
   const downloadAPK = () => {
-  Linking.openURL('https://moshtriyar.ir/download/moshtriyar.apk').catch(() => {
+  Linking.openURL('https://github.com/Hassan1359h/moshtriyar/releases/latest/download/app-release.apk').catch(() => {
     Alert.alert('خطا', 'مرورگر باز نشد');
   });
 };
