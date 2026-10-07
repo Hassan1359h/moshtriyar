@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     }
 
     res.setHeader('Content-Type', 'application/vnd.android.package-archive');
-    res.setHeader('Content-Disposition', 'attachment; filename="moshtriyar.apk"');
+    res.setHeader('Content-Disposition', 'attachment; filename="moshtriyar-v1.0.11.apk"');
     res.setHeader('Cache-Control', 'public, max-age=3600');
 
     const arrayBuffer = await response.arrayBuffer();
