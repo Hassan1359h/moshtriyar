@@ -2,7 +2,7 @@
   "expo": {
     "name": "مشتری‌یار",
     "slug": "moshtriyar",
-    "version": "1.0.11",
+    "version": "1.0.12",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -25,7 +25,7 @@
     "android": {
       "package": "ir.moshtriyar.app",
 
-      "versionCode": 17,
+      "versionCode": 18,
 
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
