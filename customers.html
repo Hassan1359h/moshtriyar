@@ -352,28 +352,79 @@ if (window.ReactNativeWebView && typeof window.ReactNativeWebView.postMessage ==
         alert('هنوز مشتری‌ای نداری که خروجی بگیری.');
         return;
     }
-    // ساخت یه HTML ساده برای اپ
-    var simpleRows = '';
-    customers.forEach(function(c, i) {
-        simpleRows += (i+1) + '. ' + (c.name || '-') +
-            ' | ' + (c.phone || '-') +
-            ' | ' + ((c.total_purchase || 0).toLocaleString('fa-IR')) + ' تومان\n';
-    });
-    var simpleContent = 'لیست مشتریان مشتری‌یار\n' +
-        '━━━━━━━━━━━━━━\n' +
-        'تعداد: ' + customers.length + ' مشتری\n\n' +
-        simpleRows + '\n' +
-        'ساخته شده با مشتری‌یار — moshtriyar.ir';
+  
+    // 🎯 ساخت HTML زیبا
+var statusMap = {
+    'lead': 'بالقوه',
+    'negotiating': 'در مذاکره',
+    'customer': 'مشتری',
+    'lost': 'از دست رفته'
+};
+var channelMap = {
+    'call': '📞 تماس',
+    'whatsapp': '💬 واتساپ',
+    'sms': '📱 پیامک',
+    'instagram': '📷 اینستاگرام',
+    'inperson': '👤 حضوری'
+};
 
-    var base64 = btoa(unescape(encodeURIComponent(simpleContent)));
-    window.ReactNativeWebView.postMessage(JSON.stringify({
-        type: 'saveFile',
-        data: base64,
-        filename: 'moshtariyan-' + new Date().toISOString().slice(0, 10) + '.doc',
-         mimeType: 'application/msword'
-    }));
-    alert('✅ لیست مشتریان آماده شد. محل ذخیره رو انتخاب کن.');
-    return;
+var tableRows = '';
+customers.forEach(function(c, i) {
+    tableRows += '<tr>' +
+        '<td>' + (i + 1) + '</td>' +
+        '<td>' + escapeHtml(c.name || '-') + '</td>' +
+        '<td style="direction:ltr;text-align:right;font-family:monospace;">' + escapeHtml(c.phone || '-') + '</td>' +
+        '<td>' + escapeHtml(c.email || '-') + '</td>' +
+        '<td>' + (statusMap[c.status] || c.status || '-') + '</td>' +
+        '<td>' + (channelMap[c.preferred_channel || 'call'] || '📞 تماس') + '</td>' +
+        '<td>' + (c.last_contact_at ? new Date(c.last_contact_at).toLocaleDateString('fa-IR') : '-') + '</td>' +
+        '<td>' + ((parseInt(c.total_purchase) || 0)).toLocaleString('fa-IR') + ' تومان</td>' +
+        '<td>' + escapeHtml((c.notes || '-').replace(/\n/g, ' ')) + '</td>' +
+        '</tr>';
+});
+
+var today = new Date().toLocaleDateString('fa-IR');
+var total = customers.length;
+var phoneList = customers.map(function(c) { return c.phone; }).filter(Boolean).join(' • ');
+
+var htmlContent = '<!DOCTYPE html><html dir="rtl" lang="fa"><head><meta charset="UTF-8">' +
+    '<title>لیست مشتریان مشتری‌یار</title>' +
+    '<style>' +
+    'body{font-family:Tahoma,Arial,sans-serif;direction:rtl;padding:30px;color:#1e293b;}' +
+    'h1{text-align:center;color:#2563eb;border-bottom:3px solid #2563eb;padding-bottom:15px;margin-bottom:20px;}' +
+    '.meta{text-align:center;color:#64748b;margin-bottom:25px;font-size:14px;}' +
+    '.meta b{color:#1e293b;}' +
+    'table{width:100%;border-collapse:collapse;margin-bottom:30px;}' +
+    'th{background:#2563eb;color:#fff;padding:10px 8px;font-size:12px;text-align:right;border:1px solid #1d4ed8;}' +
+    'td{padding:9px 8px;font-size:12px;border:1px solid #e2e8f0;text-align:right;}' +
+    'tr:nth-child(even) td{background:#f8fafc;}' +
+    '.phones{background:#f0fdf4;border:2px solid #86efac;border-radius:12px;padding:20px;margin-top:30px;}' +
+    '.phones h2{color:#166534;font-size:16px;margin-bottom:12px;}' +
+    '.phones p{font-family:monospace;font-size:14px;direction:ltr;text-align:right;line-height:2.2;}' +
+    '.footer{text-align:center;color:#94a3b8;font-size:12px;margin-top:30px;padding-top:20px;border-top:1px solid #e2e8f0;}' +
+    '</style></head><body>' +
+    '<h1>📋 لیست مشتریان مشتری‌یار</h1>' +
+    '<div class="meta">تاریخ: <b>' + today + '</b> | تعداد کل: <b>' + total + ' مشتری</b></div>' +
+    '<table><thead><tr>' +
+    '<th>#</th><th>نام</th><th>شماره موبایل</th><th>ایمیل</th>' +
+    '<th>وضعیت</th><th>راه ارتباطی</th><th>آخرین تماس</th>' +
+    '<th>مجموع خرید</th><th>توضیحات</th>' +
+    '</tr></thead><tbody>' + tableRows + '</tbody></table>' +
+    '<div class="phones"><h2>📱 لیست شماره‌های موبایل</h2>' +
+    '<p>' + (phoneList || 'شماره‌ای ثبت نشده') + '</p></div>' +
+    '<div class="footer">ساخته شده با مشتری‌یار — moshtriyar.ir</div>' +
+    '</body></html>';
+
+var base64 = btoa(unescape(encodeURIComponent(htmlContent)));
+window.ReactNativeWebView.postMessage(JSON.stringify({
+    type: 'saveFile',
+    data: base64,
+    filename: 'moshtariyan-' + new Date().toISOString().slice(0, 10) + '.doc',
+    mimeType: 'application/msword'
+}));
+alert('✅ لیست مشتریان آماده شد. محل ذخیره رو انتخاب کن.');
+return;
+    
 }
     if (!customers.length) {
         alert('هنوز مشتری‌ای نداری که خروجی بگیری.');
