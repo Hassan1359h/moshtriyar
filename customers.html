@@ -345,288 +345,170 @@ $('aiBtn').onclick = () => {
     if (!name) return;
     window.location.href = 'ai.html?customer=' + encodeURIComponent(name) + '&phone=' + encodeURIComponent(phone || '') + '&channel=' + encodeURIComponent(channel);
 };
-$('exportBtn').onclick = async () => {
- // 🎯 اگه تو اپ هستیم، از پل نیتیو استفاده کن
-if (window.ReactNativeWebView && typeof window.ReactNativeWebView.postMessage === 'function') {
-    if (!customers.length) {
-        alert('هنوز مشتری‌ای نداری که خروجی بگیری.');
-        return;
-    }
+
   
-    // 🎯 ساخت HTML زیبا
-var statusMap = {
-    'lead': 'بالقوه',
-    'negotiating': 'در مذاکره',
-    'customer': 'مشتری',
-    'lost': 'از دست رفته'
-};
-var channelMap = {
-    'call': '📞 تماس',
-    'whatsapp': '💬 واتساپ',
-    'sms': '📱 پیامک',
-    'instagram': '📷 اینستاگرام',
-    'inperson': '👤 حضوری'
-};
-
-var tableRows = '';
-customers.forEach(function(c, i) {
-    tableRows += '<tr>' +
-        '<td>' + (i + 1) + '</td>' +
-        '<td>' + escapeHtml(c.name || '-') + '</td>' +
-        '<td style="direction:ltr;text-align:right;font-family:monospace;">' + escapeHtml(c.phone || '-') + '</td>' +
-        '<td>' + escapeHtml(c.email || '-') + '</td>' +
-        '<td>' + (statusMap[c.status] || c.status || '-') + '</td>' +
-        '<td>' + (channelMap[c.preferred_channel || 'call'] || '📞 تماس') + '</td>' +
-        '<td>' + (c.last_contact_at ? new Date(c.last_contact_at).toLocaleDateString('fa-IR') : '-') + '</td>' +
-        '<td>' + ((parseInt(c.total_purchase) || 0)).toLocaleString('fa-IR') + ' تومان</td>' +
-        '<td>' + escapeHtml((c.notes || '-').replace(/\n/g, ' ')) + '</td>' +
-        '</tr>';
-});
-
-var today = new Date().toLocaleDateString('fa-IR');
-var total = customers.length;
-var phoneList = customers.map(function(c) { return c.phone; }).filter(Boolean).join(' • ');
-
-var htmlContent = '<!DOCTYPE html><html dir="rtl" lang="fa"><head><meta charset="UTF-8">' +
-    '<title>لیست مشتریان مشتری‌یار</title>' +
-    '<style>' +
-    'body{font-family:Tahoma,Arial,sans-serif;direction:rtl;padding:30px;color:#1e293b;}' +
-    'h1{text-align:center;color:#2563eb;border-bottom:3px solid #2563eb;padding-bottom:15px;margin-bottom:20px;}' +
-    '.meta{text-align:center;color:#64748b;margin-bottom:25px;font-size:14px;}' +
-    '.meta b{color:#1e293b;}' +
-    'table{width:100%;border-collapse:collapse;margin-bottom:30px;}' +
-    'th{background:#2563eb;color:#fff;padding:10px 8px;font-size:12px;text-align:right;border:1px solid #1d4ed8;}' +
-    'td{padding:9px 8px;font-size:12px;border:1px solid #e2e8f0;text-align:right;}' +
-    'tr:nth-child(even) td{background:#f8fafc;}' +
-    '.phones{background:#f0fdf4;border:2px solid #86efac;border-radius:12px;padding:20px;margin-top:30px;}' +
-    '.phones h2{color:#166534;font-size:16px;margin-bottom:12px;}' +
-    '.phones p{font-family:monospace;font-size:14px;direction:ltr;text-align:right;line-height:2.2;}' +
-    '.footer{text-align:center;color:#94a3b8;font-size:12px;margin-top:30px;padding-top:20px;border-top:1px solid #e2e8f0;}' +
-    '</style></head><body>' +
-    '<h1>📋 لیست مشتریان مشتری‌یار</h1>' +
-    '<div class="meta">تاریخ: <b>' + today + '</b> | تعداد کل: <b>' + total + ' مشتری</b></div>' +
-    '<table><thead><tr>' +
-    '<th>#</th><th>نام</th><th>شماره موبایل</th><th>ایمیل</th>' +
-    '<th>وضعیت</th><th>راه ارتباطی</th><th>آخرین تماس</th>' +
-    '<th>مجموع خرید</th><th>توضیحات</th>' +
-    '</tr></thead><tbody>' + tableRows + '</tbody></table>' +
-    '<div class="phones"><h2>📱 لیست شماره‌های موبایل</h2>' +
-    '<p>' + (phoneList || 'شماره‌ای ثبت نشده') + '</p></div>' +
-    '<div class="footer">ساخته شده با مشتری‌یار — moshtriyar.ir</div>' +
-    '</body></html>';
-
-var base64 = btoa(unescape(encodeURIComponent(htmlContent)));
-window.ReactNativeWebView.postMessage(JSON.stringify({
-    type: 'saveFile',
-    data: base64,
-    filename: 'moshtariyan-' + new Date().toISOString().slice(0, 10) + '.doc',
-    mimeType: 'application/msword'
-}));
-alert('✅ لیست مشتریان آماده شد. محل ذخیره رو انتخاب کن.');
-return;
-    
-}
+$('exportBtn').onclick = async () => {
     if (!customers.length) {
-        alert('هنوز مشتری‌ای نداری که خروجی بگیری.');
+        alert('هنوز مشتری‌ای برای خروجی گرفتن ثبت نشده است.');
         return;
     }
+
+    const btn = $('exportBtn');
+    const oldText = btn.textContent;
 
     const statusMap = {
-        'lead': 'بالقوه',
-        'negotiating': 'در مذاکره',
-        'customer': 'مشتری',
-        'lost': 'از دست رفته'
+        lead: 'مشتری بالقوه',
+        negotiating: 'در حال مذاکره',
+        customer: 'مشتری',
+        lost: 'از دست رفته'
     };
 
     const channelMap = {
-        'call': '📞 تماس',
-        'whatsapp': '💬 واتساپ',
-        'sms': '📱 پیامک',
-        'instagram': '📷 اینستاگرام',
-        'inperson': '👤 حضوری'
+        call: 'تماس تلفنی',
+        whatsapp: 'واتساپ',
+        sms: 'پیامک',
+        instagram: 'اینستاگرام',
+        inperson: 'حضوری'
     };
 
-    // ساخت ردیف‌های جدول
-    let tableRows = '';
-    customers.forEach((c, i) => {
-        tableRows += `
-            <tr>
-                <td>${i + 1}</td>
-                <td>${escapeHtml(c.name || '-')}</td>
-                <td style="direction:ltr;text-align:right;font-family:monospace;">${escapeHtml(c.phone || '-')}</td>
-                <td>${escapeHtml(c.email || '-')}</td>
-                <td>${statusMap[c.status] || c.status || '-'}</td>
-                <td>${channelMap[c.preferred_channel || 'call'] || '📞 تماس'}</td>
-                <td>${c.last_contact_at ? new Date(c.last_contact_at).toLocaleDateString('fa-IR') : '-'}</td>
-                <td>${(parseInt(c.total_purchase) || 0).toLocaleString('fa-IR')} تومان</td>
-                <td>${escapeHtml((c.notes || '-').replace(/\n/g, ' '))}</td>
-            </tr>
-        `;
-    });
+    // تبدیل مقدار به سلول امن CSV
+    const csvCell = value => {
+        let text = String(value ?? '');
 
-    const today = new Date().toLocaleDateString('fa-IR');
-    const total = customers.length;
-    const phoneList = customers.map(c => c.phone).filter(Boolean).join(' • ');
-
-    const htmlContent = `
-        <!DOCTYPE html>
-        <html dir="rtl" lang="fa">
-        <head>
-            <meta charset="UTF-8">
-            <title>لیست مشتریان مشتری‌یار</title>
-            <style>
-                body {
-                    font-family: Tahoma, Arial, sans-serif;
-                    direction: rtl;
-                    padding: 30px;
-                    color: #1e293b;
-                }
-                h1 {
-                    text-align: center;
-                    color: #2563eb;
-                    border-bottom: 3px solid #2563eb;
-                    padding-bottom: 15px;
-                    margin-bottom: 20px;
-                }
-                .meta {
-                    text-align: center;
-                    color: #64748b;
-                    margin-bottom: 25px;
-                    font-size: 14px;
-                }
-                .meta b {
-                    color: #1e293b;
-                }
-                table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin-bottom: 30px;
-                }
-                th {
-                    background: #2563eb;
-                    color: #fff;
-                    padding: 10px 8px;
-                    font-size: 12px;
-                    text-align: right;
-                    border: 1px solid #1d4ed8;
-                }
-                td {
-                    padding: 9px 8px;
-                    font-size: 12px;
-                    border: 1px solid #e2e8f0;
-                    text-align: right;
-                }
-                tr:nth-child(even) td {
-                    background: #f8fafc;
-                }
-                .phones {
-                    background: #f0fdf4;
-                    border: 2px solid #86efac;
-                    border-radius: 12px;
-                    padding: 20px;
-                    margin-top: 30px;
-                }
-                .phones h2 {
-                    color: #166534;
-                    font-size: 16px;
-                    margin-bottom: 12px;
-                }
-                .phones p {
-                    font-family: monospace;
-                    font-size: 14px;
-                    direction: ltr;
-                    text-align: right;
-                    line-height: 2.2;
-                }
-                .footer {
-                    text-align: center;
-                    color: #94a3b8;
-                    font-size: 12px;
-                    margin-top: 30px;
-                    padding-top: 20px;
-                    border-top: 1px solid #e2e8f0;
-                }
-            </style>
-        </head>
-        <body>
-            <h1>📋 لیست مشتریان مشتری‌یار</h1>
-            <div class="meta">
-                تاریخ: <b>${today}</b> |
-                تعداد کل: <b>${total} مشتری</b>
-            </div>
-
-            <table>
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>نام</th>
-                        <th>شماره موبایل</th>
-                        <th>ایمیل</th>
-                        <th>وضعیت</th>
-                        <th>راه ارتباطی</th>
-                        <th>آخرین تماس</th>
-                        <th>مجموع خرید</th>
-                        <th>توضیحات</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${tableRows}
-                </tbody>
-            </table>
-
-            <div class="phones">
-                <h2>📱 لیست شماره‌های موبایل</h2>
-                <p>${phoneList || 'شماره‌ای ثبت نشده'}</p>
-            </div>
-
-            <div class="footer">
-                ساخته شده با مشتری‌یار — moshtriyar.ir
-            </div>
-        </body>
-        </html>
-    `;
-
-    const fileName = 'moshtariyan-' + new Date().toISOString().slice(0, 10) + '.doc';
-
-    // 🎯 روش ۱: Web Share API
-    if (navigator.share && navigator.canShare) {
-        try {
-            const blob = new Blob([htmlContent], { type: 'application/msword' });
-            const file = new File([blob], fileName, { type: 'application/msword' });
-
-            if (navigator.canShare({ files: [file] })) {
-                await navigator.share({
-                    files: [file],
-                    title: 'لیست مشتریان',
-                    text: 'خروجی Word از مشتریان مشتری‌یار'
-                });
-                return;
-            }
-        } catch (err) {
-            if (err.name === 'AbortError') return;
+        // جلوگیری از اجرای فرمول‌های خطرناک در Excel
+        if (/^[\s]*[=+\-@]/.test(text)) {
+            text = "'" + text;
         }
-    }
 
-    // 🎯 روش ۲: دانلود سنتی
+        return '"' + text.replace(/"/g, '""') + '"';
+    };
+
+    const headers = [
+        'ردیف',
+        'نام و نام خانوادگی',
+        'شماره موبایل',
+        'ایمیل',
+        'وضعیت',
+        'راه ارتباطی',
+        'بهترین زمان تماس',
+        'نام کاربری اینستاگرام',
+        'عدم ارسال یادآوری',
+        'آخرین تماس',
+        'مجموع خرید',
+        'توضیحات'
+    ];
+
+    const rows = customers.map((c, index) => [
+        index + 1,
+        c.name,
+        c.phone,
+        c.email,
+        statusMap[c.status] || c.status,
+        channelMap[c.preferred_channel] || 'تماس تلفنی',
+        ({
+            anytime: 'هر وقت',
+            morning: 'صبح',
+            noon: 'ظهر',
+            evening: 'عصر',
+            night: 'شب'
+        })[c.best_time] || '',
+        c.instagram_username,
+        c.do_not_disturb ? 'بله' : 'خیر',
+        c.last_contact_at
+            ? new Date(c.last_contact_at).toLocaleDateString('fa-IR')
+            : '',
+        c.total_purchase ?? '',
+        c.notes
+    ]);
+
+    // BOM برای نمایش صحیح فارسی در Excel
+    const csv = '\uFEFF' +
+        [headers, ...rows]
+            .map(row => row.map(csvCell).join(';'))
+            .join('\r\n');
+
+    const fileName =
+        'moshtariyan-' +
+        new Date().toISOString().slice(0, 10) +
+        '.csv';
+
+    btn.disabled = true;
+    btn.textContent = 'در حال آماده‌سازی...';
+
     try {
-        const blob = new Blob([htmlContent], { type: 'application/msword' });
+        // مسیر اپ اندرویدی؛ نیازمند پشتیبانی از saveFile در اپ
+        if (
+            window.ReactNativeWebView &&
+            typeof window.ReactNativeWebView.postMessage === 'function'
+        ) {
+            const base64 = btoa(unescape(encodeURIComponent(csv)));
+
+            window.ReactNativeWebView.postMessage(JSON.stringify({
+                type: 'saveFile',
+                data: base64,
+                filename: fileName,
+                mimeType: 'text/csv;charset=utf-8'
+            }));
+
+            alert(
+                'فایل خروجی به اپ ارسال شد. ' +
+                'اگر دانلود انجام نشد، باید پشتیبانی ذخیره فایل در اپ بررسی شود.'
+            );
+            return;
+        }
+
+        const blob = new Blob(
+            [csv],
+            { type: 'text/csv;charset=utf-8;' }
+        );
+
         const url = URL.createObjectURL(blob);
+
+        // ابتدا تلاش برای اشتراک‌گذاری فایل در گوشی
+        if (navigator.share && typeof File !== 'undefined') {
+            const file = new File([blob], fileName, {
+                type: 'text/csv;charset=utf-8;'
+            });
+
+            if (
+                navigator.canShare &&
+                navigator.canShare({ files: [file] })
+            ) {
+                try {
+                    await navigator.share({
+                        files: [file],
+                        title: 'خروجی مشتریان مشتری‌یار'
+                    });
+                    return;
+                } catch (error) {
+                    if (error.name === 'AbortError') return;
+                    // در صورت خطا، دانلود مستقیم را امتحان می‌کنیم
+                }
+            }
+        }
+
+        // دانلود مستقیم در مرورگر
         const link = document.createElement('a');
         link.href = url;
         link.download = fileName;
-        link.style.position = 'fixed';
-        link.style.opacity = '0';
+        link.style.display = 'none';
+
         document.body.appendChild(link);
         link.click();
-        setTimeout(() => {
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-        }, 500);
-    } catch (err) {
-        console.error('Export error:', err);
-        alert('❌ خطا در دانلود فایل');
+        link.remove();
+
+        setTimeout(() => URL.revokeObjectURL(url), 3000);
+
+    } catch (error) {
+        console.error('Customer export error:', error);
+        alert('دانلود انجام نشد. لطفاً دوباره تلاش کنید.');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = oldText;
     }
 };
+
+   
 
 // 🎯 تابع escape HTML
 function escapeHtml(value) {
