@@ -32,14 +32,6 @@
         {
           "key": "Cache-Control",
           "value": "no-store, no-cache, must-revalidate, max-age=0"
-        },
-        {
-          "key": "Pragma",
-          "value": "no-cache"
-        },
-        {
-          "key": "Expires",
-          "value": "0"
         }
       ]
     },
@@ -60,6 +52,30 @@
           "value": "no-store, no-cache, must-revalidate, max-age=0"
         }
       ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "moshtriyar.vercel.app"
+        }
+      ],
+      "destination": "https://moshtriyar.ir/$1",
+      "permanent": true
+    },
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.moshtriyar.ir"
+        }
+      ],
+      "destination": "https://moshtriyar.ir/$1",
+      "permanent": true
     }
   ]
 }
