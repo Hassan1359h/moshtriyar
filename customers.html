@@ -346,6 +346,35 @@ $('aiBtn').onclick = () => {
     window.location.href = 'ai.html?customer=' + encodeURIComponent(name) + '&phone=' + encodeURIComponent(phone || '') + '&channel=' + encodeURIComponent(channel);
 };
 $('exportBtn').onclick = async () => {
+ // 🎯 اگه تو اپ هستیم، از پل نیتیو استفاده کن
+if (window.ReactNativeWebView && typeof window.ReactNativeWebView.postMessage === 'function') {
+    if (!customers.length) {
+        alert('هنوز مشتری‌ای نداری که خروجی بگیری.');
+        return;
+    }
+    // ساخت یه HTML ساده برای اپ
+    var simpleRows = '';
+    customers.forEach(function(c, i) {
+        simpleRows += (i+1) + '. ' + (c.name || '-') +
+            ' | ' + (c.phone || '-') +
+            ' | ' + ((c.total_purchase || 0).toLocaleString('fa-IR')) + ' تومان\n';
+    });
+    var simpleContent = 'لیست مشتریان مشتری‌یار\n' +
+        '━━━━━━━━━━━━━━\n' +
+        'تعداد: ' + customers.length + ' مشتری\n\n' +
+        simpleRows + '\n' +
+        'ساخته شده با مشتری‌یار — moshtriyar.ir';
+
+    var base64 = btoa(unescape(encodeURIComponent(simpleContent)));
+    window.ReactNativeWebView.postMessage(JSON.stringify({
+        type: 'saveFile',
+        data: base64,
+        filename: 'moshtariyan-' + new Date().toISOString().slice(0, 10) + '.txt',
+        mimeType: 'text/plain'
+    }));
+    alert('✅ لیست مشتریان آماده شد. محل ذخیره رو انتخاب کن.');
+    return;
+}
     if (!customers.length) {
         alert('هنوز مشتری‌ای نداری که خروجی بگیری.');
         return;
