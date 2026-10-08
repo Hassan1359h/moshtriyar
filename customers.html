@@ -369,8 +369,8 @@ if (window.ReactNativeWebView && typeof window.ReactNativeWebView.postMessage ==
     window.ReactNativeWebView.postMessage(JSON.stringify({
         type: 'saveFile',
         data: base64,
-        filename: 'moshtariyan-' + new Date().toISOString().slice(0, 10) + '.txt',
-        mimeType: 'text/plain'
+        filename: 'moshtariyan-' + new Date().toISOString().slice(0, 10) + '.doc',
+         mimeType: 'application/msword'
     }));
     alert('✅ لیست مشتریان آماده شد. محل ذخیره رو انتخاب کن.');
     return;
