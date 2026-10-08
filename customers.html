@@ -48,7 +48,7 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f1f5f9;color:#0f172a;li
 .hidden{display:none!important}
 @media(max-width:600px){.stats{grid-template-columns:1fr}}
 </style>
- <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+ <script defer src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -184,7 +184,7 @@ async function loadCustomers() {
 
 function updateStats() {
     $('totalCount').textContent = customers.length;
-    $('activeCount').textContent = customers.filter(c => c.status === 'customer' || c.status === 'negotiating').length;
+    $('activeCount').textContent = customers.filter(c => c.status === 'loyal' || c.status === 'new' || c.status === 'waiting').length;
     $('dangerCount').textContent = customers.filter(c => getRiskLevel(c) === 'danger').length;
 }
 
@@ -287,7 +287,7 @@ function openEdit(c) {
     $('name').value = c.name || '';
     $('phone').value = c.phone || '';
     $('email').value = c.email || '';
-    $('status').value = c.status || 'lead';
+    $('status').value = c.status || 'new';
     $('notes').value = c.notes || '';
     $('deleteBtn').classList.remove('hidden');
  $('preferredChannel').value = c.preferred_channel || 'call';
