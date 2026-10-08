@@ -125,10 +125,11 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f1f5f9;color:#0f172a;li
             <div class="field">
                 <label>وضعیت</label>
                 <select id="status">
-                    <option value="lead">مشتری بالقوه</option>
-                    <option value="negotiating">در حال مذاکره</option>
-                    <option value="customer">مشتری</option>
-                    <option value="lost">از دست رفته</option>
+    <option value="new">🔵 مشتری جدید (اولین خرید)</option>
+    <option value="waiting">🟡 در انتظار خرید (استعلام کرده)</option>
+    <option value="loyal">🟢 مشتری وفادار (بیش از ۳ خرید)</option>
+    <option value="lost">🔴 از دست‌رفته (۹۰ روز بدون خرید)</option>
+                 
                 </select>
             </div>
             <div class="field">
@@ -250,18 +251,27 @@ filtered.forEach(c => {
     list.appendChild(div);
 });
 }
-
 function statusLabel(s) {
-    return { lead: 'بالقوه', negotiating: 'در مذاکره', customer: 'مشتری', lost: 'از دست رفته' }[s] || s;
+    return { 
+        new: 'مشتری جدید', 
+        waiting: 'در انتظار خرید', 
+        loyal: 'مشتری وفادار', 
+        lost: 'از دست‌رفته' 
+    }[s] || s;
 }
 
 function statusIcon(s) {
-    return { lead: '🔵', negotiating: '🟡', customer: '🟢', lost: '🔴' }[s] || '⚪';
-}
+    return { 
+        new: '🔵', 
+        waiting: '🟡', 
+        loyal: '🟢', 
+        lost: '🔴' 
+    }[s] || '⚪';
+ }
 
 function openAdd() {
     $('modalTitle').textContent = 'افزودن مشتری';
-    $('customerForm').reset();
+    $('status').value = 'new';
     $('customerId').value = '';
     $('deleteBtn').classList.add('hidden');
  $('preferredChannel').value = 'call';
@@ -354,11 +364,12 @@ $('exportBtn').onclick = async () => {
     }
 
     const statusMap = {
-        'lead': 'بالقوه',
-        'negotiating': 'در مذاکره',
-        'customer': 'مشتری',
-        'lost': 'از دست رفته'
-    };
+    'new': 'مشتری جدید',
+    'waiting': 'در انتظار خرید',
+    'loyal': 'مشتری وفادار',
+    'lost': 'از دست‌رفته'
+  };
+     };
 
     const channelMap = {
         'call': '📞 تماس',
