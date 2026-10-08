@@ -347,12 +347,6 @@ $('aiBtn').onclick = () => {
     window.location.href = 'ai.html?customer=' + encodeURIComponent(name) + '&phone=' + encodeURIComponent(phone || '') + '&channel=' + encodeURIComponent(channel);
 };
 
-
-
-
- تااااارذااار
- 
-
 $('exportBtn').onclick = async () => {
     if (!customers.length) {
         alert('هنوز مشتری‌ای نداری که خروجی بگیری.');
@@ -450,14 +444,7 @@ $('exportBtn').onclick = async () => {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
     }, 500);
-};
-    
-
-    
-    
-
-
-   
+};   
 
 // 🎯 تابع escape HTML
 function escapeHtml(value) {
@@ -472,4 +459,4 @@ function escapeHtml(value) {
 init();
 </script>
 </body>
-      </html>
+    </html>
