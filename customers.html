@@ -53,7 +53,7 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f1f5f9;color:#0f172a;li
 <body>
 
 <header class="header">
-    <h1>👥 مشتریان</h1>
+    <h1>👥 <span id="pageTitle">مشتریان</span></h1>
     <div>
         <a href="dashboard.html">داشبورد</a>
         <a href="at-risk.html" style="background:#dc2626;color:#fff;text-decoration:none;padding:8px 14px;border-radius:10px;font-weight:700;font-size:13px;">⚠️ در خطر</a>
@@ -63,14 +63,14 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f1f5f9;color:#0f172a;li
 <div class="container">
     <div class="top-bar">
         <input type="text" class="search" id="search" placeholder="🔍 جستجوی نام یا شماره...">
-        <button class="btn-add" id="addBtn">+ افزودن مشتری</button>
+        <button class="btn-add" id="addBtn">+ افزودن <span id="btnAddLabel">مشتری</span></button>
         <button class="btn-export" id="exportBtn">📥 خروجی</button>
     </div>
 
     <div class="stats">
-        <div class="stat"><b id="totalCount">0</b><span>کل مشتریان</span></div>
-        <div class="stat"><b id="activeCount">0</b><span>فعال</span></div>
-        <div class="stat"><b id="dangerCount">0</b><span>در خطر</span></div>
+        <div class="stat"><b id="totalCount">0</b><span id="statTotal">کل مشتریان</span></div>
+        <div class="stat"><b id="activeCount">0</b><span id="statActive">فعال</span></div>
+        <div class="stat"><b id="dangerCount">0</b><span id="statDanger">در خطر</span></div>
     </div>
 
     <div id="list" class="loading">در حال بارگذاری...</div>
@@ -174,6 +174,14 @@ const { data: profileBT } = await supabase
     .maybeSingle();
 
 myLabels = getLabels(profileBT?.business_type || 'shop');
+ 
+// 🎯 اعمال متن‌های پویا
+const setTxt = (id, txt) => { const el = $(id); if (el) el.textContent = txt; };
+setTxt('pageTitle', myLabels.customers);
+setTxt('btnAddLabel', myLabels.customer);
+setTxt('statTotal', 'کل ' + myLabels.customers);
+setTxt('statActive', 'فعال');
+setTxt('statDanger', 'در خطر'); 
 
 await loadCustomers();
 }
