@@ -35,8 +35,8 @@ body{font-family:Vazirmatn,sans-serif;background:#f1f5f9;margin:0;padding:20px;p
 <body>
 
 <div class="header">
-    <h1>📦 محصولات</h1>
-    <button class="btn-add" onclick="openAdd()">+ افزودن</button>
+   <h1>📦 <span id="pageTitle">محصولات</span></h1> 
+    <button class="btn-add" onclick="openAdd()">+ افزودن <span id="btnAddLabel">محصول</span></button>
 </div>
 
 <div class="grid" id="grid">
@@ -45,7 +45,7 @@ body{font-family:Vazirmatn,sans-serif;background:#f1f5f9;margin:0;padding:20px;p
 
 <div class="modal" id="modal">
     <div class="modal-box">
-        <h2 id="modalTitle">افزودن محصول</h2>
+        <h2 id="modalTitle">افزودن <span id="modalTypeLabel">محصول</span></h2>
         <input type="hidden" id="productId">
         
         <div class="preview" id="preview" onclick="document.getElementById('fileInput').click()">
@@ -54,7 +54,7 @@ body{font-family:Vazirmatn,sans-serif;background:#f1f5f9;margin:0;padding:20px;p
         <input type="file" id="fileInput" accept="image/*" style="display:none">
         
         <div class="field">
-            <label>نام محصول *</label>
+            <label>نام <span id="fieldNameLabel">محصول</span> *</label>
             <input type="text" id="name" placeholder="مثلاً: گتر کوهنوردی">
         </div>
         
@@ -104,9 +104,16 @@ const { data: profileBT } = await supabase
     .maybeSingle();
 
 myLabels = getLabels(profileBT?.business_type || 'shop');
-
+    
+// 🎯 اعمال متن‌های پویا
+const setTxt = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+setTxt('pageTitle', myLabels.products);
+setTxt('btnAddLabel', myLabels.product);
+setTxt('modalTypeLabel', myLabels.product);
+setTxt('fieldNameLabel', myLabels.product);
+    
 window.openAdd = function() {
-    document.getElementById('modalTitle').textContent = 'افزودن محصول';
+    document.getElementById('modalTitle').textContent = 'افزودن ' + myLabels.product;
     document.getElementById('productId').value = '';
     document.getElementById('name').value = '';
     document.getElementById('price').value = '';
@@ -207,7 +214,7 @@ function render() {
             '<h3>' + p.name + '</h3>' +
             '<div class="price">' + (parseInt(p.price) || 0).toLocaleString('fa-IR') + ' تومان</div>';
         card.onclick = () => {
-            document.getElementById('modalTitle').textContent = 'ویرایش محصول';
+            document.getElementById('modalTitle').textContent = 'ویرایش ' + myLabels.product;
             document.getElementById('productId').value = p.id;
             document.getElementById('name').value = p.name || '';
             document.getElementById('price').value = p.price || '';
