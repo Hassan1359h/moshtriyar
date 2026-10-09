@@ -169,11 +169,14 @@ function render() {
 
     // قیف فروش
     const maxCount = Math.max(total, 1);
-    $('funnel').innerHTML = `
-      ${funnelStep(myLabels.customers + ' جدید', leads, maxCount)}
-      funnelStep('در انتظار ' + myLabels.sale, negotiating, maxCount)
-      ${funnelStep(myLabels.customer + ' وفادار', converted, maxCount)}
-    `;
+
+    const waitingLabel = 'در انتظار ' + (myLabels ? myLabels.sale : 'خرید');
+    const funnelHtml =
+    funnelStep((myLabels ? myLabels.customers : 'مشتریان') + ' جدید', leads, maxCount) +
+    funnelStep(waitingLabel, negotiating, maxCount) +
+    funnelStep((myLabels ? myLabels.customer : 'مشتری') + ' وفادار', converted, maxCount);
+$('funnel').innerHTML = funnelHtml;
+    
 
     // ارزش فرصت‌های از دست رفته
     const atRisk = customers.filter(c => {
