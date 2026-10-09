@@ -154,10 +154,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#2563eb}
     <div id="items" class="items">
         <div class="loading">در حال آماده‌سازی...</div>
     </div>
-    <div style="display:flex;gap:8px;margin-top:12px;">
-        <button id="addItem" class="btn btn-blue" style="flex:1;">➕ افزودن <span id="addItemLabel">محصول</span></button>
-        <button id="addManualItem" class="btn btn-blue" style="flex:1;">✏️ افزودن <span id="addManualLabel">خدمت</span></button>
-    </div>
+    <button id="addItem" class="btn btn-blue add-btn">➕ افزودن <span id="addItemLabel">محصول</span></button>
+    <button id="addManualItem" class="btn btn-blue add-btn" style="margin-top:8px;">✏️ افزودن <span id="addManualLabel">ردیف دستی</span></button>
 </section>
 
 <section class="card no-print">
@@ -210,7 +208,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#2563eb}
 <div class="share-menu no-print" id="shareMenu">
     <div class="share-box">
         <h3>📤 ارسال فاکتور</h3>
-        <p>متن فاکتور ارسال می‌شود. برای ارسال فایل، اول DOC یا PDF را دانلود کن.</p>
+        <p>متن فاکتور ارسال می‌شود. برای ارسال فایل، اول PDF را دانلود کن.</p>
         <div class="share-grid">
             <button class="share-item wa" data-share="whatsapp"><span class="ic">💬</span>واتساپ</button>
             <button class="share-item tg" data-share="telegram"><span class="ic">✈️</span>تلگرام</button>
@@ -247,6 +245,12 @@ let myProfile = null;
 let myLabels = null;
 let businessType = 'shop';
 let editingInvoiceId = null;
+
+const SERVICE_ONLY_TYPES = ['medical', 'dental', 'lab', 'salon'];
+
+function isServiceOnly() {
+    return SERVICE_ONLY_TYPES.includes(businessType);
+}
 
 function escapeHtml(value) {
     return String(value ?? "")
@@ -299,7 +303,7 @@ async function loadBranding() {
         if (sites && sites.length > 0) {
             storeName = sites[0].brand_name || sites[0].name || null;
             logoUrl = sites[0].brand_logo_url || null;
-            businessType = sites[0].business_type || 'shop';
+            if (sites[0].business_type) businessType = sites[0].business_type;
         }
 
         if (!storeName && !logoUrl) {
@@ -361,10 +365,21 @@ function applyBusinessType() {
     if (addItemLabel) addItemLabel.textContent = myLabels.product;
     if (addManualLabel) addManualLabel.textContent = myLabels.service;
 
-    if (addItemBtn) addItemBtn.style.display = "block";
-    if (manualItemBtn) {
-        manualItemBtn.style.display = "block";
-        manualItemBtn.className = "btn btn-blue";
+    if (isServiceOnly()) {
+        if (addItemBtn) addItemBtn.style.display = "none";
+        if (manualItemBtn) {
+            manualItemBtn.style.display = "block";
+            manualItemBtn.className = "btn btn-blue add-btn";
+            manualItemBtn.style.marginTop = "12px";
+            manualItemBtn.style.width = "100%";
+        }
+    } else {
+        if (addItemBtn) addItemBtn.style.display = "block";
+        if (manualItemBtn) {
+            manualItemBtn.style.display = "block";
+            manualItemBtn.className = "btn btn-blue add-btn";
+            manualItemBtn.style.marginTop = "8px";
+        }
     }
 }
 
@@ -386,7 +401,8 @@ async function loadCustomers() {
 
 function renderCustomers() {
     const select = $("customerSelect");
-    select.innerHTML = '<option value="">انتخاب مشتری...</option>';
+    const label = myLabels ? myLabels.customer : 'مشتری';
+    select.innerHTML = '<option value="">انتخاب ' + label + '...</option>';
     customers.forEach(c => {
         const option = document.createElement("option");
         option.value = c.id;
@@ -430,7 +446,8 @@ async function loadProducts() {
 }
 
 function productOptions() {
-    let html = '<option value="">انتخاب ' + (myLabels ? myLabels.product : 'محصول') + '...</option>';
+    const label = myLabels ? myLabels.product : 'محصول';
+    let html = '<option value="">انتخاب ' + label + '...</option>';
     products.forEach(p => {
         html += '<option value="' + escapeHtml(p.id) + '">' +
                 escapeHtml(p.name) + " - " + money(p.price) + "</option>";
@@ -458,7 +475,7 @@ function addItem(saved, isManual) {
 
     let firstInput;
     if (manual) {
-        firstInput = '<input class="productName" type="text" placeholder="مثلاً ویزیت دکتر، مشاوره، گارانتی..." value="' + escapeHtml(saved?.product_name || "") + '">';
+        firstInput = '<input class="productName" type="text" placeholder="شرح خدمت..." value="' + escapeHtml(saved?.product_name || "") + '">';
     } else {
         firstInput = '<select class="productSelect">' + productOptions() + '</select>';
     }
@@ -583,6 +600,8 @@ function renderPreview() {
     const logo = getStoreLogo();
     const storeName = getStoreName();
     const storePhone = getStorePhone();
+    const itemColLbl = myLabels ? myLabels.product : 'محصول';
+    const custLbl = myLabels ? myLabels.customer : 'مشتری';
 
     let html =
         '<div class="inv-head">' +
@@ -602,12 +621,10 @@ function renderPreview() {
         '</div>';
 
     html += '<div style="margin-bottom:14px;font-size:12px;color:#475569;">' +
-                '<div><b style="color:#1e293b;">مشتری:</b> ' + (customerName ? escapeHtml(customerName) : '—') + '</div>' +
+                '<div><b style="color:#1e293b;">' + custLbl + ':</b> ' + (customerName ? escapeHtml(customerName) : '—') + '</div>' +
                 (customerPhone ? '<div><b style="color:#1e293b;">تلفن:</b> ' + escapeHtml(customerPhone) + '</div>' : '') +
                 (note ? '<div><b style="color:#1e293b;">توضیحات:</b> ' + escapeHtml(note) + '</div>' : '') +
             '</div>';
-
-    const itemColLbl = myLabels ? myLabels.product : 'محصول';
 
     html +=
         '<table class="inv-table">' +
@@ -655,12 +672,13 @@ function buildInvoiceText() {
 
     const invoiceLbl = myLabels ? myLabels.invoice : 'فاکتور';
     const itemLbl = myLabels ? myLabels.product : 'محصول';
+    const custLbl = myLabels ? myLabels.customer : 'مشتری';
 
     let text = "🧾 " + invoiceLbl + " " + getStoreName() + "\n";
     text += "━━━━━━━━━━━━━━\n";
     text += "شماره " + invoiceLbl + ": " + $("invoiceNumber").value + "\n";
     text += "تاریخ: " + $("invoiceDate").value + "\n";
-    if (customerName) text += "مشتری: " + customerName + "\n";
+    if (customerName) text += custLbl + ": " + customerName + "\n";
     if (customerPhone) text += "تلفن: " + customerPhone + "\n";
     text += "\n📦 " + itemLbl + "ها:\n";
 
@@ -920,7 +938,12 @@ function resetInvoice() {
     itemCount = 0;
     $("invoiceNumber").value = invoiceNumber();
     $("invoiceDate").value = todayShamsi();
-    addItem();
+
+    if (isServiceOnly()) {
+        addItem(null, true);
+    } else {
+        addItem();
+    }
     calculate();
 }
 
@@ -993,7 +1016,13 @@ function renderInvoiceArchive(list) {
             itemCount = 0;
             const items = Array.isArray(invoice.items) ? invoice.items : [];
             items.forEach(it => addItem(it, it.is_manual));
-            if (items.length === 0) addItem();
+            if (items.length === 0) {
+                if (isServiceOnly()) {
+                    addItem(null, true);
+                } else {
+                    addItem();
+                }
+            }
 
             calculate();
             window.scrollTo({ top: 0, behavior: "smooth" });
@@ -1010,7 +1039,13 @@ function renderInvoiceArchive(list) {
             $("items").innerHTML = "";
             itemCount = 0;
             (invoice.items || []).forEach(it => addItem(it, it.is_manual));
-            if ((invoice.items || []).length === 0) addItem();
+            if ((invoice.items || []).length === 0) {
+                if (isServiceOnly()) {
+                    addItem(null, true);
+                } else {
+                    addItem();
+                }
+            }
             calculate();
             $("shareMenu").classList.add("active");
         };
@@ -1026,7 +1061,13 @@ function renderInvoiceArchive(list) {
             $("items").innerHTML = "";
             itemCount = 0;
             (invoice.items || []).forEach(it => addItem(it, it.is_manual));
-            if ((invoice.items || []).length === 0) addItem();
+            if ((invoice.items || []).length === 0) {
+                if (isServiceOnly()) {
+                    addItem(null, true);
+                } else {
+                    addItem();
+                }
+            }
             calculate({ skipPreview: true });
             renderPreview();
             setTimeout(() => {
@@ -1083,8 +1124,12 @@ async function init() {
         .eq('id', me.id)
         .maybeSingle();
 
-    myLabels = getLabels(profileBT?.business_type || businessType || 'shop');
+    if (profileBT?.business_type) {
+        businessType = profileBT.business_type;
+    }
+    myLabels = getLabels(businessType);
 
+    renderCustomers();
     applyBusinessType();
 
     await loadInvoiceArchive();
@@ -1094,7 +1139,12 @@ async function init() {
 
     $("items").innerHTML = "";
     itemCount = 0;
-    addItem();
+
+    if (isServiceOnly()) {
+        addItem(null, true);
+    } else {
+        addItem();
+    }
 
     ["customer", "customerPhone", "invoiceNote", "discountPercent", "discountFixed"]
         .forEach(id => $(id).addEventListener("input", renderPreview));
