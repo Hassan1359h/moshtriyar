@@ -153,12 +153,12 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#2563eb}
 
 <!-- محصولات -->
 <section class="card no-print">
-    <div class="title">📦 محصولات</div>
+    <div class="title">📦 <span id="itemsSectionTitle">محصولات</span></div>
     <div id="items" class="items">
         <div class="loading">در حال آماده‌سازی...</div>
     </div>
-    <button id="addItem" class="btn btn-blue add-btn">➕ افزودن محصول</button>
-    <button id="addManualItem" class="btn btn-gray add-btn" style="margin-top:8px;">✏️ افزودن ردیف دستی (خدمات)</button>
+    <button id="addItem" class="btn btn-blue add-btn">➕ افزودن <span id="addItemLabel">محصول</span></button>
+    <button id="addManualItem" class="btn btn-gray add-btn" style="margin-top:8px;">✏️ افزودن <span id="addManualLabel">ردیف دستی</span></button>
 </section>
 
 <!-- تخفیف -->
@@ -231,7 +231,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#2563eb}
 
 import { supabase } from './js/supabase.js';
 import { checkPlanGuard } from './js/check-plan.js';
-
+import { getLabels } from './js/labels.js';
 // 🎯 چک انقضای پلن
 if (!(await checkPlanGuard())) {
     throw new Error('Plan expired');
@@ -251,6 +251,7 @@ let products = [];
 let customers = [];
 let me = null;
 let myProfile = null;
+let myLabels = null;
 let businessType = 'shop';   
 let editingInvoiceId = null;
 
@@ -1169,7 +1170,21 @@ async function init() {
 
     await Promise.all([loadCustomers(), loadProducts()]);
     await loadBranding();
-applyBusinessType();
+    applyBusinessType();
+
+// 🎯 لود متن‌های پویا
+const { data: profileBT } = await supabase
+    .from('profiles')
+    .select('business_type')
+    .eq('id', me.id)
+    .maybeSingle();
+
+const myLabels = getLabels(profileBT?.business_type || 'shop');
+const setTxt = (id, txt) => { const el = $(id); if (el) el.textContent = txt; };
+setTxt('itemsSectionTitle', myLabels.products);
+setTxt('addItemLabel', myLabels.product);
+setTxt('addManualLabel', myLabels.service);
+    
 await loadInvoiceArchive();
 
     $("invoiceNumber").value = invoiceNumber();
