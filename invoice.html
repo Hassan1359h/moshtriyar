@@ -150,7 +150,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#2563eb}
 </section>
 
 <section class="card no-print">
-    <div class="title">📦 <span id="itemsSectionTitle">محصولات</span></div>
+    <div class="title"><span id="itemsEmoji">📦</span> <span id="itemsSectionTitle">محصولات</span></div>
     <div id="items" class="items">
         <div class="loading">در حال آماده‌سازی...</div>
     </div>
@@ -362,6 +362,9 @@ function applyBusinessType() {
     const manualItemBtn = $("addManualItem");
 
     if (itemsSectionTitle) itemsSectionTitle.textContent = myLabels.products;
+    const emojiMap = { shop: '📦', medical: '🩺', dental: '🦷', lab: '🧪', salon: '💇', gym: '🏋️', school: '🏫', legal: '⚖️', realestate: '🏠', technical: '🔧', general: '📋' };
+    const emojiEl = document.getElementById('itemsEmoji');
+    if (emojiEl) emojiEl.textContent = emojiMap[businessType] || '📦';
     if (addItemLabel) addItemLabel.textContent = myLabels.product;
     if (addManualLabel) addManualLabel.textContent = myLabels.service;
 
