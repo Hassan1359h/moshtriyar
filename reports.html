@@ -74,7 +74,7 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;li
         </div>
 
         <div class="card">
-            <h2>🎯 قیف ${myLabels.sale}</h2>
+            <h2>🎯 قیف <span id="funnelTitle">فروش</span></h2>
             <div class="funnel" id="funnel"></div>
         </div>
 
@@ -114,7 +114,10 @@ if (!session) { window.location.href = 'login.html'; }
     .maybeSingle();
 
 myLabels = getLabels(profileBT?.business_type || 'shop');
-
+    
+const ftEl = document.getElementById('funnelTitle');
+if (ftEl) ftEl.textContent = myLabels.sale;
+    
 document.querySelectorAll('.period button').forEach(btn => {
     btn.onclick = () => {
         document.querySelectorAll('.period button').forEach(b => b.classList.remove('active'));
