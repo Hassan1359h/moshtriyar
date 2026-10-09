@@ -436,10 +436,10 @@ $("customerSelect").onchange = () => {
 async function loadProducts() {
     const { data, error } = await supabase
         .from("products")
-        .select("id,name,price")
+        .select("id,name,price,business_type")
         .eq("user_id", me.id)
+        .eq("business_type", businessType || 'shop')
         .order("created_at", { ascending: false });
-
     if (error) {
         products = [];
         console.error(error);
@@ -1120,8 +1120,23 @@ async function init() {
     }
     me = session.user;
 
-    await Promise.all([loadCustomers(), loadProducts()]);
+    await loadCustomers();
     await loadBranding();
+
+    const { data: profileBT } = await supabase
+        .from('profiles')
+        .select('business_type')
+        .eq('id', me.id)
+        .maybeSingle();
+
+    if (profileBT?.business_type) {
+        businessType = profileBT.business_type;
+    }
+    myLabels = getLabels(businessType);
+
+    await loadProducts();
+    renderCustomers();
+    applyBusinessType();
 
     const { data: profileBT } = await supabase
         .from('profiles')
