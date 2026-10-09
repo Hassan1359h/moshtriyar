@@ -104,16 +104,16 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;li
     <div class="card">
         <div class="card-title">📊 این ماه</div>
         <div class="stats-grid">
-            <div class="stat"><b id="totalCustomers">0</b><span>کل مشتریان</span></div>
-            <div class="stat"><b id="activeCustomers">0</b><span>مشتری فعال</span></div>
-            <div class="stat"><b id="totalSales">۰</b><span>فروش (تومان)</span></div>
-            <div class="stat"><b id="newCustomers">0</b><span>اضافه شده این ماه</span></div>
+            <div class="stat"><b id="totalCustomers">0</b><span id="label_total">کل مشتریان</span></div>
+            <div class="stat"><b id="activeCustomers">0</b><span id="label_active">مشتری فعال</span></div>
+            <div class="stat"><b id="totalSales">۰</b><span id="label_sales">فروش (تومان)</span></div>
+            <div class="stat"><b id="newCustomers">0</b><span id="label_new">اضافه شده این ماه</span></div>
         </div>
     </div>
 
     <!-- مشتریان در خطر -->
     <div class="card danger-card hidden" id="riskCard">
-        <div class="card-title">⚠️ مشتریان در خطر از دست رفتن</div>
+        <div class="card-title">⚠️ <span id="label_atrisk">مشتریان در خطر از دست رفتن</span></div>
         <div class="risk-summary">
             <div class="risk-amount"><span id="riskCount">0</span> مشتری</div>
             <div class="risk-desc">ارزش در خطر: <strong id="riskValue">۰</strong> تومان</div>
@@ -189,6 +189,12 @@ const { data: profileBT } = await supabase
 
 myBusinessType = profileBT?.business_type || 'shop';
 myLabels = getLabels(myBusinessType);
+
+    // 🎯 اعمال متن‌های پویا
+if ($('label_total')) $('label_total').textContent = myLabels.customers;
+if ($('label_active')) $('label_active').textContent = myLabels.customer + ' فعال';
+if ($('label_atrisk')) $('label_atrisk').textContent = myLabels.customers + ' در خطر';
+if ($('label_sales')) $('label_sales').textContent = myLabels.sale + ' (تومان)';
     
     // 🎯 چک انقضای پلن — اگه منقضی، برو به locked.html
     const { data: profileCheck } = await supabase
