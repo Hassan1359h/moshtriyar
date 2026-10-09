@@ -79,6 +79,7 @@ body{font-family:Vazirmatn,sans-serif;background:#f1f5f9;margin:0;padding:20px;p
 
 <script type="module">
 import { supabase } from './js/supabase.js';
+import { getLabels } from './js/labels.js';
 import { checkPlanGuard } from './js/check-plan.js';
 import { getLabels } from './js/labels.js';
 
@@ -90,11 +91,20 @@ if (!(await checkPlanGuard())) {
 let products = [];
 let me = null;
 let imageUrl = '';
+let businessType = 'shop';
 let myLabels = null;
 
 const { data: { session } } = await supabase.auth.getSession();
 if (!session) { window.location.href = 'login.html'; }
 me = session.user;
+   const { data: profileBT } = await supabase
+    .from('profiles')
+    .select('business_type')
+    .eq('id', me.id)
+    .maybeSingle();
+
+businessType = profileBT?.business_type || 'shop';
+myLabels = getLabels(businessType);
     
 // 🎯 لود نوع کسب‌وکار
 const { data: profileBT } = await supabase
@@ -157,8 +167,9 @@ window.saveProduct = async function() {
     btn.disabled = true;
     btn.textContent = 'در حال ذخیره...';
     
-    const payload = {
+     const payload = {
         user_id: me.id,
+        business_type: businessType,
         name: name,
         price: parseInt(document.getElementById('price').value) || 0,
         description: document.getElementById('description').value.trim() || null,
@@ -186,8 +197,16 @@ window.saveProduct = async function() {
 };
 
 async function loadProducts() {
+    let query = supabase.from('products').select('*').eq('user_id', me.id);
     
-    const { data, error } = await supabase.from('products').select('*').eq('user_id', me.id).order('created_at', { ascending: false });
+    // 🎯 فیلتر بر اساس نوع کسب‌وکار
+    if (businessType && businessType !== 'shop') {
+        query = query.eq('business_type', businessType);
+    } else {
+        query = query.eq('business_type', 'shop');
+    }
+    
+    const { data, error } = await query.order('created_at', { ascending: false });
     
     if (error) {
         document.getElementById('grid').innerHTML = '<div class="loading">خطا: ' + error.message + '</div>';
