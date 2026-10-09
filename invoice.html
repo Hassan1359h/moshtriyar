@@ -107,7 +107,6 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#2563eb}
 
 <div id="message" class="message no-print"></div>
 
-<!-- برندینگ فروشگاه -->
 <section class="card no-print">
     <div class="brand-box" id="brandBox">
         <div class="brand-logo" id="brandLogo">🏪</div>
@@ -118,7 +117,6 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#2563eb}
     </div>
 </section>
 
-<!-- اطلاعات فاکتور -->
 <section class="card no-print">
     <div class="title">📋 اطلاعات فاکتور</div>
     <div class="grid">
@@ -151,7 +149,6 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#2563eb}
     </div>
 </section>
 
-<!-- محصولات -->
 <section class="card no-print">
     <div class="title">📦 <span id="itemsSectionTitle">محصولات</span></div>
     <div id="items" class="items">
@@ -161,7 +158,6 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#2563eb}
     <button id="addManualItem" class="btn btn-gray add-btn" style="margin-top:8px;">✏️ افزودن <span id="addManualLabel">ردیف دستی</span></button>
 </section>
 
-<!-- تخفیف -->
 <section class="card no-print">
     <div class="title">💰 تخفیف</div>
     <div class="grid">
@@ -181,13 +177,11 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#2563eb}
     </div>
 </section>
 
-<!-- پیش‌نمایش فاکتور -->
 <section class="card">
     <div class="title no-print">👁️ پیش‌نمایش فاکتور</div>
     <div id="invoicePreviewBox" class="invoice-preview"></div>
 </section>
 
-<!-- عملیات -->
 <section class="card no-print">
     <div class="title">⚡ عملیات فاکتور</div>
     <div class="buttons">
@@ -199,7 +193,6 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#2563eb}
     </div>
 </section>
 
-<!-- آرشیو -->
 <section class="card no-print">
     <div class="title">📚 آرشیو فاکتورها</div>
     <div style="margin-bottom:12px;">
@@ -212,7 +205,6 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#2563eb}
 
 </main>
 
-<!-- منوی ارسال -->
 <div class="share-menu no-print" id="shareMenu">
     <div class="share-box">
         <h3>📤 ارسال فاکتور</h3>
@@ -232,12 +224,11 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#2563eb}
 import { supabase } from './js/supabase.js';
 import { checkPlanGuard } from './js/check-plan.js';
 import { getLabels } from './js/labels.js';
-// 🎯 چک انقضای پلن
+
 if (!(await checkPlanGuard())) {
     throw new Error('Plan expired');
 }
 
-// 🔧 اسم ستون‌های profiles — اگه فرق داشت این‌ها رو عوض کن
 const STORE_NAME_COL = 'store_name';
 const STORE_LOGO_COL = 'logo_url';
 const OPERATOR_PHONE_COL = 'phone';
@@ -252,12 +243,9 @@ let customers = [];
 let me = null;
 let myProfile = null;
 let myLabels = null;
-let businessType = 'shop';   
+let businessType = 'shop';
 let editingInvoiceId = null;
 
-// ———————————————————————————
-// ابزار
-// ———————————————————————————
 function escapeHtml(value) {
     return String(value ?? "")
         .replace(/&/g, "&amp;")
@@ -294,30 +282,24 @@ function message(text, type) {
     setTimeout(() => { box.className = "message"; }, 3500);
 }
 
-// ———————————————————————————
-// بارگذاری برندینگ فروشگاه
-// ———————————————————————————
-
 async function loadBranding() {
     try {
-        // 🎯 اول از جدول websites بخون (همون که تنظیمات دستیار استفاده می‌کنه)
-        
-const { data: sites } = await supabase
-    .from("websites")
-    .select("brand_name, brand_logo_url, name, business_type")
-    .eq("user_id", me.id)
-    .eq("active", true)
-    .limit(1);
+        const { data: sites } = await supabase
+            .from("websites")
+            .select("brand_name, brand_logo_url, name, business_type")
+            .eq("user_id", me.id)
+            .eq("active", true)
+            .limit(1);
+
         let storeName = null;
         let logoUrl = null;
 
         if (sites && sites.length > 0) {
-    storeName = sites[0].brand_name || sites[0].name || null;
-    logoUrl = sites[0].brand_logo_url || null;
-    businessType = sites[0].business_type || 'shop';
-}
+            storeName = sites[0].brand_name || sites[0].name || null;
+            logoUrl = sites[0].brand_logo_url || null;
+            businessType = sites[0].business_type || 'shop';
+        }
 
-        // 🎯 اگه تو websites نبود، از profiles امتحان کن (پشتیبان)
         if (!storeName && !logoUrl) {
             const { data: profile } = await supabase
                 .from("profiles")
@@ -351,6 +333,7 @@ const { data: sites } = await supabase
         console.error("Branding error:", e);
     }
 }
+
 function getStoreName() {
     return myProfile?.[STORE_NAME_COL] || "فروشگاه شما";
 }
@@ -362,51 +345,28 @@ function getStoreLogo() {
 function getStorePhone() {
     return myProfile?.[OPERATOR_PHONE_COL] || "";
 }
-    
-// 🏢 تابع تنظیم متن‌ها بر اساس نوع کسب‌وکار
+
 function applyBusinessType() {
-    const itemsEl = document.getElementById('items');
-    const card = itemsEl?.closest('.card');
-    const sectionTitle = card?.querySelector('.title');
+    if (!myLabels) return;
+
+    const itemsSectionTitle = document.getElementById('itemsSectionTitle');
+    const addItemLabel = document.getElementById('addItemLabel');
+    const addManualLabel = document.getElementById('addManualLabel');
     const addItemBtn = $("addItem");
     const manualItemBtn = $("addManualItem");
 
-    if (businessType === 'service') {
-        // 🩺 فقط خدمات
-        if (sectionTitle) sectionTitle.textContent = "🩺 خدمات";
-        if (addItemBtn) addItemBtn.style.display = "none";
-        if (manualItemBtn) {
-            manualItemBtn.style.display = "block";
-            manualItemBtn.textContent = "➕ افزودن خدمت";
-            manualItemBtn.className = "btn btn-blue add-btn";
-            manualItemBtn.style.marginTop = "0";
-        }
-    } else if (businessType === 'both') {
-        // 🎯 هر دو
-        if (sectionTitle) sectionTitle.textContent = "📦 محصولات و خدمات";
-        if (addItemBtn) {
-            addItemBtn.style.display = "block";
-            addItemBtn.textContent = "➕ افزودن محصول";
-        }
-        if (manualItemBtn) {
-            manualItemBtn.style.display = "block";
-            manualItemBtn.textContent = "✏️ افزودن خدمت";
-            manualItemBtn.className = "btn btn-gray add-btn";
-            manualItemBtn.style.marginTop = "8px";
-        }
-    } else {
-        // 🛒 فروشگاه (پیش‌فرض)
-        if (sectionTitle) sectionTitle.textContent = "📦 محصولات";
-        if (addItemBtn) {
-            addItemBtn.style.display = "block";
-            addItemBtn.textContent = "➕ افزودن محصول";
-        }
-        if (manualItemBtn) manualItemBtn.style.display = "none";
+    if (itemsSectionTitle) itemsSectionTitle.textContent = myLabels.products;
+    if (addItemLabel) addItemLabel.textContent = myLabels.product;
+    if (addManualLabel) addManualLabel.textContent = myLabels.service;
+
+    if (addItemBtn) addItemBtn.style.display = "block";
+    if (manualItemBtn) {
+        manualItemBtn.style.display = "block";
+        manualItemBtn.className = "btn btn-gray add-btn";
+        manualItemBtn.style.marginTop = "8px";
     }
 }
-// ———————————————————————————
-// بارگذاری مشتریان و محصولات
-// ———————————————————————————
+
 async function loadCustomers() {
     const { data, error } = await supabase
         .from("customers")
@@ -469,17 +429,13 @@ async function loadProducts() {
 }
 
 function productOptions() {
-    let html = '<option value="">انتخاب محصول...</option>';
+    let html = '<option value="">انتخاب ' + (myLabels ? myLabels.product : 'محصول') + '...</option>';
     products.forEach(p => {
         html += '<option value="' + escapeHtml(p.id) + '">' +
                 escapeHtml(p.name) + " - " + money(p.price) + "</option>";
     });
     return html;
 }
-
-// ———————————————————————————
-// ردیف محصول
-// ———————————————————————————
 
 function addItem(saved, isManual) {
     if (itemCount >= 25) {
@@ -495,7 +451,9 @@ function addItem(saved, isManual) {
     div.dataset.id = id;
     div.dataset.type = manual ? "manual" : "product";
 
-    const titleText = manual ? "🩺 خدمت" : "📦 محصول";
+    const productLbl = myLabels ? myLabels.product : "محصول";
+    const serviceLbl = myLabels ? myLabels.service : "خدمت";
+    const titleText = manual ? "🩺 " + serviceLbl : "📦 " + productLbl;
 
     let firstInput;
     if (manual) {
@@ -544,43 +502,12 @@ function addItem(saved, isManual) {
 
     calculate();
 }
-   function addManualItem() {
+
+function addManualItem() {
     addItem(null, true);
 }
 
-$("addManualItem").onclick = addManualItem; 
-// ———————————————————————————
-// محاسبات
-// ———————————————————————————
-function calculate(opts = {}) {
-    let subtotal = 0;
-    document.querySelectorAll(".item").forEach(item => {
-        const q = Number(item.querySelector(".quantity").value) || 0;
-        const p = Number(item.querySelector(".price").value) || 0;
-        const t = q * p;
-        subtotal += t;
-        item.querySelector(".rowTotal").textContent = money(t);
-    });
-
-    const percent = Math.min(100, Math.max(0, Number($("discountPercent").value) || 0));
-    const fixed = Math.max(0, Number($("discountFixed").value) || 0);
-    const discount = Math.min(subtotal, subtotal * percent / 100 + fixed);
-    const total = Math.max(0, subtotal - discount);
-
-    $("subtotal").textContent = money(subtotal);
-    $("discount").textContent = money(discount);
-    $("total").textContent = money(total);
-
-    if (!opts.skipPreview) {
-        renderPreview();
-    }
-
-    return { subtotal, discount, total };
-}
-
-// ———————————————————————————
-// جمع‌آوری ردیف‌ها
-// ———————————————————————————
+$("addManualItem").onclick = addManualItem;
 
 function collectItems() {
     const items = [];
@@ -615,10 +542,35 @@ function collectItems() {
     });
     return items;
 }
-// ———————————————————————————
-// پیش‌نمایش فاکتور
-// ———————————————————————————
-    function renderPreview() {
+
+function calculate(opts) {
+    opts = opts || {};
+    let subtotal = 0;
+    document.querySelectorAll(".item").forEach(item => {
+        const q = Number(item.querySelector(".quantity").value) || 0;
+        const p = Number(item.querySelector(".price").value) || 0;
+        const t = q * p;
+        subtotal += t;
+        item.querySelector(".rowTotal").textContent = money(t);
+    });
+
+    const percent = Math.min(100, Math.max(0, Number($("discountPercent").value) || 0));
+    const fixed = Math.max(0, Number($("discountFixed").value) || 0);
+    const discount = Math.min(subtotal, subtotal * percent / 100 + fixed);
+    const total = Math.max(0, subtotal - discount);
+
+    $("subtotal").textContent = money(subtotal);
+    $("discount").textContent = money(discount);
+    $("total").textContent = money(total);
+
+    if (!opts.skipPreview) {
+        renderPreview();
+    }
+
+    return { subtotal, discount, total };
+}
+
+function renderPreview() {
     const box = $("invoicePreviewBox");
     if (!box) return;
 
@@ -654,18 +606,20 @@ function collectItems() {
                 (note ? '<div><b style="color:#1e293b;">توضیحات:</b> ' + escapeHtml(note) + '</div>' : '') +
             '</div>';
 
+    const itemColLbl = myLabels ? myLabels.product : 'محصول';
+
     html +=
         '<table class="inv-table">' +
             '<thead><tr>' +
                 '<th style="width:35px;">#</th>' +
-                '<th>محصول</th>' +
+                '<th>' + itemColLbl + '</th>' +
                 '<th style="width:50px;">تعداد</th>' +
                 '<th style="width:90px;">قیمت</th>' +
                 '<th style="width:90px;">جمع</th>' +
             '</tr></thead><tbody>';
 
     if (items.length === 0) {
-        html += '<tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:16px;">محصولی اضافه نشده</td></tr>';
+        html += '<tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:16px;">موردی اضافه نشده</td></tr>';
     } else {
         items.forEach((it, i) => {
             html += '<tr>' +
@@ -691,23 +645,23 @@ function collectItems() {
     box.innerHTML = html;
 }
 
-// ———————————————————————————
-// ساخت متن فاکتور (برای ارسال و ذخیره)
-// ———————————————————————————
 function buildInvoiceText() {
-    const calc = calculate();
+    const calc = calculate({ skipPreview: true });
     const items = collectItems();
     const customerName = $("customer").value.trim();
     const customerPhone = $("customerPhone").value.trim();
     const note = $("invoiceNote").value.trim();
 
-    let text = "🧾 فاکتور " + getStoreName() + "\n";
+    const invoiceLbl = myLabels ? myLabels.invoice : 'فاکتور';
+    const itemLbl = myLabels ? myLabels.product : 'محصول';
+
+    let text = "🧾 " + invoiceLbl + " " + getStoreName() + "\n";
     text += "━━━━━━━━━━━━━━\n";
-    text += "شماره فاکتور: " + $("invoiceNumber").value + "\n";
+    text += "شماره " + invoiceLbl + ": " + $("invoiceNumber").value + "\n";
     text += "تاریخ: " + $("invoiceDate").value + "\n";
     if (customerName) text += "مشتری: " + customerName + "\n";
     if (customerPhone) text += "تلفن: " + customerPhone + "\n";
-    text += "\n📦 محصولات:\n";
+    text += "\n📦 " + itemLbl + "ها:\n";
 
     items.forEach((it, i) => {
         text += (i + 1) + ". " + it.product_name +
@@ -726,19 +680,18 @@ function buildInvoiceText() {
     return { text, calc, items, customerName, customerPhone };
 }
 
-// ———————————————————————————
-// ذخیره در Supabase
-// ———————————————————————————
 $("saveBtn").onclick = async () => {
     const btn = $("saveBtn");
     btn.disabled = true;
     btn.textContent = "⏳ در حال ذخیره...";
 
     try {
-        const { text, calc, items, customerName, customerPhone } = buildInvoiceText();
+        const data = buildInvoiceText();
+        const items = data.items;
+        const calc = data.calc;
 
         if (items.length === 0) {
-            message("حداقل یک محصول اضافه کن.", "error");
+            message("حداقل یک مورد اضافه کن.", "error");
             return;
         }
 
@@ -747,13 +700,13 @@ $("saveBtn").onclick = async () => {
             invoice_number: $("invoiceNumber").value,
             invoice_date: $("invoiceDate").value,
             customer_id: $("customer").dataset.customerId || $("customerSelect").value || null,
-            customer_name: customerName || null,
-            customer_phone: customerPhone || null,
+            customer_name: data.customerName || null,
+            customer_phone: data.customerPhone || null,
             items: items,
             subtotal: calc.subtotal,
             discount: calc.discount,
             total: calc.total,
-            text_content: text
+            text_content: data.text
         };
 
         let error;
@@ -778,7 +731,7 @@ $("saveBtn").onclick = async () => {
         }
 
         message(
-            editingInvoiceId ? "فاکتور با موفقیت بروزرسانی شد." : "فاکتور با موفقیت ذخیره شد.",
+            editingInvoiceId ? "فاکتور بروزرسانی شد." : "فاکتور ذخیره شد.",
             "success"
         );
 
@@ -795,24 +748,18 @@ $("saveBtn").onclick = async () => {
     }
 };
 
-// ———————————————————————————
-// دانلود PDF / پرینت
-// ———————————————————————————
 $("downloadPdfBtn").onclick = async () => {
     const btn = $("downloadPdfBtn");
     const oldText = btn.textContent;
     btn.disabled = true;
-    btn.textContent = "⏳ در حال ساخت PDF...";
+    btn.textContent = "⏳ در حال ساخت...";
 
     try {
         const element = $("invoicePreviewBox");
         if (!element) throw new Error("Preview not found");
 
         const canvas = await html2canvas(element, {
-            scale: 2,
-            useCORS: true,
-            backgroundColor: '#ffffff',
-            logging: false
+            scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false
         });
 
         const imgData = canvas.toDataURL('image/jpeg', 0.85);
@@ -840,29 +787,20 @@ $("downloadPdfBtn").onclick = async () => {
         const filename = "factor-" + invNumber + ".pdf";
         const base64 = pdf.output('datauristring').split(',')[1];
 
-        // 🎯 چک کن تو اپ هستیم
-        const isInApp = /wv|WebView/i.test(navigator.userAgent) ||
-                        (window.ReactNativeWebView !== undefined);
+        const isInApp = window.ReactNativeWebView && typeof window.ReactNativeWebView.postMessage === "function";
 
         if (isInApp) {
-            // ارسال به اپ نیتیو
-            if (window.ReactNativeWebView && typeof window.ReactNativeWebView.postMessage === 'function') {
-                window.ReactNativeWebView.postMessage(JSON.stringify({
-                    type: "saveFile",
-                    data: base64,
-                    filename: filename,
-                    mimeType: "application/pdf"
-                }));
-                message("PDF آماده شد. محل ذخیره رو انتخاب کن.", "success");
-            } else {
-                message("خطا: پل نیتیو در دسترس نیست", "error");
-            }
+            window.ReactNativeWebView.postMessage(JSON.stringify({
+                type: "saveFile",
+                data: base64,
+                filename: filename,
+                mimeType: "application/pdf"
+            }));
+            message("PDF آماده شد. محل ذخیره رو انتخاب کن.", "success");
         } else {
-            // مرورگر معمولی
             pdf.save(filename);
             message("فایل PDF دانلود شد.", "success");
         }
-
     } catch (e) {
         console.error("PDF error:", e);
         message("خطا: " + (e.message || "نامشخص"), "error");
@@ -871,24 +809,15 @@ $("downloadPdfBtn").onclick = async () => {
         btn.textContent = oldText;
     }
 };
-    
-// ———————————————————————————
-// AI بهبود متن
-// ———————————————————————————
-// ✨ بهبود متن با AI
+
 $("aiBtn").onclick = async () => {
     const btn = $("aiBtn");
     const oldText = btn.textContent;
     btn.disabled = true;
-    btn.textContent = "⏳ در حال پردازش...";
-
-    message("AI در حال فکر کردن است... (ممکنه ۵-۱۰ ثانیه طول بکشه)", "info");
+    btn.textContent = "⏳ ...";
 
     try {
         const { text } = buildInvoiceText();
-
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 ثانیه
 
         const res = await fetch("/api/ai-generate", {
             method: "POST",
@@ -896,11 +825,8 @@ $("aiBtn").onclick = async () => {
             body: JSON.stringify({
                 prompt: "این متن فاکتور را با لحن رسمی و محترمانه بازنویسی کن، اطلاعات را حذف نکن، فقط متن پیام آماده برای ارسال به مشتری باشد:\n\n" + text,
                 type: "invoice-message"
-            }),
-            signal: controller.signal
+            })
         });
-
-        clearTimeout(timeoutId);
 
         const data = await res.json();
         if (data?.text) {
@@ -912,24 +838,17 @@ $("aiBtn").onclick = async () => {
         }
     } catch (e) {
         console.error(e);
-        if (e.name === "AbortError") {
-            message("AI خیلی طول کشید (بیشتر از ۳۰ ثانیه). دوباره امتحان کن.", "error");
-        } else {
-            message("خطا در ارتباط با AI: " + e.message, "error");
-        }
+        message("AI در دسترس نیست.", "error");
     } finally {
         btn.disabled = false;
         btn.textContent = oldText;
     }
 };
 
-// ———————————————————————————
-// منوی ارسال
-// ———————————————————————————
 $("sendBtn").onclick = () => {
     const items = collectItems();
     if (items.length === 0) {
-        message("اول محصول اضافه کن.", "error");
+        message("اول یه مورد اضافه کن.", "error");
         return;
     }
     $("shareMenu").classList.add("active");
@@ -970,8 +889,6 @@ document.querySelectorAll(".share-item").forEach(btn => {
                 return;
             }
 
-            console.log("Share →", platform, url.slice(0, 100));
-
             const a = document.createElement("a");
             a.href = url;
             a.target = "_blank";
@@ -982,7 +899,6 @@ document.querySelectorAll(".share-item").forEach(btn => {
 
             message("در حال باز کردن " + btn.textContent.trim() + " ...", "success");
             $("shareMenu").classList.remove("active");
-
         } catch (e) {
             console.error("Share error:", e);
             message("خطا در ارسال: " + e.message, "error");
@@ -990,9 +906,6 @@ document.querySelectorAll(".share-item").forEach(btn => {
     };
 });
 
-// ———————————————————————————
-// ریست فاکتور
-// ———————————————————————————
 function resetInvoice() {
     editingInvoiceId = null;
     $("customerSelect").value = "";
@@ -1016,9 +929,6 @@ $("clearBtn").onclick = () => {
     message("فاکتور جدید آماده شد.", "success");
 };
 
-// ———————————————————————————
-// آرشیو فاکتورها
-// ———————————————————————————
 async function loadInvoiceArchive() {
     const archive = $("invoiceArchive");
     if (!me) {
@@ -1081,7 +991,7 @@ function renderInvoiceArchive(list) {
             $("items").innerHTML = "";
             itemCount = 0;
             const items = Array.isArray(invoice.items) ? invoice.items : [];
-            items.forEach(it => addItem(it));
+            items.forEach(it => addItem(it, it.is_manual));
             if (items.length === 0) addItem();
 
             calculate();
@@ -1090,7 +1000,6 @@ function renderInvoiceArchive(list) {
         };
 
         div.querySelector(".archive-send").onclick = () => {
-            // فاکتور آرشیوی را در فرم بارگذاری و منوی ارسال را باز می‌کنیم
             $("invoiceNumber").value = invoice.invoice_number || "";
             $("invoiceDate").value = invoice.invoice_date || "";
             $("customer").value = invoice.customer_name || "";
@@ -1099,31 +1008,30 @@ function renderInvoiceArchive(list) {
             $("discountFixed").value = Number(invoice.discount) || 0;
             $("items").innerHTML = "";
             itemCount = 0;
-            (invoice.items || []).forEach(it => addItem(it));
+            (invoice.items || []).forEach(it => addItem(it, it.is_manual));
             if ((invoice.items || []).length === 0) addItem();
             calculate();
             $("shareMenu").classList.add("active");
         };
 
         div.querySelector(".archive-pdf").onclick = () => {
-    // بارگذاری در فرم و سپس باز کردن پنجره چاپ PDF
-    $("invoiceNumber").value = invoice.invoice_number || "";
-    $("invoiceDate").value = invoice.invoice_date || "";
-    $("customer").value = invoice.customer_name || "";
-    $("customer").dataset.customerId = invoice.customer_id || "";
-    $("customerPhone").value = invoice.customer_phone || "";
-    $("discountPercent").value = 0;
-    $("discountFixed").value = Number(invoice.discount) || 0;
-    $("items").innerHTML = "";
-    itemCount = 0;
-    (invoice.items || []).forEach(it => addItem(it, it.is_manual));
-    if ((invoice.items || []).length === 0) addItem();
-    calculate({ skipPreview: true });
-    renderPreview();
-    setTimeout(() => {
-        $("downloadPdfBtn").click();
-    }, 300);
-};
+            $("invoiceNumber").value = invoice.invoice_number || "";
+            $("invoiceDate").value = invoice.invoice_date || "";
+            $("customer").value = invoice.customer_name || "";
+            $("customer").dataset.customerId = invoice.customer_id || "";
+            $("customerPhone").value = invoice.customer_phone || "";
+            $("discountPercent").value = 0;
+            $("discountFixed").value = Number(invoice.discount) || 0;
+            $("items").innerHTML = "";
+            itemCount = 0;
+            (invoice.items || []).forEach(it => addItem(it, it.is_manual));
+            if ((invoice.items || []).length === 0) addItem();
+            calculate({ skipPreview: true });
+            renderPreview();
+            setTimeout(() => {
+                $("downloadPdfBtn").click();
+            }, 300);
+        };
 
         div.querySelector(".archive-delete").onclick = async () => {
             if (!confirm("این فاکتور حذف شود؟")) return;
@@ -1157,9 +1065,6 @@ $("invoiceSearch").addEventListener("input", () => {
     renderInvoiceArchive(filtered);
 });
 
-// ———————————————————————————
-// راه‌اندازی
-// ———————————————————————————
 async function init() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
@@ -1170,35 +1075,26 @@ async function init() {
 
     await Promise.all([loadCustomers(), loadProducts()]);
     await loadBranding();
+
+    const { data: profileBT } = await supabase
+        .from('profiles')
+        .select('business_type')
+        .eq('id', me.id)
+        .maybeSingle();
+
+    myLabels = getLabels(profileBT?.business_type || businessType || 'shop');
+
     applyBusinessType();
 
-// 🎯 لود متن‌های پویا
-const { data: profileBT } = await supabase
-    .from('profiles')
-    .select('business_type')
-    .eq('id', me.id)
-    .maybeSingle();
-
-const myLabels = getLabels(profileBT?.business_type || 'shop');
-const setTxt = (id, txt) => { const el = $(id); if (el) el.textContent = txt; };
-setTxt('itemsSectionTitle', myLabels.products);
-setTxt('addItemLabel', myLabels.product);
-setTxt('addManualLabel', myLabels.service);
-    
-await loadInvoiceArchive();
+    await loadInvoiceArchive();
 
     $("invoiceNumber").value = invoiceNumber();
     $("invoiceDate").value = todayShamsi();
 
     $("items").innerHTML = "";
-itemCount = 0;
-if (businessType === 'service') {
-    addItem(null, true); // ردیف خدمت دستی
-} else {
-    addItem(); // ردیف محصول
-}
+    itemCount = 0;
+    addItem();
 
-    // render preview با تغییرات
     ["customer", "customerPhone", "invoiceNote", "discountPercent", "discountFixed"]
         .forEach(id => $(id).addEventListener("input", renderPreview));
 
