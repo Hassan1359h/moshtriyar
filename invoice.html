@@ -154,8 +154,10 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#2563eb}
     <div id="items" class="items">
         <div class="loading">در حال آماده‌سازی...</div>
     </div>
-    <button id="addItem" class="btn btn-blue add-btn">➕ افزودن <span id="addItemLabel">محصول</span></button>
-    <button id="addManualItem" class="btn btn-gray add-btn" style="margin-top:8px;">✏️ افزودن <span id="addManualLabel">ردیف دستی</span></button>
+    <div style="display:flex;gap:8px;margin-top:12px;">
+        <button id="addItem" class="btn btn-blue" style="flex:1;">➕ افزودن <span id="addItemLabel">محصول</span></button>
+        <button id="addManualItem" class="btn btn-blue" style="flex:1;">✏️ افزودن <span id="addManualLabel">خدمت</span></button>
+    </div>
 </section>
 
 <section class="card no-print">
@@ -362,8 +364,7 @@ function applyBusinessType() {
     if (addItemBtn) addItemBtn.style.display = "block";
     if (manualItemBtn) {
         manualItemBtn.style.display = "block";
-        manualItemBtn.className = "btn btn-gray add-btn";
-        manualItemBtn.style.marginTop = "8px";
+        manualItemBtn.className = "btn btn-blue";
     }
 }
 
