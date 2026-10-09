@@ -233,7 +233,7 @@ async function loadCustomers() {
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
     $('totalCustomers').textContent = customers.length;
-    $('activeCustomers').textContent = customers.filter(c => c.status === 'customer' || c.status === 'negotiating').length;
+    $('activeCustomers').textContent = customers.filter(c => c.status === 'loyal' || c.status === 'waiting' || c.status === 'new').length;
 
     const thisMonthCustomers = customers.filter(c => new Date(c.created_at) >= monthStart).length;
     $('newCustomers').textContent = thisMonthCustomers;
