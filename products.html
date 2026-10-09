@@ -80,6 +80,7 @@ body{font-family:Vazirmatn,sans-serif;background:#f1f5f9;margin:0;padding:20px;p
 <script type="module">
 import { supabase } from './js/supabase.js';
 import { checkPlanGuard } from './js/check-plan.js';
+import { getLabels } from './js/labels.js';
 
 // 🎯 چک انقضای پلن قبل از هر کاری
 if (!(await checkPlanGuard())) {
@@ -89,10 +90,20 @@ if (!(await checkPlanGuard())) {
 let products = [];
 let me = null;
 let imageUrl = '';
+let myLabels = null;
 
 const { data: { session } } = await supabase.auth.getSession();
 if (!session) { window.location.href = 'login.html'; }
 me = session.user;
+    
+// 🎯 لود نوع کسب‌وکار
+const { data: profileBT } = await supabase
+    .from('profiles')
+    .select('business_type')
+    .eq('id', me.id)
+    .maybeSingle();
+
+myLabels = getLabels(profileBT?.business_type || 'shop');
 
 window.openAdd = function() {
     document.getElementById('modalTitle').textContent = 'افزودن محصول';
