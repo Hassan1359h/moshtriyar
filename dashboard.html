@@ -168,15 +168,27 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;li
 </div>
 <script type="module">
 import { supabase } from './js/supabase.js';
-
+import { getLabels } from './js/labels.js';
 const $ = id => document.getElementById(id);
 let me = null;
 let customers = [];
+let myLabels = null;
+let myBusinessType = null;
 
 async function init() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { window.location.href = 'login.html'; return; }
     me = session.user;
+    
+    // 🎯 لود نوع کسب‌وکار
+const { data: profileBT } = await supabase
+    .from('profiles')
+    .select('business_type')
+    .eq('id', me.id)
+    .maybeSingle();
+
+myBusinessType = profileBT?.business_type || 'shop';
+myLabels = getLabels(myBusinessType);
     
     // 🎯 چک انقضای پلن — اگه منقضی، برو به locked.html
     const { data: profileCheck } = await supabase
