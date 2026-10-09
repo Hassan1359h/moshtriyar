@@ -13,57 +13,13 @@ export const LABELS = {
         appointment: 'سفارش',
         appointments: 'سفارشات'
     },
-    medical: {
-        customer: 'مراجع',
-        customers: 'مراجعان',
-        product: 'خدمت',
-        products: 'خدمات',
-        sale: 'ویزیت',
-        sales: 'ویزیت‌ها',
-        invoice: 'صورتحساب',
-        invoices: 'صورتحساب‌ها',
-        service: 'درمان',
-        appointment: 'نوبت',
-        appointments: 'نوبت‌ها'
+    medical: { ..., product: 'خدمت', service: 'مشاوره', ... }
     },
-    dental: {
-        customer: 'مراجع',
-        customers: 'مراجعان',
-        product: 'درمان',
-        products: 'درمان‌ها',
-        sale: 'ویزیت',
-        sales: 'ویزیت‌ها',
-        invoice: 'صورتحساب',
-        invoices: 'صورتحساب‌ها',
-        service: 'درمان',
-        appointment: 'نوبت',
-        appointments: 'نوبت‌ها'
+    dental: { customer: 'مراجع', customers: 'مراجعان', product: 'درمان', products: 'درمان‌ها', sale: 'ویزیت', sales: 'ویزیت‌ها', invoice: 'صورتحساب', invoices: 'صورتحساب‌ها', service: 'خدمت جانبی', appointment: 'نوبت', appointments: 'نوبت‌ها' },
     },
-    lab: {
-        customer: 'مراجعه‌کننده',
-        customers: 'مراجعه‌کنندگان',
-        product: 'آزمایش',
-        products: 'آزمایش‌ها',
-        sale: 'پذیرش',
-        sales: 'پذیرش‌ها',
-        invoice: 'صورتحساب',
-        invoices: 'صورتحساب‌ها',
-        service: 'آزمایش',
-        appointment: 'نوبت',
-        appointments: 'نوبت‌ها'
+    lab: { ..., product: 'آزمایش', service: 'نمونه‌گیری', ... }
     },
-    salon: {
-        customer: 'مراجع',
-        customers: 'مراجعان',
-        product: 'خدمت',
-        products: 'خدمات',
-        sale: 'نوبت',
-        sales: 'نوبت‌ها',
-        invoice: 'فاکتور',
-        invoices: 'فاکتورها',
-        service: 'خدمت',
-        appointment: 'نوبت',
-        appointments: 'نوبت‌ها'
+    salon: { ..., product: 'خدمت', service: 'خدمت جانبی', ... }
     },
     gym: {
         customer: 'ورزشکار',
