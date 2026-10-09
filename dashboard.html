@@ -126,6 +126,17 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;li
         <div class="card-title">💳 وضعیت اشتراک</div>
         <div id="subContent"></div>
     </div>
+    <!-- 🎯 نوع کسب‌وکار -->
+<div class="card">
+    <div class="card-title">🎯 نوع کسب‌وکار</div>
+    <p style="color:#64748b;font-size:13px;line-height:1.8;margin-bottom:14px;">
+        نوع کسب‌وکار فعلی: <strong id="currentBT" style="color:#2563eb;">—</strong>
+    </p>
+    <a href="business-type.html" class="btn-main" style="display:block;text-align:center;text-decoration:none;">
+        🔄 تغییر نوع کسب‌وکار
+    </a>
+</div>
+    
     <!-- 📞 پنل اپراتور -->
 <div class="card">
     <div class="card-title">📞 پنل اپراتور من</div>
@@ -189,6 +200,25 @@ const { data: profileBT } = await supabase
 
 myBusinessType = profileBT?.business_type || 'shop';
 myLabels = getLabels(myBusinessType);
+
+    // 🎯 نمایش نام کسب‌وکار فعلی
+const BT_NAMES = {
+    shop: '🛍️ فروشگاه',
+    medical: '👨‍⚕️ پزشکی',
+    dental: '🦷 دندانپزشکی',
+    lab: '🧪 آزمایشگاه',
+    salon: '💇 سالن زیبایی',
+    gym: '🏋️ باشگاه',
+    school: '🏫 آموزشگاه',
+    legal: '⚖️ خدمات حقوقی',
+    realestate: '🏠 املاک',
+    technical: '🔧 خدمات فنی',
+    general: '➕ عمومی'
+};
+setTimeout(() => {
+    const el = $('currentBT');
+    if (el) el.textContent = BT_NAMES[myBusinessType] || '🛍️ فروشگاه';
+}, 100);
 
     // 🎯 اعمال متن‌های پویا
 if ($('label_total')) $('label_total').textContent = myLabels.customers;
