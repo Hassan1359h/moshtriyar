@@ -46,7 +46,7 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;li
 <body>
 
 <header class="header">
-    <h1>⚠️ مشتریان در خطر</h1>
+    <h1>⚠️ <span id="pageTitle">مشتریان در خطر</span></h1>
     <div>
         <a href="ai.html">✨ دستیار</a>
         <a href="dashboard.html">داشبورد</a>
@@ -59,14 +59,14 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;li
     <div class="hidden" id="content">
         <div class="alert-box" id="alertBox">
             <div class="icon">⚠️</div>
-            <h2><span id="riskCount">0</span> مشتری در خطر</h2>
+            <h2><span id="riskCount">0</span> <span id="riskLabel">مشتری در خطر</span></h2>
             <div class="alert-amount"><span id="riskValue">۰</span> تومان</div>
             <p>اگه امروز پیگیری کنی، احتمال بازگشتشون زیاد است</p>
         </div>
 
         <button class="btn-bulk" id="bulkBtn">✨ پیام برای همه (AI)</button>
 
-        <div class="section-title">📋 لیست مشتریان</div>
+        <div class="section-title">📋 لیست <span id="listTitle">مشتریان</span></div>
         <div id="list"></div>
     </div>
 </div>
@@ -89,6 +89,12 @@ if (!session) { window.location.href = 'login.html'; }
 
 myLabels = getLabels(profileBT?.business_type || 'shop');
 
+// 🎯 اعمال متن‌های پویا
+const setTxt = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+setTxt('pageTitle', myLabels.customers + ' در خطر');
+setTxt('riskLabel', myLabels.customer + ' در خطر');
+setTxt('listTitle', myLabels.customers);
+    
 async function loadData() {
     const { data, error } = await supabase
         .from('customers')
@@ -119,7 +125,7 @@ async function loadData() {
     if (!risky.length) {
         $('loading').classList.add('hidden');
         $('content').classList.remove('hidden');
-        $('alertBox').innerHTML = '<div class="icon">🎉</div><h2 style="color:#16a34a">هیچ مشتری در خطری نداری!</h2><p>کارت درسته.</p>';
+        $('alertBox').innerHTML = '<div class="icon">🎉</div><h2 style="color:#16a34a">هیچ ' + myLabels.customer + ' در خطری نداری!</h2><p>کارت درسته.</p>';
         $('bulkBtn').classList.add('hidden');
         $('list').innerHTML = '';
         return;
