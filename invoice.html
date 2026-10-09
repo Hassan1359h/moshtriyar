@@ -474,7 +474,9 @@ function addItem(saved, isManual) {
 
     const productLbl = myLabels ? myLabels.product : "محصول";
     const serviceLbl = myLabels ? myLabels.service : "خدمت";
-    const titleText = manual ? "🩺 " + serviceLbl : "📦 " + productLbl;
+    const emojiMap = { shop: '📦', medical: '🩺', dental: '🦷', lab: '🧪', salon: '💇', gym: '🏋️', school: '🏫', legal: '⚖️', realestate: '🏠', technical: '🔧', general: '📋' };
+    const emoji = emojiMap[businessType] || '🩺';
+    const titleText = manual ? emoji + " " + serviceLbl : emoji + " " + productLbl;
 
     let firstInput;
     if (manual) {
