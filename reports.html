@@ -74,7 +74,7 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;li
         </div>
 
         <div class="card">
-            <h2>🎯 قیف فروش</h2>
+            <h2>🎯 قیف ${myLabels.sale}</h2>
             <div class="funnel" id="funnel"></div>
         </div>
 
@@ -157,18 +157,19 @@ function render() {
 
     // آمار
     $('statsGrid').innerHTML = `
-        <div class="stat"><b class="blue">${total}</b><span>کل مشتریان</span></div>
-        <div class="stat"><b class="green">${converted}</b><span>مشتری وفادار</span></div>
-        <div class="stat"><b class="yellow">${negotiating}</b><span>در انتظار خرید</span></div>
-        <div class="stat"><b class="red">${lost}</b><span>از دست‌رفته</span></div>
+    <div class="stat"><b class="blue">${total}</b><span>کل ${myLabels.customers}</span></div>
+    <div class="stat"><b class="green">${converted}</b><span>${myLabels.customer} وفادار</span></div>
+    <div class="stat"><b class="yellow">${negotiating}</b><span>در انتظار خرید</span></div>
+    <div class="stat"><b class="red">${lost}</b><span>از دست‌رفته</span></div>
+
     `;
 
     // قیف فروش
     const maxCount = Math.max(total, 1);
     $('funnel').innerHTML = `
-        ${funnelStep('مشتریان جدید', leads, maxCount)}
-        ${funnelStep('در انتظار خرید', negotiating, maxCount)}
-        ${funnelStep('مشتری وفادار', converted, maxCount)}
+      ${funnelStep(myLabels.customers + ' جدید', leads, maxCount)}
+      ${funnelStep('در انتظار خرید', negotiating, maxCount)}
+      ${funnelStep(myLabels.customer + ' وفادار', converted, maxCount)}
     `;
 
     // ارزش فرصت‌های از دست رفته
