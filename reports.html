@@ -61,6 +61,7 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;li
     <div class="loading" id="loading">در حال بارگذاری...</div>
 
     <div class="hidden" id="content">
+
         <div class="period">
             <button data-period="30" class="active">۳۰ روز اخیر</button>
             <button data-period="90">۳ ماه اخیر</button>
@@ -84,12 +85,14 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;li
                 <div class="big" id="lostValue">۰ تومان</div>
                 <p>اگه پیگیری کنی، احتمال بازگشت ۶۰٪ است</p>
             </div>
+
             <div class="tips">
                 <h3>💡 نکته</h3>
                 <p>• هر پیگیری می‌تونه یه فروش جدید باشه</p>
                 <p>• به «مشتریان در خطر» سر بزن و امروز با ۳ نفر تماس بگیر</p>
             </div>
         </div>
+
     </div>
 </div>
 
@@ -113,8 +116,14 @@ document.querySelectorAll('.period button').forEach(btn => {
 });
 
 async function loadData() {
-    const { data, error } = await supabase.from('customers').select('*');
-    if (error) { $('loading').textContent = 'خطا: ' + error.message; return; }
+    const { data, error } = await supabase
+        .from('customers')
+        .select('*');
+
+    if (error) {
+        $('loading').textContent = 'خطا: ' + error.message;
+        return;
+    }
 
     allCustomers = data || [];
     $('loading').classList.add('hidden');
@@ -131,33 +140,32 @@ function getFilteredCustomers() {
 
 function render() {
     const customers = getFilteredCustomers();
-
     const total = customers.length;
-    const converted = customers.filter(c => c.status === 'customer').length;
-    const negotiating = customers.filter(c => c.status === 'negotiating').length;
+    const converted = customers.filter(c => c.status === 'loyal').length;
+    const negotiating = customers.filter(c => c.status === 'waiting').length;
     const lost = customers.filter(c => c.status === 'lost').length;
-    const leads = customers.filter(c => c.status === 'lead').length;
+    const leads = customers.filter(c => c.status === 'new').length;
 
     // آمار
     $('statsGrid').innerHTML = `
         <div class="stat"><b class="blue">${total}</b><span>کل مشتریان</span></div>
-        <div class="stat"><b class="green">${converted}</b><span>مشتری (خرید کرد)</span></div>
-        <div class="stat"><b class="yellow">${negotiating}</b><span>در حال مذاکره</span></div>
-        <div class="stat"><b class="red">${lost}</b><span>از دست رفته</span></div>
+        <div class="stat"><b class="green">${converted}</b><span>مشتری وفادار</span></div>
+        <div class="stat"><b class="yellow">${negotiating}</b><span>در انتظار خرید</span></div>
+        <div class="stat"><b class="red">${lost}</b><span>از دست‌رفته</span></div>
     `;
 
     // قیف فروش
     const maxCount = Math.max(total, 1);
     $('funnel').innerHTML = `
-        ${funnelStep('مشتریان بالقوه', leads, maxCount)}
-        ${funnelStep('در حال مذاکره', negotiating, maxCount)}
-        ${funnelStep('مشتری شده', converted, maxCount)}
+        ${funnelStep('مشتریان جدید', leads, maxCount)}
+        ${funnelStep('در انتظار خرید', negotiating, maxCount)}
+        ${funnelStep('مشتری وفادار', converted, maxCount)}
     `;
 
     // ارزش فرصت‌های از دست رفته
     const atRisk = customers.filter(c => {
         if (c.status === 'lost') return true;
-        if (c.status === 'customer' || c.status === 'negotiating') {
+        if (c.status === 'loyal' || c.status === 'waiting' || c.status === 'new') {
             if (!c.last_contact_at) return true;
             const days = Math.floor((Date.now() - new Date(c.last_contact_at)) / 86400000);
             return days >= 14;
@@ -184,5 +192,6 @@ function funnelStep(label, count, max) {
 
 loadData();
 </script>
+
 </body>
 </html>
