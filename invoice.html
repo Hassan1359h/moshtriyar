@@ -224,6 +224,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#2563eb}
 import { supabase } from './js/supabase.js';
 import { checkPlanGuard } from './js/check-plan.js';
 import { getLabels } from './js/labels.js';
+import { loadBusinessType } from './js/helpers.js';
 
 if (!(await checkPlanGuard())) {
     throw new Error('Plan expired');
