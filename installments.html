@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#8b5cf6">
+<title>اقساط | مشتری‌یار</title>
+<link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+<link rel="icon" href="icon-192.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;line-height:1.7;padding-bottom:80px}
+.header{background:#1e293b;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100}
+.header h1{font-size:16px;font-weight:800}
+.header a{color:#fff;text-decoration:none;background:#334155;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:700;margin-right:6px}
+.container{max-width:900px;margin:0 auto;padding:20px}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+@media(max-width:600px){.stats-grid{grid-template-columns:1fr}}
+.stat{background:#fff;border-radius:14px;padding:16px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.04)}
+.stat b{font-size:22px;display:block;font-weight:900;color:#8b5cf6}
+.stat span{font-size:11px;color:#64748b;font-weight:700}
+.stat.green b{color:#16a34a}
+.stat.red b{color:#dc2626}
+.card{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 10px rgba(0,0,0,.04);border-right:4px solid #8b5cf6}
+.card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px}
+.card-name{font-weight:800;font-size:15px;color:#1e293b}
+.card-amount{font-weight:900;color:#8b5cf6;font-size:14px}
+.progress{background:#f1f5f9;height:8px;border-radius:4px;margin:10px 0;overflow:hidden}
+.progress-inner{background:linear-gradient(90deg,#8b5cf6,#7c3aed);height:100%;border-radius:4px;transition:.3s}
+.card-info{background:#f8fafc;border-radius:10px;padding:10px;font-size:12px;margin-bottom:10px}
+.card-info div{display:flex;justify-content:space-between;padding:3px 0}
+.card-info span:first-child{color:#64748b;font-weight:600}
+.card-info span:last-child{color:#1e293b;font-weight:700}
+.actions{display:flex;gap:6px;flex-wrap:wrap}
+.btn{padding:8px 14px;border:0;border-radius:10px;font-family:inherit;font-weight:800;font-size:12px;cursor:pointer}
+.btn-green{background:#16a34a;color:#fff}
+.btn-blue{background:#2563eb;color:#fff}
+.btn-red{background:#dc2626;color:#fff}
+.btn-gray{background:#e2e8f0;color:#0f172a}
+.btn-add{width:100%;padding:14px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:#fff;border:0;border-radius:14px;font-family:inherit;font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 4px 12px rgba(139,92,246,.3);margin-bottom:16px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:20px;z-index:200;overflow-y:auto}
+.modal.open{display:flex}
+.modal-box{background:#fff;border-radius:18px;max-width:420px;width:100%;padding:22px;max-height:90vh;overflow-y:auto}
+.modal-box h2{margin:0 0 16px;font-size:17px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;font-weight:700;color:#475569;margin-bottom:6px}
+.field input,.field textarea,.field select{width:100%;padding:11px;border:2px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;background:#f8fafc}
+.field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:#8b5cf6;background:#fff}
+.modal-btns{display:flex;gap:10px;margin-top:16px}
+.btn-save{flex:1;padding:13px;background:#8b5cf6;color:#fff;border:0;border-radius:12px;font-family:inherit;font-weight:800;font-size:14px;cursor:pointer}
+.btn-cancel{flex:1;padding:13px;background:#f1f5f9;color:#475569;border:0;border-radius:12px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer}
+.btn-danger{width:100%;padding:11px;background:#fee2e2;color:#dc2626;border:0;border-radius:10px;font-family:inherit;font-weight:800;font-size:13px;cursor:pointer;margin-top:10px}
+.loading{text-align:center;padding:40px;color:#64748b}
+.empty{text-align:center;padding:40px;color:#94a3b8;background:#fff;border-radius:14px}
+.hidden{display:none!important}
+.payments-list{margin-top:8px}
+.payment-item{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#f8fafc;border-radius:8px;margin-bottom:6px;font-size:12px}
+.payment-item.paid{background:#f0fdf4;color:#166534}
+.payment-item.overdue{background:#fef2f2;color:#991b1b}
+</style>
+</head>
+<body>
+
+<header class="header">
+    <h1>📅 اقساط</h1>
+    <div>
+        <a href="checks.html">💳 چک‌ها</a>
+        <a href="dashboard.html">داشبورد</a>
+    </div>
+</header>
+
+<div class="container">
+
+    <div class="stats-grid">
+        <div class="stat"><b id="totalContracts">۰</b><span>قرارداد</span></div>
+        <div class="stat green"><b id="totalPaid">۰</b><span>پرداخت شده</span></div>
+        <div class="stat red"><b id="totalRemaining">۰</b><span>باقی‌مانده</span></div>
+    </div>
+
+    <button class="btn-add" id="addBtn">➕ افزودن قرارداد اقساطی</button>
+
+    <div id="list" class="loading">در حال بارگذاری...</div>
+
+</div>
+
+<div class="modal" id="modal">
+    <div class="modal-box">
+        <h2 id="modalTitle">افزودن قرارداد اقساطی</h2>
+        <input type="hidden" id="installmentId">
+
+        <div class="field">
+            <label>👥 مشتری</label>
+            <select id="customerSelect">
+                <option value="">در حال بارگذاری...</option>
+            </select>
+        </div>
+
+        <div class="field">
+            <label>نام مشتری *</label>
+            <input type="text" id="customerName" placeholder="نام مشتری" required>
+        </div>
+
+        <div class="field">
+            <label>شماره تماس</label>
+            <input type="tel" id="customerPhone" placeholder="09121234567" style="direction:ltr;text-align:right;">
+        </div>
+
+        <div class="field">
+            <label>مبلغ کل (تومان) *</label>
+            <input type="number" id="totalAmount" placeholder="10000000" required>
+        </div>
+
+        <div class="field">
+            <label>تعداد اقساط *</label>
+            <input type="number" id="count" placeholder="4" min="1" max="60" required>
+        </div>
+
+        <div class="field">
+            <label>تاریخ اولین قسط (شمسی) *</label>
+            <input type="text" id="startDate" placeholder="1405/08/15" style="direction:ltr;text-align:right;" required>
+        </div>
+
+        <div class="field">
+            <label>توضیحات</label>
+            <textarea id="description" placeholder="توضیح..."></textarea>
+        </div>
+
+        <div class="modal-btns">
+            <button class="btn-cancel" id="cancelBtn">انصراف</button>
+            <button class="btn-save" id="saveBtn">ذخیره</button>
+        </div>
+
+        <button class="btn-danger hidden" id="deleteBtn">🗑️ حذف</button>
+    </div>
+</div>
+
+<script type="module">
+import { supabase } from './js/supabase.js';
+import { checkPlanGuard } from './js/check-plan.js';
+
+if (!(await checkPlanGuard())) {
+    throw new Error('Plan expired');
+}
+
+const $ = id => document.getElementById(id);
+let installments = [];
+let customers = [];
+let me = null;
+
+async function init() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { window.location.href = 'login.html'; return; }
+    me = session.user;
+    await loadCustomers();
+    await loadInstallments();
+}
+
+async function loadCustomers() {
+    const { data } = await supabase
+        .from('customers')
+        .select('id, name, phone')
+        .eq('user_id', me.id)
+        .order('created_at', { ascending: false });
+
+    customers = data || [];
+    renderCustomers();
+}
+
+function renderCustomers() {
+    const select = $('customerSelect');
+    select.innerHTML = '<option value="">انتخاب مشتری...</option>';
+    customers.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.name + (c.phone ? ' - ' + c.phone : '');
+        select.appendChild(opt);
+    });
+}
+
+$('customerSelect').onchange = () => {
+    const id = $('customerSelect').value;
+    if (!id) return;
+    const c = customers.find(x => x.id === id);
+    if (c) {
+        $('customerName').value = c.name || '';
+        $('customerPhone').value = c.phone || '';
+    }
+};
+
+async function loadInstallments() {
+    const { data, error } = await supabase
+        .from('installments')
+        .select('*')
+        .eq('user_id', me.id)
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        $('list').innerHTML = '<div class="empty">⚠️ خطا: ' + error.message + '</div>';
+        return;
+    }
+
+    installments = data || [];
+    await Promise.all(installments.map(async inst => {
+        const { data: pays } = await supabase
+            .from('installment_payments')
+            .select('*')
+            .eq('installment_id', inst.id)
+            .order('due_date', { ascending: true });
+        inst.payments = pays || [];
+    }));
+
+    render();
+    updateStats();
+}
+
+function updateStats() {
+    let totalPaid = 0, totalRemaining = 0;
+
+    installments.forEach(inst => {
+        const paid = inst.payments ? inst.payments.filter(p => p.status === 'paid').reduce((s, p) => s + Number(p.amount || 0), 0) : 0;
+        const total = Number(inst.total_amount) || 0;
+        totalPaid += paid;
+        totalRemaining += (total - paid);
+    });
+
+    $('totalContracts').textContent = installments.length;
+    $('totalPaid').textContent = totalPaid.toLocaleString('fa-IR');
+    $('totalRemaining').textContent = totalRemaining.toLocaleString('fa-IR');
+}
+
+function render() {
+    const list = $('list');
+    if (!installments.length) {
+        list.innerHTML = '<div class="empty">📭 قراردادی ثبت نشده</div>';
+        return;
+    }
+
+    const now = new Date();
+    list.innerHTML = '';
+
+    installments.forEach(inst => {
+        const total = Number(inst.total_amount) || 0;
+        const pays = inst.payments || [];
+        const paid = pays.filter(p => p.status === 'paid').reduce((s, p) => s + Number(p.amount || 0), 0);
+        const remain = total - paid;
+        const percent = total > 0 ? Math.round((paid / total) * 100) : 0;
+
+        let paymentsHtml = '<div class="payments-list">';
+        pays.forEach(p => {
+            const isOverdue = p.status === 'pending' && p.due_date && new Date(p.due_date) < now;
+            const cls = p.status === 'paid' ? 'paid' : (isOverdue ? 'overdue' : '');
+            paymentsHtml += '<div class="payment-item ' + cls + '">' +
+                '<span>قسط ' + (pays.indexOf(p) + 1) + ' — ' + Number(p.amount || 0).toLocaleString('fa-IR') + ' تومان</span>' +
+                '<span>' + (p.status === 'paid' ? '✅ پرداخت شده' : '⏰ ' + (p.due_date || '-')) + '</span>' +
+                (p.status === 'pending' ? '<button class="btn btn-green pay-btn" data-pid="' + p.id + '">پرداخت</button>' : '') +
+                '</div>';
+        });
+        paymentsHtml += '</div>';
+
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML =
+            '<div class="card-head">' +
+                '<div class="card-name">👥 ' + escapeHtml(inst.customer_name) + '</div>' +
+                '<div class="card-amount">' + total.toLocaleString('fa-IR') + ' تومان</div>' +
+            '</div>' +
+            '<div class="progress"><div class="progress-inner" style="width:' + percent + '%;"></div></div>' +
+            '<div style="font-size:11px;color:#64748b;text-align:center;margin-bottom:10px;">' + percent + '% پرداخت شده</div>' +
+            '<div class="card-info">' +
+                '<div><span>تعداد اقساط</span><span>' + inst.count + '</span></div>' +
+                '<div><span>پرداخت شده</span><span>' + paid.toLocaleString('fa-IR') + ' تومان</span></div>' +
+                '<div><span>باقی‌مانده</span><span>' + remain.toLocaleString('fa-IR') + ' تومان</span></div>' +
+            '</div>' +
+            paymentsHtml +
+            '<div class="actions" style="margin-top:10px;">' +
+                '<button class="btn btn-blue act-edit" data-id="' + inst.id + '">✏️ ویرایش</button>' +
+                '<button class="btn btn-gray act-send" data-id="' + inst.id + '">📤 پیامک</button>' +
+            '</div>';
+
+        list.appendChild(card);
+    });
+
+    list.querySelectorAll('.pay-btn').forEach(b => {
+        b.onclick = () => markPaymentPaid(b.dataset.pid);
+    });
+    list.querySelectorAll('.act-edit').forEach(b => {
+        b.onclick = () => openEdit(installments.find(x => x.id === b.dataset.id));
+    });
+    list.querySelectorAll('.act-send').forEach(b => {
+        b.onclick = () => sendSMS(installments.find(x => x.id === b.dataset.id));
+    });
+}
+
+function escapeHtml(v) {
+    return String(v ?? '').replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+    })[m]);
+}
+
+async function markPaymentPaid(paymentId) {
+    if (!confirm('این قسط پرداخت شد؟')) return;
+
+    const { error } = await supabase
+        .from('installment_payments')
+        .update({ status: 'paid', paid_at: new Date().toISOString() })
+        .eq('id', paymentId)
+        .eq('user_id', me.id);
+
+    if (error) { alert('خطا: ' + error.message); return; }
+    await loadInstallments();
+}
+
+function parseShamsiToDate(str) {
+    if (!str) return null;
+    const parts = str.split('/').map(x => parseInt(x));
+    if (parts.length !== 3) return null;
+    return { year: parts[0], month: parts[1], day: parts[2] };
+}
+
+async function addMonthsToShamsi(shamsiStr, months) {
+    const p = parseShamsiToDate(shamsiStr);
+    if (!p) return shamsiStr;
+
+    let m = p.month - 1 + months;
+    let y = p.year;
+    y += Math.floor(m / 12);
+    m = ((m % 12) + 12) % 12 + 1;
+
+    return y + '/' + String(m).padStart(2, '0') + '/' + String(p.day).padStart(2, '0');
+}
+
+function openAdd() {
+    $('modalTitle').textContent = 'افزودن قرارداد اقساطی';
+    $('installmentId').value = '';
+    $('customerSelect').value = '';
+    $('customerName').value = '';
+    $('customerPhone').value = '';
+    $('totalAmount').value = '';
+    $('count').value = '4';
+    $('startDate').value = '';
+    $('description').value = '';
+    $('deleteBtn').classList.add('hidden');
+    $('modal').classList.add('open');
+}
+
+function openEdit(inst) {
+    if (!inst) return;
+    $('modalTitle').textContent = 'ویرایش قرارداد';
+    $('installmentId').value = inst.id;
+    $('customerSelect').value = inst.customer_id || '';
+    $('customerName').value = inst.customer_name || '';
+    $('customerPhone').value = inst.customer_phone || '';
+    $('totalAmount').value = inst.total_amount || '';
+    $('count').value = inst.count || 1;
+    $('startDate').value = inst.start_date || '';
+    $('description').value = inst.description || '';
+    $('deleteBtn').classList.remove('hidden');
+    $('modal').classList.add('open');
+}
+
+$('addBtn').onclick = openAdd;
+$('cancelBtn').onclick = () => $('modal').classList.remove('open');
+
+$('saveBtn').onclick = async () => {
+    const name = $('customerName').value.trim();
+    const total = parseInt($('totalAmount').value) || 0;
+    const count = parseInt($('count').value) || 1;
+    const startDate = $('startDate').value.trim();
+
+    if (!name) { alert('نام مشتری رو وارد کن'); return; }
+    if (!total) { alert('مبلغ کل رو وارد کن'); return; }
+    if (!count || count < 1) { alert('تعداد اقساط رو وارد کن'); return; }
+    if (!startDate) { alert('تاریخ اولین قسط رو وارد کن'); return; }
+
+    const btn = $('saveBtn');
+    btn.disabled = true;
+    btn.textContent = 'در حال ذخیره...';
+
+    const payload = {
+        user_id: me.id,
+        customer_id: $('customerSelect').value || null,
+        customer_name: name,
+        customer_phone: $('customerPhone').value.trim() || null,
+        total_amount: total,
+        count: count,
+        start_date: startDate,
+        description: $('description').value.trim() || null
+    };
+
+    try {
+        const id = $('installmentId').value;
+        let instId = id;
+
+        if (id) {
+            const res = await supabase.from('installments').update(payload).eq('id', id).eq('user_id', me.id);
+            if (res.error) throw res.error;
+
+            // 🎯 پاک کردن اقساط قدیمی
+            await supabase.from('installment_payments').delete().eq('installment_id', id);
+        } else {
+            const res = await supabase.from('installments').insert(payload).select().single();
+            if (res.error) throw res.error;
+            instId = res.data.id;
+        }
+
+        // 🎯 ساخت اقساط
+        const perInstallment = Math.floor(total / count);
+        const payments = [];
+        for (let i = 0; i < count; i++) {
+            let amount = perInstallment;
+            if (i === count - 1) {
+                amount = total - perInstallment * (count - 1);
+            }
+            const dueDate = await addMonthsToShamsi(startDate, i);
+            payments.push({
+                installment_id: instId,
+                user_id: me.id,
+                amount: amount,
+                due_date: dueDate,
+                status: 'pending'
+            });
+        }
+
+        const payRes = await supabase.from('installment_payments').insert(payments);
+        if (payRes.error) throw payRes.error;
+
+        $('modal').classList.remove('open');
+        await loadInstallments();
+    } catch (err) {
+        alert('خطا: ' + err.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'ذخیره';
+    }
+};
+
+$('deleteBtn').onclick = async () => {
+    const id = $('installmentId').value;
+    if (!id) return;
+    if (!confirm('این قرارداد حذف شود؟ (همه‌ی اقساط هم حذف می‌شن)')) return;
+
+    const { error } = await supabase.from('installments').delete().eq('id', id).eq('user_id', me.id);
+    if (error) { alert('خطا: ' + error.message); return; }
+    $('modal').classList.remove('open');
+    await loadInstallments();
+};
+
+function sendSMS(inst) {
+    if (!inst || !inst.customer_phone) return;
+
+    const total = Number(inst.total_amount) || 0;
+    const text = 'سلام ' + inst.customer_name + ' عزیز\n' +
+        'یادآوری: اقساط شما به مبلغ کل ' + total.toLocaleString('fa-IR') + ' تومان در حال پرداخت است.\n' +
+        'با تشکر';
+
+    window.location.href = 'sms:' + inst.customer_phone + '?body=' + encodeURIComponent(text);
+}
+
+init();
+</script>
+
+</body>
+</html>
