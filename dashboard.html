@@ -148,6 +148,62 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;li
     </div>
 </div>
     
+   async function loadFinancialStats() {
+    try {
+        // 🎯 چک‌ها
+        const { data: checksData } = await supabase
+            .from('checks')
+            .select('amount, status, due_date')
+            .eq('user_id', me.id)
+            .eq('status', 'pending');
+
+        const now = new Date();
+        let pendingCount = 0;
+        let overdueCount = 0;
+
+        (checksData || []).forEach(c => {
+            pendingCount++;
+            if (c.due_date && new Date(c.due_date) < now) {
+                overdueCount++;
+            }
+        });
+
+        // 🎯 اقساط
+        const { data: paymentsData } = await supabase
+            .from('installment_payments')
+            .select('status, due_date')
+            .eq('user_id', me.id)
+            .eq('status', 'pending');
+
+        let overdueInst = 0;
+        (paymentsData || []).forEach(p => {
+            if (p.due_date && new Date(p.due_date) < now) {
+                overdueInst++;
+            }
+        });
+
+        // 🎯 قراردادهای فعال
+        const { data: contractsData } = await supabase
+            .from('installments')
+            .select('id')
+            .eq('user_id', me.id);
+
+        const activeInst = (contractsData || []).length;
+
+        // 🎯 نمایش
+        if (pendingCount > 0 || activeInst > 0) {
+            $('financialStats').style.display = 'block';
+        }
+
+        $('statPendingChecks').textContent = pendingCount;
+        $('statOverdueChecks').textContent = overdueCount;
+        $('statActiveInst').textContent = activeInst;
+        $('statOverdueInst').textContent = overdueInst;
+
+    } catch (e) {
+        console.error("Financial stats error:", e);
+    }
+} 
     <!-- 📞 پنل اپراتور -->
 <div class="card">
     <div class="card-title">📞 پنل اپراتور من</div>
