@@ -180,6 +180,7 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;li
 <script type="module">
 import { supabase } from './js/supabase.js';
 import { getLabels } from './js/labels.js';
+import { loadBusinessType } from './js/helpers.js';
 const $ = id => document.getElementById(id);
 let me = null;
 let customers = [];
@@ -192,14 +193,9 @@ async function init() {
     me = session.user;
     
     // 🎯 لود نوع کسب‌وکار
-const { data: profileBT } = await supabase
-    .from('profiles')
-    .select('business_type')
-    .eq('id', me.id)
-    .maybeSingle();
-
-myBusinessType = profileBT?.business_type || 'shop';
-myLabels = getLabels(myBusinessType);
+    
+myBusinessType = await loadBusinessType(supabase, me.id);
+    myLabels = getLabels(myBusinessType);
 
     // 🎯 نمایش نام کسب‌وکار فعلی
 const BT_NAMES = {
