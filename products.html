@@ -16,13 +16,16 @@ body{font-family:Vazirmatn,sans-serif;background:#f1f5f9;margin:0;padding:20px;p
 .card .no-img{width:100%;height:120px;background:#f1f5f9;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:40px;margin-bottom:8px}
 .card h3{margin:0 0 6px;font-size:15px}
 .card .price{color:#2563eb;font-weight:900}
+.card .meta{font-size:11px;color:#64748b;margin-top:6px;display:flex;flex-wrap:wrap;gap:6px}
+.card .meta span{background:#f1f5f9;padding:2px 8px;border-radius:8px}
 .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;padding:20px;overflow-y:auto}
 .modal.show{display:block}
 .modal-box{background:#fff;border-radius:16px;padding:20px;max-width:400px;margin:auto}
 .modal-box h2{margin:0 0 16px;font-size:17px}
 .field{margin-bottom:14px}
 .field label{display:block;font-size:13px;font-weight:700;margin-bottom:6px;color:#475569}
-.field input,.field textarea{width:100%;padding:10px;border:2px solid #e2e8f0;border-radius:10px;font-family:inherit;box-sizing:border-box}
+.field input,.field textarea,.field select{width:100%;padding:10px;border:2px solid #e2e8f0;border-radius:10px;font-family:inherit;box-sizing:border-box;font-size:13px;background:#f8fafc}
+.field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:#3b82f6;background:#fff}
 .preview{width:100%;height:120px;background:#f1f5f9;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-bottom:14px;font-size:13px;color:#94a3b8;overflow:hidden}
 .preview img{width:100%;height:100%;object-fit:cover}
 .btns{display:flex;gap:10px;margin-top:16px}
@@ -30,6 +33,8 @@ body{font-family:Vazirmatn,sans-serif;background:#f1f5f9;margin:0;padding:20px;p
 .btn-save:disabled{opacity:.6;cursor:not-allowed}
 .btn-cancel{flex:1;padding:13px;background:#f1f5f9;color:#475569;border:none;border-radius:12px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}
 .loading{text-align:center;padding:40px;color:#64748b}
+.extra-section{padding-top:14px;border-top:2px dashed #e2e8f0;margin-top:14px}
+.extra-title{font-size:12px;font-weight:800;color:#7c3aed;margin-bottom:12px}
 </style>
 </head>
 <body>
@@ -55,7 +60,7 @@ body{font-family:Vazirmatn,sans-serif;background:#f1f5f9;margin:0;padding:20px;p
 
         <div class="field">
             <label>نام <span id="fieldNameLabel">محصول</span> *</label>
-            <input type="text" id="name" placeholder="مثلاً: گتر کوهنوردی">
+            <input type="text" id="name" placeholder="نام را وارد کن">
         </div>
 
         <div class="field">
@@ -66,6 +71,13 @@ body{font-family:Vazirmatn,sans-serif;background:#f1f5f9;margin:0;padding:20px;p
         <div class="field">
             <label>توضیحات</label>
             <textarea id="description" placeholder="توضیح مختصر..."></textarea>
+        </div>
+
+        <div id="extraFieldsWrap" style="display:none;">
+            <div class="extra-section">
+                <div class="extra-title">📋 اطلاعات تخصصی</div>
+                <div id="extraFields"></div>
+            </div>
         </div>
 
         <div class="btns">
@@ -79,7 +91,7 @@ body{font-family:Vazirmatn,sans-serif;background:#f1f5f9;margin:0;padding:20px;p
 <script type="module">
 import { supabase } from './js/supabase.js';
 import { checkPlanGuard } from './js/check-plan.js';
-import { getLabels } from './js/labels.js';
+import { getLabels, BUSINESS_FIELDS } from './js/labels.js';
 
 if (!(await checkPlanGuard())) {
     throw new Error('Plan expired');
@@ -110,6 +122,59 @@ setTxt('btnAddLabel', myLabels.product);
 setTxt('modalTypeLabel', myLabels.product);
 setTxt('fieldNameLabel', myLabels.product);
 
+// 🎯 رندر فیلدهای تخصصی
+function renderExtraFields(metadata) {
+    const container = document.getElementById('extraFields');
+    const wrap = document.getElementById('extraFieldsWrap');
+    if (!container || !wrap) return;
+
+    container.innerHTML = '';
+
+    const fields = BUSINESS_FIELDS[businessType] || [];
+
+    if (fields.length === 0) {
+        wrap.style.display = 'none';
+        return;
+    }
+
+    wrap.style.display = 'block';
+
+    fields.forEach(f => {
+        const div = document.createElement('div');
+        div.className = 'field';
+
+        const val = metadata?.[f.key] ?? '';
+
+        let inputHtml = '';
+        if (f.type === 'select') {
+            inputHtml = '<select id="extra_' + f.key + '">';
+            inputHtml += '<option value="">انتخاب کن...</option>';
+            f.options.forEach(opt => {
+                const selected = (val === opt) ? ' selected' : '';
+                inputHtml += '<option value="' + opt + '"' + selected + '>' + opt + '</option>';
+            });
+            inputHtml += '</select>';
+        } else if (f.type === 'number') {
+            inputHtml = '<input type="number" id="extra_' + f.key + '" value="' + val + '" placeholder="' + (f.placeholder || '') + '">';
+        } else {
+            inputHtml = '<input type="text" id="extra_' + f.key + '" value="' + val + '" placeholder="' + (f.placeholder || '') + '">';
+        }
+
+        div.innerHTML = '<label>' + f.label + '</label>' + inputHtml;
+        container.appendChild(div);
+    });
+}
+
+function collectExtraFields() {
+    const metadata = {};
+    const fields = BUSINESS_FIELDS[businessType] || [];
+    fields.forEach(f => {
+        const el = document.getElementById('extra_' + f.key);
+        if (el && el.value) metadata[f.key] = el.value;
+    });
+    return metadata;
+}
+
 window.openAdd = function() {
     document.getElementById('modalTitle').textContent = 'افزودن ' + myLabels.product;
     document.getElementById('productId').value = '';
@@ -119,6 +184,7 @@ window.openAdd = function() {
     document.getElementById('preview').innerHTML = '<span id="previewText">📸 برای انتخاب عکس کلیک کن</span>';
     document.getElementById('deleteBtn').style.display = 'none';
     imageUrl = '';
+    renderExtraFields({});
     document.getElementById('modal').classList.add('show');
 };
 
@@ -162,7 +228,8 @@ window.saveProduct = async function() {
         name: name,
         price: parseInt(document.getElementById('price').value) || 0,
         description: document.getElementById('description').value.trim() || null,
-        image_url: imageUrl || null
+        image_url: imageUrl || null,
+        metadata: collectExtraFields()
     };
 
     try {
@@ -209,14 +276,31 @@ function render() {
         return;
     }
 
+    const fields = BUSINESS_FIELDS[businessType] || [];
+
     grid.innerHTML = '';
     products.forEach(p => {
         const card = document.createElement('div');
         card.className = 'card';
+
+        let metaHtml = '';
+        if (p.metadata && Object.keys(p.metadata).length > 0) {
+            metaHtml = '<div class="meta">';
+            fields.forEach(f => {
+                const v = p.metadata[f.key];
+                if (v) {
+                    metaHtml += '<span>' + f.label + ': ' + v + '</span>';
+                }
+            });
+            metaHtml += '</div>';
+        }
+
         card.innerHTML =
             (p.image_url ? '<img src="' + p.image_url + '">' : '<div class="no-img">📦</div>') +
             '<h3>' + p.name + '</h3>' +
-            '<div class="price">' + (parseInt(p.price) || 0).toLocaleString('fa-IR') + ' تومان</div>';
+            '<div class="price">' + (parseInt(p.price) || 0).toLocaleString('fa-IR') + ' تومان</div>' +
+            metaHtml;
+
         card.onclick = () => {
             document.getElementById('modalTitle').textContent = 'ویرایش ' + myLabels.product;
             document.getElementById('productId').value = p.id;
@@ -229,6 +313,7 @@ function render() {
             } else {
                 document.getElementById('preview').innerHTML = '<span>📸 برای انتخاب عکس کلیک کن</span>';
             }
+            renderExtraFields(p.metadata || {});
             document.getElementById('deleteBtn').style.display = 'block';
             document.getElementById('modal').classList.add('show');
         };
