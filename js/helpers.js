@@ -51,3 +51,4 @@ export async function loadBusinessType(supabase, userId) {
         return 'shop';
     }
 }
+
