@@ -92,6 +92,7 @@ body{font-family:Vazirmatn,sans-serif;background:#f1f5f9;margin:0;padding:20px;p
 import { supabase } from './js/supabase.js';
 import { checkPlanGuard } from './js/check-plan.js';
 import { getLabels, BUSINESS_FIELDS } from './js/labels.js';
+import { loadBusinessType } from './js/helpers.js';
 
 if (!(await checkPlanGuard())) {
     throw new Error('Plan expired');
@@ -107,13 +108,7 @@ const { data: { session } } = await supabase.auth.getSession();
 if (!session) { window.location.href = 'login.html'; }
 me = session.user;
 
-const { data: profileBT } = await supabase
-    .from('profiles')
-    .select('business_type')
-    .eq('id', me.id)
-    .maybeSingle();
-
-businessType = profileBT?.business_type || 'shop';
+businessType = await loadBusinessType(supabase, me.id);
 myLabels = getLabels(businessType);
 
 const setTxt = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
