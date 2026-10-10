@@ -16,6 +16,49 @@ export function getLabels(businessType) {
     return LABELS[businessType] || LABELS.shop;
 }
 
+// 🎯 فیلدهای تخصصی هر کسب‌وکار
+export const BUSINESS_FIELDS = {
+    shop: [],
+    medical: [
+        { key: 'visit_type', label: 'نوع ویزیت', type: 'select', options: ['ویزیت اول', 'ویزیت مجدد', 'مشاوره'] },
+        { key: 'sessions', label: 'تعداد جلسه', type: 'number' }
+    ],
+    dental: [
+        { key: 'treatment_type', label: 'نوع درمان', type: 'text', placeholder: 'مثلاً: ترمیم، عصب‌کشی' },
+        { key: 'sessions', label: 'تعداد جلسه', type: 'number' }
+    ],
+    lab: [
+        { key: 'test_type', label: 'نوع آزمایش', type: 'text', placeholder: 'مثلاً: CBC، قند خون' },
+        { key: 'ready_time', label: 'زمان آماده‌سازی', type: 'text', placeholder: 'مثلاً: ۲۴ ساعت' }
+    ],
+    salon: [
+        { key: 'service_duration', label: 'مدت زمان', type: 'text', placeholder: 'مثلاً: ۱ ساعت' }
+    ],
+    gym: [
+        { key: 'duration', label: 'مدت اشتراک', type: 'select', options: ['۱ ماهه', '۳ ماهه', '۶ ماهه', '۱۲ ماهه'] },
+        { key: 'sessions', label: 'تعداد جلسه', type: 'number' }
+    ],
+    school: [
+        { key: 'level', label: 'سطح', type: 'select', options: ['مقدماتی', 'متوسط', 'پیشرفته'] },
+        { key: 'sessions', label: 'تعداد جلسه', type: 'number' },
+        { key: 'term', label: 'ترم', type: 'text', placeholder: 'مثلاً: پاییز ۱۴۰۵' }
+    ],
+    legal: [
+        { key: 'case_type', label: 'نوع پرونده', type: 'text', placeholder: 'مثلاً: حقوقی، کیفری' },
+        { key: 'hours', label: 'تعداد ساعت', type: 'number' }
+    ],
+    realestate: [
+        { key: 'property_type', label: 'نوع ملک', type: 'select', options: ['آپارتمان', 'ویلا', 'زمین', 'مغازه', 'دفتر'] },
+        { key: 'area', label: 'متراژ', type: 'number' },
+        { key: 'address', label: 'آدرس', type: 'text', placeholder: 'آدرس ملک' }
+    ],
+    technical: [
+        { key: 'device_type', label: 'نوع دستگاه', type: 'text', placeholder: 'مثلاً: یخچال، ماشین لباسشویی' },
+        { key: 'warranty', label: 'مدت گارانتی', type: 'text', placeholder: 'مثلاً: ۶ ماه' }
+    ],
+    general: []
+};
+
 export const BUSINESS_TYPES = [
     { value: 'shop', label: '🛍️ فروشگاه', desc: 'فروش محصولات' },
     { value: 'medical', label: '👨‍⚕️ پزشکی', desc: 'مطب و ویزیت' },
