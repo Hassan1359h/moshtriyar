@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#2563eb">
+<title>چک‌ها | مشتری‌یار</title>
+<link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+<link rel="icon" href="icon-192.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;line-height:1.7;padding-bottom:80px}
+.header{background:#1e293b;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100}
+.header h1{font-size:16px;font-weight:800}
+.header a{color:#fff;text-decoration:none;background:#334155;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:700;margin-right:6px}
+.container{max-width:900px;margin:0 auto;padding:20px}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+@media(max-width:600px){.stats-grid{grid-template-columns:1fr}}
+.stat{background:#fff;border-radius:14px;padding:16px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.04)}
+.stat b{font-size:22px;display:block;font-weight:900;color:#2563eb}
+.stat span{font-size:11px;color:#64748b;font-weight:700}
+.stat.warn b{color:#d97706}
+.stat.danger b{color:#dc2626}
+.tabs{display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px}
+.tab{flex-shrink:0;padding:10px 18px;border:2px solid #e2e8f0;background:#fff;border-radius:12px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;color:#475569}
+.tab.active{background:#2563eb;color:#fff;border-color:#2563eb}
+.card{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 10px rgba(0,0,0,.04);border-right:4px solid #e2e8f0}
+.card.warn{border-right-color:#d97706}
+.card.danger{border-right-color:#dc2626}
+.card.success{border-right-color:#16a34a}
+.card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px}
+.card-name{font-weight:800;font-size:15px;color:#1e293b}
+.card-amount{font-weight:900;color:#2563eb;font-size:15px}
+.card-info{background:#f8fafc;border-radius:10px;padding:10px;font-size:12px;margin-bottom:10px}
+.card-info div{display:flex;justify-content:space-between;padding:3px 0}
+.card-info span:first-child{color:#64748b;font-weight:600}
+.card-info span:last-child{color:#1e293b;font-weight:700}
+.badge{font-size:10px;padding:3px 8px;border-radius:8px;font-weight:800}
+.badge.pending{background:#fef3c7;color:#92400e}
+.badge.cashed{background:#dcfce7;color:#166534}
+.badge.bounced{background:#fee2e2;color:#991b1b}
+.badge.returned{background:#e0e7ff;color:#3730a3}
+.actions{display:flex;gap:6px;flex-wrap:wrap}
+.btn{padding:8px 14px;border:0;border-radius:10px;font-family:inherit;font-weight:800;font-size:12px;cursor:pointer}
+.btn-green{background:#16a34a;color:#fff}
+.btn-blue{background:#2563eb;color:#fff}
+.btn-red{background:#dc2626;color:#fff}
+.btn-gray{background:#e2e8f0;color:#0f172a}
+.btn-add{width:100%;padding:14px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;border:0;border-radius:14px;font-family:inherit;font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 4px 12px rgba(59,130,246,.3);margin-bottom:16px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:20px;z-index:200;overflow-y:auto}
+.modal.open{display:flex}
+.modal-box{background:#fff;border-radius:18px;max-width:420px;width:100%;padding:22px;max-height:90vh;overflow-y:auto}
+.modal-box h2{margin:0 0 16px;font-size:17px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;font-weight:700;color:#475569;margin-bottom:6px}
+.field input,.field textarea,.field select{width:100%;padding:11px;border:2px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;background:#f8fafc}
+.field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:#3b82f6;background:#fff}
+.modal-btns{display:flex;gap:10px;margin-top:16px}
+.btn-save{flex:1;padding:13px;background:#2563eb;color:#fff;border:0;border-radius:12px;font-family:inherit;font-weight:800;font-size:14px;cursor:pointer}
+.btn-cancel{flex:1;padding:13px;background:#f1f5f9;color:#475569;border:0;border-radius:12px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer}
+.btn-danger{width:100%;padding:11px;background:#fee2e2;color:#dc2626;border:0;border-radius:10px;font-family:inherit;font-weight:800;font-size:13px;cursor:pointer;margin-top:10px}
+.loading{text-align:center;padding:40px;color:#64748b}
+.empty{text-align:center;padding:40px;color:#94a3b8;background:#fff;border-radius:14px}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<header class="header">
+    <h1>💳 چک‌ها</h1>
+    <div>
+        <a href="installments.html">📅 اقساط</a>
+        <a href="dashboard.html">داشبورد</a>
+    </div>
+</header>
+
+<div class="container">
+
+    <div class="stats-grid">
+        <div class="stat"><b id="totalAmount">۰</b><span>کل چک‌ها</span></div>
+        <div class="stat warn"><b id="pendingAmount">۰</b><span>در انتظار وصول</span></div>
+        <div class="stat danger"><b id="overdueCount">۰</b><span>سررسید گذشته</span></div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab active" data-status="all">همه</button>
+        <button class="tab" data-status="pending">در انتظار</button>
+        <button class="tab" data-status="cashed">وصول شده</button>
+        <button class="tab" data-status="bounced">برگشتی</button>
+        <button class="tab" data-status="returned">عودت داده</button>
+    </div>
+
+    <button class="btn-add" id="addBtn">➕ افزودن چک جدید</button>
+
+    <div id="list" class="loading">در حال بارگذاری...</div>
+
+</div>
+
+<div class="modal" id="modal">
+    <div class="modal-box">
+        <h2 id="modalTitle">افزودن چک</h2>
+        <input type="hidden" id="checkId">
+
+        <div class="field">
+            <label>👥 مشتری</label>
+            <select id="customerSelect">
+                <option value="">در حال بارگذاری...</option>
+            </select>
+        </div>
+
+        <div class="field">
+            <label>نام مشتری *</label>
+            <input type="text" id="customerName" placeholder="نام مشتری" required>
+        </div>
+
+        <div class="field">
+            <label>شماره تماس</label>
+            <input type="tel" id="customerPhone" placeholder="09121234567" style="direction:ltr;text-align:right;">
+        </div>
+
+        <div class="field">
+            <label>مبلغ (تومان) *</label>
+            <input type="number" id="amount" placeholder="1000000" required>
+        </div>
+
+        <div class="field">
+            <label>شماره چک</label>
+            <input type="text" id="checkNumber" placeholder="123456" style="direction:ltr;text-align:right;">
+        </div>
+
+        <div class="field">
+            <label>بانک</label>
+            <input type="text" id="bankName" placeholder="مثلاً: ملی، صادرات">
+        </div>
+
+        <div class="field">
+            <label>تاریخ سررسید (شمسی) *</label>
+            <input type="text" id="dueDate" placeholder="1405/08/15" style="direction:ltr;text-align:right;" required>
+        </div>
+
+        <div class="field">
+            <label>توضیحات</label>
+            <textarea id="description" placeholder="توضیح..."></textarea>
+        </div>
+
+        <div class="modal-btns">
+            <button class="btn-cancel" id="cancelBtn">انصراف</button>
+            <button class="btn-save" id="saveBtn">ذخیره</button>
+        </div>
+
+        <button class="btn-danger hidden" id="deleteBtn">🗑️ حذف</button>
+    </div>
+</div>
+
+<script type="module">
+import { supabase } from './js/supabase.js';
+import { checkPlanGuard } from './js/check-plan.js';
+
+if (!(await checkPlanGuard())) {
+    throw new Error('Plan expired');
+}
+
+const $ = id => document.getElementById(id);
+let checks = [];
+let customers = [];
+let me = null;
+let currentFilter = 'all';
+
+async function init() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { window.location.href = 'login.html'; return; }
+    me = session.user;
+    await loadCustomers();
+    await loadChecks();
+}
+
+async function loadCustomers() {
+    const { data } = await supabase
+        .from('customers')
+        .select('id, name, phone')
+        .eq('user_id', me.id)
+        .order('created_at', { ascending: false });
+
+    customers = data || [];
+    renderCustomers();
+}
+
+function renderCustomers() {
+    const select = $('customerSelect');
+    select.innerHTML = '<option value="">انتخاب مشتری...</option>';
+    customers.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.name + (c.phone ? ' - ' + c.phone : '');
+        opt.dataset.name = c.name;
+        opt.dataset.phone = c.phone || '';
+        select.appendChild(opt);
+    });
+}
+
+$('customerSelect').onchange = () => {
+    const id = $('customerSelect').value;
+    if (!id) return;
+    const c = customers.find(x => x.id === id);
+    if (c) {
+        $('customerName').value = c.name || '';
+        $('customerPhone').value = c.phone || '';
+    }
+};
+
+async function loadChecks() {
+    const { data, error } = await supabase
+        .from('checks')
+        .select('*')
+        .eq('user_id', me.id)
+        .order('due_date', { ascending: true });
+
+    if (error) {
+        $('list').innerHTML = '<div class="empty">⚠️ خطا: ' + error.message + '</div>';
+        return;
+    }
+
+    checks = data || [];
+    render();
+    updateStats();
+}
+
+function updateStats() {
+    let total = 0, pending = 0, overdue = 0;
+    const now = new Date();
+
+    checks.forEach(c => {
+        total += Number(c.amount) || 0;
+        if (c.status === 'pending') {
+            pending += Number(c.amount) || 0;
+            if (c.due_date && new Date(c.due_date) < now) overdue++;
+        }
+    });
+
+    $('totalAmount').textContent = total.toLocaleString('fa-IR');
+    $('pendingAmount').textContent = pending.toLocaleString('fa-IR');
+    $('overdueCount').textContent = overdue;
+}
+
+function getStatusLabel(s) {
+    return {
+        pending: 'در انتظار',
+        cashed: 'وصول شده',
+        bounced: 'برگشتی',
+        returned: 'عودت داده'
+    }[s] || s;
+}
+
+function getStatusClass(s) {
+    return {
+        pending: 'pending',
+        cashed: 'cashed',
+        bounced: 'bounced',
+        returned: 'returned'
+    }[s] || 'pending';
+}
+
+function render() {
+    const list = $('list');
+    const filtered = currentFilter === 'all' ? checks : checks.filter(c => c.status === currentFilter);
+
+    if (!filtered.length) {
+        list.innerHTML = '<div class="empty">📭 چکی ثبت نشده</div>';
+        return;
+    }
+
+    const now = new Date();
+    list.innerHTML = '';
+
+    filtered.forEach(c => {
+        const isOverdue = c.status === 'pending' && c.due_date && new Date(c.due_date) < now;
+        const card = document.createElement('div');
+        card.className = 'card ' + (isOverdue ? 'danger' : (c.status === 'pending' ? 'warn' : 'success'));
+
+        card.innerHTML =
+            '<div class="card-head">' +
+                '<div class="card-name">👥 ' + escapeHtml(c.customer_name) + '</div>' +
+                '<div class="card-amount">' + (Number(c.amount) || 0).toLocaleString('fa-IR') + ' تومان</div>' +
+            '</div>' +
+            '<div style="margin-bottom:8px;"><span class="badge ' + getStatusClass(c.status) + '">' + getStatusLabel(c.status) + '</span></div>' +
+            '<div class="card-info">' +
+                (c.check_number ? '<div><span>شماره چک</span><span>' + escapeHtml(c.check_number) + '</span></div>' : '') +
+                (c.bank_name ? '<div><span>بانک</span><span>' + escapeHtml(c.bank_name) + '</span></div>' : '') +
+                '<div><span>سررسید</span><span>' + escapeHtml(c.due_date || '-') + '</span></div>' +
+                (c.customer_phone ? '<div><span>تلفن</span><span>' + escapeHtml(c.customer_phone) + '</span></div>' : '') +
+            '</div>' +
+            (c.description ? '<div style="font-size:12px;color:#64748b;margin-bottom:8px;">📝 ' + escapeHtml(c.description) + '</div>' : '') +
+            '<div class="actions">' +
+                (c.status === 'pending' ? '<button class="btn btn-green act-cash" data-id="' + c.id + '">✅ وصول</button>' : '') +
+                (c.status === 'pending' ? '<button class="btn btn-red act-bounce" data-id="' + c.id + '">❌ برگشتی</button>' : '') +
+                '<button class="btn btn-blue act-edit" data-id="' + c.id + '">✏️ ویرایش</button>' +
+                (c.customer_phone ? '<button class="btn btn-gray act-send" data-id="' + c.id + '">📤 پیامک</button>' : '') +
+            '</div>';
+
+        list.appendChild(card);
+    });
+
+    list.querySelectorAll('.act-edit').forEach(b => {
+        b.onclick = () => openEdit(checks.find(x => x.id === b.dataset.id));
+    });
+    list.querySelectorAll('.act-cash').forEach(b => {
+        b.onclick = () => changeStatus(b.dataset.id, 'cashed');
+    });
+    list.querySelectorAll('.act-bounce').forEach(b => {
+        b.onclick = () => changeStatus(b.dataset.id, 'bounced');
+    });
+    list.querySelectorAll('.act-send').forEach(b => {
+        b.onclick = () => sendSMS(checks.find(x => x.id === b.dataset.id));
+    });
+}
+
+function escapeHtml(v) {
+    return String(v ?? '').replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+    })[m]);
+}
+
+async function changeStatus(id, status) {
+    const { error } = await supabase
+        .from('checks')
+        .update({ status })
+        .eq('id', id)
+        .eq('user_id', me.id);
+
+    if (error) { alert('خطا: ' + error.message); return; }
+    await loadChecks();
+}
+
+function openAdd() {
+    $('modalTitle').textContent = 'افزودن چک';
+    $('checkId').value = '';
+    $('customerSelect').value = '';
+    $('customerName').value = '';
+    $('customerPhone').value = '';
+    $('amount').value = '';
+    $('checkNumber').value = '';
+    $('bankName').value = '';
+    $('dueDate').value = '';
+    $('description').value = '';
+    $('deleteBtn').classList.add('hidden');
+    $('modal').classList.add('open');
+}
+
+function openEdit(c) {
+    if (!c) return;
+    $('modalTitle').textContent = 'ویرایش چک';
+    $('checkId').value = c.id;
+    $('customerSelect').value = c.customer_id || '';
+    $('customerName').value = c.customer_name || '';
+    $('customerPhone').value = c.customer_phone || '';
+    $('amount').value = c.amount || '';
+    $('checkNumber').value = c.check_number || '';
+    $('bankName').value = c.bank_name || '';
+    $('dueDate').value = c.due_date || '';
+    $('description').value = c.description || '';
+    $('deleteBtn').classList.remove('hidden');
+    $('modal').classList.add('open');
+}
+
+$('addBtn').onclick = openAdd;
+$('cancelBtn').onclick = () => $('modal').classList.remove('open');
+
+$('saveBtn').onclick = async () => {
+    const name = $('customerName').value.trim();
+    const amount = parseInt($('amount').value) || 0;
+    const dueDate = $('dueDate').value.trim();
+
+    if (!name) { alert('نام مشتری رو وارد کن'); return; }
+    if (!amount) { alert('مبلغ رو وارد کن'); return; }
+    if (!dueDate) { alert('تاریخ سررسید رو وارد کن'); return; }
+
+    const btn = $('saveBtn');
+    btn.disabled = true;
+    btn.textContent = 'در حال ذخیره...';
+
+    const payload = {
+        user_id: me.id,
+        customer_id: $('customerSelect').value || null,
+        customer_name: name,
+        customer_phone: $('customerPhone').value.trim() || null,
+        amount: amount,
+        check_number: $('checkNumber').value.trim() || null,
+        bank_name: $('bankName').value.trim() || null,
+        due_date: dueDate,
+        description: $('description').value.trim() || null
+    };
+
+    try {
+        const id = $('checkId').value;
+        let res;
+        if (id) {
+            res = await supabase.from('checks').update(payload).eq('id', id).eq('user_id', me.id);
+        } else {
+            payload.status = 'pending';
+            res = await supabase.from('checks').insert(payload);
+        }
+        if (res.error) throw res.error;
+
+        $('modal').classList.remove('open');
+        await loadChecks();
+    } catch (err) {
+        alert('خطا: ' + err.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'ذخیره';
+    }
+};
+
+$('deleteBtn').onclick = async () => {
+    const id = $('checkId').value;
+    if (!id) return;
+    if (!confirm('این چک حذف شود؟')) return;
+
+    const { error } = await supabase.from('checks').delete().eq('id', id).eq('user_id', me.id);
+    if (error) { alert('خطا: ' + error.message); return; }
+    $('modal').classList.remove('open');
+    await loadChecks();
+};
+
+document.querySelectorAll('.tab').forEach(t => {
+    t.onclick = () => {
+        document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+        t.classList.add('active');
+        currentFilter = t.dataset.status;
+        render();
+    };
+});
+
+function sendSMS(c) {
+    if (!c || !c.customer_phone) return;
+
+    const amount = (Number(c.amount) || 0).toLocaleString('fa-IR');
+    const text = 'سلام ' + c.customer_name + ' عزیز\n' +
+        'یادآوری: چک شما به مبلغ ' + amount + ' تومان در تاریخ ' + c.due_date + ' سررسید می‌شود.\n' +
+        'با تشکر';
+
+    window.location.href = 'sms:' + c.customer_phone + '?body=' + encodeURIComponent(text);
+}
+
+init();
+</script>
+
+</body>
+</html>
