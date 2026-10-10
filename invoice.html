@@ -755,14 +755,15 @@ $("saveBtn").onclick = async () => {
         }
 
        // 🎯 آپدیت درآمد مشتری
-await updateCustomerTotal(
-    data.customerName,
-    data.customerPhone,
-    calc.total,
-    editingInvoiceId ? 'update' : 'add',
-    editingInvoiceId
-);
 
+await updateCustomerTotal(
+            $("customer").dataset.customerId || null,
+            data.customerName,
+            data.customerPhone,
+            calc.total,
+            editingInvoiceId ? 'update' : 'add',
+            editingInvoiceId
+        );
 message(
     editingInvoiceId ? "فاکتور بروزرسانی شد." : "فاکتور ذخیره شد.",
     "success"
@@ -1103,14 +1104,15 @@ function renderInvoiceArchive(list) {
                 return;
             }
            // 🎯 کم کردن از درآمد مشتری
-  await updateCustomerTotal(
-    invoice.customer_name,
-    invoice.customer_phone,
-    0,
-    'delete',
-    invoice.id
-);
-
+  
+await updateCustomerTotal(
+        invoice.customer_id,
+        invoice.customer_name,
+        invoice.customer_phone,
+        0,
+        'delete',
+        invoice.id
+    );
 message("فاکتور حذف شد.", "success");
 loadInvoiceArchive(); 
         };
@@ -1176,13 +1178,15 @@ async function init() {
     calculate();
 }
 // 🎯 آپدیت مجموع خرید مشتری
-async function updateCustomerTotal(customerName, customerPhone, amount, action, invoiceId) {
-    if (!customerName && !customerPhone) return;
+async function updateCustomerTotal(customerId, customerName, customerPhone, amount, action, invoiceId) {
+    if (!customerId && !customerName && !customerPhone) return;
 
     try {
         let customerQuery = supabase.from('customers').select('id, total_purchase').eq('user_id', me.id);
 
-        if (customerPhone) {
+        if (customerId) {
+            customerQuery = customerQuery.eq('id', customerId);
+        } else if (customerPhone) {
             customerQuery = customerQuery.eq('phone', customerPhone);
         } else {
             customerQuery = customerQuery.eq('name', customerName);
@@ -1190,7 +1194,10 @@ async function updateCustomerTotal(customerName, customerPhone, amount, action, 
 
         const { data: existingCustomer } = await customerQuery.maybeSingle();
 
-        if (!existingCustomer) return;
+        if (!existingCustomer) {
+            console.log("Customer not found:", { customerId, customerName, customerPhone });
+            return;
+        }
 
         let oldAmount = 0;
         if (action === 'update' || action === 'delete') {
@@ -1224,7 +1231,6 @@ async function updateCustomerTotal(customerName, customerPhone, amount, action, 
     } catch (e) {
         console.error("Update customer total error:", e);
     }
-
 } 
     
 init();
