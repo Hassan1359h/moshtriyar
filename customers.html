@@ -149,7 +149,8 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f1f5f9;color:#0f172a;li
 <script type="module">
 import { supabase } from './js/supabase.js';
 import { checkPlanGuard } from './js/check-plan.js';
- import { getLabels } from './js/labels.js';
+import { getLabels } from './js/labels.js';
+import { loadBusinessType } from './js/helpers.js';
 
 // 🎯 چک انقضای پلن قبل از هر کاری
 if (!(await checkPlanGuard())) {
@@ -167,13 +168,8 @@ async function init() {
     me = session.user;
 
 // 🎯 لود نوع کسب‌وکار
-const { data: profileBT } = await supabase
-    .from('profiles')
-    .select('business_type')
-    .eq('id', me.id)
-    .maybeSingle();
-
-myLabels = getLabels(profileBT?.business_type || 'shop');
+const bt = await loadBusinessType(supabase, me.id);
+    myLabels = getLabels(bt);
  
 // 🎯 اعمال متن‌های پویا
 const setTxt = (id, txt) => { const el = $(id); if (el) el.textContent = txt; };
