@@ -35,7 +35,7 @@ body{font-family:Vazirmatn,sans-serif;background:#f1f5f9;margin:0;padding:20px;p
 <body>
 
 <div class="header">
-   <h1>📦 <span id="pageTitle">محصولات</span></h1> 
+    <h1>📦 <span id="pageTitle">محصولات</span></h1>
     <button class="btn-add" onclick="openAdd()">+ افزودن <span id="btnAddLabel">محصول</span></button>
 </div>
 
@@ -47,43 +47,40 @@ body{font-family:Vazirmatn,sans-serif;background:#f1f5f9;margin:0;padding:20px;p
     <div class="modal-box">
         <h2 id="modalTitle">افزودن <span id="modalTypeLabel">محصول</span></h2>
         <input type="hidden" id="productId">
-        
+
         <div class="preview" id="preview" onclick="document.getElementById('fileInput').click()">
             <span id="previewText">📸 برای انتخاب عکس کلیک کن</span>
         </div>
         <input type="file" id="fileInput" accept="image/*" style="display:none">
-        
+
         <div class="field">
             <label>نام <span id="fieldNameLabel">محصول</span> *</label>
             <input type="text" id="name" placeholder="مثلاً: گتر کوهنوردی">
         </div>
-        
+
         <div class="field">
             <label>قیمت (تومان)</label>
             <input type="number" id="price" placeholder="150000">
         </div>
-        
+
         <div class="field">
             <label>توضیحات</label>
             <textarea id="description" placeholder="توضیح مختصر..."></textarea>
         </div>
-        
+
         <div class="btns">
-    <button class="btn-save" id="saveBtn" onclick="saveProduct()">💾 ذخیره</button>
-    <button class="btn-cancel" onclick="closeModal()">انصراف</button>
-</div>
-<button id="deleteBtn" onclick="deleteProduct()" style="width:100%;padding:11px;background:#fff;color:#dc2626;border:2px solid #fecaca;border-radius:10px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:10px;display:none;">🗑️ حذف محصول</button>
+            <button class="btn-save" id="saveBtn" onclick="saveProduct()">💾 ذخیره</button>
+            <button class="btn-cancel" onclick="closeModal()">انصراف</button>
         </div>
+        <button id="deleteBtn" onclick="deleteProduct()" style="width:100%;padding:11px;background:#fff;color:#dc2626;border:2px solid #fecaca;border-radius:10px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:10px;display:none;">🗑️ حذف</button>
     </div>
 </div>
 
 <script type="module">
 import { supabase } from './js/supabase.js';
-import { getLabels } from './js/labels.js';
 import { checkPlanGuard } from './js/check-plan.js';
 import { getLabels } from './js/labels.js';
 
-// 🎯 چک انقضای پلن قبل از هر کاری
 if (!(await checkPlanGuard())) {
     throw new Error('Plan expired');
 }
@@ -97,7 +94,8 @@ let myLabels = null;
 const { data: { session } } = await supabase.auth.getSession();
 if (!session) { window.location.href = 'login.html'; }
 me = session.user;
-   const { data: profileBT } = await supabase
+
+const { data: profileBT } = await supabase
     .from('profiles')
     .select('business_type')
     .eq('id', me.id)
@@ -105,23 +103,13 @@ me = session.user;
 
 businessType = profileBT?.business_type || 'shop';
 myLabels = getLabels(businessType);
-    
-// 🎯 لود نوع کسب‌وکار
-const { data: profileBT } = await supabase
-    .from('profiles')
-    .select('business_type')
-    .eq('id', me.id)
-    .maybeSingle();
 
-myLabels = getLabels(profileBT?.business_type || 'shop');
-    
-// 🎯 اعمال متن‌های پویا
 const setTxt = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
 setTxt('pageTitle', myLabels.products);
 setTxt('btnAddLabel', myLabels.product);
 setTxt('modalTypeLabel', myLabels.product);
 setTxt('fieldNameLabel', myLabels.product);
-    
+
 window.openAdd = function() {
     document.getElementById('modalTitle').textContent = 'افزودن ' + myLabels.product;
     document.getElementById('productId').value = '';
@@ -129,6 +117,7 @@ window.openAdd = function() {
     document.getElementById('price').value = '';
     document.getElementById('description').value = '';
     document.getElementById('preview').innerHTML = '<span id="previewText">📸 برای انتخاب عکس کلیک کن</span>';
+    document.getElementById('deleteBtn').style.display = 'none';
     imageUrl = '';
     document.getElementById('modal').classList.add('show');
 };
@@ -140,13 +129,13 @@ window.closeModal = function() {
 document.getElementById('fileInput').onchange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    
+
     const reader = new FileReader();
     reader.onload = (ev) => {
         document.getElementById('preview').innerHTML = '<img src="' + ev.target.result + '">';
     };
     reader.readAsDataURL(file);
-    
+
     try {
         const ext = file.name.split('.').pop();
         const fileName = me.id + '-' + Date.now() + '.' + ext;
@@ -161,13 +150,13 @@ document.getElementById('fileInput').onchange = async (e) => {
 
 window.saveProduct = async function() {
     const name = document.getElementById('name').value.trim();
-    if (!name) { alert('نام محصول رو وارد کن'); return; }
-    
+    if (!name) { alert('نام رو وارد کن'); return; }
+
     const btn = document.getElementById('saveBtn');
     btn.disabled = true;
     btn.textContent = 'در حال ذخیره...';
-    
-     const payload = {
+
+    const payload = {
         user_id: me.id,
         business_type: businessType,
         name: name,
@@ -175,7 +164,7 @@ window.saveProduct = async function() {
         description: document.getElementById('description').value.trim() || null,
         image_url: imageUrl || null
     };
-    
+
     try {
         const id = document.getElementById('productId').value;
         let res;
@@ -185,7 +174,7 @@ window.saveProduct = async function() {
             res = await supabase.from('products').insert(payload);
         }
         if (res.error) throw res.error;
-        
+
         closeModal();
         await loadProducts();
     } catch (err) {
@@ -197,22 +186,18 @@ window.saveProduct = async function() {
 };
 
 async function loadProducts() {
-    let query = supabase.from('products').select('*').eq('user_id', me.id);
-    
-    // 🎯 فیلتر بر اساس نوع کسب‌وکار
-    if (businessType && businessType !== 'shop') {
-        query = query.eq('business_type', businessType);
-    } else {
-        query = query.eq('business_type', 'shop');
-    }
-    
-    const { data, error } = await query.order('created_at', { ascending: false });
-    
+    const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('user_id', me.id)
+        .eq('business_type', businessType)
+        .order('created_at', { ascending: false });
+
     if (error) {
         document.getElementById('grid').innerHTML = '<div class="loading">خطا: ' + error.message + '</div>';
         return;
     }
-    
+
     products = data || [];
     render();
 }
@@ -220,15 +205,15 @@ async function loadProducts() {
 function render() {
     const grid = document.getElementById('grid');
     if (!products.length) {
-        grid.innerHTML = '<div class="loading">هنوز محصولی نداری</div>';
+        grid.innerHTML = '<div class="loading">هنوز ' + myLabels.product + 'ی نداری</div>';
         return;
     }
-    
+
     grid.innerHTML = '';
     products.forEach(p => {
         const card = document.createElement('div');
         card.className = 'card';
-        card.innerHTML = 
+        card.innerHTML =
             (p.image_url ? '<img src="' + p.image_url + '">' : '<div class="no-img">📦</div>') +
             '<h3>' + p.name + '</h3>' +
             '<div class="price">' + (parseInt(p.price) || 0).toLocaleString('fa-IR') + ' تومان</div>';
@@ -250,16 +235,18 @@ function render() {
         grid.appendChild(card);
     });
 }
+
 window.deleteProduct = async function() {
     const id = document.getElementById('productId').value;
     if (!id) return;
-    if (!confirm('از حذف این محصول مطمئنید؟')) return;
+    if (!confirm('از حذف این ' + myLabels.product + ' مطمئنید؟')) return;
     const { error } = await supabase.from('products').delete().eq('id', id);
     if (error) { alert('خطا: ' + error.message); return; }
     closeModal();
     await loadProducts();
 };
+
 loadProducts();
 </script>
 </body>
-  </html>
+</html>
