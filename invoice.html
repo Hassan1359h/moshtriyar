@@ -1138,20 +1138,6 @@ async function init() {
     renderCustomers();
     applyBusinessType();
 
-    const { data: profileBT } = await supabase
-        .from('profiles')
-        .select('business_type')
-        .eq('id', me.id)
-        .maybeSingle();
-
-    if (profileBT?.business_type) {
-        businessType = profileBT.business_type;
-    }
-    myLabels = getLabels(businessType);
-
-    renderCustomers();
-    applyBusinessType();
-
     await loadInvoiceArchive();
 
     $("invoiceNumber").value = invoiceNumber();
