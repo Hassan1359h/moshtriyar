@@ -74,6 +74,7 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;li
 <script type="module">
 import { supabase } from './js/supabase.js';
 import { getLabels } from './js/labels.js';
+import { loadBusinessType } from './js/helpers.js';
 
 const $ = id => document.getElementById(id);
 let risky = [];
@@ -81,14 +82,10 @@ let myLabels = null;
 
 const { data: { session } } = await supabase.auth.getSession();
 if (!session) { window.location.href = 'login.html'; }
-    const { data: profileBT } = await supabase
-    .from('profiles')
-    .select('business_type')
-    .eq('id', session.user.id)
-    .maybeSingle();
 
-myLabels = getLabels(profileBT?.business_type || 'shop');
-
+const bt = await loadBusinessType(supabase, session.user.id);
+myLabels = getLabels(bt);
+    
 // 🎯 اعمال متن‌های پویا
 const setTxt = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
 setTxt('pageTitle', myLabels.customers + ' در خطر');
