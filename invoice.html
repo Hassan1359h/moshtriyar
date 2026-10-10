@@ -754,14 +754,23 @@ $("saveBtn").onclick = async () => {
             return;
         }
 
-        message(
-            editingInvoiceId ? "فاکتور بروزرسانی شد." : "فاکتور ذخیره شد.",
-            "success"
-        );
+       // 🎯 آپدیت درآمد مشتری
+await updateCustomerTotal(
+    data.customerName,
+    data.customerPhone,
+    calc.total,
+    editingInvoiceId ? 'update' : 'add',
+    editingInvoiceId
+);
 
-        editingInvoiceId = null;
-        resetInvoice();
-        await loadInvoiceArchive();
+message(
+    editingInvoiceId ? "فاکتور بروزرسانی شد." : "فاکتور ذخیره شد.",
+    "success"
+);
+
+editingInvoiceId = null;
+resetInvoice();
+await loadInvoiceArchive(); 
 
     } catch (e) {
         console.error(e);
@@ -1093,8 +1102,17 @@ function renderInvoiceArchive(list) {
                 message("حذف فاکتور انجام نشد.", "error");
                 return;
             }
-            message("فاکتور حذف شد.", "success");
-            loadInvoiceArchive();
+           // 🎯 کم کردن از درآمد مشتری
+  await updateCustomerTotal(
+    invoice.customer_name,
+    invoice.customer_phone,
+    0,
+    'delete',
+    invoice.id
+);
+
+message("فاکتور حذف شد.", "success");
+loadInvoiceArchive(); 
         };
 
         archive.appendChild(div);
@@ -1157,7 +1175,58 @@ async function init() {
 
     calculate();
 }
+// 🎯 آپدیت مجموع خرید مشتری
+async function updateCustomerTotal(customerName, customerPhone, amount, action, invoiceId) {
+    if (!customerName && !customerPhone) return;
 
+    try {
+        let customerQuery = supabase.from('customers').select('id, total_purchase').eq('user_id', me.id);
+
+        if (customerPhone) {
+            customerQuery = customerQuery.eq('phone', customerPhone);
+        } else {
+            customerQuery = customerQuery.eq('name', customerName);
+        }
+
+        const { data: existingCustomer } = await customerQuery.maybeSingle();
+
+        if (!existingCustomer) return;
+
+        let oldAmount = 0;
+        if (action === 'update' || action === 'delete') {
+            if (invoiceId) {
+                const { data: oldInvoice } = await supabase
+                    .from('invoices')
+                    .select('total')
+                    .eq('id', invoiceId)
+                    .maybeSingle();
+                oldAmount = oldInvoice?.total || 0;
+            }
+        }
+
+        let newTotal = Number(existingCustomer.total_purchase) || 0;
+
+        if (action === 'add') {
+            newTotal += Number(amount) || 0;
+        } else if (action === 'update') {
+            newTotal = newTotal - oldAmount + Number(amount);
+        } else if (action === 'delete') {
+            newTotal = newTotal - oldAmount;
+        }
+
+        if (newTotal < 0) newTotal = 0;
+
+        await supabase
+            .from('customers')
+            .update({ total_purchase: newTotal })
+            .eq('id', existingCustomer.id);
+
+    } catch (e) {
+        console.error("Update customer total error:", e);
+    }
+
+} 
+    
 init();
 
 </script>
