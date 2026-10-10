@@ -1091,21 +1091,10 @@ function renderInvoiceArchive(list) {
         };
 
         div.querySelector(".archive-delete").onclick = async () => {
-            if (!confirm("این فاکتور حذف شود؟")) return;
-            const { error } = await supabase
-                .from("invoices")
-                .delete()
-                .eq("id", invoice.id)
-                .eq("user_id", me.id);
+    if (!confirm("این فاکتور حذف شود؟")) return;
 
-            if (error) {
-                console.error(error);
-                message("حذف فاکتور انجام نشد.", "error");
-                return;
-            }
-           // 🎯 کم کردن از درآمد مشتری
-  
-await updateCustomerTotal(
+    // 🎯 اول درآمد مشتری رو کم کن (قبل از حذف فاکتور)
+    await updateCustomerTotal(
         invoice.customer_id,
         invoice.customer_name,
         invoice.customer_phone,
@@ -1113,9 +1102,23 @@ await updateCustomerTotal(
         'delete',
         invoice.id
     );
-message("فاکتور حذف شد.", "success");
-loadInvoiceArchive(); 
-        };
+
+    // بعد فاکتور رو حذف کن
+    const { error } = await supabase
+        .from("invoices")
+        .delete()
+        .eq("id", invoice.id)
+        .eq("user_id", me.id);
+
+    if (error) {
+        console.error(error);
+        message("حذف فاکتور انجام نشد.", "error");
+        return;
+    }
+
+    message("فاکتور حذف شد.", "success");
+    loadInvoiceArchive();
+};
 
         archive.appendChild(div);
     });
