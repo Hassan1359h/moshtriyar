@@ -782,11 +782,14 @@ $("saveBtn").onclick = async () => {
                 .eq("id", editingInvoiceId)
                 .eq("user_id", me.id);
             error = res.error;
-        } else {
-            const res = await supabase
-                .from("invoices")
-                .insert(payload);
-            error = res.error;
+
+            } else {
+    const res = await supabase
+        .from("invoices")
+        .insert(payload)
+        .select()
+        .single();
+    error = res.error;
         }
 
         if (error) {
@@ -811,6 +814,64 @@ message(
 );
 
 editingInvoiceId = null;
+// 🎯 ساخت خودکار چک/اقساط
+if (paymentType === 'check' || paymentType === 'installment') {
+    const invoiceId = editingInvoiceId || (res?.data?.id) || null;
+    
+    if (paymentType === 'check') {
+        await supabase.from('checks').insert({
+            user_id: me.id,
+            customer_id: $("customer").dataset.customerId || null,
+            customer_name: data.customerName,
+            customer_phone: data.customerPhone,
+            amount: calc.total,
+            check_number: $('checkNumber') ? $('checkNumber').value.trim() : null,
+            bank_name: $('checkBank') ? $('checkBank').value.trim() : null,
+            due_date: $('checkDueDate') ? $('checkDueDate').value.trim() : null,
+            status: 'pending',
+            invoice_id: invoiceId
+        });
+    }
+    
+    if (paymentType === 'installment') {
+        const instCount = parseInt($('instCount').value) || 4;
+        const instDate = $('instStartDate').value.trim();
+        
+        const { data: instData, error: instErr } = await supabase
+            .from('installments')
+            .insert({
+                user_id: me.id,
+                customer_id: $("customer").dataset.customerId || null,
+                customer_name: data.customerName,
+                customer_phone: data.customerPhone,
+                total_amount: calc.total,
+                count: instCount,
+                start_date: instDate,
+                invoice_id: invoiceId
+            })
+            .select()
+            .single();
+        
+        if (!instErr && instData) {
+            const perInst = Math.floor(calc.total / instCount);
+            const payments = [];
+            for (let i = 0; i < instCount; i++) {
+                let amt = perInst;
+                if (i === instCount - 1) amt = calc.total - perInst * (instCount - 1);
+                const dueDate = addMonthsToShamsiLocal(instDate, i);
+                payments.push({
+                    installment_id: instData.id,
+                    user_id: me.id,
+                    amount: amt,
+                    due_date: dueDate,
+                    status: 'pending'
+                });
+            }
+            await supabase.from('installment_payments').insert(payments);
+        }
+    }
+}
+        
 resetInvoice();
 await loadInvoiceArchive(); 
 
