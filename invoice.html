@@ -799,7 +799,6 @@ if (error) {
 }
 
        // 🎯 آپدیت درآمد مشتری
-
 await updateCustomerTotal(
             $("customer").dataset.customerId || null,
             data.customerName,
@@ -808,12 +807,7 @@ await updateCustomerTotal(
             editingInvoiceId ? 'update' : 'add',
             editingInvoiceId
         );
-message(
-    editingInvoiceId ? "فاکتور بروزرسانی شد." : "فاکتور ذخیره شد.",
-    "success"
-);
 
-editingInvoiceId = null;
 // 🎯 ساخت خودکار چک/اقساط
 if (paymentType === 'check' || paymentType === 'installment') {
     const invoiceId = editingInvoiceId || (res?.data?.id) || null;
@@ -871,6 +865,14 @@ if (paymentType === 'check' || paymentType === 'installment') {
         }
     }
 }
+ // 🎯 پیام موفقیت
+message(
+    editingInvoiceId ? "فاکتور بروزرسانی شد." : "فاکتور ذخیره شد.",
+    "success"
+);
+
+// 🎯 ریست
+editingInvoiceId = null; 
         
 resetInvoice();
 await loadInvoiceArchive(); 
