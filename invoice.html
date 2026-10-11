@@ -284,6 +284,7 @@ let me = null;
 let myProfile = null;
 let myLabels = null;
 let businessType = 'shop';
+let paymentType = 'cash';    
 let editingInvoiceId = null;
 
 const SERVICE_ONLY_TYPES = ['medical', 'dental', 'lab', 'salon'];
@@ -982,6 +983,17 @@ document.querySelectorAll(".share-item").forEach(btn => {
 
 function resetInvoice() {
     editingInvoiceId = null;
+    paymentType = 'cash';
+if ($('ptCash')) $('ptCash').className = 'btn btn-blue';
+if ($('ptCheck')) $('ptCheck').className = 'btn btn-gray';
+if ($('ptInstallment')) $('ptInstallment').className = 'btn btn-gray';
+if ($('checkFields')) $('checkFields').style.display = 'none';
+if ($('installmentFields')) $('installmentFields').style.display = 'none';
+if ($('checkNumber')) $('checkNumber').value = '';
+if ($('checkBank')) $('checkBank').value = '';
+if ($('checkDueDate')) $('checkDueDate').value = '';
+if ($('instCount')) $('instCount').value = '4';
+if ($('instStartDate')) $('instStartDate').value = '';
     $("customerSelect").value = "";
     $("customer").value = "";
     $("customer").dataset.customerId = "";
@@ -1217,7 +1229,28 @@ async function init() {
 
     ["customer", "customerPhone", "invoiceNote", "discountPercent", "discountFixed"]
         .forEach(id => $(id).addEventListener("input", renderPreview));
+// 🎯 دکمه‌های نوع پرداخت
+function setPaymentType(type) {
+    paymentType = type;
+    const btns = {
+        cash: $('ptCash'),
+        check: $('ptCheck'),
+        installment: $('ptInstallment')
+    };
+    Object.keys(btns).forEach(k => {
+        if (btns[k]) {
+            btns[k].className = (k === type) ? 'btn btn-blue' : 'btn btn-gray';
+            btns[k].style.width = '100%';
+        }
+    });
+    if ($('checkFields')) $('checkFields').style.display = (type === 'check') ? 'block' : 'none';
+    if ($('installmentFields')) $('installmentFields').style.display = (type === 'installment') ? 'block' : 'none';
+}
 
+if ($('ptCash')) $('ptCash').onclick = () => setPaymentType('cash');
+if ($('ptCheck')) $('ptCheck').onclick = () => setPaymentType('check');
+if ($('ptInstallment')) $('ptInstallment').onclick = () => setPaymentType('installment');
+    
     calculate();
 }
 // 🎯 آپدیت مجموع خرید مشتری
