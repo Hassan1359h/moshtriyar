@@ -807,13 +807,11 @@ await updateCustomerTotal(
             editingInvoiceId ? 'update' : 'add',
             editingInvoiceId
         );
-
-// 🎯 ساخت خودکار چک/اقساط
-if (paymentType === 'check' || paymentType === 'installment') {
-    const invoiceId = editingInvoiceId || (res?.data?.id) || null;
-    
+        
+// 🎯 ساخت خودکار چک/اقساط (جدا، تا خطا کل فاکتور رو خراب نکنه)
+try {
     if (paymentType === 'check') {
-        await supabase.from('checks').insert({
+        const { error: chkErr } = await supabase.from('checks').insert({
             user_id: me.id,
             customer_id: $("customer").dataset.customerId || null,
             customer_name: data.customerName,
@@ -823,8 +821,9 @@ if (paymentType === 'check' || paymentType === 'installment') {
             bank_name: $('checkBank') ? $('checkBank').value.trim() : null,
             due_date: $('checkDueDate') ? $('checkDueDate').value.trim() : null,
             status: 'pending',
-            invoice_id: invoiceId
+            invoice_id: editingInvoiceId || (res?.data?.id) || null
         });
+        if (chkErr) console.error("Check insert error:", chkErr);
     }
     
     if (paymentType === 'installment') {
@@ -841,12 +840,15 @@ if (paymentType === 'check' || paymentType === 'installment') {
                 total_amount: calc.total,
                 count: instCount,
                 start_date: instDate,
-                invoice_id: invoiceId
+                invoice_id: editingInvoiceId || (res?.data?.id) || null
             })
             .select()
             .single();
         
-        if (!instErr && instData) {
+        if (instErr) {
+            console.error("Installment insert error:", instErr);
+            alert("خطای اقساط: " + instErr.message);
+        } else if (instData) {
             const perInst = Math.floor(calc.total / instCount);
             const payments = [];
             for (let i = 0; i < instCount; i++) {
@@ -861,10 +863,18 @@ if (paymentType === 'check' || paymentType === 'installment') {
                     status: 'pending'
                 });
             }
-            await supabase.from('installment_payments').insert(payments);
+            const { error: payErr } = await supabase.from('installment_payments').insert(payments);
+            if (payErr) {
+                console.error("Payments insert error:", payErr);
+                alert("خطای اقساط: " + payErr.message);
+            }
         }
     }
-}
+} catch (installmentError) {
+    console.error("Installment block error:", installmentError);
+    alert("خطای اقساط: " + installmentError.message);
+    }
+
  // 🎯 پیام موفقیت
 message(
     editingInvoiceId ? "فاکتور بروزرسانی شد." : "فاکتور ذخیره شد.",
