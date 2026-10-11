@@ -157,6 +157,45 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#2563eb}
     <button id="addItem" class="btn btn-blue add-btn">➕ افزودن <span id="addItemLabel">محصول</span></button>
     <button id="addManualItem" class="btn btn-blue add-btn" style="margin-top:8px;">✏️ افزودن <span id="addManualLabel">ردیف دستی</span></button>
 </section>
+<!-- نوع پرداخت -->
+<section class="card no-print">
+    <div class="title">💰 نوع پرداخت</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;">
+        <button id="ptCash" type="button" class="btn btn-blue" style="width:100%;">💵 نقدی</button>
+        <button id="ptCheck" type="button" class="btn btn-gray" style="width:100%;">💳 چکی</button>
+        <button id="ptInstallment" type="button" class="btn btn-gray" style="width:100%;">📅 اقساطی</button>
+    </div>
+
+    <div id="checkFields" style="display:none;">
+        <div class="grid">
+            <div>
+                <label>شماره چک</label>
+                <input id="checkNumber" placeholder="123456">
+            </div>
+            <div>
+                <label>بانک</label>
+                <input id="checkBank" placeholder="مثلاً: ملی">
+            </div>
+            <div>
+                <label>تاریخ سررسید (شمسی)</label>
+                <input id="checkDueDate" placeholder="1405/09/15" style="direction:ltr;text-align:right;">
+            </div>
+        </div>
+    </div>
+
+    <div id="installmentFields" style="display:none;">
+        <div class="grid">
+            <div>
+                <label>تعداد اقساط</label>
+                <input id="instCount" type="number" min="2" max="60" value="4">
+            </div>
+            <div>
+                <label>تاریخ اولین قسط (شمسی)</label>
+                <input id="instStartDate" placeholder="1405/08/15" style="direction:ltr;text-align:right;">
+            </div>
+        </div>
+    </div>
+</section>
 
 <section class="card no-print">
     <div class="title">💰 تخفیف</div>
