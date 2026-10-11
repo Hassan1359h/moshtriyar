@@ -435,28 +435,46 @@ $('saveBtn').onclick = async () => {
         btn.textContent = 'ذخیره';
     }
 };
-
 $('deleteBtn').onclick = async () => {
     const id = $('installmentId').value;
     if (!id) return;
     if (!confirm('این قرارداد حذف شود؟ (همه‌ی اقساط هم حذف می‌شن)')) return;
 
+    // 🎯 پیدا کردن اطلاعات قرارداد
+    const { data: inst } = await supabase
+        .from('installments')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+
+    if (inst) {
+        // 🎯 کم کردن از درآمد مشتری
+        let q = supabase.from('customers').select('id, total_purchase').eq('user_id', me.id);
+        if (inst.customer_id) {
+            q = q.eq('id', inst.customer_id);
+        } else if (inst.customer_phone) {
+            q = q.eq('phone', inst.customer_phone);
+        } else {
+            q = q.eq('name', inst.customer_name);
+        }
+        const { data: cust } = await q.maybeSingle();
+        
+        if (cust) {
+            const newTotal = Math.max(0, (Number(cust.total_purchase) || 0) - (Number(inst.total_amount) || 0));
+            await supabase
+                .from('customers')
+                .update({ total_purchase: newTotal })
+                .eq('id', cust.id);
+        }
+    }
+
+    // 🎯 حذف قرارداد
     const { error } = await supabase.from('installments').delete().eq('id', id).eq('user_id', me.id);
     if (error) { alert('خطا: ' + error.message); return; }
+
     $('modal').classList.remove('open');
     await loadInstallments();
 };
-
-function sendSMS(inst) {
-    if (!inst || !inst.customer_phone) return;
-
-    const total = Number(inst.total_amount) || 0;
-    const text = 'سلام ' + inst.customer_name + ' عزیز\n' +
-        'یادآوری: اقساط شما به مبلغ کل ' + total.toLocaleString('fa-IR') + ' تومان در حال پرداخت است.\n' +
-        'با تشکر';
-
-    window.location.href = 'sms:' + inst.customer_phone + '?body=' + encodeURIComponent(text);
-}
 
 init();
 </script>
