@@ -775,28 +775,28 @@ $("saveBtn").onclick = async () => {
         };
 
         let error;
-        if (editingInvoiceId) {
-            const res = await supabase
-                .from("invoices")
-                .update(payload)
-                .eq("id", editingInvoiceId)
-                .eq("user_id", me.id);
-            error = res.error;
-
-            } else {
-    const res = await supabase
+let res;
+if (editingInvoiceId) {
+    res = await supabase
+        .from("invoices")
+        .update(payload)
+        .eq("id", editingInvoiceId)
+        .eq("user_id", me.id);
+    error = res.error;
+} else {
+    res = await supabase
         .from("invoices")
         .insert(payload)
         .select()
         .single();
     error = res.error;
-        }
+}
 
-        if (error) {
-            console.error(error);
-            message("ذخیره فاکتور انجام نشد: " + (error.message || ""), "error");
-            return;
-        }
+if (error) {
+    console.error(error);
+    message("ذخیره فاکتور انجام نشد: " + (error.message || ""), "error");
+    return;
+}
 
        // 🎯 آپدیت درآمد مشتری
 
