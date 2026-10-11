@@ -138,6 +138,7 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;li
 <script type="module">
 import { supabase } from './js/supabase.js';
 import { checkPlanGuard } from './js/check-plan.js';
+import { isShamsiPast } from './js/helpers.js';
 
 if (!(await checkPlanGuard())) {
     throw new Error('Plan expired');
@@ -248,7 +249,7 @@ function render() {
 
         let paymentsHtml = '<div class="payments-list">';
         pays.forEach(p => {
-            const isOverdue = p.status === 'pending' && p.due_date && new Date(p.due_date) < now;
+            const isOverdue = p.status === 'pending' && p.due_date && isShamsiPast(p.due_date);
             const cls = p.status === 'paid' ? 'paid' : (isOverdue ? 'overdue' : '');
             paymentsHtml += '<div class="payment-item ' + cls + '">' +
                 '<span>قسط ' + (pays.indexOf(p) + 1) + ' — ' + Number(p.amount || 0).toLocaleString('fa-IR') + ' تومان</span>' +
