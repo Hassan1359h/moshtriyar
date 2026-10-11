@@ -1259,7 +1259,24 @@ $("invoiceSearch").addEventListener("input", () => {
     });
     renderInvoiceArchive(filtered);
 });
+function addMonthsToShamsiLocal(shamsiStr, months) {
+    if (!shamsiStr) return shamsiStr;
+    const parts = shamsiStr.split('/').map(x => parseInt(x));
+    if (parts.length !== 3) return shamsiStr;
+    
+    let m = parts[1] - 1 + months;
+    let y = parts[0];
+    y += Math.floor(m / 12);
+    m = ((m % 12) + 12) % 12 + 1;
+    
+    return y + '/' + String(m).padStart(2, '0') + '/' + String(parts[2]).padStart(2, '0');
+}
 
+async function init() {
+    const { data: { session } } = await supabase.auth.getSession();
+    ...
+}
+    
 async function init() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
