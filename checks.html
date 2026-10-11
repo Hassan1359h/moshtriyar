@@ -228,13 +228,12 @@ async function loadChecks() {
 
 function updateStats() {
     let total = 0, pending = 0, overdue = 0;
-    const now = new Date();
 
     checks.forEach(c => {
         total += Number(c.amount) || 0;
         if (c.status === 'pending') {
             pending += Number(c.amount) || 0;
-            if (c.due_date && new Date(c.due_date) < now) overdue++;
+            if (c.due_date && isShamsiPast(c.due_date)) overdue++;
         }
     });
 
@@ -270,7 +269,6 @@ function render() {
         return;
     }
 
-    const now = new Date();
     list.innerHTML = '';
 
     filtered.forEach(c => {
@@ -322,6 +320,16 @@ function escapeHtml(v) {
 }
 
 async function changeStatus(id, status) {
+    const { data: chk } = await supabase
+        .from('checks')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+
+    if (!chk) { alert('چک پیدا نشد'); return; }
+
+    const oldStatus = chk.status;
+    
     const { error } = await supabase
         .from('checks')
         .update({ status })
@@ -329,6 +337,35 @@ async function changeStatus(id, status) {
         .eq('user_id', me.id);
 
     if (error) { alert('خطا: ' + error.message); return; }
+
+    let q = supabase.from('customers').select('id, total_purchase, total_paid').eq('user_id', me.id);
+    if (chk.customer_id) {
+        q = q.eq('id', chk.customer_id);
+    } else if (chk.customer_phone) {
+        q = q.eq('phone', chk.customer_phone);
+    } else {
+        q = q.eq('name', chk.customer_name);
+    }
+    const { data: cust } = await q.maybeSingle();
+
+    if (cust) {
+        let newTotal = Number(cust.total_purchase) || 0;
+        let newPaid = Number(cust.total_paid) || 0;
+
+        if (oldStatus === 'pending' && status === 'cashed') {
+            newPaid += Number(chk.amount) || 0;
+        } else if (oldStatus === 'cashed' && status !== 'cashed') {
+            newPaid = Math.max(0, newPaid - (Number(chk.amount) || 0));
+        } else if (oldStatus === 'pending' && (status === 'bounced' || status === 'returned')) {
+            newTotal = Math.max(0, newTotal - (Number(chk.amount) || 0));
+        }
+
+        await supabase
+            .from('customers')
+            .update({ total_purchase: newTotal, total_paid: newPaid })
+            .eq('id', cust.id);
+    }
+
     await loadChecks();
 }
 
@@ -393,14 +430,43 @@ $('saveBtn').onclick = async () => {
 
     try {
         const id = $('checkId').value;
-        let res;
+        
+        // 🎯 پیدا کردن مشتری برای آپدیت درآمد
+        let q = supabase.from('customers').select('id, total_purchase').eq('user_id', me.id);
+        if (payload.customer_id) {
+            q = q.eq('id', payload.customer_id);
+        } else if (payload.customer_phone) {
+            q = q.eq('phone', payload.customer_phone);
+        } else {
+            q = q.eq('name', payload.customer_name);
+        }
+        const { data: cust } = await q.maybeSingle();
+
         if (id) {
-            res = await supabase.from('checks').update(payload).eq('id', id).eq('user_id', me.id);
+            const { data: oldChk } = await supabase
+                .from('checks')
+                .select('amount')
+                .eq('id', id)
+                .maybeSingle();
+
+            const res = await supabase.from('checks').update(payload).eq('id', id).eq('user_id', me.id);
+            if (res.error) throw res.error;
+
+            if (cust && oldChk) {
+                const diff = amount - (Number(oldChk.amount) || 0);
+                const newTotal = Math.max(0, (Number(cust.total_purchase) || 0) + diff);
+                await supabase.from('customers').update({ total_purchase: newTotal }).eq('id', cust.id);
+            }
         } else {
             payload.status = 'pending';
-            res = await supabase.from('checks').insert(payload);
+            const res = await supabase.from('checks').insert(payload);
+            if (res.error) throw res.error;
+
+            if (cust) {
+                const newTotal = (Number(cust.total_purchase) || 0) + amount;
+                await supabase.from('customers').update({ total_purchase: newTotal }).eq('id', cust.id);
+            }
         }
-        if (res.error) throw res.error;
 
         $('modal').classList.remove('open');
         await loadChecks();
@@ -416,6 +482,29 @@ $('deleteBtn').onclick = async () => {
     const id = $('checkId').value;
     if (!id) return;
     if (!confirm('این چک حذف شود؟')) return;
+
+    const { data: chk } = await supabase
+        .from('checks')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+
+    if (chk && chk.status === 'pending') {
+        let q = supabase.from('customers').select('id, total_purchase').eq('user_id', me.id);
+        if (chk.customer_id) {
+            q = q.eq('id', chk.customer_id);
+        } else if (chk.customer_phone) {
+            q = q.eq('phone', chk.customer_phone);
+        } else {
+            q = q.eq('name', chk.customer_name);
+        }
+        const { data: cust } = await q.maybeSingle();
+
+        if (cust) {
+            const newTotal = Math.max(0, (Number(cust.total_purchase) || 0) - (Number(chk.amount) || 0));
+            await supabase.from('customers').update({ total_purchase: newTotal }).eq('id', cust.id);
+        }
+    }
 
     const { error } = await supabase.from('checks').delete().eq('id', id).eq('user_id', me.id);
     if (error) { alert('خطا: ' + error.message); return; }
