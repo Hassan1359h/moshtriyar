@@ -178,15 +178,22 @@ function moshtriyar_connect() {
             'connected'
         );
 
-        update_option(
-            'moshtiyar_user_id',
-            sanitize_text_field($body['userId'] ?? '')
-        );
+       update_option(
+    'moshtiyar_user_id',
+    sanitize_text_field($body['userId'] ?? '')
+);
 
-        update_option(
-            'moshtiyar_message',
-            'مشتری‌یار با موفقیت متصل شد.'
-        );
+if (!empty($body['apiKey'])) {
+    update_option(
+        'moshtiyar_api_key',
+        sanitize_text_field($body['apiKey'])
+    );
+}
+
+update_option(
+    'moshtiyar_message',
+    'مشتری‌یار با موفقیت متصل شد.'
+); 
 
         return true;
     }
@@ -294,17 +301,14 @@ function moshtiyar_notice() {
 
     if ($status === 'connected') {
 
-        echo '<div class="notice notice-success">
-        <p>✅ مشتری‌یار با موفقیت متصل است.</p>
-        </div>';
+    $hasApiKey = !empty(get_option('moshtiyar_api_key', ''));
+    $apiKeyStatus = $hasApiKey ? '🟢 کلید API فعال' : '🟡 در انتظار کلید API';
 
-    } elseif ($status === 'connecting') {
+    echo '<div class="notice notice-success">
+    <p>✅ مشتری‌یار با موفقیت متصل است. ' . $apiKeyStatus . '</p>
+    </div>';
 
-        echo '<div class="notice notice-warning">
-        <p>⏳ مشتری‌یار در حال اتصال است.</p>
-        </div>';
-
-    } elseif ($status === 'error') {
+} elseif ($status === 'connecting') {
 
         echo '<div class="notice notice-error">
         <p>❌ مشتری‌یار: ' .
