@@ -821,8 +821,8 @@ document.getElementById('wpInstallBtn')?.addEventListener('click', async () => {
     throw new Error('خطا در ساخت افزونه');
 }
 
-const blob = await pluginRes.blob();
-const url = URL.createObjectURL(blob);
+// 🎯 لینک مستقیم از سرور (به جای blob)
+const serverUrl = `${window.location.origin}/api/download-plugin?token=${connectData.token}&siteUrl=${encodeURIComponent(currentWebsite.domain)}`;
 
 // 🔽 تلاش برای دانلود خودکار
 try {
@@ -845,9 +845,9 @@ msg.innerHTML = `
             ✅ افزونه آماده شد!
         </p>
 
-        <a href="${url}" download="moshtriyar-ai-agent.zip"
+        <a href="${serverUrl}"
            style="display:block;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;padding:12px;border-radius:10px;text-decoration:none;font-weight:800;text-align:center;font-size:14px;margin-bottom:10px;">
-            ⬇️ دانلود مستقیم (${Math.round(blob.size / 1024)} KB)
+            ⬇️ دانلود افزونه
         </a>
 
         <p style="color:#64748b;font-size:12px;margin-bottom:6px;text-align:right;font-weight:700;">
@@ -855,7 +855,7 @@ msg.innerHTML = `
         </p>
 
         <div id="manualLink" style="background:#f1f5f9;padding:10px;border-radius:8px;font-size:11px;direction:ltr;text-align:left;word-break:break-all;color:#1e40af;border:1px dashed #2563eb;margin-bottom:8px;font-family:monospace;">
-            ${url}
+            ${serverUrl}
         </div>
 
         <button id="copyLinkBtn"
