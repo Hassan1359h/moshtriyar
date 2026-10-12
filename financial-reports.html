@@ -391,5 +391,36 @@ $('backupBtn').addEventListener('click', () => {
 init();
 </script>
 
+<!-- 🎯 ثبت Service Worker -->
+<script>
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js', { scope: '/' })
+            .then(reg => {
+                console.log('✅ SW registered. Scope:', reg.scope);
+                
+                reg.addEventListener('updatefound', () => {
+                    const newWorker = reg.installing;
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            if (confirm('🚀 نسخه جدید مشتری‌یار آماده است. برای بروزرسانی الان رفرش کنیم؟')) {
+                                newWorker.postMessage({ type: 'SKIP_WAITING' });
+                                window.location.reload();
+                            }
+                        }
+                    });
+                });
+            })
+            .catch(err => console.warn('SW registration failed:', err));
+    });
+    
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (refreshing) return;
+        refreshing = true;
+        window.location.reload();
+    });
+}
+</script>
 </body>
 </html>
