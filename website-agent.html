@@ -817,26 +817,44 @@ document.getElementById('wpInstallBtn')?.addEventListener('click', async () => {
                 siteUrl: currentWebsite.domain
             })
         });
+ if (!pluginRes.ok) {
+    throw new Error('خطا در ساخت افزونه');
+}
 
-        if (!pluginRes.ok) {
-            throw new Error('خطا در ساخت افزونه');
-        }
+const blob = await pluginRes.blob();
+const url = URL.createObjectURL(blob);
 
-        const blob = await pluginRes.blob();
-        const url = URL.createObjectURL(blob);
+// 🔽 تلاش برای دانلود خودکار
+try {
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'moshtriyar-ai-agent.zip';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+} catch (e) {
+    console.log('Auto-download failed:', e);
+}
 
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'moshtriyar-ai-agent.zip';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+// 🔽 نمایش لینک دانلود دستی (برای WebView اندروید)
+msg.innerHTML = `
+    <div style="margin-top:12px;padding:14px;background:#eff6ff;border-radius:12px;border:2px solid #2563eb;">
+        <p style="color:#1e40af;font-weight:800;font-size:13px;margin-bottom:10px;line-height:1.7;">
+            ✅ افزونه آماده شد!<br>
+            روی دکمه زیر بزن تا دانلود شروع بشه.
+        </p>
+        <a href="${url}" download="moshtriyar-ai-agent.zip"
+           style="display:block;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;padding:12px;border-radius:10px;text-decoration:none;font-weight:800;text-align:center;font-size:14px;">
+            ⬇️ دانلود افزونه (${Math.round(blob.size / 1024)} KB)
+        </a>
+    </div>
+`;
+msg.style.color = '#16a34a';
+btn.textContent = '✅ آماده شد — دریافت مجدد';
 
-        msg.textContent = '✅ افزونه دانلود شد! حالا توی وردپرس نصبش کن.';
-        msg.style.color = '#16a34a';
-        btn.textContent = '✅ دانلود شد — دوباره دریافت';
-
+// پاک کردن blob بعد از ۱۰ دقیقه
+setTimeout(() => URL.revokeObjectURL(url), 10 * 60 * 1000);
     } catch (err) {
         console.error('WP install error:', err);
         msg.textContent = '❌ ' + (err.message || 'خطا در دریافت افزونه');
