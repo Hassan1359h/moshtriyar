@@ -838,23 +838,58 @@ try {
 }
 
 // 🔽 نمایش لینک دانلود دستی (برای WebView اندروید)
+        
 msg.innerHTML = `
     <div style="margin-top:12px;padding:14px;background:#eff6ff;border-radius:12px;border:2px solid #2563eb;">
         <p style="color:#1e40af;font-weight:800;font-size:13px;margin-bottom:10px;line-height:1.7;">
-            ✅ افزونه آماده شد!<br>
-            روی دکمه زیر بزن تا دانلود شروع بشه.
+            ✅ افزونه آماده شد!
         </p>
+
         <a href="${url}" download="moshtriyar-ai-agent.zip"
-           style="display:block;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;padding:12px;border-radius:10px;text-decoration:none;font-weight:800;text-align:center;font-size:14px;">
-            ⬇️ دانلود افزونه (${Math.round(blob.size / 1024)} KB)
+           style="display:block;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;padding:12px;border-radius:10px;text-decoration:none;font-weight:800;text-align:center;font-size:14px;margin-bottom:10px;">
+            ⬇️ دانلود مستقیم (${Math.round(blob.size / 1024)} KB)
         </a>
+
+        <p style="color:#64748b;font-size:12px;margin-bottom:6px;text-align:right;font-weight:700;">
+            💡 اگر دانلود نشد، این لینک را کپی کن و در Chrome باز کن:
+        </p>
+
+        <div id="manualLink" style="background:#f1f5f9;padding:10px;border-radius:8px;font-size:11px;direction:ltr;text-align:left;word-break:break-all;color:#1e40af;border:1px dashed #2563eb;margin-bottom:8px;font-family:monospace;">
+            ${url}
+        </div>
+
+        <button id="copyLinkBtn"
+                style="display:block;width:100%;background:#16a34a;color:#fff;padding:10px;border-radius:10px;border:0;font-weight:800;font-size:13px;font-family:inherit;cursor:pointer;">
+            📋 کپی لینک
+        </button>
+        <p id="copyMsg" style="color:#16a34a;font-size:12px;text-align:center;margin-top:8px;font-weight:700;"></p>
     </div>
 `;
-msg.style.color = '#16a34a';
-btn.textContent = '✅ آماده شد — دریافت مجدد';
 
-// پاک کردن blob بعد از ۱۰ دقیقه
-setTimeout(() => URL.revokeObjectURL(url), 10 * 60 * 1000);
+// 📋 کپی لینک
+setTimeout(() => {
+    const btn = document.getElementById('copyLinkBtn');
+    const copyMsg = document.getElementById('copyMsg');
+    if (btn) {
+        btn.addEventListener('click', async () => {
+            const link = document.getElementById('manualLink').textContent.trim();
+            try {
+                await navigator.clipboard.writeText(link);
+                copyMsg.textContent = '✅ لینک کپی شد! حالا در Chrome پیست کن.';
+            } catch (e) {
+                // روش جایگزین
+                const range = document.createRange();
+                range.selectNode(document.getElementById('manualLink'));
+                window.getSelection().removeAllRanges();
+                window.getSelection().addRange(range);
+                document.execCommand('copy');
+                window.getSelection().removeAllRanges();
+                copyMsg.textContent = '✅ لینک کپی شد! حالا در Chrome پیست کن.';
+            }
+            setTimeout(() => copyMsg.textContent = '', 4000);
+        });
+    }
+}, 100);
     } catch (err) {
         console.error('WP install error:', err);
         msg.textContent = '❌ ' + (err.message || 'خطا در دریافت افزونه');
