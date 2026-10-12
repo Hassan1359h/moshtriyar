@@ -3,7 +3,7 @@
    ============================================ */
 
 // 🎯 نسخه کش — با هر دیپلوی جدید این عدد رو زیاد کن
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const STATIC_CACHE = `moshtriyar-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `moshtriyar-runtime-${CACHE_VERSION}`;
 
@@ -30,6 +30,7 @@ const NO_CACHE_DOMAINS = [
 // ============================================
 self.addEventListener('install', (event) => {
     console.log('[SW] Installing version:', CACHE_VERSION);
+   console.log('[SW] ✅ Service Worker installed successfully');
     event.waitUntil(
         caches.open(STATIC_CACHE)
             .then(cache => cache.addAll(PRECACHE_URLS).catch(err => {
