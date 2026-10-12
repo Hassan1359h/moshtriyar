@@ -13,7 +13,7 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;line-height:1.7;padding-bottom:80px}
-.header{background:#1e293b;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100}
+.header{background:#1e293b;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;flex-wrap:wrap;gap:8px}
 .header h1{font-size:16px;font-weight:800}
 .header a{color:#fff;text-decoration:none;background:#334155;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:700;margin-right:6px}
 .container{max-width:900px;margin:0 auto;padding:20px}
@@ -43,9 +43,8 @@ tr:last-child td{border-bottom:0}
 @media(max-width:600px){.actions-grid{grid-template-columns:1fr}}
 .btn{padding:12px;border:0;border-radius:12px;font-family:inherit;font-weight:800;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
 .btn-green{background:#16a34a;color:#fff}
-.btn-blue{background:#2563eb;color:#fff}
-.btn-purple{background:#8b5cf6;color:#fff}
 .btn-orange{background:#ea580c;color:#fff}
+.btn-purple{background:#8b5cf6;color:#fff}
 .btn:disabled{opacity:.5;cursor:not-allowed}
 .loading{text-align:center;padding:40px;color:#64748b}
 .badge{font-size:10px;padding:2px 8px;border-radius:8px;font-weight:800}
@@ -53,7 +52,6 @@ tr:last-child td{border-bottom:0}
 .badge.cashed{background:#dcfce7;color:#166534}
 .badge.bounced{background:#fee2e2;color:#991b1b}
 .badge.returned{background:#e0e7ff;color:#3730a3}
-.badge.paid{background:#dcfce7;color:#166534}
 .summary-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px}
 .summary-row:last-child{border-bottom:0}
 .summary-row strong{font-weight:900}
@@ -72,7 +70,6 @@ tr:last-child td{border-bottom:0}
 </header>
 
 <div class="container">
-
     <div class="filter-card">
         <div class="filter-grid">
             <div class="field">
@@ -104,17 +101,17 @@ tr:last-child td{border-bottom:0}
     <div id="reportContent">
         <div class="loading">در حال بارگذاری...</div>
     </div>
-
 </div>
 
 <script type="module">
 import { supabase } from './js/supabase.js';
-import { checkPlanGuard } from './js/check-plan.js';
-import { isShamsiPast, shamsiToGregorian } from './js/helpers.js';
 
-if (!(await checkPlanGuard())) {
-    throw new Error('Plan expired');
-}
+// 🎯 نمایش خطا (برای دیباگ موبایل)
+window.onerror = function(msg, url, line) {
+    const c = document.getElementById('reportContent');
+    if (c) c.innerHTML = '<div class="empty" style="color:#dc2626;">خطا: ' + msg + '</div>';
+    return false;
+};
 
 const $ = id => document.getElementById(id);
 let me = null;
@@ -123,11 +120,69 @@ let allInstallments = [];
 let filteredChecks = [];
 let filteredInstallments = [];
 
+// 🎯 توابع کمکی inline
+function shamsiToGregorian(jy, jm, jd) {
+    jy += 1595;
+    let days = -355668 + (365 * jy) + (~~(jy / 33) * 8) + ~~(((jy % 33) + 3) / 4) + jd + ((jm < 7) ? (jm - 1) * 31 : ((jm - 7) * 30) + 186);
+    let gy = 400 * ~~(days / 146097); days %= 146097;
+    if (days > 36524) { gy += 100 * ~~(--days / 36524); days %= 36524; if (days >= 365) days++; }
+    gy += 4 * ~~(days / 1461); days %= 1461;
+    if (days > 365) { gy += ~~((days - 1) / 365); days = (days - 1) % 365; }
+    let gd = days + 1;
+    const sal_a = [0,31,((gy%4===0&&gy%100!==0)||gy%400===0)?29:28,31,30,31,30,31,31,30,31,30,31];
+    let gm; for (gm=0; gm<13 && gd>sal_a[gm]; gm++) gd -= sal_a[gm];
+    return { gy, gm, gd };
+}
+
+function isShamsiPast(shamsiStr) {
+    if (!shamsiStr) return false;
+    try {
+        const parts = String(shamsiStr).split('/').map(x => parseInt(x));
+        if (parts.length !== 3) return false;
+        const g = shamsiToGregorian(parts[0], parts[1], parts[2]);
+        const due = new Date(g.gy, g.gm - 1, g.gd);
+        return due < new Date();
+    } catch (e) { return false; }
+}
+
+function toShamsiString(date) {
+    try {
+        return new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
+            year: "numeric", month: "2-digit", day: "2-digit"
+        }).format(date).replace(/\//g, '/');
+    } catch (e) { return ''; }
+}
+
+function inRange(dateStr, from, to) {
+    if (!from && !to) return true;
+    if (!dateStr) return false;
+    const norm = String(dateStr).replace(/-/g, '/');
+    if (from && norm < String(from).replace(/-/g, '/')) return false;
+    if (to && norm > String(to).replace(/-/g, '/')) return false;
+    return true;
+}
+
+function getStatusLabel(s) {
+    return { pending: 'در انتظار', cashed: 'وصول شده', bounced: 'برگشتی', returned: 'عودت داده' }[s] || s;
+}
+function getStatusClass(s) {
+    return { pending: 'pending', cashed: 'cashed', bounced: 'bounced', returned: 'returned' }[s] || 'pending';
+}
+function escapeHtml(v) {
+    return String(v ?? '').replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' })[m]);
+}
+
+// 🎯 بارگذاری داده‌ها
 async function init() {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) { window.location.href = 'login.html'; return; }
-    me = session.user;
-    await loadData();
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) { window.location.href = 'login.html'; return; }
+        me = session.user;
+        await loadData();
+    } catch (e) {
+        console.error(e);
+        $('reportContent').innerHTML = '<div class="empty" style="color:#dc2626;">خطا: ' + e.message + '</div>';
+    }
 }
 
 async function loadData() {
@@ -136,17 +191,19 @@ async function loadData() {
         supabase.from('installments').select('*').eq('user_id', me.id).order('created_at', { ascending: false })
     ]);
 
+    if (chkRes.error) throw new Error('checks: ' + chkRes.error.message);
+    if (instRes.error) throw new Error('installments: ' + instRes.error.message);
+
     allChecks = chkRes.data || [];
     allInstallments = instRes.data || [];
 
-    // 🎯 لود پرداخت‌های اقساط
     if (allInstallments.length) {
         const ids = allInstallments.map(i => i.id);
         const { data: pays } = await supabase
             .from('installment_payments')
             .select('*')
             .in('installment_id', ids);
-        
+
         allInstallments.forEach(inst => {
             inst.payments = (pays || []).filter(p => p.installment_id === inst.id);
         });
@@ -160,24 +217,17 @@ function applyFilter() {
     const fromDate = $('fromDate').value.trim();
     const toDate = $('toDate').value.trim();
 
-    let fromShamsi = null;
-    let toShamsi = null;
+    let fromShamsi = fromDate || null;
+    let toShamsi = toDate || null;
 
-    if (fromDate) fromShamsi = fromDate;
-    if (toDate) toShamsi = toDate;
-
-    // 🎯 فیلتر سریع
     if (filter === 'current' || filter === 'last' || filter === '3') {
         const now = new Date();
         let monthsBack = 0;
         if (filter === 'last') monthsBack = 1;
         if (filter === '3') monthsBack = 3;
-        
         const cutoff = new Date(now);
         cutoff.setMonth(cutoff.getMonth() - monthsBack);
-        const cutoffShamsi = toShamsiString(cutoff);
-        
-        fromShamsi = cutoffShamsi;
+        fromShamsi = toShamsiString(cutoff);
     }
 
     filteredChecks = allChecks.filter(c => inRange(c.due_date, fromShamsi, toShamsi));
@@ -186,63 +236,17 @@ function applyFilter() {
     render();
 }
 
-function toShamsiString(date) {
-    try {
-        return new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
-            year: "numeric", month: "2-digit", day: "2-digit"
-        }).format(date).replace(/\//g, '/');
-    } catch (e) {
-        return '';
-    }
-}
-
-function inRange(dateStr, from, to) {
-    if (!from && !to) return true;
-    if (!dateStr) return false;
-    
-    const norm = String(dateStr).replace(/-/g, '/');
-    
-    if (from) {
-        const fromNorm = String(from).replace(/-/g, '/');
-        if (norm < fromNorm) return false;
-    }
-    if (to) {
-        const toNorm = String(to).replace(/-/g, '/');
-        if (norm > toNorm) return false;
-    }
-    return true;
-}
-
-function getStatusLabel(s) {
-    return { pending: 'در انتظار', cashed: 'وصول شده', bounced: 'برگشتی', returned: 'عودت داده' }[s] || s;
-}
-
-function getStatusClass(s) {
-    return { pending: 'pending', cashed: 'cashed', bounced: 'bounced', returned: 'returned' }[s] || 'pending';
-}
-
-function escapeHtml(v) {
-    return String(v ?? '').replace(/[&<>"']/g, m => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
-    })[m]);
-}
-
 function render() {
     const content = $('reportContent');
 
-    // 🎯 آمار چک‌ها
-    let checksTotal = 0, checksPending = 0, checksCashed = 0, checksOverdue = 0;
+    let checksTotal = 0, checksPending = 0, checksCashed = 0;
     filteredChecks.forEach(c => {
         const amt = Number(c.amount) || 0;
         checksTotal += amt;
-        if (c.status === 'pending') {
-            checksPending += amt;
-            if (c.due_date && isShamsiPast(c.due_date)) checksOverdue++;
-        }
+        if (c.status === 'pending') checksPending += amt;
         if (c.status === 'cashed') checksCashed += amt;
     });
 
-    // 🎯 آمار اقساط
     let instTotal = 0, instPaid = 0, instPending = 0;
     filteredInstallments.forEach(inst => {
         const total = Number(inst.total_amount) || 0;
@@ -254,14 +258,11 @@ function render() {
         instPending += (total - paid);
     });
 
-    // 🎯 جمع کل
     const grandTotal = checksTotal + instTotal;
     const grandPaid = checksCashed + instPaid;
-    const grandPending = (checksPending) + instPending;
+    const grandPending = checksPending + instPending;
 
     let html = '';
-
-    // آمار
     html += '<div class="stats-grid">';
     html += '<div class="stat purple"><b>' + grandTotal.toLocaleString('fa-IR') + '</b><span>کل فروش (تومان)</span></div>';
     html += '<div class="stat green"><b>' + grandPaid.toLocaleString('fa-IR') + '</b><span>درآمد وصول‌شده</span></div>';
@@ -269,55 +270,30 @@ function render() {
     html += '<div class="stat"><b>' + (filteredChecks.length + filteredInstallments.length) + '</b><span>تعداد اسناد</span></div>';
     html += '</div>';
 
-    // خلاصه
-    html += '<div class="card">';
-    html += '<div class="card-title">📊 خلاصه</div>';
+    html += '<div class="card"><div class="card-title">📊 خلاصه</div>';
     html += '<div class="summary-row"><span>💳 چک‌ها (' + filteredChecks.length + ')</span><strong>' + checksTotal.toLocaleString('fa-IR') + ' تومان</strong></div>';
     html += '<div class="summary-row"><span>📅 اقساط (' + filteredInstallments.length + ')</span><strong>' + instTotal.toLocaleString('fa-IR') + ' تومان</strong></div>';
-    html += '<div class="summary-row total"><span>جمع کل</span><strong style="color:#8b5cf6;">' + grandTotal.toLocaleString('fa-IR') + ' تومان</strong></div>';
-    html += '</div>';
+    html += '<div class="summary-row total"><span>جمع کل</span><strong style="color:#8b5cf6;">' + grandTotal.toLocaleString('fa-IR') + ' تومان</strong></div></div>';
 
-    // جدول چک‌ها
-    html += '<div class="card">';
-    html += '<div class="card-title">💳 چک‌ها <span>' + filteredChecks.length + ' مورد</span></div>';
-    if (!filteredChecks.length) {
-        html += '<div class="empty">چکی در این بازه نیست</div>';
-    } else {
-        html += '<table><thead><tr>';
-        html += '<th>مشتری</th><th>مبلغ</th><th>سررسید</th><th>وضعیت</th>';
-        html += '</tr></thead><tbody>';
+    html += '<div class="card"><div class="card-title">💳 چک‌ها <span>' + filteredChecks.length + ' مورد</span></div>';
+    if (!filteredChecks.length) html += '<div class="empty">چکی در این بازه نیست</div>';
+    else {
+        html += '<table><thead><tr><th>مشتری</th><th>مبلغ</th><th>سررسید</th><th>وضعیت</th></tr></thead><tbody>';
         filteredChecks.forEach(c => {
-            html += '<tr>';
-            html += '<td>' + escapeHtml(c.customer_name) + '</td>';
-            html += '<td>' + (Number(c.amount) || 0).toLocaleString('fa-IR') + '</td>';
-            html += '<td>' + escapeHtml(c.due_date || '-') + '</td>';
-            html += '<td><span class="badge ' + getStatusClass(c.status) + '">' + getStatusLabel(c.status) + '</span></td>';
-            html += '</tr>';
+            html += '<tr><td>' + escapeHtml(c.customer_name) + '</td><td>' + (Number(c.amount)||0).toLocaleString('fa-IR') + '</td><td>' + escapeHtml(c.due_date||'-') + '</td><td><span class="badge ' + getStatusClass(c.status) + '">' + getStatusLabel(c.status) + '</span></td></tr>';
         });
         html += '</tbody></table>';
     }
     html += '</div>';
 
-    // جدول اقساط
-    html += '<div class="card">';
-    html += '<div class="card-title">📅 اقساط <span>' + filteredInstallments.length + ' مورد</span></div>';
-    if (!filteredInstallments.length) {
-        html += '<div class="empty">قسطی در این بازه نیست</div>';
-    } else {
-        html += '<table><thead><tr>';
-        html += '<th>مشتری</th><th>کل</th><th>پرداخت شده</th><th>باقی</th>';
-        html += '</tr></thead><tbody>';
+    html += '<div class="card"><div class="card-title">📅 اقساط <span>' + filteredInstallments.length + ' مورد</span></div>';
+    if (!filteredInstallments.length) html += '<div class="empty">قسطی در این بازه نیست</div>';
+    else {
+        html += '<table><thead><tr><th>مشتری</th><th>کل</th><th>پرداخت شده</th><th>باقی</th></tr></thead><tbody>';
         filteredInstallments.forEach(inst => {
             const total = Number(inst.total_amount) || 0;
-            const paid = (inst.payments || [])
-                .filter(p => p.status === 'paid')
-                .reduce((s, p) => s + Number(p.amount || 0), 0);
-            html += '<tr>';
-            html += '<td>' + escapeHtml(inst.customer_name) + '</td>';
-            html += '<td>' + total.toLocaleString('fa-IR') + '</td>';
-            html += '<td style="color:#16a34a;">' + paid.toLocaleString('fa-IR') + '</td>';
-            html += '<td style="color:#dc2626;">' + (total - paid).toLocaleString('fa-IR') + '</td>';
-            html += '</tr>';
+            const paid = (inst.payments || []).filter(p => p.status === 'paid').reduce((s,p) => s + Number(p.amount || 0), 0);
+            html += '<tr><td>' + escapeHtml(inst.customer_name) + '</td><td>' + total.toLocaleString('fa-IR') + '</td><td style="color:#16a34a;">' + paid.toLocaleString('fa-IR') + '</td><td style="color:#dc2626;">' + (total-paid).toLocaleString('fa-IR') + '</td></tr>';
         });
         html += '</tbody></table>';
     }
@@ -326,66 +302,35 @@ function render() {
     content.innerHTML = html;
 }
 
-// 🎯 فیلتر
-$('monthFilter').onchange = applyFilter;
-$('fromDate').onchange = applyFilter;
-$('toDate').onchange = applyFilter;
+// 🎯 اتصال دکمه‌ها (بدون top-level await)
+$('monthFilter').addEventListener('change', applyFilter);
+$('fromDate').addEventListener('change', applyFilter);
+$('toDate').addEventListener('change', applyFilter);
 
-// 🎯 دانلود Excel
-$('downloadExcelBtn').onclick = () => {
-    if (typeof XLSX === 'undefined') {
-        alert('کتابخانه Excel لود نشد. دوباره امتحان کن.');
-        return;
-    }
-    
+$('downloadExcelBtn').addEventListener('click', () => {
+    if (typeof XLSX === 'undefined') { alert('کتابخانه Excel لود نشد'); return; }
     const wb = XLSX.utils.book_new();
-    
-    // شیت ۱: چک‌ها
-    const checksData = [['#', 'مشتری', 'تلفن', 'مبلغ', 'شماره چک', 'بانک', 'سررسید', 'وضعیت']];
-    filteredChecks.forEach((c, i) => {
-        checksData.push([
-            i + 1,
-            c.customer_name || '-',
-            c.customer_phone || '-',
-            Number(c.amount) || 0,
-            c.check_number || '-',
-            c.bank_name || '-',
-            c.due_date || '-',
-            getStatusLabel(c.status)
-        ]);
-    });
+
+    const checksData = [['#','مشتری','تلفن','مبلغ','شماره چک','بانک','سررسید','وضعیت']];
+    filteredChecks.forEach((c, i) => checksData.push([i+1, c.customer_name||'-', c.customer_phone||'-', Number(c.amount)||0, c.check_number||'-', c.bank_name||'-', c.due_date||'-', getStatusLabel(c.status)]));
     const ws1 = XLSX.utils.aoa_to_sheet(checksData);
-    ws1['!cols'] = [{ wch: 5 }, { wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 12 }];
+    ws1['!cols'] = [{wch:5},{wch:20},{wch:15},{wch:15},{wch:15},{wch:12},{wch:15},{wch:12}];
     XLSX.utils.book_append_sheet(wb, ws1, 'چک‌ها');
-    
-    // شیت ۲: اقساط
-    const instData = [['#', 'مشتری', 'تلفن', 'کل مبلغ', 'پرداخت شده', 'باقی', 'تعداد', 'تاریخ شروع']];
+
+    const instData = [['#','مشتری','تلفن','کل مبلغ','پرداخت شده','باقی','تعداد','تاریخ شروع']];
     filteredInstallments.forEach((inst, i) => {
         const total = Number(inst.total_amount) || 0;
-        const paid = (inst.payments || [])
-            .filter(p => p.status === 'paid')
-            .reduce((s, p) => s + Number(p.amount || 0), 0);
-        instData.push([
-            i + 1,
-            inst.customer_name || '-',
-            inst.customer_phone || '-',
-            total,
-            paid,
-            total - paid,
-            inst.count || 0,
-            inst.start_date || '-'
-        ]);
+        const paid = (inst.payments || []).filter(p => p.status === 'paid').reduce((s,p) => s + Number(p.amount || 0), 0);
+        instData.push([i+1, inst.customer_name||'-', inst.customer_phone||'-', total, paid, total-paid, inst.count||0, inst.start_date||'-']);
     });
     const ws2 = XLSX.utils.aoa_to_sheet(instData);
-    ws2['!cols'] = [{ wch: 5 }, { wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 8 }, { wch: 15 }];
+    ws2['!cols'] = [{wch:5},{wch:20},{wch:15},{wch:15},{wch:15},{wch:15},{wch:8},{wch:15}];
     XLSX.utils.book_append_sheet(wb, ws2, 'اقساط');
-    
-    const date = new Date().toISOString().slice(0, 10);
-    XLSX.writeFile(wb, 'financial-report-' + date + '.xlsx');
-};
 
-// 🎯 چاپ PDF
-$('downloadPdfBtn').onclick = async () => {
+    XLSX.writeFile(wb, 'financial-report-' + new Date().toISOString().slice(0,10) + '.xlsx');
+});
+
+$('downloadPdfBtn').addEventListener('click', async () => {
     const btn = $('downloadPdfBtn');
     const oldText = btn.innerHTML;
     btn.disabled = true;
@@ -393,11 +338,7 @@ $('downloadPdfBtn').onclick = async () => {
 
     try {
         const { jsPDF } = window.jspdf;
-        const element = $('reportContent');
-        const canvas = await html2canvas(element, {
-            scale: 2, useCORS: true, backgroundColor: '#ffffff'
-        });
-
+        const canvas = await html2canvas($('reportContent'), { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
         const imgData = canvas.toDataURL('image/jpeg', 0.9);
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -418,64 +359,35 @@ $('downloadPdfBtn').onclick = async () => {
             heightLeft -= (pdfHeight - 20);
         }
 
-        const date = new Date().toISOString().slice(0, 10);
-        pdf.save('financial-report-' + date + '.pdf');
+        pdf.save('financial-report-' + new Date().toISOString().slice(0,10) + '.pdf');
     } catch (e) {
         alert('خطا: ' + e.message);
     } finally {
         btn.disabled = false;
         btn.innerHTML = oldText;
     }
-};
+});
 
-// 🎯 بکاپ ماه
-$('backupBtn').onclick = () => {
+$('backupBtn').addEventListener('click', () => {
+    if (typeof XLSX === 'undefined') { alert('کتابخانه Excel لود نشد'); return; }
     const wb = XLSX.utils.book_new();
-    
-    // بکاپ کامل: چک‌ها
-    const checksData = [['ID', 'مشتری', 'تلفن', 'مبلغ', 'شماره چک', 'بانک', 'سررسید', 'وضعیت', 'توضیحات']];
-    filteredChecks.forEach(c => {
-        checksData.push([
-            c.id,
-            c.customer_name || '-',
-            c.customer_phone || '-',
-            Number(c.amount) || 0,
-            c.check_number || '-',
-            c.bank_name || '-',
-            c.due_date || '-',
-            getStatusLabel(c.status),
-            c.description || '-'
-        ]);
-    });
-    const ws1 = XLSX.utils.aoa_to_sheet(checksData);
-    XLSX.utils.book_append_sheet(wb, ws1, 'چک‌ها');
-    
-    // بکاپ کامل: اقساط
-    const instData = [['ID', 'مشتری', 'تلفن', 'کل مبلغ', 'پرداخت شده', 'باقی', 'تعداد', 'تاریخ شروع', 'توضیحات']];
+
+    const checksData = [['ID','مشتری','تلفن','مبلغ','شماره چک','بانک','سررسید','وضعیت','توضیحات']];
+    filteredChecks.forEach(c => checksData.push([c.id, c.customer_name||'-', c.customer_phone||'-', Number(c.amount)||0, c.check_number||'-', c.bank_name||'-', c.due_date||'-', getStatusLabel(c.status), c.description||'-']));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(checksData), 'چک‌ها');
+
+    const instData = [['ID','مشتری','تلفن','کل مبلغ','پرداخت شده','باقی','تعداد','تاریخ شروع','توضیحات']];
     filteredInstallments.forEach(inst => {
         const total = Number(inst.total_amount) || 0;
-        const paid = (inst.payments || [])
-            .filter(p => p.status === 'paid')
-            .reduce((s, p) => s + Number(p.amount || 0), 0);
-        instData.push([
-            inst.id,
-            inst.customer_name || '-',
-            inst.customer_phone || '-',
-            total,
-            paid,
-            total - paid,
-            inst.count || 0,
-            inst.start_date || '-',
-            inst.description || '-'
-        ]);
+        const paid = (inst.payments || []).filter(p => p.status === 'paid').reduce((s,p) => s + Number(p.amount || 0), 0);
+        instData.push([inst.id, inst.customer_name||'-', inst.customer_phone||'-', total, paid, total-paid, inst.count||0, inst.start_date||'-', inst.description||'-']);
     });
-    const ws2 = XLSX.utils.aoa_to_sheet(instData);
-    XLSX.utils.book_append_sheet(wb, ws2, 'اقساط');
-    
-    const date = new Date().toISOString().slice(0, 10);
-    XLSX.writeFile(wb, 'backup-' + date + '.xlsx');
-};
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(instData), 'اقساط');
 
+    XLSX.writeFile(wb, 'backup-' + new Date().toISOString().slice(0,10) + '.xlsx');
+});
+
+// 🎯 شروع
 init();
 </script>
 
