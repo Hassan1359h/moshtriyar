@@ -134,6 +134,7 @@ if (!defined('ABSPATH')) exit;
 
 define('MOSHTRIYAR_TOKEN', '${token}');
 define('MOSHTRIYAR_API', '${API}/api/wordpress-activate');
+define('MOSHTRIYAR_API_SYNC', '${API}/api/product-sync');
 
 function moshtriyar_connect() {
 
@@ -248,6 +249,103 @@ add_action(
     'moshtiyar_admin_check'
 );
 
+/* ==========================================
+   🛒 همگام‌سازی کالاهای ووکامرس با مشتری‌یار
+   ========================================== */
+
+function moshtiyar_sync_products() {
+
+    if (!function_exists('wc_get_products')) {
+        return array('success' => false, 'message' => 'ووکامرس نصب نیست');
+    }
+
+    $apiKey = get_option('moshtiyar_api_key', '');
+    if (!$apiKey) {
+        return array('success' => false, 'message' => 'کلید API تنظیم نشده');
+    }
+
+    // گرفتن همه کالاها
+    $products = wc_get_products(array(
+        'limit' => -1,
+        'status' => 'publish'
+    ));
+
+    $payload = array();
+
+    foreach ($products as $product) {
+
+        $image_id = $product->get_image_id();
+        $image_url = $image_id ? wp_get_attachment_image_url($image_id, 'medium') : '';
+
+        $categories = wp_get_post_terms($product->get_id(), 'product_cat', array('fields' => 'names'));
+
+        $payload[] = array(
+            'id' => (string) $product->get_id(),
+            'sku' => (string) $product->get_sku(),
+            'name' => $product->get_name(),
+            'sale_price' => (float) $product->get_price(),
+            'stock' => (int) $product->get_stock_quantity(),
+            'image_url' => $image_url ?: '',
+            'category' => !empty($categories) ? $categories[0] : ''
+        );
+    }
+
+    if (empty($payload)) {
+        return array('success' => false, 'message' => 'کالایی پیدا نشد');
+    }
+
+    $response = wp_remote_post(
+        MOSHTRIYAR_API_SYNC,
+        array(
+            'timeout' => 60,
+            'headers' => array('Content-Type' => 'application/json'),
+            'body' => wp_json_encode(array(
+                'apiKey' => $apiKey,
+                'siteUrl' => home_url('/'),
+                'products' => $payload
+            ))
+        )
+    );
+
+    if (is_wp_error($response)) {
+        return array('success' => false, 'message' => $response->get_error_message());
+    }
+
+    $body = json_decode(wp_remote_retrieve_body($response), true);
+
+    if (!empty($body['success'])) {
+        update_option('moshtiyar_last_sync', current_time('mysql'));
+        update_option('moshtiyar_synced_count', intval($body['synced'] ?? 0));
+        return array('success' => true, 'message' => 'تعداد ' . ($body['synced'] ?? 0) . ' کالا همگام شد');
+    }
+
+    return array('success' => false, 'message' => $body['error'] ?? 'خطای نامشخص');
+}
+
+/* 🎯 دکمه دستی همگام‌سازی در ادمین */
+function moshtiyar_sync_button() {
+
+    if (!current_user_can('manage_options')) return;
+
+    if (isset($_POST['moshtiyar_sync_now']) && check_admin_referer('moshtiyar_sync_action')) {
+        $result = moshtiyar_sync_products();
+        echo '<div class="notice ' . ($result['success'] ? 'notice-success' : 'notice-error') . '"><p>' . esc_html($result['message']) . '</p></div>';
+    }
+
+    $lastSync = get_option('moshtiyar_last_sync', 'هرگز');
+    $syncedCount = get_option('moshtiyar_synced_count', 0);
+
+    echo '<div class="notice notice-info" style="padding:12px;">';
+    echo '<p><strong>🔄 همگام‌سازی کالاها با مشتری‌یار</strong></p>';
+    echo '<p>آخرین همگام‌سازی: ' . esc_html($lastSync) . ' | تعداد کالا: ' . esc_html($syncedCount) . '</p>';
+    echo '<form method="post">';
+    wp_nonce_field('moshtiyar_sync_action');
+    echo '<button type="submit" name="moshtiyar_sync_now" class="button button-primary">🔄 همگام‌سازی الان</button>';
+    echo '</form>';
+    echo '</div>';
+}
+
+add_action('admin_notices', 'moshtiyar_sync_button');
 function moshtiyar_agent() {
 
     if (is_admin()) return;
