@@ -822,8 +822,7 @@ document.getElementById('wpInstallBtn')?.addEventListener('click', async () => {
 }
 
 // 🎯 لینک مستقیم از سرور (به جای blob)
-const serverUrl = `${window.location.origin}/api/download-plugin?token=${connectData.token}&siteUrl=${encodeURIComponent(currentWebsite.domain)}`;
-
+const serverUrl = `https://moshtriyar.ir/api/wordpress-plugin?token=${connectData.token}&siteUrl=${encodeURIComponent(currentWebsite.domain)}`;
 // 🔽 تلاش برای دانلود خودکار
 try {
     const a = document.createElement('a');
