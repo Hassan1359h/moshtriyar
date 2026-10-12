@@ -3,7 +3,7 @@
    ============================================ */
 
 // 🎯 نسخه کش — با هر دیپلوی جدید این عدد رو زیاد کن
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const STATIC_CACHE = `moshtriyar-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `moshtriyar-runtime-${CACHE_VERSION}`;
 
