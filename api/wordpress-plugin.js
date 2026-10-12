@@ -24,11 +24,110 @@ const origin = (value) => {
   }
 };
 
-export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method Not Allowed" });
+// =====================================================
+// 🎯 بررسی API Key و گرفتن اطلاعات کاربر
+// =====================================================
+async function authByApiKey(apiKey, siteUrl) {
+  const apiKeyHash = hashToken(apiKey);
+
+  const { data, error } = await supabase
+    .from("site_api_keys")
+    .select("id, user_id, site_url, is_active")
+    .eq("api_key_hash", apiKeyHash)
+    .maybeSingle();
+
+  if (error) throw new Error("API key lookup failed: " + error.message);
+  if (!data) return { ok: false, error: "Invalid API key", code: 401 };
+  if (!data.is_active) return { ok: false, error: "API key is inactive", code: 403 };
+
+  const configuredOrigin = origin(data.site_url);
+  const requestedOrigin = origin(siteUrl);
+
+  if (!configuredOrigin || configuredOrigin.toLowerCase() !== requestedOrigin.toLowerCase()) {
+    return { ok: false, error: "Site URL mismatch", code: 403 };
   }
 
+  // به‌روزرسانی last_used_at
+  await supabase
+    .from("site_api_keys")
+    .update({ last_used_at: new Date().toISOString() })
+    .eq("id", data.id);
+
+  return { ok: true, data, configuredOrigin };
+}
+
+// =====================================================
+// 🎯 همگام‌سازی کالاها (قبلاً توی product-sync.js بود)
+// =====================================================
+async function handleProductSync(req, res) {
+  try {
+    const apiKey = String(req.body?.apiKey || "").trim();
+    const siteUrl = String(req.body?.siteUrl || "").trim();
+    const products = Array.isArray(req.body?.products) ? req.body.products : [];
+
+    if (!apiKey) return res.status(400).json({ error: "Missing API key" });
+    if (!siteUrl) return res.status(400).json({ error: "Missing site URL" });
+    if (!products.length) return res.status(400).json({ error: "No products provided" });
+
+    // بررسی API Key
+    const authResult = await authByApiKey(apiKey, siteUrl);
+    if (!authResult.ok) {
+      return res.status(authResult.code).json({ error: authResult.error });
+    }
+
+    const { data: keyData, configuredOrigin } = authResult;
+
+    // آماده‌سازی رکوردهای کالا
+    const rows = products.map((p) => ({
+      user_id: keyData.user_id,
+      site_url: configuredOrigin,
+      external_id: String(p.id ?? p.external_id ?? ""),
+      sku: String(p.sku || ""),
+      name: String(p.name || "بدون نام"),
+      sale_price: Number(p.sale_price || p.price || 0),
+      stock: Number(p.stock || 0),
+      image_url: String(p.image_url || ""),
+      category: String(p.category || ""),
+      last_synced_at: new Date().toISOString()
+    })).filter((r) => r.external_id);
+
+    if (!rows.length) {
+      return res.status(400).json({ error: "No valid products to sync" });
+    }
+
+    const { data: saved, error: upsertError } = await supabase
+      .from("site_products")
+      .upsert(rows, {
+        onConflict: "user_id,site_url,external_id",
+        ignoreDuplicates: false
+      })
+      .select("id");
+
+    if (upsertError) {
+      console.error("product upsert:", upsertError);
+      return res.status(500).json({
+        error: "Could not save products",
+        details: upsertError.message
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      synced: saved?.length || 0,
+      total: rows.length,
+      siteUrl: configuredOrigin
+    });
+
+  } catch (error) {
+    console.error("product-sync handler:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+}
+
+// =====================================================
+// 🎯 ساخت افزونه (دانلود ZIP) - مثل قبل
+// =====================================================
+async function handlePluginDownload(req, res) {
   try {
     const auth = req.headers.authorization || "";
     if (!auth.startsWith("Bearer ")) {
@@ -81,7 +180,7 @@ export default async function handler(req, res) {
       return res.status(403).json({ error: "Website is not authorized" });
     }
 
-    // ساخت کد افزونه (بدون template literal - امن و ساده)
+    // ساخت کد PHP
     const php = [
       "<?php",
       "/**",
@@ -151,7 +250,6 @@ export default async function handler(req, res) {
       "    if (get_option('moshtiyar_status') !== 'connected') return;",
       "    $userId = get_option('moshtiyar_user_id', '');",
       "    if (!$userId) return;",
-      "",
       "    echo '<script src=\"' . esc_url(MOSHTRIYAR_API . '/../website-agent.js') . '\" data-user-id=\"' . esc_attr($userId) . '\" data-site=\"' . esc_attr(home_url('/')) . '\" data-enabled=\"true\"></script>';",
       "}",
       "add_action('wp_head', 'moshtiyar_agent', 100);",
@@ -177,7 +275,7 @@ export default async function handler(req, res) {
     const zip = new JSZip();
     const folder = zip.folder("moshtiyar-ai-agent");
     folder.file("moshtiyar-ai-agent.php", php);
-    folder.file("readme.txt", "Moshtriyar AI Agent\n\nنسخه: 1.2.0\n\nنصب:\n1. افزونه را نصب کنید.\n2. افزونه را فعال کنید.\n3. وارد پیشخوان وردپرس شوید.\n4. اتصال به مشتری‌یار انجام می‌شود.\n");
+    folder.file("readme.txt", "Moshtriyar AI Agent\n\nنسخه: 1.2.0\n");
 
     const buffer = await zip.generateAsync({
       type: "nodebuffer",
@@ -192,7 +290,24 @@ export default async function handler(req, res) {
     return res.end(buffer);
 
   } catch (error) {
-    console.error("Moshtriyar plugin error:", error);
+    console.error("plugin download error:", error);
     return res.status(500).json({ error: "Internal Server Error" });
   }
+}
+
+// =====================================================
+// 🎯 Router اصلی - تصمیم می‌گیره کدوم کار انجام بشه
+// =====================================================
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method Not Allowed" });
+  }
+
+  // 🎯 اگر درخواست همگام‌سازی کالاهاست
+  if (req.body?.action === "sync-products") {
+    return handleProductSync(req, res);
+  }
+
+  // 🎯 در غیر این صورت، دانلود افزونه
+  return handlePluginDownload(req, res);
 }
