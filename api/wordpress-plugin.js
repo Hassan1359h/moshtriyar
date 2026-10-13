@@ -108,6 +108,15 @@ function buildPluginPHP(token) {
     "    }",
     "}",
     "add_action('admin_notices', 'moshtiyar_notice');"
+    "",
+"function moshtiyar_agent() {",
+"    if (is_admin()) return;",
+"    if (get_option('moshtiyar_status') !== 'connected') return;",
+"    $userId = get_option('moshtiyar_user_id', '');",
+"    if (!$userId) return;",
+"    echo '<script src=\"" + API + "/api/website-agent.js?v=1.3.0\" data-user-id=\"' . esc_attr($userId) . '\" data-site=\"' . esc_attr(home_url('/')) . '\" data-enabled=\"true\"></script>';",
+"}",
+"add_action('wp_head', 'moshtiyar_agent', 100);"
   ].join("\n");
 }
 
