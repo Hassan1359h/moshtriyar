@@ -18,6 +18,7 @@ import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 
 const APP_URL = 'https://moshtriyar.ir';
+const ZIP_MIME = 'application/zip';
 
 export default function App() {
   const webViewRef = useRef(null);
@@ -49,132 +50,176 @@ export default function App() {
   const handleRetry = () => {
     setError(false);
     setLoading(true);
-    if (webViewRef.current) {
-      webViewRef.current.reload();
-    }
+    webViewRef.current?.reload();
   };
 
   // =========================================================
-  // 🎯 دانلود فایل‌ها از WebView (ZIP افزونه وردپرس، PDF و ...)
+  // 🎯 ابزارها
   // =========================================================
 
-  const downloadFileFromWebView = async (url) => {
+  const getFileName = (url, fallback = 'moshtriyar-ai-agent.zip') => {
     try {
-      // استخراج نام فایل از URL
-      let fileName = 'download';
+      const cleanUrl = String(url || '').split('?')[0];
+      const part = cleanUrl.split('/').pop();
+      if (part && part.includes('.')) {
+        return decodeURIComponent(part);
+      }
+    } catch (_) {}
+    return fallback;
+  };
 
-      try {
-        const urlParts = url.split('?')[0].split('/');
-        const lastPart = urlParts[urlParts.length - 1];
-        if (lastPart && lastPart.includes('.')) {
-          fileName = decodeURIComponent(lastPart);
-        } else {
-          // اگه نام فایل توی URL نبود، اسم پیش‌فرض
-          fileName = 'moshtriyar-ai-agent.zip';
-        }
-      } catch (e) {
+  const isPluginDownloadUrl = (url) => {
+    const value = String(url || '').toLowerCase();
+    return (
+      value.includes('/api/wordpress-plugin') ||
+      value.includes('/api/download-plugin') ||
+      value.includes('wordpress-plugin') ||
+      value.includes('download-plugin') ||
+      value.endsWith('.zip') ||
+      (value.includes('token=') && value.includes('siteurl='))
+    );
+  };
+
+  // =========================================================
+  // 🎯 دانلود فایل‌ها از WebView (ZIP افزونه، PDF و ...)
+  // =========================================================
+
+  const downloadFileFromWebView = async (url, requestedFileName) => {
+    if (!url || !/^https?:\/\//i.test(url)) {
+      Alert.alert('خطا', 'لینک دانلود معتبر نیست.');
+      return;
+    }
+
+    try {
+      let fileName = requestedFileName || getFileName(url);
+
+      if (!fileName.toLowerCase().endsWith('.zip')) {
         fileName = 'moshtriyar-ai-agent.zip';
       }
 
-      // اطمینان از داشتن پسوند
-      if (!fileName.includes('.')) {
-        fileName += '.zip';
-      }
+      // جلوگیری از کاراکترهای غیرمجاز در نام فایل
+      fileName = fileName.replace(/[\\/:*?"<>|]/g, '_');
 
-      // مسیر ذخیره‌سازی موقت
-      const fileUri = FileSystem.cacheDirectory + fileName;
+      const fileUri = `${FileSystem.cacheDirectory}${Date.now()}-${fileName}`;
 
-      console.log('📥 Starting download:', url);
-      console.log('📁 Save to:', fileUri);
-
-      // نوتیفیکیشن شروع
-      Alert.alert('📥 دانلود شروع شد', `فایل: ${fileName}`);
-
-      // دانلود فایل
-      const downloadResumable = FileSystem.createDownloadResumable(
-        url,
-        fileUri,
-        {},
-        (downloadProgress) => {
-          const progress =
-            downloadProgress.totalBytesWritten /
-            (downloadProgress.totalBytesExpectedToWrite || 1);
-          console.log(`Download progress: ${Math.round(progress * 100)}%`);
-        }
+      Alert.alert(
+        'دانلود افزونه',
+        'فایل افزونه در حال دانلود است. پس از اتمام، پنجره ذخیره‌سازی باز می‌شود.'
       );
 
-      const result = await downloadResumable.downloadAsync();
+      // دانلود فایل
+      const result = await FileSystem.downloadAsync(url, fileUri, {
+        headers: {
+          Accept: 'application/zip, application/octet-stream, */*',
+        },
+      });
 
-      if (!result || !result.uri) {
-        throw new Error('دانلود ناموفق بود');
+      if (result.status < 200 || result.status >= 300) {
+        throw new Error(`پاسخ ناموفق سرور: ${result.status}`);
       }
 
-      console.log('✅ Downloaded to:', result.uri);
+      const info = await FileSystem.getInfoAsync(result.uri);
 
-      // اشتراک‌گذاری / ذخیره
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(result.uri, {
-          mimeType: 'application/zip',
-          dialogTitle: 'ذخیره یا اشتراک‌گذاری افزونه',
-          UTI: 'public.zip-archive',
-        });
-      } else {
-        Alert.alert(
-          '✅ دانلود شد',
-          'فایل در پوشه Downloads ذخیره شد:\n' + result.uri
+      if (!info.exists || !info.size || info.size < 100) {
+        throw new Error('فایل دانلودشده معتبر نیست.');
+      }
+
+      // بررسی محتوای فایل: ZIP واقعی باید با "PK" شروع شود
+      const content = await FileSystem.readAsStringAsync(result.uri, {
+        encoding: FileSystem.EncodingType.Base64,
+        length: 16,
+        position: 0,
+      });
+
+      const looksLikeZip =
+        content.startsWith('UEsDB') ||
+        content.startsWith('UEsFB') ||
+        content.startsWith('UEsBA') ||
+        content.startsWith('UEsD');
+
+      if (!looksLikeZip) {
+        throw new Error(
+          'سرور فایل ZIP برنگرداند. احتمالاً لینک منقضی شده یا دسترسی دانلود معتبر نیست.'
         );
       }
+
+      // اشتراک‌گذاری / ذخیره
+      const sharingAvailable = await Sharing.isAvailableAsync();
+
+      if (!sharingAvailable) {
+        Alert.alert(
+          'دانلود کامل شد',
+          `فایل در این مسیر ذخیره شد:\n${result.uri}`
+        );
+        return;
+      }
+
+      await Sharing.shareAsync(result.uri, {
+        mimeType: ZIP_MIME,
+        dialogTitle: 'ذخیره یا اشتراک‌گذاری افزونه وردپرس',
+        UTI: 'public.zip-archive',
+      });
     } catch (err) {
-      console.error('Download error:', err);
-      Alert.alert('❌ خطا در دانلود', err.message || 'نامشخص');
+      console.error('Plugin download error:', err);
+      Alert.alert(
+        'خطا در دانلود',
+        err?.message || 'دانلود افزونه انجام نشد. دوباره تلاش کنید.'
+      );
     }
   };
 
   // =========================================================
-  // 🎯 مدیریت دانلود (فقط اندروید)
+  // 🎯 مدیریت دانلود Native (فقط اندروید)
   // =========================================================
 
   const handleFileDownload = ({ nativeEvent }) => {
-    console.log('🎯 onFileDownload triggered:', nativeEvent.downloadUrl);
-    const downloadUrl = nativeEvent.downloadUrl;
-    if (downloadUrl) {
-      downloadFileFromWebView(downloadUrl);
+    const url = nativeEvent?.downloadUrl;
+    if (url) {
+      downloadFileFromWebView(url);
     }
   };
 
   // =========================================================
-  // دانلود APK با مرورگر خارجی
+  // دانلود APK اپ مشتری‌یار
   // =========================================================
 
   const downloadAPK = () => {
     Linking.openURL('https://moshtriyar.ir/download/moshtriyar.apk').catch(() => {
-      Alert.alert('خطا', 'مرورگر باز نشد');
+      Alert.alert('خطا', 'مرورگر برای دانلود فایل باز نشد.');
     });
   };
 
   // =========================================================
-  // ذخیره فایل‌های PDF و خروجی مشتریان (از طریق message)
+  // ذخیره فایل‌های PDF و ... از طریق پیام WebView
   // =========================================================
 
   const saveFileFromWebView = async (base64Data, filename, mimeType) => {
     try {
-      const uri = FileSystem.documentDirectory + filename;
+      if (!base64Data || !filename) {
+        throw new Error('اطلاعات فایل ناقص است.');
+      }
+
+      const safeName = String(filename).replace(/[\\/:*?"<>|]/g, '_');
+      const uri = `${FileSystem.documentDirectory}${safeName}`;
 
       await FileSystem.writeAsStringAsync(uri, base64Data, {
         encoding: FileSystem.EncodingType.Base64,
       });
 
-      if (await Sharing.isAvailableAsync()) {
+      const sharingAvailable = await Sharing.isAvailableAsync();
+
+      if (sharingAvailable) {
         await Sharing.shareAsync(uri, {
-          mimeType: mimeType || 'application/pdf',
-          dialogTitle: 'ذخیره یا اشتراک‌گذاری',
+          mimeType: mimeType || 'application/octet-stream',
+          dialogTitle: 'ذخیره یا اشتراک‌گذاری فایل',
           UTI: mimeType === 'application/pdf' ? 'com.adobe.pdf' : undefined,
         });
       } else {
-        Alert.alert('موفق', 'فایل ذخیره شد در:\n' + uri);
+        Alert.alert('ذخیره شد', `فایل در این مسیر ذخیره شد:\n${uri}`);
       }
     } catch (err) {
-      Alert.alert('خطا در ذخیره', err.message || 'نامشخص');
+      console.error('Save file error:', err);
+      Alert.alert('خطا در ذخیره فایل', err?.message || 'خطای نامشخص');
     }
   };
 
@@ -184,23 +229,29 @@ export default function App() {
 
   const handleMessage = async (event) => {
     try {
-      const data = JSON.parse(event.nativeEvent.data);
+      const rawData = event?.nativeEvent?.data;
+      const data = JSON.parse(rawData);
 
       if (data.type === 'saveFile') {
         await saveFileFromWebView(data.data, data.filename, data.mimeType);
-      } else if (data.type === 'downloadAPK') {
+        return;
+      }
+
+      if (data.type === 'downloadAPK') {
         downloadAPK();
-      } else if (data.type === 'downloadFile') {
-        // 🎯 دانلود فایل از طریق message
-        downloadFileFromWebView(data.url);
-      } else if (data.type === 'openUrl') {
-        const url = data.url;
-        if (url) {
-          Linking.openURL(url).catch(() => {});
-        }
+        return;
+      }
+
+      if (data.type === 'downloadFile') {
+        await downloadFileFromWebView(data.url, data.filename);
+        return;
+      }
+
+      if (data.type === 'openUrl' && data.url) {
+        await Linking.openURL(data.url);
       }
     } catch (err) {
-      console.error('Message error:', err);
+      console.error('WebView message error:', err);
     }
   };
 
@@ -209,23 +260,21 @@ export default function App() {
   // =========================================================
 
   const handleShouldStartLoad = (request) => {
-    const url = request.url || '';
+    const url = String(request?.url || '');
+
+    if (!url) return false;
 
     // APK → مرورگر خارجی
     if (
       url.startsWith('https://moshtriyar.ir/download/moshtriyar.apk') ||
-      url.endsWith('.apk')
+      url.toLowerCase().includes('.apk')
     ) {
       downloadAPK();
       return false;
     }
 
-    // 🎯 لینک‌های دانلود افزونه وردپرس → Native Download
-    if (
-      url.includes('/api/wordpress-plugin') ||
-      url.includes('/api/download-plugin') ||
-      url.endsWith('.zip')
-    ) {
+    // ZIP افزونه وردپرس → دانلود Native
+    if (isPluginDownloadUrl(url)) {
       downloadFileFromWebView(url);
       return false;
     }
@@ -241,36 +290,28 @@ export default function App() {
       return true;
     }
 
-    // واتساپ
-    if (url.startsWith('whatsapp://') || url.startsWith('https://wa.me/')) {
-      Linking.openURL(url).catch(() => Alert.alert('خطا', 'واتساپ نصب نیست'));
-      return false;
-    }
-
-    // تلگرام
-    if (url.startsWith('tg://') || url.startsWith('https://t.me/')) {
-      Linking.openURL(url).catch(() => Alert.alert('خطا', 'تلگرام نصب نیست'));
-      return false;
-    }
-
-    // ایتا
-    if (url.startsWith('eitaa://') || url.startsWith('https://eitaa.com/')) {
-      Linking.openURL(url).catch(() => Alert.alert('خطا', 'ایتا نصب نیست'));
-      return false;
-    }
-
-    // تماس / پیامک / ایمیل
+    // لینک‌های اپ‌های خارجی
     if (
+      url.startsWith('whatsapp://') ||
+      url.startsWith('https://wa.me/') ||
+      url.startsWith('tg://') ||
+      url.startsWith('https://t.me/') ||
+      url.startsWith('eitaa://') ||
+      url.startsWith('https://eitaa.com/') ||
       url.startsWith('sms:') ||
       url.startsWith('tel:') ||
       url.startsWith('mailto:')
     ) {
-      Linking.openURL(url).catch(() => {});
+      Linking.openURL(url).catch(() => {
+        Alert.alert('خطا', 'امکان باز کردن این لینک وجود ندارد.');
+      });
       return false;
     }
 
     // سایر لینک‌های خارجی
-    Linking.openURL(url).catch(() => {});
+    Linking.openURL(url).catch(() => {
+      Alert.alert('خطا', 'امکان باز کردن لینک خارجی وجود ندارد.');
+    });
     return false;
   };
 
@@ -286,7 +327,7 @@ export default function App() {
           <Text style={styles.errorIcon}>📡</Text>
           <Text style={styles.errorTitle}>اتصال برقرار نشد</Text>
           <Text style={styles.errorText}>
-            لطفاً اتصال اینترنت خود را بررسی کنید
+            لطفاً اتصال اینترنت خود را بررسی کنید و دوباره تلاش کنید.
           </Text>
           <TouchableOpacity style={styles.retryBtn} onPress={handleRetry}>
             <Text style={styles.retryText}>🔄 تلاش مجدد</Text>
@@ -308,29 +349,30 @@ export default function App() {
         ref={webViewRef}
         source={{ uri: APP_URL }}
         style={styles.webview}
-        javaScriptEnabled={true}
-        domStorageEnabled={true}
-        allowsInlineMediaPlayback={true}
+        javaScriptEnabled
+        domStorageEnabled
+        allowsInlineMediaPlayback
         mediaPlaybackRequiresUserAction={false}
         mediaCapturePermissionGrantType="grant"
-        allowsProtectedMedia={true}
-        sharedCookiesEnabled={true}
-        thirdPartyCookiesEnabled={true}
-        allowFileAccess={true}
+        allowsProtectedMedia
+        sharedCookiesEnabled
+        thirdPartyCookiesEnabled
+        allowFileAccess
         originWhitelist={['*']}
         setSupportMultipleWindows={false}
-        cacheEnabled={true}
+        cacheEnabled
         cacheMode="LOAD_DEFAULT"
         onShouldStartLoadWithRequest={handleShouldStartLoad}
+        onFileDownload={
+          Platform.OS === 'android' ? handleFileDownload : undefined
+        }
         onMessage={handleMessage}
-        // 🎯 این خط کلید حل مشکل دانلود است
-        onFileDownload={Platform.OS === 'android' ? handleFileDownload : undefined}
-        userAgent={'Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36'}
         onLoadStart={() => setLoading(true)}
         onLoadEnd={() => setLoading(false)}
         onError={handleError}
         onNavigationStateChange={(navState) => setCanGoBack(navState.canGoBack)}
         onPermissionRequest={(event) => event.grant(event.resources)}
+        userAgent="Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
       />
 
       {loading && (
@@ -344,7 +386,7 @@ export default function App() {
 }
 
 // =========================================================
-// Style
+// Styles
 // =========================================================
 
 const styles = StyleSheet.create({
