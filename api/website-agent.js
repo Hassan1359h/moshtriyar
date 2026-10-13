@@ -412,7 +412,7 @@ callBtn.style.display = "none";
             } catch (e) {}
 
             try {
-                var response = await fetch("https://moshtriyar.vercel.app/api/website-chat", {
+                var response = await fetch("https://moshtriyar.ir/api/website-chat", {
     method: "POST",
     headers: {
         "Content-Type": "application/json"
