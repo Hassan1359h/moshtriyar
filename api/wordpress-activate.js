@@ -29,6 +29,86 @@ export default async function handler(req, res) {
     }
 
     try {
+        // =====================================================
+        // 🎯 مسیر auto-connect — برای اسکریپت دستی (غیر وردپرسی)
+        // =====================================================
+        if (req.body?.action === "auto-connect") {
+            const userId = String(req.body?.userId || "").trim();
+            const siteUrl = String(req.body?.siteUrl || "").trim();
+
+            if (!userId || !siteUrl) {
+                return res.status(400).json({ error: "userId and siteUrl required" });
+            }
+
+            const requestedOrigin = normalizeOrigin(siteUrl);
+            if (!requestedOrigin) {
+                return res.status(400).json({ error: "Invalid site URL" });
+            }
+
+            const { data: userResult, error: userError } =
+                await supabaseAdmin.auth.admin.getUserById(userId);
+
+            if (userError || !userResult?.user) {
+                return res.status(404).json({ error: "User not found" });
+            }
+
+            const { data: existing } = await supabaseAdmin
+                .from("wordpress_connections")
+                .select("id, used_at")
+                .eq("user_id", userId)
+                .eq("site_url", requestedOrigin)
+                .maybeSingle();
+
+            if (existing?.used_at) {
+                return res.status(200).json({
+                    success: true,
+                    already_connected: true,
+                    userId,
+                    siteUrl: requestedOrigin
+                });
+            }
+
+            if (existing) {
+                await supabaseAdmin
+                    .from("wordpress_connections")
+                    .update({ used_at: new Date().toISOString() })
+                    .eq("id", existing.id);
+            } else {
+                const dummyToken = "auto_" + crypto.randomBytes(16).toString("hex");
+                await supabaseAdmin
+                    .from("wordpress_connections")
+                    .insert({
+                        user_id: userId,
+                        site_url: requestedOrigin,
+                        token_hash: hashToken(dummyToken),
+                        expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+                        used_at: new Date().toISOString()
+                    });
+            }
+
+            const metadata = userResult.user.user_metadata || {};
+            const oldAgent = metadata.website_agent || {};
+            const websiteAgent = {
+                ...oldAgent,
+                enabled: true,
+                websiteUrl: requestedOrigin
+            };
+
+            await supabaseAdmin.auth.admin.updateUserById(userId, {
+                user_metadata: { ...metadata, website_agent: websiteAgent }
+            });
+
+            return res.status(200).json({
+                success: true,
+                connected: true,
+                userId,
+                siteUrl: requestedOrigin
+            });
+        }
+
+        // =====================================================
+        // 🎯 مسیر معمولی — افزونه وردپرس
+        // =====================================================
         const token = String(req.body?.token || "").trim();
         const siteUrl = String(req.body?.siteUrl || "").trim();
 
