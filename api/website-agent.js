@@ -1,3 +1,21 @@
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseAdmin = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+);
+
+function normalizeOrigin(value) {
+    try {
+        const url = new URL(String(value || "").trim());
+        if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+        return url.origin;
+    } catch {
+        return null;
+    }
+}
+
 export default async function handler(req, res) {
 
     if (req.method !== "GET") {
@@ -8,6 +26,54 @@ export default async function handler(req, res) {
     const SUPABASE_URL = process.env.SUPABASE_URL || "";
     const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || "";
 
+    // ==========================================================
+    // 🎯 آپدیت خودکار وضعیت اتصال بر اساس Referer
+    // ==========================================================
+    try {
+        const referer = req.headers.referer || req.headers.referrer || "";
+        const refererOrigin = normalizeOrigin(referer);
+
+        if (refererOrigin && !refererOrigin.includes("moshtriyar.ir") && !refererOrigin.includes("vercel.app")) {
+            const { data: pending } = await supabaseAdmin
+                .from("wordpress_connections")
+                .select("id, user_id")
+                .eq("site_url", refererOrigin)
+                .is("used_at", null)
+                .maybeSingle();
+
+            if (pending) {
+                await supabaseAdmin
+                    .from("wordpress_connections")
+                    .update({ used_at: new Date().toISOString() })
+                    .eq("id", pending.id);
+
+                // آپدیت website_agent توی user_metadata
+                const { data: userResult } = await supabaseAdmin.auth.admin.getUserById(pending.user_id);
+                if (userResult?.user) {
+                    const metadata = userResult.user.user_metadata || {};
+                    const oldAgent = metadata.website_agent || {};
+                    await supabaseAdmin.auth.admin.updateUserById(pending.user_id, {
+                        user_metadata: {
+                            ...metadata,
+                            website_agent: {
+                                ...oldAgent,
+                                enabled: true,
+                                websiteUrl: refererOrigin
+                            }
+                        }
+                    });
+                }
+
+                console.log("✅ Auto-connected site:", refererOrigin);
+            }
+        }
+    } catch (err) {
+        console.warn("Auto-connect check failed:", err?.message);
+    }
+
+    // ==========================================================
+    // 🎯 کد اسکریپت (بدون تغییر)
+    // ==========================================================
     const script = `
 
 (function () {
@@ -90,34 +156,6 @@ fetch("https://moshtriyar.vercel.app/api/send-email?action=settings&userId=" + e
                     resolve(config);
                 });
         });
-    }
-
-
-    // ==========================================================
-    // 🔌 اطلاع خودکار به سرور (برای اسکریپت دستی — غیر وردپرسی)
-    // ==========================================================
-    async function activateConnection() {
-        if (!config.userId || !config.site) return;
-        var cacheKey = "moshtriyar_activated_" + config.userId + "_" + config.site;
-        try { if (localStorage.getItem(cacheKey) === "1") return; } catch (e) {}
-        try {
-            var res = await fetch("https://moshtriyar.ir/api/wordpress-activate", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    action: "auto-connect",
-                    userId: config.userId,
-                    siteUrl: config.site
-                })
-            });
-            var data = await res.json();
-            console.log("Moshtriyar: auto-connect", data);
-            if (data && data.success) {
-                try { localStorage.setItem(cacheKey, "1"); } catch (e) {}
-            }
-        } catch (err) {
-            console.warn("Moshtriyar: auto-connect failed", err);
-        }
     }
 
 
@@ -204,7 +242,6 @@ fetch("https://moshtriyar.vercel.app/api/send-email?action=settings&userId=" + e
 
 
         // 🎨 هدر (با رنگ سفارشی)
-// ==========================================================
 var header = document.createElement("div");
 
 header.style.cssText =
@@ -840,8 +877,6 @@ callBtn.style.display = "none";
     // ==========================================================
     (async function boot() {
         await loadCustomSettings();
-
-        activateConnection();
 
         if (document.readyState === "loading") {
             document.addEventListener("DOMContentLoaded", createAgent);
