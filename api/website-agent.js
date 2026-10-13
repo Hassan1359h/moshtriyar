@@ -93,6 +93,34 @@ fetch("https://moshtriyar.vercel.app/api/send-email?action=settings&userId=" + e
     }
 
 
+    // ==========================================================
+    // 🔌 اطلاع خودکار به سرور (برای اسکریپت دستی — غیر وردپرسی)
+    // ==========================================================
+    async function activateConnection() {
+        if (!config.userId || !config.site) return;
+        var cacheKey = "moshtriyar_activated_" + config.userId + "_" + config.site;
+        try { if (localStorage.getItem(cacheKey) === "1") return; } catch (e) {}
+        try {
+            var res = await fetch("https://moshtriyar.ir/api/wordpress-activate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    action: "auto-connect",
+                    userId: config.userId,
+                    siteUrl: config.site
+                })
+            });
+            var data = await res.json();
+            console.log("Moshtriyar: auto-connect", data);
+            if (data && data.success) {
+                try { localStorage.setItem(cacheKey, "1"); } catch (e) {}
+            }
+        } catch (err) {
+            console.warn("Moshtriyar: auto-connect failed", err);
+        }
+    }
+
+
     function loadSupabase() {
         return new Promise(function (resolve, reject) {
             if (window.supabase) {
@@ -813,6 +841,8 @@ callBtn.style.display = "none";
     (async function boot() {
         await loadCustomSettings();
 
+        activateConnection();
+
         if (document.readyState === "loading") {
             document.addEventListener("DOMContentLoaded", createAgent);
         } else {
@@ -831,4 +861,3 @@ callBtn.style.display = "none";
     res.status(200).send(script);
 
 }
-
