@@ -267,13 +267,12 @@ export default async function handler(req, res) {
       return res.status(check.code).json({ error: check.error });
     }
 
-    // مصرف توکن
-    await supabase
-      .from("wordpress_connections")
-      .update({ used_at: new Date().toISOString() })
-      .eq("id", check.connection.id);
-
+  
+    // دانلود نباید توکن فعال‌سازی را مصرف کند.
+    // توکن فقط هنگام اتصال موفق وردپرس مصرف می‌شود.
     return sendPluginZip(res, token);
+    
+    
   }
 
   // 🔵 POST → دو حالت
@@ -330,5 +329,6 @@ export default async function handler(req, res) {
     return sendPluginZip(res, token);
   }
 
-  return res.status(405).json({ error: "Method Not Allowed" });
+  return res.status(405).json({ error: "Method Not Allowed" 
+                                   });
     }
