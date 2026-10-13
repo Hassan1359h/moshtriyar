@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+
+<!DOCTYPE html> 
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -34,7 +35,6 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;li
 .btn-save{width:100%;padding:16px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;border:none;border-radius:14px;font-family:inherit;font-weight:800;font-size:16px;cursor:pointer;box-shadow:0 8px 20px rgba(59,130,246,.3)}
 .btn-save:disabled{opacity:.6;cursor:not-allowed}
 .msg{text-align:center;margin-top:14px;font-size:14px;font-weight:700;min-height:20px}
-/* پیش‌نمایش */
 .preview-box{position:relative;background:linear-gradient(135deg,#f1f5f9,#e2e8f0);border-radius:16px;height:300px;overflow:hidden;border:2px dashed #cbd5e1}
 .preview-widget{position:absolute;bottom:20px;width:280px;background:#fff;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.15);overflow:hidden}
 .preview-widget.right{right:20px}
@@ -117,37 +117,39 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;li
             <input type="text" id="operatorInput" placeholder="مثلاً: حسین شهابی" maxlength="40">
         </div>
     </div>
-<!-- 🎨 برندینگ فروشگاه -->
-<div class="card" style="background:linear-gradient(135deg,#fef3c7,#fde68a);border:2px solid #fbbf24;">
-    <h2>🎨 برندینگ فروشگاه</h2>
-    <p class="desc">
-        لوگو و اسم فروشگاهت رو اینجا بذار تا توی ویجت، فاکتور و ایمیل‌ها نمایش داده بشه.
-    </p>
 
-    <div class="field">
-        <label>اسم فروشگاه / کسب‌وکار</label>
-        <input type="text" id="brandNameInput" placeholder="مثلاً: فروشگاه آسمان" maxlength="50">
+    <!-- 🎨 برندینگ فروشگاه -->
+    <div class="card" style="background:linear-gradient(135deg,#fef3c7,#fde68a);border:2px solid #fbbf24;">
+        <h2>🎨 برندینگ فروشگاه</h2>
+        <p class="desc">
+            لوگو و اسم فروشگاهت رو اینجا بذار تا توی ویجت، فاکتور و ایمیل‌ها نمایش داده بشه.
+        </p>
+
+        <div class="field">
+            <label>اسم فروشگاه / کسب‌وکار</label>
+            <input type="text" id="brandNameInput" placeholder="مثلاً: فروشگاه آسمان" maxlength="50">
+        </div>
+
+        <div class="field">
+            <label>لوگوی فروشگاه (حداکثر ۱۵۰ KB)</label>
+            <input type="file" id="brandLogoInput" accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml" style="padding:8px;background:#fff;">
+            <div id="brandLogoPreview" style="margin-top:10px;display:none;">
+                <img id="brandLogoImg" style="max-width:120px;max-height:120px;border-radius:12px;border:2px solid #fbbf24;padding:4px;background:#fff;">
+                <button type="button" id="removeLogoBtn" style="background:#fee2e2;color:#dc2626;border:none;padding:6px 12px;border-radius:8px;font-family:inherit;font-weight:700;font-size:12px;cursor:pointer;margin-right:10px;">🗑️ حذف لوگو</button>
+            </div>
+            <div class="field" style="margin-top:14px;padding-top:14px;border-top:1px dashed #fbbf24;">
+                <label>🏢 نوع کسب‌وکار</label>
+                <select id="businessTypeInput" style="width:100%;padding:12px;border:2px solid #e2e8f0;border-radius:12px;font-family:inherit;font-size:14px;background:#fff;">
+                    <option value="shop">🛒 فروشگاه (محصولات)</option>
+                    <option value="service">🩺 خدمات (ویزیت، مشاوره، گارانتی)</option>
+                    <option value="both">🎯 هر دو (فروشگاه + خدمات)</option>
+                </select>
+                <p style="font-size:12px;color:#92400e;margin-top:8px;">اگه کلینیک، مشاور یا گارانتی داری، این رو انتخاب کن تا متن‌های فاکتور مناسب بشن.</p>
+            </div>
+            <p class="msg" id="brandLogoMsg"></p>
+        </div>
     </div>
 
-    <div class="field">
-        <label>لوگوی فروشگاه (حداکثر ۱۵۰ KB)</label>
-        <input type="file" id="brandLogoInput" accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml" style="padding:8px;background:#fff;">
-        <div id="brandLogoPreview" style="margin-top:10px;display:none;">
-            <img id="brandLogoImg" style="max-width:120px;max-height:120px;border-radius:12px;border:2px solid #fbbf24;padding:4px;background:#fff;">
-            <button type="button" id="removeLogoBtn" style="background:#fee2e2;color:#dc2626;border:none;padding:6px 12px;border-radius:8px;font-family:inherit;font-weight:700;font-size:12px;cursor:pointer;margin-right:10px;">🗑️ حذف لوگو</button>
-        </div>
-        <div class="field" style="margin-top:14px;padding-top:14px;border-top:1px dashed #fbbf24;">
-    <label>🏢 نوع کسب‌وکار</label>
-    <select id="businessTypeInput" style="width:100%;padding:12px;border:2px solid #e2e8f0;border-radius:12px;font-family:inherit;font-size:14px;background:#fff;">
-        <option value="shop">🛒 فروشگاه (محصولات)</option>
-        <option value="service">🩺 خدمات (ویزیت، مشاوره، گارانتی)</option>
-        <option value="both">🎯 هر دو (فروشگاه + خدمات)</option>
-    </select>
-    <p style="font-size:12px;color:#92400e;margin-top:8px;">اگه کلینیک، مشاور یا گارانتی داری، این رو انتخاب کن تا متن‌های فاکتور مناسب بشن.</p>
-        </div>
-        <p class="msg" id="brandLogoMsg"></p>
-    </div>
-</div>
     <div class="card">
         <h2>📍 موقعیت ویجت</h2>
         <div class="position-picker" id="positionPicker">
@@ -155,39 +157,41 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;li
             <div class="position-option" data-position="left">⬅️ چپ</div>
         </div>
     </div>
-    
-    <div class="card">
-    <h2>🔄 وضعیت</h2>
-    <div class="field">
-        <label>
-            <input type="checkbox" id="enabledInput" checked style="width:auto;margin-left:8px;">
-            دستیار فعال باشد
-        </label>
-    </div>
-</div>
-<div class="card" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px solid #86efac;">
-    <h2>🟢 نصب آسان وردپرس</h2>
-    <p class="desc">
-        اگه سایتت با وردپرس ساخته شده، با یه کلیک افزونه مخصوص خودت رو دریافت کن.
-        بعد نصب و فعال‌سازی، اتصال خودکار انجام می‌شه.
-    </p>
-    <button class="btn-save" id="wpInstallBtn" style="background:linear-gradient(135deg,#16a34a,#059669);">
-        🟢 دریافت افزونه وردپرس
-    </button>
-    <p class="msg" id="wpMsg"></p>
-</div>
-    
-<div class="card">
-    <h2>📋 کد اتصال سایت</h2>
-    <p class="desc">
-        کد اسکریپت مشتری‌یار رو ببین و توی سایتت قرار بده.
-    </p>
-    <button class="btn-save" id="showScriptBtn" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);">
-        📋 نمایش کد اتصال
-    </button>
-</div>
 
-<button class="btn-save" id="saveBtn">💾 ذخیره تنظیمات</button>
+    <div class="card">
+        <h2>🔄 وضعیت</h2>
+        <div class="field">
+            <label>
+                <input type="checkbox" id="enabledInput" checked style="width:auto;margin-left:8px;">
+                دستیار فعال باشد
+            </label>
+        </div>
+    </div>
+
+    <!-- 🟢 نصب آسان وردپرس -->
+    <div class="card" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px solid #86efac;">
+        <h2>🟢 نصب آسان وردپرس</h2>
+        <p class="desc">
+            اگه سایتت با وردپرس ساخته شده، با یه کلیک افزونه مخصوص خودت رو دریافت کن.
+            بعد نصب و فعال‌سازی، اتصال خودکار انجام می‌شه.
+        </p>
+        <button class="btn-save" id="wpInstallBtn" style="background:linear-gradient(135deg,#16a34a,#059669);">
+            🟢 دریافت افزونه وردپرس
+        </button>
+        <p class="msg" id="wpMsg"></p>
+    </div>
+
+    <div class="card">
+        <h2>📋 کد اتصال سایت</h2>
+        <p class="desc">
+            کد اسکریپت مشتری‌یار رو ببین و توی سایتت قرار بده.
+        </p>
+        <button class="btn-save" id="showScriptBtn" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);">
+            📋 نمایش کد اتصال
+        </button>
+    </div>
+
+    <button class="btn-save" id="saveBtn">💾 ذخیره تنظیمات</button>
     <p class="msg" id="saveMsg"></p>
 
 </div>
@@ -215,7 +219,6 @@ async function init() {
 
     currentUser = data.session.user;
 
-    // 🔍 پیدا کردن سایت کاربر
     const { data: sites } = await supabase
         .from('websites')
         .select('id, name, domain, brand_name, brand_logo_url, business_type, api_key')
@@ -224,36 +227,35 @@ async function init() {
         .limit(1);
 
     if (!sites || sites.length === 0) {
-    showConnectForm();
-    return;
-}
+        showConnectForm();
+        return;
+    }
 
     currentWebsite = sites[0];
-    // 🎨 لود برند
-currentBrandName = currentWebsite.brand_name || '';
-currentBrandLogoUrl = currentWebsite.brand_logo_url || '';
-    // 🏢 نوع کسب‌وکار
-currentBusinessType = currentWebsite.business_type || 'shop';
-const businessTypeInput = document.getElementById('businessTypeInput');
-if (businessTypeInput) {
-    businessTypeInput.value = currentBusinessType;
-}
 
-const brandNameInput = document.getElementById('brandNameInput');
-if (brandNameInput && currentBrandName) {
-    brandNameInput.value = currentBrandName;
-}
+    currentBrandName = currentWebsite.brand_name || '';
+    currentBrandLogoUrl = currentWebsite.brand_logo_url || '';
+    currentBusinessType = currentWebsite.business_type || 'shop';
 
-if (currentBrandLogoUrl) {
-    const preview = document.getElementById('brandLogoPreview');
-    const img = document.getElementById('brandLogoImg');
-    if (preview && img) {
-        img.src = currentBrandLogoUrl;
-        preview.style.display = 'block';
+    const businessTypeInput = document.getElementById('businessTypeInput');
+    if (businessTypeInput) {
+        businessTypeInput.value = currentBusinessType;
     }
-}
 
-    // 📥 گرفتن تنظیمات قبلی
+    const brandNameInput = document.getElementById('brandNameInput');
+    if (brandNameInput && currentBrandName) {
+        brandNameInput.value = currentBrandName;
+    }
+
+    if (currentBrandLogoUrl) {
+        const preview = document.getElementById('brandLogoPreview');
+        const img = document.getElementById('brandLogoImg');
+        if (preview && img) {
+            img.src = currentBrandLogoUrl;
+            preview.style.display = 'block';
+        }
+    }
+
     const { data: existing } = await supabase
         .from('site_settings')
         .select('*')
@@ -264,7 +266,6 @@ if (currentBrandLogoUrl) {
         settings = { ...settings, ...existing };
     }
 
-    // اعمال به فرم
     applySettings();
     updatePreview();
 }
@@ -275,12 +276,10 @@ function applySettings() {
     document.getElementById('operatorInput').value = settings.operator_name || '';
     document.getElementById('enabledInput').checked = settings.enabled !== false;
 
-    // رنگ
     document.querySelectorAll('.color-option').forEach(el => {
         el.classList.toggle('active', el.dataset.color === settings.color);
     });
 
-    // موقعیت
     document.querySelectorAll('.position-option').forEach(el => {
         el.classList.toggle('active', el.dataset.position === settings.position);
     });
@@ -293,17 +292,11 @@ function updatePreview() {
     const position = settings.position || 'right';
     const enabled = settings.enabled !== false;
 
-    // هدر
     document.getElementById('previewHeader').style.background = `linear-gradient(135deg, ${color}, ${color}dd)`;
     document.getElementById('previewTitle').textContent = title;
-
-    // پیام
     document.getElementById('previewBody').textContent = welcome;
-
-    // دکمه ارسال
     document.getElementById('previewSend').style.background = color;
 
-    // موقعیت
     const widget = document.getElementById('previewWidget');
     const bubble = document.getElementById('previewBubble');
     widget.classList.remove('right', 'left');
@@ -311,7 +304,6 @@ function updatePreview() {
     widget.classList.add(position);
     bubble.classList.add(position);
 
-    // دکمه تماس (اگه اپراتور داره)
     const callBtn = document.getElementById('previewBtn');
     if (settings.operator_name) {
         callBtn.style.background = '#10b981';
@@ -320,7 +312,6 @@ function updatePreview() {
         callBtn.classList.add('hidden');
     }
 
-    // وضعیت
     if (!enabled) {
         widget.style.opacity = '0.4';
         bubble.style.opacity = '0.4';
@@ -330,7 +321,6 @@ function updatePreview() {
     }
 }
 
-// 🎨 انتخاب رنگ
 document.querySelectorAll('.color-option').forEach(el => {
     el.addEventListener('click', () => {
         settings.color = el.dataset.color;
@@ -340,7 +330,6 @@ document.querySelectorAll('.color-option').forEach(el => {
     });
 });
 
-// 📍 انتخاب موقعیت
 document.querySelectorAll('.position-option').forEach(el => {
     el.addEventListener('click', () => {
         settings.position = el.dataset.position;
@@ -350,7 +339,6 @@ document.querySelectorAll('.position-option').forEach(el => {
     });
 });
 
-// 📝 Inputs
 document.getElementById('titleInput').addEventListener('input', e => {
     settings.title = e.target.value;
     updatePreview();
@@ -390,10 +378,10 @@ document.getElementById('saveBtn').addEventListener('click', async () => {
                 'Authorization': 'Bearer ' + session.access_token,
             },
             body: JSON.stringify({
-    websiteId: currentWebsite.id,
-    settings: settings,
-    brandName: currentBrandName,
-}),
+                websiteId: currentWebsite.id,
+                settings: settings,
+                brandName: currentBrandName,
+            }),
         });
 
         const result = await res.json();
@@ -401,13 +389,14 @@ document.getElementById('saveBtn').addEventListener('click', async () => {
         if (!res.ok || !result.ok) {
             throw new Error(result.error || 'خطا در ذخیره');
         }
-// 🏢 ذخیره‌ی نوع کسب‌وکار تو جدول websites
-if (currentWebsite) {
-    await supabase
-        .from('websites')
-        .update({ business_type: currentBusinessType })
-        .eq('id', currentWebsite.id);
-    }
+
+        if (currentWebsite) {
+            await supabase
+                .from('websites')
+                .update({ business_type: currentBusinessType })
+                .eq('id', currentWebsite.id);
+        }
+
         msg.textContent = '✅ تنظیمات ذخیره شد! تغییرات تا ۵ دقیقه آینده روی سایت اعمال می‌شن.';
         msg.style.color = '#16a34a';
 
@@ -419,18 +408,17 @@ if (currentWebsite) {
         btn.textContent = '💾 ذخیره تنظیمات';
     }
 });
-// 🎨 آپلود لوگو به Supabase Storage
+
+// 🎨 آپلود لوگو
 async function uploadBrandLogo(file) {
     const msg = document.getElementById('brandLogoMsg');
-    
-    // چک حجم
+
     if (file.size > 150 * 1024) {
         msg.textContent = '❌ حجم لوگو بیشتر از ۱۵۰ KB است';
         msg.style.color = '#dc2626';
         return null;
     }
 
-    // چک نوع
     const allowed = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/svg+xml'];
     if (!allowed.includes(file.type)) {
         msg.textContent = '❌ فقط تصویر (PNG, JPG, WebP, SVG) مجاز است';
@@ -445,7 +433,6 @@ async function uploadBrandLogo(file) {
         msg.textContent = '⏳ در حال آپلود...';
         msg.style.color = '#2563eb';
 
-        // حذف لوگوی قبلی اگه بود
         if (currentBrandLogoUrl) {
             const oldPath = currentBrandLogoUrl.split('/brand-logos/')[1];
             if (oldPath) {
@@ -453,18 +440,15 @@ async function uploadBrandLogo(file) {
             }
         }
 
-        // آپلود
         const { error } = await supabase.storage
             .from('brand-logos')
             .upload(fileName, file, { upsert: true, contentType: file.type });
 
         if (error) throw error;
 
-        // گرفتن URL عمومی
         const { data } = supabase.storage.from('brand-logos').getPublicUrl(fileName);
         const publicUrl = data.publicUrl;
 
-        // ذخیره توی دیتابیس
         await supabase
             .from('websites')
             .update({ brand_logo_url: publicUrl })
@@ -472,7 +456,6 @@ async function uploadBrandLogo(file) {
 
         currentBrandLogoUrl = publicUrl;
 
-        // نمایش پیش‌نمایش
         const preview = document.getElementById('brandLogoPreview');
         const img = document.getElementById('brandLogoImg');
         img.src = publicUrl + '?t=' + Date.now();
@@ -490,7 +473,6 @@ async function uploadBrandLogo(file) {
     }
 }
 
-// 🎨 رویدادهای برندینگ
 document.getElementById('brandLogoInput').addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -501,7 +483,8 @@ document.getElementById('brandLogoInput').addEventListener('change', async (e) =
 document.getElementById('brandNameInput').addEventListener('input', (e) => {
     currentBrandName = e.target.value.trim();
 });
-    document.getElementById('businessTypeInput')?.addEventListener('change', (e) => {
+
+document.getElementById('businessTypeInput')?.addEventListener('change', (e) => {
     currentBusinessType = e.target.value;
 });
 
@@ -539,10 +522,7 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
     location.href = 'index.html';
 });
 
-// ==========================================================
-// 🌐 فرم اتصال وب‌سایت (اگه کاربر سایت نداره)
-// ==========================================================
-    
+// 🌐 فرم اتصال وب‌سایت
 function showConnectForm() {
     document.querySelector('.container').innerHTML = `
         <div class="card" style="text-align:center;padding:20px;">
@@ -579,7 +559,6 @@ function showConnectForm() {
     });
 }
 
-// 🔑 تولید API Key
 function generateApiKey() {
     const bytes = new Uint8Array(20);
     crypto.getRandomValues(bytes);
@@ -588,7 +567,6 @@ function generateApiKey() {
         .join('');
 }
 
-// 📤 ارسال فرم
 async function handleConnect() {
     const name = document.getElementById('connectName').value.trim();
     const url = document.getElementById('connectUrl').value.trim();
@@ -630,19 +608,19 @@ async function handleConnect() {
         const { data, error } = await supabase
             .from('websites')
             .insert({
-        user_id: currentUser.id,
-        name: name,
-        domain: origin,
-        api_key: apiKey,
-        brand_name: name,
-        active: true
-    })
-    .select('id, name, domain, api_key, active, brand_name, brand_logo_url')
-    .single();
+                user_id: currentUser.id,
+                name: name,
+                domain: origin,
+                api_key: apiKey,
+                brand_name: name,
+                active: true
+            })
+            .select('id, name, domain, api_key, active, brand_name, brand_logo_url')
+            .single();
 
-if (error) throw error;
+        if (error) throw error;
 
-    showScriptPage(origin, apiKey);
+        showScriptPage(origin, apiKey);
 
     } catch (err) {
         console.error('Connect error:', err);
@@ -652,9 +630,7 @@ if (error) throw error;
         btn.textContent = '🔌 اتصال سایت';
     }
 }
-// ==========================================================
-// ✅ صفحه موفقیت + کد اسکریپت + راهنما
-// ==========================================================
+
 function showScriptPage(domain, apiKey) {
     const scriptCode = `<script src="https://moshtriyar.vercel.app/api/website-agent.js"
     data-user-id="${currentUser.id}"
@@ -730,7 +706,6 @@ function showScriptPage(domain, apiKey) {
         </a>
     `;
 
-    // 📋 دکمه کپی
     document.getElementById('copyScriptBtn').addEventListener('click', async () => {
         const btn = document.getElementById('copyScriptBtn');
         const msg = document.getElementById('copyMsg');
@@ -753,10 +728,9 @@ function showScriptPage(domain, apiKey) {
         }
     });
 
-    // 📜 اسکرول به بالا
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-  // 📋 نمایش کد اتصال در صفحه تنظیمات
+
 document.getElementById('showScriptBtn')?.addEventListener('click', () => {
     if (currentWebsite?.domain) {
         showScriptPage(currentWebsite.domain);
@@ -765,7 +739,9 @@ document.getElementById('showScriptBtn')?.addEventListener('click', () => {
     }
 });
 
-// 🟢 دریافت و نصب افزونه وردپرس
+// ==========================================================
+// 🟢 دریافت افزونه وردپرس (با postMessage برای اپ + لینک برای مرورگر)
+// ==========================================================
 document.getElementById('wpInstallBtn')?.addEventListener('click', async () => {
     const btn = document.getElementById('wpInstallBtn');
     const msg = document.getElementById('wpMsg');
@@ -803,52 +779,67 @@ document.getElementById('wpInstallBtn')?.addEventListener('click', async () => {
             throw new Error(connectData.error || 'خطا در دریافت توکن');
         }
 
-        msg.textContent = '📦 در حال ساخت افزونه...';
+        // 🎯 لینک دانلود GET با token و siteUrl
+        const downloadUrl = `https://moshtriyar.ir/api/wordpress-plugin?token=${connectData.token}&siteUrl=${encodeURIComponent(currentWebsite.domain)}`;
+
+        msg.textContent = '📦 در حال آماده‌سازی فایل...';
         msg.style.color = '#2563eb';
 
-        const pluginRes = await fetch('/api/wordpress-plugin', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + session.access_token
-            },
-            body: JSON.stringify({
-                token: connectData.token,
-                siteUrl: currentWebsite.domain
-            })
-        });
-        if (!pluginRes.ok) {
-            let detail = {};
-            try { detail = await pluginRes.json(); } catch (_) {}
-            throw new Error(detail.error || 'خطا در ساخت افزونه');
+        // 🎯 ارسال به اپ React Native (اگر داخل WebView هستیم)
+        if (window.ReactNativeWebView) {
+            window.ReactNativeWebView.postMessage(JSON.stringify({
+                type: 'downloadFile',
+                url: downloadUrl,
+                filename: 'moshtriyar-ai-agent.zip'
+            }));
         }
-        const zipBlob = await pluginRes.blob();
-        if (!zipBlob.size || !(await zipBlob.slice(0, 2).text()).startsWith('PK')) {
-            throw new Error('پاسخ سرور فایل ZIP معتبر نیست');
-        }
-        const downloadUrl = URL.createObjectURL(zipBlob);
-        const download = () => {
-            const a = document.createElement('a');
-            a.href = downloadUrl;
-            a.download = 'moshtriyar-ai-agent.zip';
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-        };
-        msg.textContent = '';
-        const notice = document.createElement('div');
-        notice.style.cssText = 'padding:14px;background:#eff6ff;border:2px solid #2563eb;border-radius:12px';
-        const heading = document.createElement('p');
-        heading.textContent = '✅ فایل افزونه آماده است. برای ذخیره روی دکمه زیر بزنید.';
-        const retry = document.createElement('button');
-        retry.type = 'button';
-        retry.textContent = '⬇️ ذخیره فایل ZIP';
-        retry.style.cssText = 'display:block;width:100%;background:#2563eb;color:white;padding:12px;border:0;border-radius:10px;font:inherit;font-weight:800;cursor:pointer';
-        retry.addEventListener('click', download);
-        notice.append(heading, retry);
-        msg.appendChild(notice);
-        // دانلود مستقیم از پاسخ POST؛ توکن یک‌بارمصرف دوباره مصرف نمی‌شود.
-        download();
+
+        // 🎯 نمایش لینک برای مرورگر (fallback)
+        msg.innerHTML = `
+            <div style="margin-top:12px;padding:14px;background:#eff6ff;border-radius:12px;border:2px solid #2563eb;text-align:right;">
+                <p style="color:#1e40af;font-weight:800;font-size:13px;margin-bottom:10px;line-height:1.7;">
+                    ✅ افزونه آماده شد!
+                </p>
+                <a href="${downloadUrl}"
+                   style="display:block;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;padding:12px;border-radius:10px;text-decoration:none;font-weight:800;text-align:center;font-size:14px;margin-bottom:10px;">
+                    ⬇️ دانلود افزونه
+                </a>
+                <p style="color:#64748b;font-size:12px;margin-bottom:6px;font-weight:700;">
+                    💡 اگر دانلود نشد، این لینک را کپی کن و در Chrome باز کن:
+                </p>
+                <div id="wpManualLink" style="background:#f1f5f9;padding:10px;border-radius:8px;font-size:11px;direction:ltr;text-align:left;word-break:break-all;color:#1e40af;border:1px dashed #2563eb;margin-bottom:8px;font-family:monospace;">${downloadUrl}</div>
+                <button type="button" id="wpCopyLinkBtn"
+                        style="display:block;width:100%;background:#16a34a;color:#fff;padding:10px;border-radius:10px;border:0;font-weight:800;font-size:13px;font-family:inherit;cursor:pointer;">
+                    📋 کپی لینک
+                </button>
+                <p id="wpCopyMsg" style="color:#16a34a;font-size:12px;text-align:center;margin-top:8px;font-weight:700;"></p>
+            </div>
+        `;
+
+        btn.textContent = '✅ آماده شد — دریافت مجدد';
+
+        setTimeout(() => {
+            const copyBtn = document.getElementById('wpCopyLinkBtn');
+            const copyMsgEl = document.getElementById('wpCopyMsg');
+            if (copyBtn) {
+                copyBtn.addEventListener('click', async () => {
+                    try {
+                        await navigator.clipboard.writeText(downloadUrl);
+                        copyMsgEl.textContent = '✅ لینک کپی شد!';
+                    } catch (e) {
+                        const range = document.createRange();
+                        range.selectNode(document.getElementById('wpManualLink'));
+                        window.getSelection().removeAllRanges();
+                        window.getSelection().addRange(range);
+                        document.execCommand('copy');
+                        window.getSelection().removeAllRanges();
+                        copyMsgEl.textContent = '✅ لینک کپی شد!';
+                    }
+                    setTimeout(() => copyMsgEl.textContent = '', 4000);
+                });
+            }
+        }, 100);
+
     } catch (err) {
         console.error('WP install error:', err);
         msg.textContent = '❌ ' + (err.message || 'خطا در دریافت افزونه');
@@ -860,7 +851,6 @@ document.getElementById('wpInstallBtn')?.addEventListener('click', async () => {
 });
 
 init();
-    
 </script>
 
 </body>
