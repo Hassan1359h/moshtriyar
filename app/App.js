@@ -120,7 +120,6 @@ export default function App() {
     const url = request.url || '';
 
     // APK → مرورگر خارجی
-    }
 if (
   url.startsWith(
     'https://moshtriyar.ir/download/moshtriyar.apk'
