@@ -341,13 +341,31 @@ if ($('label_sales')) $('label_sales').textContent = myLabels.sale + ' (توما
         $('adminNav').style.display = 'flex';
     }
 
-    await loadProfile();
-    await loadCustomers();
-    await loadFinancialStats();
-    await loadSubscription();
+ 
+console.time('Dashboard Loading');
 
-    $('loading').classList.add('hidden');
-    $('main').classList.remove('hidden');
+const results = await Promise.allSettled([
+    loadProfile(),
+    loadCustomers(),
+    loadFinancialStats(),
+    loadSubscription()
+]);
+
+results.forEach((result, index) => {
+    if (result.status === 'rejected') {
+        console.error(
+            'Dashboard task failed:',
+            index,
+            result.reason
+        );
+    }
+});
+
+$('loading').classList.add('hidden');
+$('main').classList.remove('hidden');
+
+console.timeEnd('Dashboard Loading');
+   
 }
 async function loadProfile() {
     const { data: profile } = await supabase
