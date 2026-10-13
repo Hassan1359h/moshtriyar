@@ -10,6 +10,7 @@ import {
   Alert,
   ActivityIndicator,
   Linking,
+  Platform,
 } from 'react-native';
 
 import { WebView } from 'react-native-webview';
@@ -54,17 +55,105 @@ export default function App() {
   };
 
   // =========================================================
+  // 🎯 دانلود فایل‌ها از WebView (ZIP افزونه وردپرس، PDF و ...)
+  // =========================================================
+
+  const downloadFileFromWebView = async (url) => {
+    try {
+      // استخراج نام فایل از URL
+      let fileName = 'download';
+
+      try {
+        const urlParts = url.split('?')[0].split('/');
+        const lastPart = urlParts[urlParts.length - 1];
+        if (lastPart && lastPart.includes('.')) {
+          fileName = decodeURIComponent(lastPart);
+        } else {
+          // اگه نام فایل توی URL نبود، اسم پیش‌فرض
+          fileName = 'moshtriyar-ai-agent.zip';
+        }
+      } catch (e) {
+        fileName = 'moshtriyar-ai-agent.zip';
+      }
+
+      // اطمینان از داشتن پسوند
+      if (!fileName.includes('.')) {
+        fileName += '.zip';
+      }
+
+      // مسیر ذخیره‌سازی موقت
+      const fileUri = FileSystem.cacheDirectory + fileName;
+
+      console.log('📥 Starting download:', url);
+      console.log('📁 Save to:', fileUri);
+
+      // نوتیفیکیشن شروع
+      Alert.alert('📥 دانلود شروع شد', `فایل: ${fileName}`);
+
+      // دانلود فایل
+      const downloadResumable = FileSystem.createDownloadResumable(
+        url,
+        fileUri,
+        {},
+        (downloadProgress) => {
+          const progress =
+            downloadProgress.totalBytesWritten /
+            (downloadProgress.totalBytesExpectedToWrite || 1);
+          console.log(`Download progress: ${Math.round(progress * 100)}%`);
+        }
+      );
+
+      const result = await downloadResumable.downloadAsync();
+
+      if (!result || !result.uri) {
+        throw new Error('دانلود ناموفق بود');
+      }
+
+      console.log('✅ Downloaded to:', result.uri);
+
+      // اشتراک‌گذاری / ذخیره
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(result.uri, {
+          mimeType: 'application/zip',
+          dialogTitle: 'ذخیره یا اشتراک‌گذاری افزونه',
+          UTI: 'public.zip-archive',
+        });
+      } else {
+        Alert.alert(
+          '✅ دانلود شد',
+          'فایل در پوشه Downloads ذخیره شد:\n' + result.uri
+        );
+      }
+    } catch (err) {
+      console.error('Download error:', err);
+      Alert.alert('❌ خطا در دانلود', err.message || 'نامشخص');
+    }
+  };
+
+  // =========================================================
+  // 🎯 مدیریت دانلود (فقط اندروید)
+  // =========================================================
+
+  const handleFileDownload = ({ nativeEvent }) => {
+    console.log('🎯 onFileDownload triggered:', nativeEvent.downloadUrl);
+    const downloadUrl = nativeEvent.downloadUrl;
+    if (downloadUrl) {
+      downloadFileFromWebView(downloadUrl);
+    }
+  };
+
+  // =========================================================
   // دانلود APK با مرورگر خارجی
   // =========================================================
 
   const downloadAPK = () => {
-  Linking.openURL('https://moshtriyar.ir/download/moshtriyar.apk').catch(() => {
-    Alert.alert('خطا', 'مرورگر باز نشد');
-  });
-};
+    Linking.openURL('https://moshtriyar.ir/download/moshtriyar.apk').catch(() => {
+      Alert.alert('خطا', 'مرورگر باز نشد');
+    });
+  };
 
   // =========================================================
-  // ذخیره فایل‌های PDF و خروجی مشتریان
+  // ذخیره فایل‌های PDF و خروجی مشتریان (از طریق message)
   // =========================================================
 
   const saveFileFromWebView = async (base64Data, filename, mimeType) => {
@@ -101,6 +190,9 @@ export default function App() {
         await saveFileFromWebView(data.data, data.filename, data.mimeType);
       } else if (data.type === 'downloadAPK') {
         downloadAPK();
+      } else if (data.type === 'downloadFile') {
+        // 🎯 دانلود فایل از طریق message
+        downloadFileFromWebView(data.url);
       } else if (data.type === 'openUrl') {
         const url = data.url;
         if (url) {
@@ -120,15 +212,23 @@ export default function App() {
     const url = request.url || '';
 
     // APK → مرورگر خارجی
-if (
-  url.startsWith(
-    'https://moshtriyar.ir/download/moshtriyar.apk'
-  ) ||
-  url.endsWith('.apk')
-) {
-  downloadAPK();
-  return false;
-}
+    if (
+      url.startsWith('https://moshtriyar.ir/download/moshtriyar.apk') ||
+      url.endsWith('.apk')
+    ) {
+      downloadAPK();
+      return false;
+    }
+
+    // 🎯 لینک‌های دانلود افزونه وردپرس → Native Download
+    if (
+      url.includes('/api/wordpress-plugin') ||
+      url.includes('/api/download-plugin') ||
+      url.endsWith('.zip')
+    ) {
+      downloadFileFromWebView(url);
+      return false;
+    }
 
     // لینک‌های داخلی سایت
     if (
@@ -223,6 +323,8 @@ if (
         cacheMode="LOAD_DEFAULT"
         onShouldStartLoadWithRequest={handleShouldStartLoad}
         onMessage={handleMessage}
+        // 🎯 این خط کلید حل مشکل دانلود است
+        onFileDownload={Platform.OS === 'android' ? handleFileDownload : undefined}
         userAgent={'Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36'}
         onLoadStart={() => setLoading(true)}
         onLoadEnd={() => setLoading(false)}
