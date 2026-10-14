@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import {
   StyleSheet,
@@ -54,22 +55,25 @@ export default function App() {
   };
 
   // =========================================================
-  // 🎯 ابزارها
+  // ابزارهای مدیریت فایل
   // =========================================================
 
   const getFileName = (url, fallback = 'moshtriyar-ai-agent.zip') => {
     try {
       const cleanUrl = String(url || '').split('?')[0];
       const part = cleanUrl.split('/').pop();
+
       if (part && part.includes('.')) {
         return decodeURIComponent(part);
       }
     } catch (_) {}
+
     return fallback;
   };
 
   const isPluginDownloadUrl = (url) => {
     const value = String(url || '').toLowerCase();
+
     return (
       value.includes('/api/wordpress-plugin') ||
       value.includes('/api/download-plugin') ||
@@ -80,13 +84,30 @@ export default function App() {
     );
   };
 
+  // تشخیص لینک نصب APK
+  const isApkUrl = (url) => {
+    try {
+      return /\.apk$/i.test(new URL(url).pathname);
+    } catch (_) {
+      return /\.apk(?:[?#]|$)/i.test(String(url || ''));
+    }
+  };
+
   // =========================================================
-  // 🎯 دانلود فایل‌ها از WebView (ZIP افزونه، PDF و ...)
+  // دانلود افزونه وردپرس
   // =========================================================
 
   const downloadFileFromWebView = async (url, requestedFileName) => {
     if (!url || !/^https?:\/\//i.test(url)) {
       Alert.alert('خطا', 'لینک دانلود معتبر نیست.');
+      return;
+    }
+
+    if (isApkUrl(url)) {
+      Alert.alert(
+        'به‌روزرسانی برنامه',
+        'نسخه بازار مشتری‌یار را از طریق کافه‌بازار به‌روزرسانی کنید.'
+      );
       return;
     }
 
@@ -97,7 +118,6 @@ export default function App() {
         fileName = 'moshtriyar-ai-agent.zip';
       }
 
-      // جلوگیری از کاراکترهای غیرمجاز در نام فایل
       fileName = fileName.replace(/[\\/:*?"<>|]/g, '_');
 
       const fileUri = `${FileSystem.cacheDirectory}${Date.now()}-${fileName}`;
@@ -107,7 +127,6 @@ export default function App() {
         'فایل افزونه در حال دانلود است. پس از اتمام، پنجره ذخیره‌سازی باز می‌شود.'
       );
 
-      // دانلود فایل
       const result = await FileSystem.downloadAsync(url, fileUri, {
         headers: {
           Accept: 'application/zip, application/octet-stream, */*',
@@ -124,7 +143,6 @@ export default function App() {
         throw new Error('فایل دانلودشده معتبر نیست.');
       }
 
-      // بررسی محتوای فایل: ZIP واقعی باید با "PK" شروع شود
       const content = await FileSystem.readAsStringAsync(result.uri, {
         encoding: FileSystem.EncodingType.Base64,
         length: 16,
@@ -143,7 +161,6 @@ export default function App() {
         );
       }
 
-      // اشتراک‌گذاری / ذخیره
       const sharingAvailable = await Sharing.isAvailableAsync();
 
       if (!sharingAvailable) {
@@ -161,6 +178,7 @@ export default function App() {
       });
     } catch (err) {
       console.error('Plugin download error:', err);
+
       Alert.alert(
         'خطا در دانلود',
         err?.message || 'دانلود افزونه انجام نشد. دوباره تلاش کنید.'
@@ -169,28 +187,27 @@ export default function App() {
   };
 
   // =========================================================
-  // 🎯 مدیریت دانلود Native (فقط اندروید)
+  // مدیریت دانلود Native
   // =========================================================
 
   const handleFileDownload = ({ nativeEvent }) => {
     const url = nativeEvent?.downloadUrl;
-    if (url) {
-      downloadFileFromWebView(url);
+
+    if (!url) return;
+
+    if (isApkUrl(url)) {
+      Alert.alert(
+        'به‌روزرسانی برنامه',
+        'برای دریافت نسخه جدید مشتری‌یار از کافه‌بازار استفاده کنید.'
+      );
+      return;
     }
+
+    downloadFileFromWebView(url);
   };
 
   // =========================================================
-  // دانلود APK اپ مشتری‌یار
-  // =========================================================
-
-  const downloadAPK = () => {
-    Linking.openURL('https://moshtriyar.ir/download/moshtriyar.apk').catch(() => {
-      Alert.alert('خطا', 'مرورگر برای دانلود فایل باز نشد.');
-    });
-  };
-
-  // =========================================================
-  // ذخیره فایل‌های PDF و ... از طریق پیام WebView
+  // ذخیره PDF و سایر فایل‌ها
   // =========================================================
 
   const saveFileFromWebView = async (base64Data, filename, mimeType) => {
@@ -219,7 +236,11 @@ export default function App() {
       }
     } catch (err) {
       console.error('Save file error:', err);
-      Alert.alert('خطا در ذخیره فایل', err?.message || 'خطای نامشخص');
+
+      Alert.alert(
+        'خطا در ذخیره فایل',
+        err?.message || 'خطای نامشخص'
+      );
     }
   };
 
@@ -233,21 +254,45 @@ export default function App() {
       const data = JSON.parse(rawData);
 
       if (data.type === 'saveFile') {
-        await saveFileFromWebView(data.data, data.filename, data.mimeType);
+        await saveFileFromWebView(
+          data.data,
+          data.filename,
+          data.mimeType
+        );
         return;
       }
 
+      // جلوگیری از دانلود مستقیم APK
       if (data.type === 'downloadAPK') {
-        downloadAPK();
+        Alert.alert(
+          'به‌روزرسانی مشتری‌یار',
+          'برای دریافت نسخه جدید برنامه، از کافه‌بازار استفاده کنید.'
+        );
         return;
       }
 
       if (data.type === 'downloadFile') {
+        if (isApkUrl(data.url)) {
+          Alert.alert(
+            'به‌روزرسانی مشتری‌یار',
+            'نسخه جدید برنامه را از کافه‌بازار دریافت کنید.'
+          );
+          return;
+        }
+
         await downloadFileFromWebView(data.url, data.filename);
         return;
       }
 
       if (data.type === 'openUrl' && data.url) {
+        if (isApkUrl(data.url)) {
+          Alert.alert(
+            'به‌روزرسانی مشتری‌یار',
+            'نسخه جدید برنامه را از کافه‌بازار دریافت کنید.'
+          );
+          return;
+        }
+
         await Linking.openURL(data.url);
       }
     } catch (err) {
@@ -264,16 +309,16 @@ export default function App() {
 
     if (!url) return false;
 
-    // APK → مرورگر خارجی
-    if (
-      url.startsWith('https://moshtriyar.ir/download/moshtriyar.apk') ||
-      url.toLowerCase().includes('.apk')
-    ) {
-      downloadAPK();
+    // جلوگیری از دانلود APK
+    if (isApkUrl(url)) {
+      Alert.alert(
+        'به‌روزرسانی مشتری‌یار',
+        'نسخه جدید برنامه را از طریق کافه‌بازار دریافت کنید.'
+      );
       return false;
     }
 
-    // ZIP افزونه وردپرس → دانلود Native
+    // دانلود افزونه وردپرس
     if (isPluginDownloadUrl(url)) {
       downloadFileFromWebView(url);
       return false;
@@ -290,7 +335,7 @@ export default function App() {
       return true;
     }
 
-    // لینک‌های اپ‌های خارجی
+    // لینک‌های اپلیکیشن‌های خارجی
     if (
       url.startsWith('whatsapp://') ||
       url.startsWith('https://wa.me/') ||
@@ -305,6 +350,7 @@ export default function App() {
       Linking.openURL(url).catch(() => {
         Alert.alert('خطا', 'امکان باز کردن این لینک وجود ندارد.');
       });
+
       return false;
     }
 
@@ -312,6 +358,7 @@ export default function App() {
     Linking.openURL(url).catch(() => {
       Alert.alert('خطا', 'امکان باز کردن لینک خارجی وجود ندارد.');
     });
+
     return false;
   };
 
@@ -323,13 +370,20 @@ export default function App() {
     return (
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="light-content" backgroundColor="#2563eb" />
+
         <View style={styles.errorBox}>
           <Text style={styles.errorIcon}>📡</Text>
+
           <Text style={styles.errorTitle}>اتصال برقرار نشد</Text>
+
           <Text style={styles.errorText}>
             لطفاً اتصال اینترنت خود را بررسی کنید و دوباره تلاش کنید.
           </Text>
-          <TouchableOpacity style={styles.retryBtn} onPress={handleRetry}>
+
+          <TouchableOpacity
+            style={styles.retryBtn}
+            onPress={handleRetry}
+          >
             <Text style={styles.retryText}>🔄 تلاش مجدد</Text>
           </TouchableOpacity>
         </View>
@@ -370,14 +424,19 @@ export default function App() {
         onLoadStart={() => setLoading(true)}
         onLoadEnd={() => setLoading(false)}
         onError={handleError}
-        onNavigationStateChange={(navState) => setCanGoBack(navState.canGoBack)}
-        onPermissionRequest={(event) => event.grant(event.resources)}
+        onNavigationStateChange={(navState) =>
+          setCanGoBack(navState.canGoBack)
+        }
+        onPermissionRequest={(event) =>
+          event.grant(event.resources)
+        }
         userAgent="Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
       />
 
       {loading && (
         <View style={styles.loadingOverlay}>
           <ActivityIndicator size="large" color="#2563eb" />
+
           <Text style={styles.loadingText}>در حال بارگذاری...</Text>
         </View>
       )}
@@ -394,9 +453,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#2563eb',
   },
+
   webview: {
     flex: 1,
   },
+
   loadingOverlay: {
     position: 'absolute',
     top: 0,
@@ -407,11 +468,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+
   loadingText: {
     marginTop: 15,
     color: '#64748b',
     fontSize: 14,
   },
+
   errorBox: {
     flex: 1,
     justifyContent: 'center',
@@ -419,16 +482,19 @@ const styles = StyleSheet.create({
     padding: 30,
     backgroundColor: '#ffffff',
   },
+
   errorIcon: {
     fontSize: 80,
     marginBottom: 20,
   },
+
   errorTitle: {
     fontSize: 22,
     fontWeight: 'bold',
     color: '#1e293b',
     marginBottom: 10,
   },
+
   errorText: {
     fontSize: 15,
     color: '#64748b',
@@ -436,12 +502,14 @@ const styles = StyleSheet.create({
     marginBottom: 30,
     lineHeight: 24,
   },
+
   retryBtn: {
     backgroundColor: '#2563eb',
     paddingHorizontal: 30,
     paddingVertical: 14,
     borderRadius: 12,
   },
+
   retryText: {
     color: '#ffffff',
     fontSize: 16,
