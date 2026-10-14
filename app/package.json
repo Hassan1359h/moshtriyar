@@ -12,6 +12,7 @@
     "expo-file-system": "~17.0.1",
     "expo-sharing": "~12.0.1",
     "expo-cafebazaar-billing": "1.0.4",
+    "expo-modules-core": "1.12.11",
     "react": "18.2.0",
     "react-native": "0.74.5",
     "react-native-webview": "13.10.5",
