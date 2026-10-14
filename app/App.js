@@ -17,6 +17,7 @@ import {
 import { WebView } from 'react-native-webview';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
+import CafeBazaarBilling from 'expo-cafebazaar-billing';
 
 const APP_URL = 'https://moshtriyar.ir';
 const ZIP_MIME = 'application/zip';
