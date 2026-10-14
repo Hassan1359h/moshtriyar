@@ -3,731 +3,463 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>پنل مدیریت | مشتری‌یار</title>
-
+<title>پنل مدیریت مرکزی | مشتری‌یار</title>
 <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
 <link rel="icon" href="icon-192.png">
-
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f1f5f9;color:#0f172a;line-height:1.7;padding-bottom:40px}
-.header{background:#1e293b;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;gap:8px}
-.header h1{font-size:16px;font-weight:800;margin-left:auto}
+:root{--primary:#2563eb;--primary-dark:#1d4ed8;--primary-light:#dbeafe;--success:#16a34a;--success-light:#dcfce7;--warning:#d97706;--warning-light:#fef3c7;--danger:#dc2626;--danger-light:#fee2e2;--accent:#7c3aed;--bg:#f1f5f9;--card:#fff;--text:#0f172a;--muted:#64748b;--border:#e2e8f0}
+body{font-family:Vazirmatn,Tahoma,sans-serif;background:var(--bg);color:var(--text);line-height:1.7;padding-bottom:40px}
+.header{background:#1e293b;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;gap:8px;position:sticky;top:0;z-index:100;flex-wrap:wrap}
+.header h1{font-size:16px;font-weight:800;display:flex;align-items:center;gap:8px}
+.header-user{display:flex;align-items:center;gap:8px;font-size:12px;color:#cbd5e1}
+.header-avatar{width:32px;height:32px;background:linear-gradient(135deg,#7c3aed,#ec4899);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:14px}
 .header a{color:#fff;text-decoration:none;background:#334155;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:700;white-space:nowrap}
-.header a.blue{background:#2563eb}
-.container{max-width:1000px;margin:0 auto;padding:20px}
+.header a.blue{background:var(--primary)}
+.container{max-width:1200px;margin:0 auto;padding:20px}
+.tabs-nav{display:flex;gap:6px;background:#fff;border-radius:14px;padding:8px;margin-bottom:18px;box-shadow:0 2px 10px rgba(0,0,0,.04);overflow-x:auto}
+.tab-btn{padding:10px 16px;border-radius:10px;border:none;background:transparent;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;color:var(--muted);white-space:nowrap;transition:.15s}
+.tab-btn:hover{background:#f1f5f9;color:var(--text)}
+.tab-btn.active{background:var(--primary);color:#fff}
+.tab-pane{display:none}
+.tab-pane.active{display:block;animation:fadeIn .25s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .card{background:#fff;border-radius:16px;padding:20px;margin-bottom:18px;box-shadow:0 2px 10px rgba(0,0,0,.04)}
-.card h2{font-size:16px;font-weight:800;margin-bottom:14px}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.stat{background:#f8fafc;border-radius:12px;padding:14px;text-align:center}
-.stat b{font-size:22px;display:block;font-weight:900}
-.stat.y b{color:#d97706}
-.stat.g b{color:#16a34a}
-.stat.r b{color:#dc2626}
-.stat span{font-size:11px;color:#64748b;font-weight:700}
-.settings{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-.field label{display:block;font-size:12px;font-weight:700;color:#475569;margin-bottom:4px}
-.field input{width:100%;padding:10px;border:2px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:14px;background:#f8fafc;direction:ltr;text-align:right}
-.btn-save{width:100%;padding:12px;background:#2563eb;color:#fff;border:none;border-radius:10px;font-family:inherit;font-weight:800;font-size:14px;cursor:pointer;margin-top:12px}
-.msg{text-align:center;margin-top:10px;font-size:13px;font-weight:700;min-height:18px}
-.tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
-.tab{padding:7px 14px;border-radius:10px;background:#fff;border:2px solid #e2e8f0;font-family:inherit;font-weight:700;font-size:12px;cursor:pointer;color:#475569}
-.tab.active{background:#2563eb;color:#fff;border-color:#2563eb}
+.card h2{font-size:15px;font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.stat{background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,.04);border-right:4px solid var(--primary)}
+.stat.g{border-right-color:var(--success)}
+.stat.y{border-right-color:var(--warning)}
+.stat.r{border-right-color:var(--danger)}
+.stat.p{border-right-color:var(--accent)}
+.stat b{font-size:24px;display:block;font-weight:900;font-variant-numeric:tabular-nums}
+.stat span{font-size:11px;color:var(--muted);font-weight:700;display:block;margin-top:4px}
+.stat .live{font-size:9px;color:var(--success);font-weight:700;background:var(--success-light);padding:2px 8px;border-radius:99px;display:inline-block;margin-top:6px}
+.tree-wrap{padding:20px 10px;overflow-x:auto}
+.tree-node{display:flex;flex-direction:column;align-items:center;gap:6px}
+.node{padding:10px 18px;border-radius:12px;font-weight:700;font-size:13px;text-align:center;min-width:200px;cursor:pointer;transition:.2s;border:2px solid transparent;position:relative}
+.node:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.1)}
+.node.lvl-1{background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;font-size:14px;font-weight:800;box-shadow:0 6px 16px rgba(37,99,235,.3)}
+.node.lvl-2{background:var(--warning-light);color:#92400e;border-color:#fcd34d}
+.node.lvl-3{background:var(--primary-light);color:#1e40af;border-color:#93c5fd;font-size:12px;min-width:170px}
+.node.lvl-4{background:var(--success-light);color:#166534;border-color:#86efac;font-size:11px;min-width:150px}
+.node-count{font-size:11px;opacity:.85;display:block;font-weight:500;margin-top:2px}
+.tree-arrow{color:#cbd5e1;font-size:14px;user-select:none;font-weight:700;text-align:center}
+.tree-branches{display:flex;gap:24px;justify-content:center;flex-wrap:wrap;position:relative;margin-top:4px}
+.tree-branch{display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:14px;position:relative}
 .pay{background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;border-right:5px solid #cbd5e1}
-.pay.pending{border-right-color:#f59e0b}
-.pay.approved{border-right-color:#16a34a}
-.pay.rejected{border-right-color:#dc2626}
-.pay-head{display:flex;justify-content:space-between;margin-bottom:10px;gap:8px}
+.pay.pending{border-right-color:var(--warning)}
+.pay.approved{border-right-color:var(--success)}
+.pay.rejected{border-right-color:var(--danger)}
+.pay-head{display:flex;justify-content:space-between;margin-bottom:10px;gap:8px;flex-wrap:wrap}
 .pay-user{font-weight:800;font-size:14px}
-.pay-email{font-size:11px;color:#64748b;direction:ltr;text-align:right}
+.pay-email{font-size:11px;color:var(--muted);direction:ltr;text-align:right}
 .badge{padding:4px 10px;border-radius:20px;font-size:10px;font-weight:800;white-space:nowrap;height:fit-content}
-.badge.pending{background:#fef3c7;color:#92400e}
-.badge.approved{background:#dcfce7;color:#166534}
-.badge.rejected{background:#fee2e2;color:#991b1b}
+.badge.pending{background:var(--warning-light);color:#92400e}
+.badge.approved{background:var(--success-light);color:#166534}
+.badge.rejected{background:var(--danger-light);color:#991b1b}
+.badge.pro{background:#fef3c7;color:#92400e}
+.badge.business{background:#dbeafe;color:#1e40af}
+.badge.trial{background:#e0e7ff;color:#4338ca}
+.badge.special{background:#ede9fe;color:#5b21b6}
 .pay-info{background:#f8fafc;border-radius:10px;padding:10px;margin-bottom:10px;font-size:12px}
 .pay-info div{display:flex;justify-content:space-between;padding:3px 0;gap:10px}
-.pay-info span:first-child{color:#64748b;font-weight:600}
-.pay-info span:last-child{color:#1e293b;font-weight:700;text-align:left}
+.pay-info span:first-child{color:var(--muted);font-weight:600}
+.pay-info span:last-child{color:var(--text);font-weight:700;text-align:left}
 .pay-info .code{font-family:monospace;direction:ltr}
 .actions{display:flex;gap:8px}
-.btn{flex:1;padding:10px;border-radius:10px;border:none;font-family:inherit;font-weight:800;font-size:12px;cursor:pointer}
-.btn-ok{background:#16a34a;color:#fff}
-.btn-no{background:#fee2e2;color:#dc2626}
-.btn:disabled{opacity:.5}
-.empty{text-align:center;padding:40px;color:#94a3b8;background:#fff;border-radius:14px}
-.loading{text-align:center;padding:40px;color:#64748b}
-.hidden{display:none!important}
-
+.btn{flex:1;padding:10px;border-radius:10px;border:none;font-family:inherit;font-weight:800;font-size:12px;cursor:pointer;transition:.15s}
+.btn:hover:not(:disabled){transform:translateY(-1px)}
+.btn-ok{background:var(--success);color:#fff}
+.btn-no{background:var(--danger-light);color:var(--danger)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.tab{padding:7px 14px;border-radius:10px;background:#fff;border:2px solid var(--border);font-family:inherit;font-weight:700;font-size:12px;cursor:pointer;color:var(--muted)}
+.tab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:10px 12px;text-align:right;border-bottom:1px solid var(--border);white-space:nowrap}
+th{font-weight:700;font-size:11px;color:var(--muted);text-transform:uppercase;background:#f8fafc}
+tbody tr:hover{background:#f8fafc}
+.search{width:100%;padding:13px 14px;border:2px solid var(--border);border-radius:12px;font-family:inherit;font-size:14px;outline:none;background:#f8fafc;margin-bottom:14px}
+.search:focus{border-color:var(--primary);background:#fff}
+.settings{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.field label{display:block;font-size:12px;font-weight:700;color:#475569;margin-bottom:4px}
+.field input{width:100%;padding:10px;border:2px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;background:#f8fafc;outline:none}
+.field input:focus{border-color:var(--primary);background:#fff}
+.btn-save{width:100%;padding:12px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-family:inherit;font-weight:800;font-size:14px;cursor:pointer;margin-top:12px}
+.msg{text-align:center;margin-top:10px;font-size:13px;font-weight:700;min-height:18px}
 .key-item{background:#f8fafc;border-radius:12px;padding:14px;margin-bottom:10px}
-.key-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.key-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px}
 .key-name{font-weight:800;font-size:14px}
-.key-val{font-size:11px;color:#64748b;direction:ltr;text-align:left;font-family:monospace}
+.key-val{font-size:11px;color:var(--muted);direction:ltr;text-align:left;font-family:monospace}
 .key-badge{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:800}
-.key-badge.active{background:#dcfce7;color:#166534}
-.key-badge.inactive{background:#fee2e2;color:#991b1b}
+.key-badge.active{background:var(--success-light);color:#166534}
+.key-badge.inactive{background:var(--danger-light);color:#991b1b}
 .key-progress{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.progress-track{flex:1;height:8px;background:#e2e8f0;border-radius:5px;overflow:hidden}
+.progress-track{flex:1;height:8px;background:var(--border);border-radius:5px;overflow:hidden}
 .progress-fill{height:100%;transition:width .3s}
-.key-stats{display:flex;justify-content:space-between;font-size:12px;color:#64748b;align-items:center}
+.key-stats{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);align-items:center;gap:8px;flex-wrap:wrap}
 .key-btn{border:none;padding:6px 12px;border-radius:8px;font-family:inherit;font-weight:700;font-size:11px;cursor:pointer}
-.key-btn.disable{background:#fee2e2;color:#991b1b}
-.key-btn.enable{background:#dcfce7;color:#166534}
-
+.key-btn.disable{background:var(--danger-light);color:#991b1b}
+.key-btn.enable{background:var(--success-light);color:#166534}
 .site-item{background:#f8fafc;border-radius:12px;padding:14px;margin-bottom:10px}
-.site-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.site-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px}
 .site-name{font-weight:800;font-size:14px}
 .site-plan{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:800;background:#eef2ff;color:#4f46e5}
 .site-plan.pro{background:#fef3c7;color:#92400e}
 .site-plan.business{background:#dbeafe;color:#1e40af}
-.site-domain{font-size:12px;color:#64748b;margin-bottom:8px}
-.site-key{font-size:11px;color:#94a3b8;direction:ltr;text-align:left;font-family:monospace}
-
-@media(max-width:600px){
-.stats,.settings{grid-template-columns:1fr}
-.pay-head{flex-direction:column}
-.header{flex-wrap:wrap}
-.header h1{width:100%}
-}
+.site-domain{font-size:12px;color:var(--muted);margin-bottom:8px}
+.sc-item{background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;border-right:5px solid var(--primary);box-shadow:0 2px 8px rgba(0,0,0,.04);cursor:pointer;transition:.15s}
+.sc-item:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.08)}
+.sc-item.expired{border-right-color:var(--danger)}
+.sc-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.sc-name{font-size:15px;font-weight:900}
+.sc-email{font-size:11px;color:var(--muted);direction:ltr;text-align:right;margin-top:2px}
+.sc-info{background:#f8fafc;border-radius:10px;padding:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sc-info div{display:flex;justify-content:space-between;gap:8px;font-size:12px;padding:2px 0}
+.sc-info span:first-child{color:var(--muted);font-weight:600}
+.sc-info span:last-child{font-weight:700;text-align:left}
+.empty{text-align:center;padding:40px 20px;color:#94a3b8;background:#fff;border-radius:14px}
+.loading{text-align:center;padding:40px;color:var(--muted)}
+.error{color:var(--danger);text-align:center;padding:30px;background:#fff;border-radius:14px}
+.modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:.2s}
+.modal-overlay.open{opacity:1;pointer-events:auto}
+.modal{background:#fff;border-radius:16px;max-width:700px;width:100%;max-height:90vh;overflow-y:auto;padding:24px;transform:scale(.95);transition:.2s}
+.modal-overlay.open .modal{transform:scale(1)}
+.modal h3{font-size:18px;font-weight:800;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.modal .close{background:#f1f5f9;border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;font-weight:800;color:var(--muted)}
+.modal .close:hover{background:var(--danger-light);color:var(--danger)}
+.modal-section{margin-top:18px}
+.modal-section h4{font-size:13px;font-weight:800;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
+.modal-item{background:#f8fafc;border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:13px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.modal-item b{font-weight:800}
+@media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}.settings{grid-template-columns:1fr}.sc-info{grid-template-columns:1fr}}
+@media(max-width:600px){.stats{grid-template-columns:1fr}.header{flex-wrap:wrap}.container{padding:14px}.tree-branches{gap:14px}}
 </style>
 </head>
-
 <body>
-
 <header class="header">
-    <h1>⚙️ پنل مدیریت</h1>
-
-    <a class="blue" href="special-customers.html">
-        👑 مشتریان ویژه
-    </a>
-
-    <a href="dashboard.html">
-        ← داشبورد
-    </a>
+  <h1>⚙️ مدیریت مرکزی مشتری‌یار</h1>
+  <div class="header-user">
+    <span id="adminName">مدیر کل</span>
+    <div class="header-avatar" id="adminAvatar">م</div>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <a class="blue" href="special-customers.html">👑 مشتریان ویژه</a>
+    <a href="dashboard.html">← داشبورد</a>
+  </div>
 </header>
-
-<div class="container" id="app">
-    <div class="loading">
-        در حال بارگذاری...
+<div class="container">
+  <nav class="tabs-nav" id="tabsNav">
+    <button class="tab-btn active" data-tab="dashboard">📊 داشبورد</button>
+    <button class="tab-btn" data-tab="tree">🌳 ساختار سلسله‌مراتبی</button>
+    <button class="tab-btn" data-tab="special">👑 مشتریان ویژه</button>
+    <button class="tab-btn" data-tab="payments">💳 پرداخت‌ها</button>
+    <button class="tab-btn" data-tab="sites">🔌 سایت‌ها</button>
+    <button class="tab-btn" data-tab="gemini">🤖 کلید Gemini</button>
+    <button class="tab-btn" data-tab="settings">⚙️ تنظیمات</button>
+  </nav>
+  <section class="tab-pane active" id="pane-dashboard">
+    <div class="stats">
+      <div class="stat y"><b id="stSpecial">—</b><span>مشتریان ویژه</span><span class="live">● آمار زنده</span></div>
+      <div class="stat g"><b id="stActiveSubs">—</b><span>اشتراک فعال</span><span class="live">● آمار زنده</span></div>
+      <div class="stat p"><b id="stRevenue">—</b><span>درآمد کل (تومان)</span><span class="live">● آمار زنده</span></div>
+      <div class="stat r"><b id="stPending">—</b><span>در انتظار پرداخت</span><span class="live">● آمار زنده</span></div>
     </div>
+    <div class="card">
+      <h2>🕐 آخرین پرداخت‌ها</h2>
+      <div class="table-wrap"><table>
+        <thead><tr><th>کاربر</th><th>پلن</th><th>مبلغ</th><th>وضعیت</th><th>تاریخ</th></tr></thead>
+        <tbody id="recentPayments"><tr><td colspan="5" class="loading">در حال بارگذاری...</td></tr></tbody>
+      </table></div>
+    </div>
+    <div class="card">
+      <h2>🕐 آخرین کاربران</h2>
+      <div class="table-wrap"><table>
+        <thead><tr><th>نام</th><th>ایمیل</th><th>نوع کسب‌وکار</th><th>پلن</th><th>ثبت‌نام</th></tr></thead>
+        <tbody id="recentUsers"><tr><td colspan="5" class="loading">در حال بارگذاری...</td></tr></tbody>
+      </table></div>
+    </div>
+  </section>
+  <section class="tab-pane" id="pane-tree">
+    <div class="card">
+      <h2>🌳 ساختار سلسله‌مراتبی مشتری‌یار</h2>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">روی هر گره کلیک کنید تا جزئیات آن را ببینید</p>
+      <div class="tree-wrap" id="treeWrap"><div class="loading">در حال ساخت درخت...</div></div>
+    </div>
+  </section>
+  <section class="tab-pane" id="pane-special">
+    <div class="card">
+      <h2>👑 مشتریان ویژه (مدیران کسب‌وکارها)</h2>
+      <input class="search" id="scSearch" type="search" placeholder="🔍 جستجو بر اساس نام، ایمیل یا شماره...">
+      <div id="scList"><div class="loading">در حال بارگذاری...</div></div>
+    </div>
+  </section>
+  <section class="tab-pane" id="pane-payments">
+    <div class="card">
+      <h2>📊 آمار پرداخت‌ها</h2>
+      <div class="stats" style="grid-template-columns:repeat(3,1fr);">
+        <div class="stat y"><b id="payPending">0</b><span>در انتظار</span></div>
+        <div class="stat g"><b id="payApproved">0</b><span>تایید شده</span></div>
+        <div class="stat r"><b id="payRejected">0</b><span>رد شده</span></div>
+      </div>
+    </div>
+    <div class="tabs" id="payTabs">
+      <button class="tab active" data-filter="pending">⏳ در انتظار</button>
+      <button class="tab" data-filter="approved">✅ تایید شده</button>
+      <button class="tab" data-filter="rejected">❌ رد شده</button>
+      <button class="tab" data-filter="all">📋 همه</button>
+    </div>
+    <div id="payList"><div class="loading">در حال بارگذاری...</div></div>
+  </section>
+  <section class="tab-pane" id="pane-sites">
+    <div class="card">
+      <h2>🌐 سایت‌های متصل</h2>
+      <div id="sitesList"><div class="loading">در حال بارگذاری...</div></div>
+    </div>
+  </section>
+  <section class="tab-pane" id="pane-gemini">
+    <div class="card">
+      <h2>🔑 کلیدهای Gemini</h2>
+      <div id="keysList"><div class="loading">در حال بارگذاری...</div></div>
+    </div>
+  </section>
+  <section class="tab-pane" id="pane-settings">
+    <div class="card">
+      <h2>💰 قیمت و مدت پلن‌ها</h2>
+      <div class="settings">
+        <div class="field"><label>قیمت پلن حرفه‌ای (تومان)</label><input type="number" id="proPrice"></div>
+        <div class="field"><label>قیمت پلن کسب‌وکار (تومان)</label><input type="number" id="bizPrice"></div>
+        <div class="field"><label>مدت پلن تست (روز)</label><input type="number" id="trialDays"></div>
+        <div class="field"><label>مدت پلن حرفه‌ای (روز)</label><input type="number" id="proDays"></div>
+        <div class="field"><label>مدت پلن کسب‌وکار (روز)</label><input type="number" id="bizDays"></div>
+      </div>
+      <button class="btn-save" id="saveBtn">💾 ذخیره تنظیمات</button>
+      <p class="msg" id="saveMsg"></p>
+    </div>
+  </section>
 </div>
-
+<div class="modal-overlay" id="modalOverlay"><div class="modal" id="modalContent"></div></div>
 <script type="module">
 import { supabase } from './js/supabase.js';
-
-const app = document.getElementById('app');
-
-let all = [];
-let filter = 'pending';
-let me = null;
-
-const esc = (value) => String(value ?? '')
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;')
-    .replace(/'/g,'&#039;');
-
-
+let me = null, allProfiles = [], allSpecialCustomers = [], allPayments = [], allKeys = [], allSites = [], allCustomers = [], settings = {}, paymentFilter = 'pending';
+const esc = (v) => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+const faNum = (n) => Number(n ?? 0).toLocaleString('fa-IR');
+const faDate = (d) => { if (!d) return '—'; try { return new Date(d).toLocaleDateString('fa-IR'); } catch { return '—'; } };
+const faDateTime = (d) => { if (!d) return '—'; try { return new Date(d).toLocaleString('fa-IR'); } catch { return '—'; } };
+const daysLeft = (end) => { if (!end) return 0; return Math.max(Math.ceil((new Date(end).getTime() - Date.now()) / 86400000), 0); };
+const isActive = (end) => end ? new Date(end).getTime() > Date.now() : false;
+const planLabel = (p) => ({ trial:'🆓 تست', pro:'💎 حرفه‌ای', business:'🏢 کسب‌وکار', special:'👑 ویژه' }[p] || '—');
+const bizLabel = (b) => ({ shop:'🛍️ فروشگاهی', service:'💼 خدماتی', restaurant:'🍽️ رستوران', cafe:'☕ کافه', educational:'📚 آموزشی', medical:'🩺 پزشکی', technical:'💻 فنی', other:'📦 سایر' }[b] || b || '—');
 async function init() {
-    try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) throw error;
-        if (!session) { window.location.replace('login.html'); return; }
-
-        me = session.user;
-        const role = me.user_metadata?.role;
-
-        console.log('Admin user:', me.email);
-        console.log('User role:', role);
-
-        if (role !== 'admin') {
-            app.innerHTML = `
-                <div class="empty">
-                    ⛔ شما ادمین نیستید.
-                    <br>
-                    <small style="color:#94a3b8">
-                        دسترسی فقط برای مدیر سیستم مجاز است.
-                    </small>
-                </div>
-            `;
-            return;
-        }
-
-        await Promise.all([
-            loadSettings(),
-            loadPayments(),
-            loadGeminiKeys(),
-            loadSites()
-        ]);
-
-        renderUI();
-
-    } catch (err) {
-        console.error('Admin init error:', err);
-        app.innerHTML = `
-            <div class="empty">
-                ⚠️ خطا در بارگذاری پنل
-                <br>
-                <small>${esc(err.message)}</small>
-            </div>
-        `;
-    }
+  const { data: { session }, error } = await supabase.auth.getSession();
+  if (error) return showError(error.message);
+  if (!session) { window.location.replace('login.html'); return; }
+  me = session.user;
+  const metaRole = me.user_metadata?.role;
+  const emailLower = (me.email || '').toLowerCase();
+  const isAdmin = metaRole === 'admin' || emailLower === 'hahass12na@gmail.com';
+  if (!isAdmin) { document.querySelector('.container').innerHTML = '<div class="error" style="margin-top:40px;">⛔ شما ادمین نیستید.</div>'; return; }
+  document.getElementById('adminName').textContent = me.user_metadata?.full_name || me.email || 'مدیر کل';
+  document.getElementById('adminAvatar').textContent = (me.user_metadata?.full_name || me.email || 'م').charAt(0).toUpperCase();
+  try {
+    await Promise.all([loadProfiles(), loadPayments(), loadGeminiKeys(), loadSites(), loadCustomers(), loadSettings()]);
+    renderDashboard(); renderTree(); renderSpecialCustomers(); renderPayments(); renderSites(); renderKeys(); renderSettings();
+  } catch (e) { console.error(e); showError(e.message); }
 }
-
-
-async function loadSettings() {
-    const { data, error } = await supabase
-        .from('settings')
-        .select('*');
-
-    if (error) throw error;
-
-    const settings = {};
-    (data || []).forEach(item => { settings[item.key] = item.value; });
-    window._settings = settings;
+async function loadProfiles() {
+  const { data, error } = await supabase.from('profiles').select('id,full_name,email,phone,role,plan,subscription_end_date,business_type,created_at,updated_at').order('created_at', { ascending: false });
+  if (error) throw error;
+  const adminEmail = (me?.email || '').toLowerCase();
+  allProfiles = (data || []).filter(p => p.role !== 'admin' && String(p.email || '').toLowerCase() !== adminEmail);
+  allSpecialCustomers = allProfiles.filter(p => ['pro','business','special'].includes(String(p.plan || '').toLowerCase()));
 }
-
-
 async function loadPayments() {
-    const { data, error } = await supabase
-        .from('payments')
-        .select('*')
-        .order('created_at', { ascending: false });
-
+  const { data, error } = await supabase.from('payments').select('*').order('created_at', { ascending: false });
+  if (error) throw error;
+  const map = {}; allProfiles.forEach(p => map[p.id] = p);
+  allPayments = (data || []).map(x => ({ ...x, prof: map[x.user_id] || null }));
+}
+async function loadGeminiKeys() { const { data, error } = await supabase.from('gemini_keys').select('*').order('id', { ascending: true }); if (error) return; allKeys = data || []; }
+async function loadSites() { const { data, error } = await supabase.from('websites').select('id,user_id,domain,name,active,business_type,brand_name,brand_logo_url,created_at').order('created_at', { ascending: false }); if (error) return; const map = {}; allProfiles.forEach(p => map[p.id] = p); allSites = (data || []).map(s => ({ ...s, prof: map[s.user_id] || null })); }
+async function loadCustomers() { const { data, error } = await supabase.from('customers').select('id,user_id,name,phone,email,status,total_purchase,total_paid,created_at').order('created_at', { ascending: false }).limit(1000); if (error) return; allCustomers = data || []; }
+async function loadSettings() { const { data, error } = await supabase.from('settings').select('*'); if (error) return; settings = {}; (data || []).forEach(s => settings[s.key] = s.value); }
+function renderDashboard() {
+  const now = Date.now();
+  const activeSubs = allProfiles.filter(p => p.subscription_end_date && new Date(p.subscription_end_date).getTime() > now).length;
+  const totalRevenue = allPayments.filter(p => p.status === 'approved').reduce((s, p) => s + Number(p.amount || 0), 0);
+  const pending = allPayments.filter(p => p.status === 'pending').length;
+  document.getElementById('stSpecial').textContent = faNum(allSpecialCustomers.length);
+  document.getElementById('stActiveSubs').textContent = faNum(activeSubs);
+  document.getElementById('stRevenue').textContent = faNum(totalRevenue);
+  document.getElementById('stPending').textContent = faNum(pending);
+  const recent = allPayments.slice(0, 5);
+  const tb1 = document.getElementById('recentPayments');
+  tb1.innerHTML = recent.length ? recent.map(p => { const b = p.status === 'pending' ? '⏳ در انتظار' : p.status === 'approved' ? '✅ تایید' : '❌ رد'; return '<tr><td>' + esc(p.prof?.full_name || p.prof?.email || '—') + '</td><td>' + esc(p.plan_name || '—') + '</td><td style="font-weight:700;">' + faNum(p.amount) + '</td><td><span class="badge ' + esc(p.status) + '">' + b + '</span></td><td style="font-size:11px;color:var(--muted);">' + faDate(p.created_at) + '</td></tr>'; }).join('') : '<tr><td colspan="5" class="empty">📭 پرداختی ثبت نشده</td></tr>';
+  const recentU = allProfiles.slice(0, 5);
+  const tb2 = document.getElementById('recentUsers');
+  tb2.innerHTML = recentU.length ? recentU.map(u => '<tr><td>' + esc(u.full_name || '—') + '</td><td style="direction:ltr;font-size:11px;">' + esc(u.email || '—') + '</td><td>' + esc(bizLabel(u.business_type)) + '</td><td><span class="badge ' + esc(u.plan || 'trial') + '">' + esc(planLabel(u.plan)) + '</span></td><td style="font-size:11px;color:var(--muted);">' + faDate(u.created_at) + '</td></tr>').join('') : '<tr><td colspan="5" class="empty">📭 کاربری ثبت نشده</td></tr>';
+}
+function renderTree() {
+  const wrap = document.getElementById('treeWrap');
+  if (!allSpecialCustomers.length) { wrap.innerHTML = '<div class="empty">📭 هنوز مشتری ویژه‌ای ثبت نشده است</div>'; return; }
+  const branchesHTML = allSpecialCustomers.slice(0, 12).map(sc => {
+    const sites = allSites.filter(s => s.user_id === sc.id);
+    const custs = allCustomers.filter(c => c.user_id === sc.id);
+    const sitesHTML = sites.length ? sites.map(s => '<div class="node lvl-4" data-site="' + esc(s.id) + '">🏢 ' + esc(s.brand_name || s.name || s.domain || 'کسب‌وکار') + '<span class="node-count">' + esc(s.domain || '') + '</span></div>').join('<div class="tree-arrow">│</div>') : '<div class="node lvl-4" style="opacity:.55;cursor:default;">🏢 بدون کسب‌وکار</div>';
+    return '<div class="tree-branch"><div class="node lvl-3" data-cust="' + esc(sc.id) + '">⭐ ' + esc(sc.full_name || sc.email || 'مشتری ویژه') + '<span class="node-count">' + sites.length + ' کسب‌وکار • ' + custs.length + ' مشتری</span></div><div class="tree-arrow">▼</div>' + sitesHTML + '</div>';
+  }).join('');
+  wrap.innerHTML = '<div class="tree-node"><div class="node lvl-1" style="cursor:default;">👑 مدیر کل مشتری‌یار<span class="node-count">' + esc(me.email || '') + '</span></div><div class="tree-arrow">▼</div><div class="node lvl-2" style="cursor:default;">⭐ مشتریان ویژه (' + faNum(allSpecialCustomers.length) + ')<span class="node-count">مدیران کسب‌وکارها</span></div><div class="tree-arrow">▼</div><div class="tree-branches">' + branchesHTML + '</div></div>';
+  wrap.querySelectorAll('[data-cust]').forEach(el => { el.onclick = () => openCustomerModal(el.dataset.cust); });
+  wrap.querySelectorAll('[data-site]').forEach(el => { el.onclick = () => openSiteModal(el.dataset.site); });
+}
+function renderSpecialCustomers() {
+  const list = document.getElementById('scList');
+  const q = (document.getElementById('scSearch')?.value || '').trim().toLowerCase();
+  if (!allSpecialCustomers.length) { list.innerHTML = '<div class="empty">📭 هنوز مشتری ویژه‌ای ثبت نشده است</div>'; return; }
+  const filtered = allSpecialCustomers.filter(sc => { if (!q) return true; return [sc.full_name, sc.email, sc.phone].filter(Boolean).join(' ').toLowerCase().includes(q); });
+  if (!filtered.length) { list.innerHTML = '<div class="empty">📭 موردی یافت نشد</div>'; return; }
+  list.innerHTML = filtered.map(sc => {
+    const active = isActive(sc.subscription_end_date);
+    const sites = allSites.filter(s => s.user_id === sc.id);
+    const custs = allCustomers.filter(c => c.user_id === sc.id);
+    const days = daysLeft(sc.subscription_end_date);
+    return '<div class="sc-item ' + (active ? '' : 'expired') + '" data-sc="' + esc(sc.id) + '"><div class="sc-head"><div><div class="sc-name">👑 ' + esc(sc.full_name || 'بدون نام') + '</div><div class="sc-email">' + esc(sc.email || '—') + '</div></div><span class="badge ' + (active ? 'approved' : 'rejected') + '">' + (active ? '🟢 فعال (' + days + ' روز)' : '🔴 منقضی') + '</span></div><div class="sc-info"><div><span>🏢 کسب‌وکارها</span><span>' + faNum(sites.length) + '</span></div><div><span>👥 مشتریان</span><span>' + faNum(custs.length) + '</span></div><div><span>📦 نوع</span><span>' + esc(bizLabel(sc.business_type)) + '</span></div><div><span>💎 پلن</span><span>' + esc(planLabel(sc.plan)) + '</span></div></div></div>';
+  }).join('');
+  list.querySelectorAll('[data-sc]').forEach(el => { el.onclick = () => openCustomerModal(el.dataset.sc); });
+}
+function openCustomerModal(userId) {
+  const sc = allProfiles.find(p => p.id === userId); if (!sc) return;
+  const sites = allSites.filter(s => s.user_id === userId);
+  const custs = allCustomers.filter(c => c.user_id === userId);
+  const pays = allPayments.filter(p => p.user_id === userId);
+  const totalPaid = pays.filter(p => p.status === 'approved').reduce((s, p) => s + Number(p.amount || 0), 0);
+  document.getElementById('modalContent').innerHTML = '<h3><span>👑 ' + esc(sc.full_name || 'مشتری ویژه') + '</span><button class="close" onclick="closeModal()">✕</button></h3><div style="font-size:12px;color:var(--muted);direction:ltr;text-align:right;">' + esc(sc.email || '') + '</div><div class="modal-section"><h4>📋 اطلاعات پایه</h4><div class="modal-item"><span>📱 موبایل</span><b style="direction:ltr;">' + esc(sc.phone || '—') + '</b></div><div class="modal-item"><span>💎 پلن</span><b>' + esc(planLabel(sc.plan)) + '</b></div><div class="modal-item"><span>📦 نوع کسب‌وکار</span><b>' + esc(bizLabel(sc.business_type)) + '</b></div><div class="modal-item"><span>📅 پایان اشتراک</span><b>' + faDate(sc.subscription_end_date) + '</b></div><div class="modal-item"><span>💰 مجموع پرداخت</span><b style="color:var(--success);">' + faNum(totalPaid) + ' تومان</b></div></div><div class="modal-section"><h4>🏢 کسب‌وکارها (' + faNum(sites.length) + ')</h4>' + (sites.length ? sites.map(s => '<div class="modal-item"><span>' + esc(s.brand_name || s.name || s.domain || '—') + '</span><b style="direction:ltr;font-size:11px;">' + esc(s.domain || '') + '</b></div>').join('') : '<div class="modal-item" style="color:var(--muted);">بدون کسب‌وکار</div>') + '</div><div class="modal-section"><h4>👥 مشتریان مخصوص (' + faNum(custs.length) + ')</h4>' + (custs.length ? custs.slice(0, 10).map(c => '<div class="modal-item"><span>' + esc(c.name || '—') + '</span><b style="direction:ltr;font-size:11px;">' + esc(c.phone || '') + '</b></div>').join('') : '<div class="modal-item" style="color:var(--muted);">بدون مشتری</div>') + (custs.length > 10 ? '<div style="font-size:11px;color:var(--muted);text-align:center;">و ' + faNum(custs.length - 10) + ' مشتری دیگر...</div>' : '') + '</div><div class="modal-section"><h4>💳 پرداخت‌ها (' + faNum(pays.length) + ')</h4>' + (pays.length ? pays.slice(0, 5).map(p => '<div class="modal-item"><span>' + faDate(p.created_at) + '</span><b>' + faNum(p.amount) + ' • ' + (p.status === 'approved' ? 'تایید' : p.status === 'pending' ? 'در انتظار' : 'رد') + '</b></div>').join('') : '<div class="modal-item" style="color:var(--muted);">بدون پرداخت</div>') + '</div>';
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function openSiteModal(siteId) {
+  const site = allSites.find(s => s.id === siteId); if (!site) return;
+  const custs = allCustomers.filter(c => c.user_id === site.user_id);
+  document.getElementById('modalContent').innerHTML = '<h3><span>🏢 ' + esc(site.brand_name || site.name || site.domain || 'کسب‌وکار') + '</span><button class="close" onclick="closeModal()">✕</button></h3><div style="font-size:12px;color:var(--muted);direction:ltr;text-align:right;">' + esc(site.domain || '') + '</div><div class="modal-section"><h4>📋 اطلاعات</h4><div class="modal-item"><span>👤 مالک</span><b>' + esc(site.prof?.full_name || site.prof?.email || '—') + '</b></div><div class="modal-item"><span>📦 نوع</span><b>' + esc(bizLabel(site.business_type)) + '</b></div><div class="modal-item"><span>🔌 وضعیت</span><b>' + (site.active ? '✅ فعال' : '❌ غیرفعال') + '</b></div></div><div class="modal-section"><h4>👥 مشتریان این مالک (' + faNum(custs.length) + ')</h4>' + (custs.slice(0, 8).map(c => '<div class="modal-item"><span>' + esc(c.name || '—') + '</span><b style="direction:ltr;font-size:11px;">' + esc(c.phone || '') + '</b></div>').join('') || '<div class="modal-item" style="color:var(--muted);">بدون مشتری</div>') + '</div>';
+  document.getElementById('modalOverlay').classList.add('open');
+}
+window.closeModal = function () { document.getElementById('modalOverlay').classList.remove('open'); };
+document.getElementById('modalOverlay').addEventListener('click', (e) => { if (e.target.id === 'modalOverlay') closeModal(); });
+function renderPayments() {
+  document.getElementById('payPending').textContent = faNum(allPayments.filter(p => p.status === 'pending').length);
+  document.getElementById('payApproved').textContent = faNum(allPayments.filter(p => p.status === 'approved').length);
+  document.getElementById('payRejected').textContent = faNum(allPayments.filter(p => p.status === 'rejected').length);
+  const list = document.getElementById('payList');
+  const items = paymentFilter === 'all' ? allPayments : allPayments.filter(p => p.status === paymentFilter);
+  if (!items.length) { list.innerHTML = '<div class="empty">📭 پرداختی در این وضعیت نیست</div>'; return; }
+  list.innerHTML = items.map(p => {
+    const b = p.status === 'pending' ? '⏳ در انتظار' : p.status === 'approved' ? '✅ تایید' : '❌ رد';
+    const actions = p.status === 'pending' ? '<div class="actions"><button class="btn btn-ok" data-approve="' + esc(p.id) + '">✅ تایید و فعال‌سازی</button><button class="btn btn-no" data-reject="' + esc(p.id) + '">❌ رد</button></div>' : '';
+    return '<div class="pay ' + esc(p.status) + '"><div class="pay-head"><div><div class="pay-user">' + esc(p.prof?.full_name || 'بدون نام') + '</div><div class="pay-email">' + esc(p.prof?.email || '—') + '</div></div><span class="badge ' + esc(p.status) + '">' + b + '</span></div><div class="pay-info"><div><span>پلن</span><span>' + esc(p.plan_name || '—') + '</span></div><div><span>مبلغ</span><span>' + faNum(p.amount) + ' تومان</span></div><div><span>مدت</span><span>' + esc(p.days || 30) + ' روز</span></div><div><span>کد پیگیری</span><span class="code">' + esc(p.tracking_code || '—') + '</span></div><div><span>تاریخ</span><span style="font-weight:400;font-size:11px;">' + faDateTime(p.created_at) + '</span></div></div>' + actions + '</div>';
+  }).join('');
+  list.querySelectorAll('[data-approve]').forEach(b => b.onclick = () => approvePayment(b.dataset.approve, b));
+  list.querySelectorAll('[data-reject]').forEach(b => b.onclick = () => rejectPayment(b.dataset.reject, b));
+}
+async function approvePayment(id, btn) {
+  if (!confirm('این پرداخت تایید و اشتراک فعال شود؟')) return;
+  btn.disabled = true; btn.textContent = '⏳ در حال تایید...';
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('جلسه منقضی شده');
+    const res = await fetch('/api/approve-payment', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token }, body: JSON.stringify({ paymentId: id }) });
+    const result = await res.json().catch(() => ({}));
+    if (!res.ok || !result.success) throw new Error(result.error || 'خطا');
+    alert('✅ پرداخت تایید شد');
+    await loadPayments(); await loadProfiles();
+    renderDashboard(); renderPayments(); renderSpecialCustomers();
+  } catch (e) { alert('❌ ' + e.message); btn.disabled = false; btn.textContent = '✅ تایید و فعال‌سازی'; }
+}
+async function rejectPayment(id, btn) {
+  if (!confirm('این پرداخت رد شود؟')) return;
+  btn.disabled = true; btn.textContent = '⏳ در حال رد...';
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('جلسه منقضی شده');
+    const res = await fetch('/api/reject-payment', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token }, body: JSON.stringify({ paymentId: id }) });
+    const result = await res.json().catch(() => ({}));
+    if (!res.ok || !result.success) throw new Error(result.error || 'خطا');
+    alert('❌ پرداخت رد شد');
+    await loadPayments();
+    renderDashboard(); renderPayments();
+  } catch (e) { alert('❌ ' + e.message); btn.disabled = false; btn.textContent = '❌ رد'; }
+}
+function renderSites() {
+  const list = document.getElementById('sitesList');
+  if (!allSites.length) { list.innerHTML = '<div class="empty">📭 هیچ سایتی متصل نشده</div>'; return; }
+  list.innerHTML = allSites.map(s => {
+    const plan = s.prof?.plan || 'trial';
+    const label = plan === 'pro' ? '💎 حرفه‌ای' : plan === 'business' ? '🏢 کسب‌وکار' : '🆓 تست';
+    return '<div class="site-item"><div class="site-head"><div class="site-name">' + esc(s.brand_name || s.name || s.domain || 'بدون نام') + '</div><span class="site-plan ' + esc(plan) + '">' + label + '</span></div><div class="site-domain">👤 ' + esc(s.prof?.full_name || s.prof?.email || 'کاربر ناشناس') + '</div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;flex-wrap:wrap;gap:6px;"><span style="font-size:11px;color:var(--muted);direction:ltr;">' + esc(s.domain || '') + '</span><span style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:800;background:' + (s.active ? 'var(--success-light)' : 'var(--warning-light)') + ';color:' + (s.active ? '#166534' : '#92400e') + ';">' + (s.active ? '✅ فعال' : '⏳ غیرفعال') + '</span></div></div>';
+  }).join('');
+}
+function renderKeys() {
+  const list = document.getElementById('keysList');
+  if (!allKeys.length) { list.innerHTML = '<div class="empty">📭 هیچ کلیدی ثبت نشده</div>'; return; }
+  list.innerHTML = allKeys.map(k => {
+    const dl = Number(k.daily_limit || 1); const ut = Number(k.used_today || 0);
+    const percent = Math.min(100, (ut / dl) * 100);
+    let color = '#16a34a'; if (percent > 90) color = '#dc2626'; else if (percent > 70) color = '#f59e0b';
+    return '<div class="key-item"><div class="key-head"><div><div class="key-name">' + esc(k.name || '—') + '</div><div class="key-val">' + esc((k.api_key || '').slice(0, 20)) + '...</div></div><span class="key-badge ' + (k.active ? 'active' : 'inactive') + '">' + (k.active ? '✅ فعال' : '❌ غیرفعال') + '</span></div><div class="key-progress"><div class="progress-track"><div class="progress-fill" style="width:' + percent + '%;background:' + color + ';"></div></div><span style="font-size:12px;font-weight:700;white-space:nowrap;">' + faNum(ut) + '/' + faNum(dl) + '</span></div><div class="key-stats"><span>مصرف کل: ' + faNum(k.total_used || 0) + '</span><button class="key-btn ' + (k.active ? 'disable' : 'enable') + '" data-key="' + k.id + '" data-active="' + !k.active + '">' + (k.active ? 'غیرفعال کن' : 'فعال کن') + '</button></div></div>';
+  }).join('');
+  list.querySelectorAll('[data-key]').forEach(b => { b.onclick = () => toggleKey(Number(b.dataset.key), b.dataset.active === 'true'); });
+}
+async function toggleKey(keyId, active) {
+  if (!confirm(active ? 'کلید فعال شود؟' : 'کلید غیرفعال شود؟')) return;
+  try {
+    const { error } = await supabase.from('gemini_keys').update({ active }).eq('id', keyId);
     if (error) throw error;
-
-    all = await Promise.all(
-        (data || []).map(async payment => {
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('email,full_name')
-                .eq('id', payment.user_id)
-                .maybeSingle();
-
-            return { ...payment, prof: profile };
-        })
-    );
+    await loadGeminiKeys(); renderKeys();
+  } catch (e) { alert('خطا: ' + e.message); }
 }
-
-
-async function loadGeminiKeys() {
-    try {
-        const { data, error } = await supabase
-            .from('gemini_keys')
-            .select('*')
-            .order('id', { ascending: true });
-
-        if (error) throw error;
-
-        const container = document.getElementById('keysList');
-        if (!container) return;
-
-        if (!data || data.length === 0) {
-            container.innerHTML = '<div class="empty" style="padding:20px;font-size:13px;">هیچ کلیدی ثبت نشده</div>';
-            return;
-        }
-
-        container.innerHTML = data.map(key => {
-            const percent = Math.min(100, (key.used_today / key.daily_limit) * 100);
-            let color = '#16a34a';
-            if (percent > 90) color = '#dc2626';
-            else if (percent > 70) color = '#f59e0b';
-
-            return `
-                <div class="key-item">
-                    <div class="key-head">
-                        <div>
-                            <div class="key-name">${esc(key.name || '-')}</div>
-                            <div class="key-val">${esc((key.api_key || '').slice(0, 20))}...</div>
-                        </div>
-                        <span class="key-badge ${key.active ? 'active' : 'inactive'}">
-                            ${key.active ? '✅ فعال' : '❌ غیرفعال'}
-                        </span>
-                    </div>
-                    <div class="key-progress">
-                        <div class="progress-track">
-                            <div class="progress-fill" style="width:${percent}%;background:${color};"></div>
-                        </div>
-                        <span style="font-size:12px;font-weight:700;white-space:nowrap;">
-                            ${key.used_today}/${key.daily_limit}
-                        </span>
-                    </div>
-                    <div class="key-stats">
-                        <span>مصرف کل: ${(key.total_used || 0).toLocaleString('fa-IR')}</span>
-                        <button class="key-btn ${key.active ? 'disable' : 'enable'}"
-                                onclick="toggleGeminiKey(${key.id}, ${!key.active})">
-                            ${key.active ? 'غیرفعال کن' : 'فعال کن'}
-                        </button>
-                    </div>
-                </div>
-            `;
-        }).join('');
-
-    } catch (err) {
-        console.error('Gemini keys error:', err);
+function renderSettings() {
+  document.getElementById('proPrice').value = settings.pro_price || '490000';
+  document.getElementById('bizPrice').value = settings.business_price || '990000';
+  document.getElementById('trialDays').value = settings.trial_days || '3';
+  document.getElementById('proDays').value = settings.pro_days || '30';
+  document.getElementById('bizDays').value = settings.business_days || '30';
+}
+document.getElementById('saveBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('saveBtn');
+  const msg = document.getElementById('saveMsg');
+  btn.disabled = true; msg.textContent = '⏳ در حال ذخیره...'; msg.style.color = 'var(--primary)';
+  try {
+    const items = [
+      { key: 'pro_price', value: String(document.getElementById('proPrice').value) },
+      { key: 'business_price', value: String(document.getElementById('bizPrice').value) },
+      { key: 'trial_days', value: String(document.getElementById('trialDays').value) },
+      { key: 'pro_days', value: String(document.getElementById('proDays').value) },
+      { key: 'business_days', value: String(document.getElementById('bizDays').value) }
+    ];
+    for (const item of items) {
+      const { error } = await supabase.from('settings').upsert(item, { onConflict: 'key' });
+      if (error) throw error;
     }
-}
-
-
-async function loadSites() {
-    const container = document.getElementById('sitesList');
-    if (!container) return;
-
-    try {
-        const { data: connections, error: connError } = await supabase
-            .from('wordpress_connections')
-            .select('id, user_id, site_url, expires_at, used_at, created_at')
-            .order('created_at', { ascending: false });
-
-        if (connError) throw connError;
-
-        if (!connections || connections.length === 0) {
-            container.innerHTML = '<div class="empty" style="padding:20px;font-size:13px;">هیچ سایتی متصل نشده</div>';
-            return;
-        }
-
-        const userIds = [...new Set(connections.map(c => c.user_id).filter(Boolean))];
-        let profilesMap = {};
-
-        if (userIds.length > 0) {
-            const { data: profiles } = await supabase
-                .from('profiles')
-                .select('id, email, full_name')
-                .in('id', userIds);
-
-            (profiles || []).forEach(p => {
-                profilesMap[p.id] = p;
-            });
-        }
-
-        container.innerHTML = connections.map(conn => {
-            const profile = profilesMap[conn.user_id] || {};
-            const plan = 'trial';
-            const planLabel = plan === 'pro' ? '💎 حرفه‌ای'
-                : plan === 'business' ? '🏢 کسب‌وکار'
-                : '🆓 تست';
-
-            const isActive = conn.used_at != null;
-            const statusLabel = isActive ? '✅ متصل' : '⏳ در انتظار';
-            const statusColor = isActive ? '#166534' : '#92400e';
-            const statusBg = isActive ? '#dcfce7' : '#fef3c7';
-
-            const domain = (conn.site_url || '').replace(/^https?:\/\//, '').replace(/\/$/, '');
-
-            return `
-                <div class="site-item">
-                    <div class="site-head">
-                        <div class="site-name">${esc(domain || 'بدون دامنه')}</div>
-                        <span class="site-plan ${plan}">${planLabel}</span>
-                    </div>
-                    <div class="site-domain">
-                        ${esc(profile.full_name || profile.email || 'کاربر ناشناس')}
-                    </div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
-                        <span style="font-size:11px;color:#94a3b8;direction:ltr;">
-                            ${esc(conn.site_url || '')}
-                        </span>
-                        <span style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:800;
-                                     background:${statusBg};color:${statusColor};">
-                            ${statusLabel}
-                        </span>
-                    </div>
-                </div>
-            `;
-        }).join('');
-
-    } catch (err) {
-        console.error('Sites error:', err);
-        container.innerHTML = `<div class="empty" style="padding:20px;font-size:13px;">
-            ❌ ${esc(err.message)}
-        </div>`;
-    }
-}
-
-
-window.toggleGeminiKey = async function(keyId, active) {
-    if (!confirm(active ? 'کلید فعال شود؟' : 'کلید غیرفعال شود؟')) return;
-
-    try {
-        const { error } = await supabase
-            .from('gemini_keys')
-            .update({ active: active })
-            .eq('id', keyId);
-
-        if (error) throw error;
-
-        await loadGeminiKeys();
-    } catch (err) {
-        alert('خطا: ' + err.message);
-    }
-};
-
-
-function renderUI() {
-    const s = window._settings || {};
-
-    app.innerHTML = `
-        <div class="card">
-            <h2>📊 آمار پرداخت‌ها</h2>
-            <div class="stats">
-                <div class="stat y">
-                    <b id="stP">0</b>
-                    <span>در انتظار</span>
-                </div>
-                <div class="stat g">
-                    <b id="stA">0</b>
-                    <span>تایید شده</span>
-                </div>
-                <div class="stat r">
-                    <b id="stR">0</b>
-                    <span>رد شده</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="card">
-            <h2>⚙️ تنظیمات قیمت و مدت زمان</h2>
-            <div class="settings">
-                <div class="field">
-                    <label>قیمت پلن حرفه‌ای (تومان)</label>
-                    <input type="number" id="proPrice" value="${esc(s.pro_price || '490000')}">
-                </div>
-                <div class="field">
-                    <label>قیمت پلن کسب‌وکار (تومان)</label>
-                    <input type="number" id="bizPrice" value="${esc(s.business_price || '990000')}">
-                </div>
-                <div class="field">
-                    <label>مدت پلن تست (روز)</label>
-                    <input type="number" id="trialDays" value="${esc(s.trial_days || '3')}">
-                </div>
-                <div class="field">
-                    <label>مدت پلن‌های اصلی (روز)</label>
-                    <input type="number" id="planDays" value="${esc(s.pro_days || '30')}">
-                </div>
-            </div>
-            <button class="btn-save" id="saveBtn">💾 ذخیره تنظیمات</button>
-            <p class="msg" id="saveMsg"></p>
-        </div>
-
-        <div class="card">
-            <h2>🔑 کلیدهای Gemini</h2>
-            <div id="keysList" style="display:flex;flex-direction:column;">
-                <div class="loading" style="padding:20px;font-size:13px;">در حال بارگذاری...</div>
-            </div>
-        </div>
-
-        <div class="card">
-            <h2>🌐 سایت‌های متصل</h2>
-            <div id="sitesList" style="display:flex;flex-direction:column;">
-                <div class="loading" style="padding:20px;font-size:13px;">در حال بارگذاری...</div>
-            </div>
-        </div>
-
-        <div class="tabs">
-            <button class="tab active" data-f="pending">⏳ در انتظار</button>
-            <button class="tab" data-f="approved">✅ تایید شده</button>
-            <button class="tab" data-f="rejected">❌ رد شده</button>
-            <button class="tab" data-f="all">📋 همه</button>
-        </div>
-
-        <div id="list"></div>
-    `;
-
-    document.getElementById('saveBtn').onclick = saveSettings;
-
-    document.querySelectorAll('.tab').forEach(tab => {
-        tab.onclick = () => {
-            document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
-            tab.classList.add('active');
-            filter = tab.dataset.f;
-            renderList();
-        };
-    });
-
-    updateStats();
-    renderList();
-
-    loadGeminiKeys();
-    loadSites();
-}
-
-
-function updateStats() {
-    document.getElementById('stP').textContent =
-        all.filter(p => p.status === 'pending').length;
-
-    document.getElementById('stA').textContent =
-        all.filter(p => p.status === 'approved').length;
-
-    document.getElementById('stR').textContent =
-        all.filter(p => p.status === 'rejected').length;
-}
-
-
-function renderList() {
-    const list = document.getElementById('list');
-
-    const items = filter === 'all'
-        ? all
-        : all.filter(p => p.status === filter);
-
-    if (!items.length) {
-        list.innerHTML = `
-            <div class="empty">
-                📭 هیچ پرداختی نیست
-            </div>
-        `;
-        return;
-    }
-
-    list.innerHTML = '';
-
-    items.forEach(payment => {
-        const badge = payment.status === 'pending'
-            ? '⏳ در انتظار'
-            : payment.status === 'approved'
-                ? '✅ تایید'
-                : '❌ رد';
-
-        const date = payment.created_at
-            ? new Date(payment.created_at).toLocaleString('fa-IR')
-            : '-';
-
-        const actions = payment.status === 'pending'
-            ? `
-                <div class="actions">
-                    <button class="btn btn-ok" data-approve="${esc(payment.id)}">
-                        ✅ تایید و فعال‌سازی
-                    </button>
-                    <button class="btn btn-no" data-reject="${esc(payment.id)}">
-                        ❌ رد
-                    </button>
-                </div>
-            `
-            : '';
-
-        const div = document.createElement('div');
-        div.className = 'pay ' + esc(payment.status);
-
-        div.innerHTML = `
-            <div class="pay-head">
-                <div>
-                    <div class="pay-user">
-                        ${esc(payment.prof?.full_name || 'بدون نام')}
-                    </div>
-                    <div class="pay-email">
-                        ${esc(payment.prof?.email || '-')}
-                    </div>
-                </div>
-                <span class="badge ${esc(payment.status)}">
-                    ${badge}
-                </span>
-            </div>
-
-            <div class="pay-info">
-                <div>
-                    <span>پلن</span>
-                    <span>${esc(payment.plan_name || '-')}</span>
-                </div>
-                <div>
-                    <span>مبلغ</span>
-                    <span>
-                        ${parseInt(payment.amount || 0, 10).toLocaleString('fa-IR')}
-                        تومان
-                    </span>
-                </div>
-                <div>
-                    <span>مدت</span>
-                    <span>${esc(payment.days || 30)} روز</span>
-                </div>
-                <div>
-                    <span>کد پیگیری</span>
-                    <span class="code">${esc(payment.tracking_code || '-')}</span>
-                </div>
-                ${payment.description ? `
-                    <div>
-                        <span>توضیحات</span>
-                        <span>${esc(payment.description)}</span>
-                    </div>
-                ` : ''}
-                <div>
-                    <span>تاریخ</span>
-                    <span style="font-weight:400;font-size:11px;">${date}</span>
-                </div>
-            </div>
-
-            ${actions}
-        `;
-
-        list.appendChild(div);
-    });
-
-    list.querySelectorAll('[data-approve]').forEach(button => {
-        button.onclick = () => approve(button.dataset.approve, button);
-    });
-
-    list.querySelectorAll('[data-reject]').forEach(button => {
-        button.onclick = () => reject(button.dataset.reject, button);
-    });
-}
-
-
-async function saveSettings() {
-    const btn = document.getElementById('saveBtn');
-    const msg = document.getElementById('saveMsg');
-
-    btn.disabled = true;
-    msg.textContent = 'در حال ذخیره...';
-    msg.style.color = '#2563eb';
-
-    try {
-        const items = [
-            { key: 'pro_price', value: document.getElementById('proPrice').value },
-            { key: 'business_price', value: document.getElementById('bizPrice').value },
-            { key: 'trial_days', value: document.getElementById('trialDays').value },
-            { key: 'pro_days', value: document.getElementById('planDays').value },
-            { key: 'business_days', value: document.getElementById('planDays').value }
-        ];
-
-        for (const item of items) {
-            const { error } = await supabase
-                .from('settings')
-                .upsert(item, { onConflict: 'key' });
-
-            if (error) throw error;
-        }
-
-        msg.textContent = '✅ تنظیمات ذخیره شد';
-        msg.style.color = '#16a34a';
-        await loadSettings();
-
-    } catch (error) {
-        console.error('Settings error:', error);
-        msg.textContent = '❌ ' + error.message;
-        msg.style.color = '#dc2626';
-    } finally {
-        btn.disabled = false;
-        setTimeout(() => { msg.textContent = ''; }, 3000);
-    }
-}
-
-
-   window.approve = async function(paymentId, btn) {
-    if (!confirm('این پرداخت تایید و اشتراک کاربر فعال شود؟')) return;
-
-    btn.disabled = true;
-    btn.textContent = 'در حال تایید...';
-
-    try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) throw new Error('جلسه ورود مدیر منقضی شده است.');
-
-        const response = await fetch('/api/approve-payment', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + session.access_token
-    },
-    body: JSON.stringify({ paymentId: paymentId })
+    msg.textContent = '✅ تنظیمات ذخیره شد'; msg.style.color = 'var(--success)';
+    await loadSettings();
+  } catch (e) { msg.textContent = '❌ ' + e.message; msg.style.color = 'var(--danger)'; }
+  finally { btn.disabled = false; setTimeout(() => { msg.textContent = ''; }, 3500); }
 });
-
-const result = await response.json().catch(() => ({}));
-
-if (!response.ok || !result.success) {
-    throw new Error(result.error || 'خطا در تایید پرداخت');
-}
-
-alert('✅ پرداخت تایید شد');
-
-// 📧 ارسال ایمیل تایید پرداخت
-try {
-    const payment = all.find(p => p.id === paymentId);
-    if (payment?.prof?.email) {
-        await fetch('/api/send-email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                to: payment.prof.email,
-                type: 'payment_approved',
-                data: {
-                    name: payment.prof.full_name || 'کاربر',
-                    plan: payment.plan_name || 'حرفه‌ای',
-                    expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('fa-IR')
-                }
-            })
-        });
-        console.log('✅ Payment approved email sent');
-    }
-} catch (emailErr) {
-    console.warn('⚠️ Payment email failed:', emailErr);
-}
-
-await loadPayments();
-renderUI();
-
-    } catch (error) {
-        console.error('Approve error:', error);
-        alert('❌ ' + error.message);
-        btn.disabled = false;
-        btn.textContent = '✅ تایید و فعال‌سازی';
-    }
-}
-
-window.reject = async function(paymentId, btn) {
-    if (!confirm('این پرداخت رد شود؟')) return;
-
-    btn.disabled = true;
-    btn.textContent = 'در حال رد...';
-
-    try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) throw new Error('جلسه ورود مدیر منقضی شده است.');
-
-        // اطلاعات پرداخت رو قبل از تغییر وضعیت بگیر
-        const payment = all.find(p => p.id === paymentId);
-
-        const { error } = await supabase
-            .from('payments')
-            .update({ status: 'rejected' })
-            .eq('id', paymentId);
-
-        if (error) throw error;
-
-        // 📧 ارسال ایمیل رد پرداخت
-        try {
-            if (payment?.prof?.email) {
-                await fetch('/api/send-email', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        to: payment.prof.email,
-                        type: 'payment_rejected',
-                        data: {
-                            name: payment.prof.full_name || 'کاربر'
-                        }
-                    })
-                });
-                console.log('✅ Rejection email sent to:', payment.prof.email);
-            }
-        } catch (emailErr) {
-            console.warn('⚠️ Rejection email failed:', emailErr);
-        }
-
-        alert('❌ پرداخت رد شد');
-        await loadPayments();
-        renderUI();
-
-    } catch (error) {
-        console.error('Reject error:', error);
-        alert('❌ ' + error.message);
-        btn.disabled = false;
-        btn.textContent = '❌ رد';
-    }
-}
-
-init();
-
+document.getElementById('tabsNav').addEventListener('click', (e) => {
+  const btn = e.target.closest('.tab-btn'); if (!btn) return;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('pane-' + btn.dataset.tab)?.classList.add('active');
+});
+document.getElementById('payTabs').addEventListener('click', (e) => {
+  const tab = e.target.closest('.tab'); if (!tab) return;
+  document.querySelectorAll('#payTabs .tab').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active'); paymentFilter = tab.dataset.filter; renderPayments();
+});
+document.getElementById('scSearch')?.addEventListener('input', renderSpecialCustomers);
+function showError(msg) { document.querySelector('.container').innerHTML = '<div class="error" style="margin-top:40px;">⚠️ ' + esc(msg) + '</div>'; }
+init().catch(err => { console.error('Init error:', err); showError(err.message || 'خطا در بارگذاری'); });
 </script>
-
 </body>
 </html>
