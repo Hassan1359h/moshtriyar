@@ -1,8 +1,9 @@
+
 name: Build APK
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     paths:
       - 'app/**'
   workflow_dispatch:
@@ -34,8 +35,15 @@ jobs:
         working-directory: ./app
         run: npm install
 
+      - name: Check Bazaar RSA
+        env:
+          EXPO_PUBLIC_CAFEBAZAAR_RSA_KEY: ${{ secrets.EXPO_PUBLIC_CAFEBAZAAR_RSA_KEY }}
+        run: test -n "$EXPO_PUBLIC_CAFEBAZAAR_RSA_KEY"
+
       - name: Expo Prebuild
         working-directory: ./app
+        env:
+          EXPO_PUBLIC_CAFEBAZAAR_RSA_KEY: ${{ secrets.EXPO_PUBLIC_CAFEBAZAAR_RSA_KEY }}
         run: npx expo prebuild --platform android --clean
 
       - name: Make gradlew executable
@@ -44,19 +52,19 @@ jobs:
 
       - name: Build APK
         working-directory: ./app/android
-        run: ./gradlew assembleRelease --no-daemon
         env:
           ANDROID_HOME: /usr/local/lib/android/sdk
           ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+          EXPO_PUBLIC_CAFEBAZAAR_RSA_KEY: ${{ secrets.EXPO_PUBLIC_CAFEBAZAAR_RSA_KEY }}
+        run: ./gradlew assembleRelease --no-daemon
 
       - name: Find APK
         working-directory: ./app
         run: |
           echo "=== Searching for APK ==="
-          find . -name "*.apk" -type f 2>/dev/null || echo "No APK"
+          find . -name "*.apk" -type f
           mkdir -p /tmp/apk-output
-          find . -name "app-release.apk" -exec cp {} /tmp/apk-output/ \; 2>/dev/null || true
-          find . -name "app-debug.apk" -exec cp {} /tmp/apk-output/ \; 2>/dev/null || true
+          find . -name "app-release.apk" -exec cp {} /tmp/apk-output/ \;
           ls -la /tmp/apk-output/
 
       - name: Upload APK
@@ -65,7 +73,7 @@ jobs:
           name: moshtriyar-apk
           path: /tmp/apk-output/*.apk
           retention-days: 30
-          if-no-files-found: warn
+          if-no-files-found: error
 
       - name: Copy APK to download folder
         run: |
