@@ -356,27 +356,18 @@ if (window.turnstile) {
                 if (!captchaToken) {
                     throw new Error('لطفاً کپچا را تایید کنید.');
                 }
-if (mode === 'login') {
-    const { data, error } = await supabase.auth.signInWithPassword({ 
-        email, 
-        password,
-        options: { captchaToken: captchaToken } 
-    });
-    if (error) throw error;
-    
-    // 🎯 تشخیص نقش: admin یا user
-    const user = data.user;
-    const role = user?.user_metadata?.role || user?.app_metadata?.role;
-    const emailLower = (user?.email || '').toLowerCase();
-    const isAdmin = role === 'admin' || emailLower === 'hahass12na@gmail.com';
-    
-    showMessage('ورود موفق! در حال انتقال...', 'success');
-    
-    setTimeout(() => {
-        window.location.href = isAdmin ? 'admin.html' : 'dashboard.html';
-    }, 800);
-}
-                
+
+                if (mode === 'login') {
+                    // 🎯 ارسال کپچا در ورود
+                    const { error } = await supabase.auth.signInWithPassword({ 
+                        email, 
+                        password,
+                        options: { captchaToken: captchaToken } 
+                    });
+                    if (error) throw error;
+                    showMessage('ورود موفق! در حال انتقال...', 'success');
+                    setTimeout(() => { window.location.href = 'dashboard.html'; }, 800);
+                } else {
                     if (!fullName) {
                         throw new Error('لطفاً نام و نام خانوادگی را وارد کنید.');
                     }
