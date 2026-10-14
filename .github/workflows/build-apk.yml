@@ -33,7 +33,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./app
-        run: npm install
+        run: npm install && npm ls expo expo-modules-core expo-cafebazaar-billing
 
       - name: Check Bazaar RSA
         env:
