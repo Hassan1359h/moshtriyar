@@ -146,21 +146,39 @@ module.exports = async function handler(req, res) {
             });
         }
 
-        const bazaarData = await bazaarResponse.json();
+        
+const bazaarData = await bazaarResponse.json();
 
-        const verifiedPurchase = (
-            bazaarData.subscriptions || []
-        ).find(item =>
-            item.sku === productId &&
-            Number(item.validUntilTimestampMsec) > Date.now()
-        );
+if (
+    !bazaarData ||
+    !Array.isArray(bazaarData.subscriptions)
+) {
+    console.error('Invalid Bazaar response structure');
 
-        if (!verifiedPurchase) {
-            return res.status(400).json({
-                success: false,
-                error: 'No valid matching subscription found'
-            });
-        }
+    return res.status(502).json({
+        success: false,
+        error: 'Invalid verification response from Bazaar'
+    });
+}
+
+const verifiedPurchase = bazaarData.subscriptions.find(
+    item =>
+        item &&
+        item.kind === 'androidpublisher#subscriptionPurchase' &&
+        item.sku === productId &&
+        Number.isSafeInteger(
+            Number(item.validUntilTimestampMsec)
+        ) &&
+        Number(item.validUntilTimestampMsec) > Date.now()
+);
+
+if (!verifiedPurchase) {
+    return res.status(400).json({
+        success: false,
+        error: 'No valid matching subscription found'
+    });
+}
+        
 
         const expiresAt = new Date(
             Number(verifiedPurchase.validUntilTimestampMsec)
