@@ -1,1 +1,1 @@
-{"name":"expo-cafebazaar-billing","version":"1.0.4-moshtriyar.1","main":"build/index.js","types":"build/index.d.ts","private":true,"peerDependencies":{"expo":"~51.0.0","expo-modules-core":"~1.12.0","react":"18.2.0","react-native":"0.74.5"}}
+{"name":"expo-cafebazaar-billing","version":"1.0.4-moshtriyar.1","main":"index.js","private":true,"peerDependencies":{"expo":"~51.0.0","expo-modules-core":"*","react":"18.2.0","react-native":"0.74.5"}}
