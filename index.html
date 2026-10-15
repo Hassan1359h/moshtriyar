@@ -631,6 +631,16 @@ window.openPayment = function (planKey) {
 };
 
 
+window.addEventListener('moshtriyarBazaarPurchaseResult', function (event) {
+    const result = event.detail;
+
+    if (result.success) {
+        alert('نتیجه خرید از بازار دریافت شد. در انتظار تأیید اعتبار پرداخت.');
+    } else {
+        alert('خطای پرداخت بازار: ' + (result.error || 'خطای نامشخص'));
+    }
+});
+        
 window.closePayment = function() {
     document.getElementById('payment-modal').style.display = 'none';
     document.body.style.overflow = '';
