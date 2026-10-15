@@ -574,23 +574,62 @@ const PLANS = {
     business: { name: 'کسب‌وکار', period: 'برای ۳۰ روز', price: 990000, free: false }
 };
 
-window.openPayment = function(planKey) {
+
+window.openPayment = function (planKey) {
     const plan = PLANS[planKey];
     if (!plan) return;
-    
+
     if (plan.free) {
         window.location.href = 'login.html?plan=' + planKey;
         return;
     }
-    
-    document.getElementById('modal-plan-title').textContent = 'پرداخت پلن ' + plan.name;
-    document.getElementById('modal-plan-period').textContent = plan.period;
-    document.getElementById('modal-amount').textContent = plan.price.toLocaleString('fa-IR');
+
+    // پرداخت درون‌برنامه‌ای بازار فقط در اپ اندروید
+    const isAndroidApp =
+        /Android/i.test(navigator.userAgent) &&
+        window.ReactNativeWebView &&
+        typeof window.ReactNativeWebView.postMessage === 'function';
+
+    if (isAndroidApp) {
+        const products = {
+            pro: 'moshtriyar_pro_30',
+            business: 'moshtriyar_business_30'
+        };
+
+        const productId = products[planKey];
+
+        if (!productId) {
+            alert('محصول پرداخت برای این پلن تعریف نشده است.');
+            return;
+        }
+
+        window.ReactNativeWebView.postMessage(
+            JSON.stringify({
+                type: 'buyBazaarSubscription',
+                productId: productId,
+                planKey: planKey
+            })
+        );
+
+        return;
+    }
+
+    // سایت خارج از اپ: مسیر فعلی پرداخت کارت‌به‌کارت
+    document.getElementById('modal-plan-title').textContent =
+        'پرداخت پلن ' + plan.name;
+
+    document.getElementById('modal-plan-period').textContent =
+        plan.period;
+
+    document.getElementById('modal-amount').textContent =
+        plan.price.toLocaleString('fa-IR');
+
     document.getElementById('payment-modal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
-    
+
     window.selectedPlan = planKey;
 };
+
 
 window.closePayment = function() {
     document.getElementById('payment-modal').style.display = 'none';
