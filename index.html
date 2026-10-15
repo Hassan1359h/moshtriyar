@@ -453,6 +453,36 @@
             </ul>
             <button onclick="openPayment('business')" class="plan-btn dark" style="border:none;font-family:inherit;cursor:pointer;width:100%;">خرید پلن کسب‌وکار</button>
         </div>
+        
+<div class="plan-card featured">
+    <div style="background:#dc2626;color:white;padding:8px;border-radius:10px;text-align:center;font-weight:bold;margin-bottom:15px;">
+        🔥 تخفیف ویژه
+    </div>
+
+    <h3>اشتراک ویژه یک‌ساله</h3>
+
+    <div class="plan-price">
+        ۸,۰۰۰,۰۰۰
+        <span class="currency">تومان</span>
+    </div>
+
+    <div class="plan-period">۳۶۵ روز اشتراک ویژه</div>
+
+    <ul class="plan-features">
+        <li>✅ دسترسی به تمام امکانات مشتری‌یار</li>
+        <li>✅ اشتراک یک‌ساله</li>
+        <li>✅ امکانات حرفه‌ای و کسب‌وکار</li>
+        <li>✅ قیمت تخفیف‌خورده ویژه</li>
+    </ul>
+
+    <button
+        onclick="openPayment('vip_yearly')"
+        class="plan-btn blue"
+        style="border:none;font-family:inherit;cursor:pointer;width:100%;">
+        🔥 خرید اشتراک با تخفیف ویژه
+    </button>
+</div>
+        
     </div>
 
     <section class="features">
@@ -643,6 +673,12 @@ const products = {
     }
 
     // سایت خارج از اپ: مسیر فعلی پرداخت کارت‌به‌کارت
+    
+if (planKey === 'vip_yearly') {
+    alert('خرید اشتراک ویژه یک‌ساله فعلاً از طریق اپ اندروید مشتری‌یار و کافه‌بازار امکان‌پذیر است.');
+    return;
+        }
+    
     document.getElementById('modal-plan-title').textContent =
         'پرداخت پلن ' + plan.name;
 
