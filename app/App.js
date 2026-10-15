@@ -254,7 +254,7 @@ export default function App() {
       const rawData = event?.nativeEvent?.data;
       const data = JSON.parse(rawData);
    if (data.type ===
-       'buyBazaarSubscription') { Alert.alert('تست ارتباط', 'درخواست خرید از سایت به اپ رسید.');
+       'buyBazaarSubscription') { 
      const allowed = ['moshtriyar_vip_yearly', 'moshtriyar_business_30', 'moshtriyar_pro_30']; if (!allowed.includes(data.productId)) return; try { await CafeBazaarBilling.connect({ rsaPublicKey: process.env.EXPO_PUBLIC_CAFEBAZAAR_RSA_KEY });
      
                                                                                                                                                                                        
