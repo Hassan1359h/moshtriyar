@@ -568,10 +568,33 @@
 
         loadPrices();
         // 🎯 پلن‌ها
+
+
 const PLANS = {
-    test: { name: 'تست', period: 'فقط برای ۳ روز', price: 0, free: true },
-    pro: { name: 'حرفه‌ای', period: 'برای ۳۰ روز', price: 490000, free: false },
-    business: { name: 'کسب‌وکار', period: 'برای ۳۰ روز', price: 990000, free: false }
+    test: {
+        name: 'تست',
+        period: 'فقط برای ۳ روز',
+        price: 0,
+        free: true
+    },
+    pro: {
+        name: 'حرفه‌ای',
+        period: 'برای ۳۰ روز',
+        price: 490000,
+        free: false
+    },
+    business: {
+        name: 'کسب‌وکار',
+        period: 'برای ۳۰ روز',
+        price: 990000,
+        free: false
+    },
+    vip_yearly: {
+        name: 'ویژه یک‌ساله | تخفیف ویژه',
+        period: 'برای ۳۶۵ روز',
+        price: 9000000,
+        free: false
+    }
 };
 
 
@@ -593,11 +616,13 @@ window.openPayment = function (planKey) {
     
 if (isAndroidApp) {
 
-    const products = {
-        
-            pro: 'moshtriyar_pro_30',
-            business: 'moshtriyar_business_30'
-        };
+    
+const products = {
+    pro: 'moshtriyar_pro_30',
+    business: 'moshtriyar_business_30',
+    vip_yearly: 'moshtriyar_vip_yearly'
+};
+    
 
         const productId = products[planKey];
 
