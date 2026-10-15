@@ -590,8 +590,12 @@ window.openPayment = function (planKey) {
         window.ReactNativeWebView &&
         typeof window.ReactNativeWebView.postMessage === 'function';
 
-    if (isAndroidApp) {
-        const products = {
+    
+if (isAndroidApp) {
+    alert('تست: درخواست خرید به اپ مشتری‌یار ارسال می‌شود');
+
+    const products = {
+        
             pro: 'moshtriyar_pro_30',
             business: 'moshtriyar_business_30'
         };
