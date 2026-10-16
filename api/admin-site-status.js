@@ -1,4 +1,3 @@
-
 const { createClient } = require('@supabase/supabase-js');
 
 function normalizeSiteUrl(value) {
@@ -68,6 +67,17 @@ module.exports = async function handler(req, res) {
       });
     }
 
+    const { data: profile, error: profileError } =
+      await supabaseAdmin
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle();
+
+    if (profileError) {
+      throw profileError;
+    }
+
     const adminEmails = (process.env.ADMIN_EMAILS || '')
       .split(',')
       .map(email => email.trim().toLowerCase())
@@ -76,7 +86,7 @@ module.exports = async function handler(req, res) {
     const userEmail = (user.email || '').toLowerCase();
 
     const isAdmin =
-      user.user_metadata?.role === 'admin' ||
+      profile?.role === 'admin' ||
       adminEmails.includes(userEmail);
 
     if (!isAdmin) {
@@ -92,16 +102,12 @@ module.exports = async function handler(req, res) {
     ] = await Promise.all([
       supabaseAdmin
         .from('websites')
-        .select(
-          'id,user_id,domain,active'
-        )
+        .select('id,user_id,domain,active')
         .order('created_at', { ascending: false }),
 
       supabaseAdmin
         .from('site_api_keys')
-        .select(
-          'user_id,site_url,is_active,last_used_at'
-        )
+        .select('user_id,site_url,is_active,last_used_at')
     ]);
 
     if (sitesError) throw sitesError;
