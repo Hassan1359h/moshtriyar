@@ -694,14 +694,44 @@ if (planKey === 'vip_yearly') {
     window.selectedPlan = planKey;
 };
 
+window.addEventListener('moshtriyarBazaarPurchaseResult', async function (event) {
+    const result = event.detail || {};
 
-window.addEventListener('moshtriyarBazaarPurchaseResult', function (event) {
-    const result = event.detail;
-
-    if (result.success) {
-        alert('نتیجه خرید از بازار دریافت شد. در انتظار تأیید اعتبار پرداخت.');
-    } else {
+    if (!result.success) {
         alert('خطای پرداخت بازار: ' + (result.error || 'خطای نامشخص'));
+        return;
+    }
+
+    try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+
+        if (error) throw error;
+        if (!session) throw new Error('برای فعال‌سازی اشتراک، ابتدا وارد حساب شوید.');
+
+        const response = await fetch('/api/verify-bazaar-purchase', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + session.access_token
+            },
+            body: JSON.stringify({
+                productId: result.productId,
+                purchaseToken: result.purchaseToken,
+                orderId: result.orderId
+            })
+        });
+
+        const verification = await response.json();
+
+        if (!response.ok || !verification.success) {
+            throw new Error(verification.error || 'تأیید پرداخت ناموفق بود.');
+        }
+
+        alert('✅ خرید تأیید شد و اشتراک شما فعال گردید.');
+        window.location.reload();
+
+    } catch (err) {
+        alert('❌ خطا در فعال‌سازی اشتراک: ' + err.message);
     }
 });
         
