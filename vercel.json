@@ -55,7 +55,7 @@
       ]
     }
   ],
-  "
+  
    "rewrites": [
   {
     "source": "/api/verify-bazaar-purchase",
