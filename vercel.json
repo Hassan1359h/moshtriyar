@@ -57,6 +57,10 @@
   ],
   "rewrites": [
     {
+      "source": "/api/verify-bazaar-purchase",
+      "destination": "/api/extend-subscription?mode=bazaar"
+    },
+    {
       "source": "/api/wordpress-connect",
       "destination": "/api/wordpress-activate?mode=connect"
     }
