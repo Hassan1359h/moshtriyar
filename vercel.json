@@ -55,21 +55,19 @@
       ]
     }
   ],
-  
-   "rewrites": [
-  {
-    "source": "/api/verify-bazaar-purchase",
-    "destination": "/api/extend-subscription?mode=bazaar"
-  },
-  {
-    "source": "/api/generate-discount-token",
-    "destination": "/api/extend-subscription?mode=discount"
-  },
-  {
-    "source": "/api/wordpress-connect",
-    "destination": "/api/wordpress-activate?mode=connect"
-  }
-    
+  "rewrites": [
+    {
+      "source": "/api/verify-bazaar-purchase",
+      "destination": "/api/extend-subscription?mode=bazaar"
+    },
+    {
+      "source": "/api/generate-discount-token",
+      "destination": "/api/extend-subscription?mode=discount"
+    },
+    {
+      "source": "/api/wordpress-connect",
+      "destination": "/api/wordpress-activate?mode=connect"
+    }
   ],
   "redirects": [
     {
