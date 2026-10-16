@@ -26,50 +26,6 @@ export default async function handler(req, res) {
     const SUPABASE_URL = process.env.SUPABASE_URL || "";
     const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || "";
 
-    // ==========================================================
-    // 🎯 آپدیت خودکار وضعیت اتصال بر اساس Referer
-    // ==========================================================
-    try {
-        const referer = req.headers.referer || req.headers.referrer || "";
-        const refererOrigin = normalizeOrigin(referer);
-
-        if (refererOrigin && !refererOrigin.includes("moshtriyar.ir") && !refererOrigin.includes("vercel.app")) {
-            const { data: pending } = await supabaseAdmin
-                .from("wordpress_connections")
-                .select("id, user_id")
-                .eq("site_url", refererOrigin)
-                .is("used_at", null)
-                .maybeSingle();
-
-            if (pending) {
-                await supabaseAdmin
-                    .from("wordpress_connections")
-                    .update({ used_at: new Date().toISOString() })
-                    .eq("id", pending.id);
-
-                // آپدیت website_agent توی user_metadata
-                const { data: userResult } = await supabaseAdmin.auth.admin.getUserById(pending.user_id);
-                if (userResult?.user) {
-                    const metadata = userResult.user.user_metadata || {};
-                    const oldAgent = metadata.website_agent || {};
-                    await supabaseAdmin.auth.admin.updateUserById(pending.user_id, {
-                        user_metadata: {
-                            ...metadata,
-                            website_agent: {
-                                ...oldAgent,
-                                enabled: true,
-                                websiteUrl: refererOrigin
-                            }
-                        }
-                    });
-                }
-
-                console.log("✅ Auto-connected site:", refererOrigin);
-            }
-        }
-    } catch (err) {
-        console.warn("Auto-connect check failed:", err?.message);
-    }
 
     // ==========================================================
     // 🎯 کد اسکریپت (بدون تغییر)

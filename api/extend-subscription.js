@@ -1,4 +1,23 @@
+
 import { createClient } from '@supabase/supabase-js';
+
+const PRODUCTS = {
+    moshtriyar_pro_30: {
+        plan: 'pro',
+        days: 30,
+        amount: 490000
+    },
+    moshtriyar_business_30: {
+        plan: 'business',
+        days: 30,
+        amount: 990000
+    },
+    moshtriyar_vip_yearly: {
+        plan: 'vip_yearly',
+        days: 365,
+        amount: 9000000
+    }
+};
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
@@ -13,7 +32,10 @@ export default async function handler(req, res) {
         const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
         if (!supabaseUrl || !serviceRoleKey) {
-            throw new Error('Supabase server settings are missing.');
+            return res.status(500).json({
+                success: false,
+                error: 'Supabase server settings are missing.'
+            });
         }
 
         const authHeader = req.headers.authorization || '';
@@ -21,15 +43,21 @@ export default async function handler(req, res) {
         if (!authHeader.startsWith('Bearer ')) {
             return res.status(401).json({
                 success: false,
-                error: 'ورود مدیر لازم است.'
+                error: 'Authentication required'
             });
         }
 
-        const accessToken = authHeader.replace('Bearer ', '').trim();
+        const accessToken = authHeader.slice(7).trim();
 
         const supabaseAdmin = createClient(
             supabaseUrl,
-            serviceRoleKey
+            serviceRoleKey,
+            {
+                auth: {
+                    persistSession: false,
+                    autoRefreshToken: false
+                }
+            }
         );
 
         const {
@@ -40,10 +68,159 @@ export default async function handler(req, res) {
         if (userError || !user) {
             return res.status(401).json({
                 success: false,
-                error: 'جلسه ورود معتبر نیست.'
+                error: 'Invalid session'
             });
         }
 
+        // مسیر تأیید خرید کافه‌بازار
+        if (req.query.mode === 'bazaar') {
+            const bazaarToken = process.env.BAZAAR_PISHKHAN_TOKEN;
+
+            if (!bazaarToken) {
+                return res.status(500).json({
+                    success: false,
+                    error: 'Bazaar server settings are missing'
+                });
+            }
+
+            const { productId, purchaseToken, orderId } = req.body || {};
+            const product = PRODUCTS[productId];
+
+            if (
+                !product ||
+                typeof purchaseToken !== 'string' ||
+                !purchaseToken.trim() ||
+                purchaseToken.length > 4096
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Invalid purchase information'
+                });
+            }
+
+            const existing = await supabaseAdmin
+                .from('bazaar_purchases')
+                .select('user_id, product_id, status')
+                .eq('purchase_token', purchaseToken)
+                .maybeSingle();
+
+            if (existing.error) throw existing.error;
+
+            if (existing.data) {
+                if (
+                    existing.data.user_id === user.id &&
+                    existing.data.product_id === productId &&
+                    existing.data.status === 'verified'
+                ) {
+                    return res.status(200).json({
+                        success: true,
+                        alreadyVerified: true
+                    });
+                }
+
+                return res.status(409).json({
+                    success: false,
+                    error: 'Purchase token already registered'
+                });
+            }
+
+            const bazaarUrl =
+                'https://pardakht.cafebazaar.ir/devapi/v2/api/' +
+                'applications/ir.moshtriyar.app/active-subscriptions/' +
+                encodeURIComponent(purchaseToken) + '/';
+
+            const bazaarResponse = await fetch(bazaarUrl, {
+                method: 'GET',
+                headers: {
+                    'CAFEBAZAAR-PISHKHAN-API-SECRET': bazaarToken,
+                    Accept: 'application/json'
+                }
+            });
+
+            if (!bazaarResponse.ok) {
+                console.error(
+                    'Bazaar verification failed:',
+                    bazaarResponse.status
+                );
+
+                return res.status(400).json({
+                    success: false,
+                    error: 'Bazaar could not verify this purchase'
+                });
+            }
+
+            const bazaarData = await bazaarResponse.json();
+
+            if (
+                !bazaarData ||
+                !Array.isArray(bazaarData.subscriptions)
+            ) {
+                return res.status(502).json({
+                    success: false,
+                    error: 'Invalid verification response from Bazaar'
+                });
+            }
+
+            const verifiedPurchase = bazaarData.subscriptions.find(
+                item =>
+                    item &&
+                    item.kind === 'androidpublisher#subscriptionPurchase' &&
+                    item.sku === productId &&
+                    Number.isSafeInteger(
+                        Number(item.validUntilTimestampMsec)
+                    ) &&
+                    Number(item.validUntilTimestampMsec) > Date.now()
+            );
+
+            if (!verifiedPurchase) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'No valid matching subscription found'
+                });
+            }
+
+            const expiresAt = new Date(
+                Number(verifiedPurchase.validUntilTimestampMsec)
+            ).toISOString();
+
+            const { data: result, error: rpcError } =
+                await supabaseAdmin.rpc('verify_bazaar_purchase', {
+                    p_user_id: user.id,
+                    p_product_id: productId,
+                    p_purchase_token: purchaseToken,
+                    p_order_id: typeof orderId === 'string'
+                        ? orderId.slice(0, 255)
+                        : null,
+                    p_plan: product.plan,
+                    p_amount: product.amount,
+                    p_days: product.days,
+                    p_expires_at: expiresAt
+                });
+
+            if (rpcError) {
+                console.error('Bazaar activation error:', rpcError.message);
+
+                return res.status(500).json({
+                    success: false,
+                    error: 'Purchase verified but activation failed'
+                });
+            }
+
+            return res.status(200).json({
+                success: true,
+                result
+            });
+        }
+
+        // جلوگیری از اجرای تمدید مدیر با mode ناشناخته
+        if (req.query.mode) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid operation'
+            });
+        }
+
+        // تمدید دستی اشتراک: فقط مدیر سیستم
         const isAdmin =
             user.user_metadata?.role === 'admin' ||
             (process.env.ADMIN_EMAILS || '')
@@ -69,7 +246,11 @@ export default async function handler(req, res) {
 
         const addDays = Number(days);
 
-        if (!Number.isInteger(addDays) || addDays <= 0 || addDays > 3650) {
+        if (
+            !Number.isInteger(addDays) ||
+            addDays <= 0 ||
+            addDays > 3650
+        ) {
             return res.status(400).json({
                 success: false,
                 error: 'مدت اشتراک نامعتبر است.'
@@ -83,9 +264,7 @@ export default async function handler(req, res) {
                 .eq('id', userId)
                 .maybeSingle();
 
-        if (profileError) {
-            throw profileError;
-        }
+        if (profileError) throw profileError;
 
         if (!profile) {
             return res.status(404).json({
@@ -95,7 +274,6 @@ export default async function handler(req, res) {
         }
 
         const now = new Date();
-
         let baseDate = now;
 
         if (profile.subscription_end_date) {
@@ -122,9 +300,7 @@ export default async function handler(req, res) {
                 })
                 .eq('id', userId);
 
-        if (updateError) {
-            throw updateError;
-        }
+        if (updateError) throw updateError;
 
         return res.status(200).json({
             success: true,
@@ -134,11 +310,11 @@ export default async function handler(req, res) {
         });
 
     } catch (error) {
-        console.error('Extend subscription error:', error);
+        console.error('Subscription API error:', error);
 
         return res.status(500).json({
             success: false,
-            error: error.message || 'خطای سرور'
+            error: 'Internal server error'
         });
     }
-          }
+}

@@ -1,3 +1,4 @@
+
 {
   "headers": [
     {
@@ -52,6 +53,16 @@
           "value": "no-store, no-cache, must-revalidate, max-age=0"
         }
       ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/verify-bazaar-purchase",
+      "destination": "/api/extend-subscription?mode=bazaar"
+    },
+    {
+      "source": "/api/wordpress-connect",
+      "destination": "/api/wordpress-activate?mode=connect"
     }
   ],
   "redirects": [

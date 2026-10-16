@@ -186,7 +186,6 @@ export default async function handler(req, res) {
       const check = await validateConnection(token, siteUrl);
       if (!check.ok) return res.status(check.code).json({ error: check.error });
 
-      await supabase.from("wordpress_connections").update({ used_at: new Date().toISOString() }).eq("id", check.connection.id);
       return sendZip(res, token);
     }
 
