@@ -244,80 +244,79 @@ export default function App() {
       );
     }
   };
-
+  
   // =========================================================
   // پیام‌های WebView
   // =========================================================
-
   const handleMessage = async (event) => {
     try {
       const rawData = event?.nativeEvent?.data;
       const data = JSON.parse(rawData);
-   
-      
-if (data.type === 'buyBazaarSubscription') {
-  const allowed = [
-    'moshtriyar_vip_yearly',
-    'moshtriyar_business_30',
-    'moshtriyar_pro_30'
-  ];
 
-  if (!allowed.includes(data.productId)) return;
+      // خرید اشتراک کافه‌بازار با پشتیبانی از تخفیف
+      if (data.type === 'buyBazaarSubscription') {
+        const allowed = [
+          'moshtriyar_vip_yearly',
+          'moshtriyar_business_30',
+          'moshtriyar_pro_30',
+        ];
 
-  const purchaseOptions = {};
+        if (!allowed.includes(data.productId)) {
+          throw new Error('شناسه محصول اشتراک معتبر نیست.');
+        }
 
-  if (data.dynamicPriceToken && data.discountIntentId) {
-    purchaseOptions.dynamicPriceToken = data.dynamicPriceToken;
-    purchaseOptions.developerPayload = data.discountIntentId;
-  }
+        const purchaseOptions = {};
 
-  try {
-    await CafeBazaarBilling.connect({
-      rsaPublicKey: process.env.EXPO_PUBLIC_CAFEBAZAAR_RSA_KEY
-    });
+        if (data.dynamicPriceToken && data.discountIntentId) {
+          purchaseOptions.dynamicPriceToken = data.dynamicPriceToken;
+          purchaseOptions.developerPayload = data.discountIntentId;
+        }
 
-    const purchase = await CafeBazaarBilling.subscribeProduct(
-      data.productId,
-      purchaseOptions
-    );
+        try {
+          await CafeBazaarBilling.connect({
+            rsaPublicKey: process.env.EXPO_PUBLIC_CAFEBAZAAR_RSA_KEY,
+          });
 
-    const result = {
-      success: true,
-      productId: purchase.productId,
-      purchaseToken: purchase.purchaseToken,
-      orderId: purchase.orderId
-    };
+          const purchase = await CafeBazaarBilling.subscribeProduct(
+            data.productId,
+            purchaseOptions
+          );
 
-    if (data.discountIntentId) {
-      result.discountIntentId = data.discountIntentId;
-    }
+          const result = {
+            success: true,
+            productId: purchase.productId,
+            purchaseToken: purchase.purchaseToken,
+            orderId: purchase.orderId,
+          };
 
-    webViewRef.current?.injectJavaScript(
-      "window.dispatchEvent(new CustomEvent('moshtriyarBazaarPurchaseResult',{detail:" +
-      JSON.stringify(result) +
-      "}));true;"
-    );
+          if (data.discountIntentId) {
+            result.discountIntentId = data.discountIntentId;
+          }
 
-  } catch (e) {
-    webViewRef.current?.injectJavaScript(
-      "window.dispatchEvent(new CustomEvent('moshtriyarBazaarPurchaseResult',{detail:" +
-      JSON.stringify({
-        success: false,
-        error: e?.message || 'خرید ناموفق بود'
-      }) +
-      "}));true;"
-    );
+          webViewRef.current?.injectJavaScript(
+            "window.dispatchEvent(new CustomEvent('moshtriyarBazaarPurchaseResult',{detail:" +
+              JSON.stringify(result) +
+              "}));true;"
+          );
+        } catch (e) {
+          webViewRef.current?.injectJavaScript(
+            "window.dispatchEvent(new CustomEvent('moshtriyarBazaarPurchaseResult',{detail:" +
+              JSON.stringify({
+                success: false,
+                error: e?.message || 'خرید ناموفق بود',
+              }) +
+              "}));true;"
+          );
+        } finally {
+          try {
+            await CafeBazaarBilling.disconnect();
+          } catch (_) {}
+        }
 
-  } finally {
-    try {
-      await CafeBazaarBilling.disconnect();
-    } catch (_) {}
-  }
+        return;
+      }
 
-  return;
-}
-                                                                                                                                                                                 
-                                                                                                                                                                                          const purchase = await CafeBazaarBilling.subscribeProduct(data.productId); webViewRef.current?.injectJavaScript("window.dispatchEvent(new CustomEvent('moshtriyarBazaarPurchaseResult',{detail:" + JSON.stringify({ success: true, productId: purchase.productId, purchaseToken: purchase.purchaseToken, orderId: purchase.orderId }) + "}));true;"); } catch (e) { webViewRef.current?.injectJavaScript("window.dispatchEvent(new CustomEvent('moshtriyarBazaarPurchaseResult',{detail:" + JSON.stringify({ success: false, error: e?.message || 'خرید ناموفق بود' }) + "}));true;"); } finally { try { await CafeBazaarBilling.disconnect(); } catch (_) {} } return; }
+      // ذخیره فایل دریافتی از WebView
       if (data.type === 'saveFile') {
         await saveFileFromWebView(
           data.data,
@@ -336,6 +335,7 @@ if (data.type === 'buyBazaarSubscription') {
         return;
       }
 
+      // دانلود فایل
       if (data.type === 'downloadFile') {
         if (isApkUrl(data.url)) {
           Alert.alert(
@@ -349,6 +349,7 @@ if (data.type === 'buyBazaarSubscription') {
         return;
       }
 
+      // باز کردن لینک خارجی
       if (data.type === 'openUrl' && data.url) {
         if (isApkUrl(data.url)) {
           Alert.alert(
