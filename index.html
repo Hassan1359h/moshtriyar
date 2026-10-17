@@ -645,32 +645,83 @@ window.openPayment = function (planKey) {
 
     
 if (isAndroidApp) {
+    const products = {
+        pro: 'moshtriyar_pro_30',
+        business: 'moshtriyar_business_30',
+        vip_yearly: 'moshtriyar_vip_yearly'
+    };
 
-    
-const products = {
-    pro: 'moshtriyar_pro_30',
-    business: 'moshtriyar_business_30',
-    vip_yearly: 'moshtriyar_vip_yearly'
-};
-    
+    const productId = products[planKey];
 
-        const productId = products[planKey];
-
-        if (!productId) {
-            alert('محصول پرداخت برای این پلن تعریف نشده است.');
-            return;
-        }
-
-        window.ReactNativeWebView.postMessage(
-            JSON.stringify({
-                type: 'buyBazaarSubscription',
-                productId: productId,
-                planKey: planKey
-            })
-        );
-
+    if (!productId) {
+        alert('محصول پرداخت برای این پلن تعریف نشده است.');
         return;
     }
+
+    const discountInput = document.getElementById('bazaar-discount-code');
+    const discountCode = discountInput?.value.trim() || '';
+
+    let purchaseOptions = {
+        type: 'buyBazaarSubscription',
+        productId,
+        planKey
+    };
+
+    if (discountCode) {
+        try {
+            const { data: { session }, error } =
+                await supabase.auth.getSession();
+
+            if (error) throw error;
+
+            if (!session) {
+                alert('ابتدا وارد حساب کاربری شوید.');
+                return;
+            }
+
+            const response = await fetch('/api/generate-discount-token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer ' + session.access_token
+                },
+                body: JSON.stringify({
+                    productId,
+                    code: discountCode
+                })
+            });
+
+            const discount = await response.json();
+
+            if (
+                !response.ok ||
+                !discount.success ||
+                !discount.dynamicPriceToken ||
+                !discount.intentId
+            ) {
+                throw new Error(
+                    discount.error || 'کد تخفیف معتبر نیست.'
+                );
+            }
+
+            purchaseOptions.dynamicPriceToken =
+                discount.dynamicPriceToken;
+
+            purchaseOptions.discountIntentId =
+                discount.intentId;
+
+        } catch (err) {
+            alert('خطای کد تخفیف: ' + err.message);
+            return;
+        }
+    }
+
+    window.ReactNativeWebView.postMessage(
+        JSON.stringify(purchaseOptions)
+    );
+
+    return;
+}
 
     // سایت خارج از اپ: مسیر فعلی پرداخت کارت‌به‌کارت
     
