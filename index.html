@@ -628,7 +628,7 @@ const PLANS = {
 };
 
 
-window.openPayment = function (planKey) {
+window.openPayment = async function (planKey) {
     const plan = PLANS[planKey];
     if (!plan) return;
 
