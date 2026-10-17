@@ -253,11 +253,70 @@ export default function App() {
     try {
       const rawData = event?.nativeEvent?.data;
       const data = JSON.parse(rawData);
-   if (data.type ===
-       'buyBazaarSubscription') { 
-     const allowed = ['moshtriyar_vip_yearly', 'moshtriyar_business_30', 'moshtriyar_pro_30']; if (!allowed.includes(data.productId)) return; try { await CafeBazaarBilling.connect({ rsaPublicKey: process.env.EXPO_PUBLIC_CAFEBAZAAR_RSA_KEY });
-     
-                                                                                                                                                                                       
+   
+      
+if (data.type === 'buyBazaarSubscription') {
+  const allowed = [
+    'moshtriyar_vip_yearly',
+    'moshtriyar_business_30',
+    'moshtriyar_pro_30'
+  ];
+
+  if (!allowed.includes(data.productId)) return;
+
+  const purchaseOptions = {};
+
+  if (data.dynamicPriceToken && data.discountIntentId) {
+    purchaseOptions.dynamicPriceToken = data.dynamicPriceToken;
+    purchaseOptions.developerPayload = data.discountIntentId;
+  }
+
+  try {
+    await CafeBazaarBilling.connect({
+      rsaPublicKey: process.env.EXPO_PUBLIC_CAFEBAZAAR_RSA_KEY
+    });
+
+    const purchase = await CafeBazaarBilling.subscribeProduct(
+      data.productId,
+      purchaseOptions
+    );
+
+    const result = {
+      success: true,
+      productId: purchase.productId,
+      purchaseToken: purchase.purchaseToken,
+      orderId: purchase.orderId
+    };
+
+    if (data.discountIntentId) {
+      result.discountIntentId = data.discountIntentId;
+    }
+
+    webViewRef.current?.injectJavaScript(
+      "window.dispatchEvent(new CustomEvent('moshtriyarBazaarPurchaseResult',{detail:" +
+      JSON.stringify(result) +
+      "}));true;"
+    );
+
+  } catch (e) {
+    webViewRef.current?.injectJavaScript(
+      "window.dispatchEvent(new CustomEvent('moshtriyarBazaarPurchaseResult',{detail:" +
+      JSON.stringify({
+        success: false,
+        error: e?.message || 'خرید ناموفق بود'
+      }) +
+      "}));true;"
+    );
+
+  } finally {
+    try {
+      await CafeBazaarBilling.disconnect();
+    } catch (_) {}
+  }
+
+  return;
+}
+                                                                                                                                                                                 
                                                                                                                                                                                           const purchase = await CafeBazaarBilling.subscribeProduct(data.productId); webViewRef.current?.injectJavaScript("window.dispatchEvent(new CustomEvent('moshtriyarBazaarPurchaseResult',{detail:" + JSON.stringify({ success: true, productId: purchase.productId, purchaseToken: purchase.purchaseToken, orderId: purchase.orderId }) + "}));true;"); } catch (e) { webViewRef.current?.injectJavaScript("window.dispatchEvent(new CustomEvent('moshtriyarBazaarPurchaseResult',{detail:" + JSON.stringify({ success: false, error: e?.message || 'خرید ناموفق بود' }) + "}));true;"); } finally { try { await CafeBazaarBilling.disconnect(); } catch (_) {} } return; }
       if (data.type === 'saveFile') {
         await saveFileFromWebView(
