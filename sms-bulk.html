@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ارسال پیامک انبوه | مشتری‌یار</title>
+<link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+<style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Vazirmatn,sans-serif;background:#f8fafc;color:#0f172a;line-height:1.7}
+    .header{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.05);padding:14px 20px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100}
+    .header a{text-decoration:none;font-weight:800;color:#2563eb;font-size:14px;}
+    .container{max-width:600px;margin:20px auto;padding:0 16px;padding-bottom:80px;}
+    .card{background:#fff;border-radius:18px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,.04);margin-bottom:16px}
+    .form-group{margin-bottom:16px}
+    label{display:block;font-weight:700;margin-bottom:8px;font-size:14px}
+    textarea, input[type="text"]{width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:14px;resize:vertical}
+    textarea:focus, input:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.1)}
+    .customer-list{max-height:250px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:10px;padding:10px}
+    .customer-item{display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid #f1f5f9}
+    .customer-item:last-child{border-bottom:none}
+    .btn-send{width:100%;padding:14px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;border:none;border-radius:12px;font-family:inherit;font-weight:800;font-size:16px;cursor:pointer;box-shadow:0 6px 16px rgba(59,130,246,.25)}
+    .btn-send:disabled{opacity:0.6;cursor:not-allowed}
+    .status{margin-top:12px;text-align:center;font-weight:700;font-size:14px;}
+</style>
+</head>
+<body>
+
+<div class="header">
+    <a href="dashboard.html">← بازگشت به داشبورد</a>
+</div>
+
+<div class="container">
+    <div class="card">
+        <h2 style="margin-bottom:16px;">✉️ ارسال پیامک انبوه</h2>
+        
+        <div class="form-group">
+            <label>انتخاب مشتریان:</label>
+            <div class="customer-list" id="customerList">
+                <p style="color:#94a3b8;font-size:13px;">در حال دریافت لیست مشتریان...</p>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>متن پیامک:</label>
+            <textarea id="messageText" rows="4" placeholder="متن پیام خود را اینجا بنویسید..." oninput="updateCharCount()"></textarea>
+            <small style="color:#64748b;display:block;margin-top:4px;" id="charCount">۰ / ۷۰ کاراکتر</small>
+        </div>
+
+        <button class="btn-send" id="sendBtn" onclick="sendBulkSms()">🚀 ارسال پیامک</button>
+        <div class="status" id="statusMsg"></div>
+    </div>
+</div>
+
+<script type="module">
+import { supabase } from './js/supabase.js'; 
+const $ = id => document.getElementById(id);
+let selectedMobiles = [];
+
+async function loadCustomers() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { window.location.href = 'login.html'; return; }
+
+    const { data: customers, error } = await supabase
+        .from('customers')
+        .select('id, name, phone')
+        .eq('user_id', session.user.id);
+
+    const listDiv = $('customerList');
+    if (error || !customers || !customers.length) {
+        listDiv.innerHTML = '<p style="color:#94a3b8;font-size:13px;">مشتری‌ای یافت نشد.</p>';
+        return;
+    }
+
+    listDiv.innerHTML = '';
+    customers.forEach(c => {
+        if(!c.phone) return; 
+        const div = document.createElement('label');
+        div.className = 'customer-item';
+        div.innerHTML = `
+            <input type="checkbox" value="${c.phone}" onchange="toggleCustomer(this)" style="width:18px;height:18px;">
+            <span>${c.name} <small style="color:#64748b;">(${c.phone})</small></span>
+        `;
+        listDiv.appendChild(div);
+    });
+}
+
+window.toggleCustomer = function(checkbox) {
+    const phone = checkbox.value;
+    if (checkbox.checked) {
+        selectedMobiles.push(phone);
+    } else {
+        selectedMobiles = selectedMobiles.filter(p => p !== phone);
+    }
+}
+
+window.updateCharCount = function() {
+    const len = $('messageText').value.length;
+    $('charCount').textContent = `${len.toLocaleString('fa-IR')} / ۷۰ کاراکتر`;
+}
+
+window.sendBulkSms = async function() {
+    const message = $('messageText').value.trim();
+    const btn = $('sendBtn');
+    const status = $('statusMsg');
+
+    if (selectedMobiles.length === 0) {
+        status.innerHTML = '<span style="color:#dc2626;">لطفاً حداقل یک مشتری را انتخاب کنید.</span>';
+        return;
+    }
+    if (!message) {
+        status.innerHTML = '<span style="color:#dc2626;">متن پیامک نمی‌تواند خالی باشد.</span>';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'در حال ارسال...';
+    status.innerHTML = '<span style="color:#2563eb;">در حال ارتباط با سرور...</span>';
+
+    try {
+        // اینجا دقیقاً نام تابع را چک می‌کنیم
+        const { data, error } = await supabase.functions.invoke('send-sms', {
+            body: { mobiles: selectedMobiles, message: message }
+        });
+
+        if (error) throw error;
+
+        // بررسی پاسخ موفقیت‌آمیز از sms.ir
+        if (data && data.success && data.data && data.data.status === 1) {
+            status.innerHTML = '<span style="color:#16a34a;">✅ پیامک‌ها با موفقیت ارسال شدند!</span>';
+            $('messageText').value = '';
+            updateCharCount();
+            
+            document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+            selectedMobiles = [];
+        } else {
+            // اگر sms.ir خطا داده باشد
+            const errorMsg = data?.data?.message || 'خطای ناشناخته در ارسال';
+            status.innerHTML = `<span style="color:#dc2626;">❌ ${errorMsg}</span>`;
+        }
+
+    } catch (err) {
+        console.error(err);
+        status.innerHTML = `<span style="color:#dc2626;">❌ خطای سیستم: ${err.message}</span>`;
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '🚀 ارسال پیامک';
+    }
+}
+
+loadCustomers();
+</script>
+</body>
+  </html>
