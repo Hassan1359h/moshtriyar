@@ -1,5 +1,8 @@
 
 import { createClient } from '@supabase/supabase-js';
+import { createHmac, randomUUID } from 'node:crypto';
+
+const PACKAGE_NAME = 'ir.moshtriyar.app';
 
 const PRODUCTS = {
     moshtriyar_pro_30: {
@@ -19,6 +22,38 @@ const PRODUCTS = {
     }
 };
 
+function createDynamicPriceToken(productId, price, nonce) {
+    const secret = process.env.BAZAAR_DYNAMIC_PRICE_SECRET;
+
+    if (!secret) {
+        throw new Error('Dynamic pricing secret is missing');
+    }
+
+    const encode = value =>
+        Buffer.from(JSON.stringify(value)).toString('base64url');
+
+    const header = encode({
+        alg: 'HS256',
+        typ: 'JWT'
+    });
+
+    const payload = encode({
+        price: price * 10,
+        package_name: PACKAGE_NAME,
+        sku: productId,
+        nonce,
+        exp: Math.floor(Date.now() / 1000) + 300
+    });
+
+    const content = `${header}.${payload}`;
+
+    const signature = createHmac('sha256', secret)
+        .update(content)
+        .digest('base64url');
+
+    return `${content}.${signature}`;
+}
+
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({
@@ -34,7 +69,7 @@ export default async function handler(req, res) {
         if (!supabaseUrl || !serviceRoleKey) {
             return res.status(500).json({
                 success: false,
-                error: 'Supabase server settings are missing.'
+                error: 'Supabase settings are missing'
             });
         }
 
@@ -47,8 +82,6 @@ export default async function handler(req, res) {
             });
         }
 
-        const accessToken = authHeader.slice(7).trim();
-
         const supabaseAdmin = createClient(
             supabaseUrl,
             serviceRoleKey,
@@ -60,10 +93,10 @@ export default async function handler(req, res) {
             }
         );
 
-        const {
-            data: { user },
-            error: userError
-        } = await supabaseAdmin.auth.getUser(accessToken);
+        const { data: { user }, error: userError } =
+            await supabaseAdmin.auth.getUser(
+                authHeader.slice(7).trim()
+            );
 
         if (userError || !user) {
             return res.status(401).json({
@@ -72,18 +105,115 @@ export default async function handler(req, res) {
             });
         }
 
-        // مسیر تأیید خرید کافه‌بازار
-        if (req.query.mode === 'bazaar') {
+        const mode = req.query.mode;
+
+        // صدور توکن تخفیف
+        if (mode === 'discount') {
+            const { productId, code } = req.body || {};
+            const product = PRODUCTS[productId];
+
+            if (
+                !product ||
+                typeof code !== 'string' ||
+                !code.trim() ||
+                code.length > 100
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Invalid discount request'
+                });
+            }
+
+            const { data: discount, error: discountError } =
+                await supabaseAdmin
+                    .from('discount_codes')
+                    .select('*')
+                    .ilike('code', code.trim())
+                    .maybeSingle();
+
+            if (discountError) throw discountError;
+
+            const now = Date.now();
+
+            if (
+                !discount ||
+                discount.is_active !== true ||
+                !discount.expires_at ||
+                new Date(discount.expires_at).getTime() <= now ||
+                !Number.isInteger(discount.max_uses) ||
+                discount.used_count >= discount.max_uses ||
+                (
+                    discount.assigned_user_id &&
+                    discount.assigned_user_id !== user.id
+                ) ||
+                !Array.isArray(discount.allowed_products) ||
+                !discount.allowed_products.includes(productId) ||
+                !Number.isInteger(discount.percent) ||
+                discount.percent <= 0 ||
+                discount.percent > 100
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Discount code is unavailable'
+                });
+            }
+
+            const price = Math.round(
+                product.amount * (100 - discount.percent) / 100
+            );
+
+            const nonce = randomUUID();
+            const expiresAt = new Date(now + 300000).toISOString();
+
+            const dynamicPriceToken = createDynamicPriceToken(
+                productId,
+                price,
+                nonce
+            );
+
+            const { data: intent, error: intentError } =
+                await supabaseAdmin
+                    .from('discount_intents')
+                    .insert({
+                        discount_id: discount.id,
+                        user_id: user.id,
+                        product_id: productId,
+                        nonce,
+                        expires_at: expiresAt,
+                        status: 'pending'
+                    })
+                    .select('id')
+                    .single();
+
+            if (intentError) throw intentError;
+
+            return res.status(200).json({
+                success: true,
+                intentId: intent.id,
+                productId,
+                price,
+                dynamicPriceToken
+            });
+        }
+
+        // تأیید خرید کافه‌بازار
+        if (mode === 'bazaar') {
             const bazaarToken = process.env.BAZAAR_PISHKHAN_TOKEN;
 
             if (!bazaarToken) {
                 return res.status(500).json({
                     success: false,
-                    error: 'Bazaar server settings are missing'
+                    error: 'Bazaar settings are missing'
                 });
             }
 
-            const { productId, purchaseToken, orderId } = req.body || {};
+            const {
+                productId,
+                purchaseToken,
+                orderId,
+                discountIntentId
+            } = req.body || {};
+
             const product = PRODUCTS[productId];
 
             if (
@@ -98,9 +228,22 @@ export default async function handler(req, res) {
                 });
             }
 
+            if (
+                discountIntentId !== undefined &&
+                (
+                    typeof discountIntentId !== 'string' ||
+                    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(discountIntentId)
+                )
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Invalid discount intent'
+                });
+            }
+
             const existing = await supabaseAdmin
                 .from('bazaar_purchases')
-                .select('user_id, product_id, status')
+                .select('user_id,product_id,status,discount_id')
                 .eq('purchase_token', purchaseToken)
                 .maybeSingle();
 
@@ -124,9 +267,49 @@ export default async function handler(req, res) {
                 });
             }
 
+            let amount = product.amount;
+
+            if (discountIntentId) {
+                const { data: intent, error: intentError } =
+                    await supabaseAdmin
+                        .from('discount_intents')
+                        .select('*')
+                        .eq('id', discountIntentId)
+                        .eq('user_id', user.id)
+                        .eq('product_id', productId)
+                        .maybeSingle();
+
+                if (intentError) throw intentError;
+
+                if (
+                    !intent ||
+                    intent.status !== 'pending' ||
+                    intent.purchase_token !== null ||
+                    new Date(intent.expires_at).getTime() <= Date.now()
+                ) {
+                    return res.status(400).json({
+                        success: false,
+                        error: 'Invalid or expired discount intent'
+                    });
+                }
+
+                const { data: discount, error: discountError } =
+                    await supabaseAdmin
+                        .from('discount_codes')
+                        .select('percent')
+                        .eq('id', intent.discount_id)
+                        .single();
+
+                if (discountError) throw discountError;
+
+                amount = Math.round(
+                    product.amount * (100 - discount.percent) / 100
+                );
+            }
+
             const bazaarUrl =
                 'https://pardakht.cafebazaar.ir/devapi/v2/api/' +
-                'applications/ir.moshtriyar.app/active-subscriptions/' +
+                `applications/${PACKAGE_NAME}/active-subscriptions/` +
                 encodeURIComponent(purchaseToken) + '/';
 
             const bazaarResponse = await fetch(bazaarUrl, {
@@ -134,7 +317,8 @@ export default async function handler(req, res) {
                 headers: {
                     'CAFEBAZAAR-PISHKHAN-API-SECRET': bazaarToken,
                     Accept: 'application/json'
-                }
+                },
+                signal: AbortSignal.timeout(12000)
             });
 
             if (!bazaarResponse.ok) {
@@ -151,13 +335,10 @@ export default async function handler(req, res) {
 
             const bazaarData = await bazaarResponse.json();
 
-            if (
-                !bazaarData ||
-                !Array.isArray(bazaarData.subscriptions)
-            ) {
+            if (!Array.isArray(bazaarData?.subscriptions)) {
                 return res.status(502).json({
                     success: false,
-                    error: 'Invalid verification response from Bazaar'
+                    error: 'Invalid Bazaar response'
                 });
             }
 
@@ -183,22 +364,34 @@ export default async function handler(req, res) {
                 Number(verifiedPurchase.validUntilTimestampMsec)
             ).toISOString();
 
+            const rpcArgs = {
+                p_user_id: user.id,
+                p_product_id: productId,
+                p_purchase_token: purchaseToken,
+                p_order_id: typeof orderId === 'string'
+                    ? orderId.slice(0, 255)
+                    : null,
+                p_plan: product.plan,
+                p_amount: amount,
+                p_days: product.days,
+                p_expires_at: expiresAt
+            };
+
+            if (discountIntentId) {
+                rpcArgs.p_discount_intent_id = discountIntentId;
+            }
+
             const { data: result, error: rpcError } =
-                await supabaseAdmin.rpc('verify_bazaar_purchase', {
-                    p_user_id: user.id,
-                    p_product_id: productId,
-                    p_purchase_token: purchaseToken,
-                    p_order_id: typeof orderId === 'string'
-                        ? orderId.slice(0, 255)
-                        : null,
-                    p_plan: product.plan,
-                    p_amount: product.amount,
-                    p_days: product.days,
-                    p_expires_at: expiresAt
-                });
+                await supabaseAdmin.rpc(
+                    'verify_bazaar_purchase',
+                    rpcArgs
+                );
 
             if (rpcError) {
-                console.error('Bazaar activation error:', rpcError.message);
+                console.error(
+                    'Bazaar activation error:',
+                    rpcError.message
+                );
 
                 return res.status(500).json({
                     success: false,
@@ -212,20 +405,20 @@ export default async function handler(req, res) {
             });
         }
 
-        // جلوگیری از اجرای تمدید مدیر با mode ناشناخته
-        if (req.query.mode) {
+        if (mode) {
             return res.status(400).json({
                 success: false,
                 error: 'Invalid operation'
             });
         }
 
-        // تمدید دستی اشتراک: فقط مدیر سیستم
+        // تمدید دستی مدیر
         const isAdmin =
-            user.user_metadata?.role === 'admin' ||
+            user.app_metadata?.role === 'admin' ||
             (process.env.ADMIN_EMAILS || '')
                 .split(',')
                 .map(x => x.trim().toLowerCase())
+                .filter(Boolean)
                 .includes((user.email || '').toLowerCase());
 
         if (!isAdmin) {
@@ -236,24 +429,17 @@ export default async function handler(req, res) {
         }
 
         const { userId, days } = req.body || {};
-
-        if (!userId) {
-            return res.status(400).json({
-                success: false,
-                error: 'شناسه مشتری ارسال نشده است.'
-            });
-        }
-
         const addDays = Number(days);
 
         if (
+            !userId ||
             !Number.isInteger(addDays) ||
             addDays <= 0 ||
             addDays > 3650
         ) {
             return res.status(400).json({
                 success: false,
-                error: 'مدت اشتراک نامعتبر است.'
+                error: 'اطلاعات تمدید نامعتبر است.'
             });
         }
 
@@ -277,8 +463,9 @@ export default async function handler(req, res) {
         let baseDate = now;
 
         if (profile.subscription_end_date) {
-            const existingEnd =
-                new Date(profile.subscription_end_date);
+            const existingEnd = new Date(
+                profile.subscription_end_date
+            );
 
             if (
                 !Number.isNaN(existingEnd.getTime()) &&
