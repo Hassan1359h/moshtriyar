@@ -765,12 +765,15 @@ window.addEventListener('moshtriyarBazaarPurchaseResult', async function (event)
                 'Content-Type': 'application/json',
                 'Authorization': 'Bearer ' + session.access_token
             },
-            body: JSON.stringify({
-                productId: result.productId,
-                purchaseToken: result.purchaseToken,
-                orderId: result.orderId
-            })
-        });
+
+body: JSON.stringify({
+    productId: result.productId,
+    purchaseToken: result.purchaseToken,
+    orderId: result.orderId,
+    ...(result.discountIntentId
+        ? { discountIntentId: result.discountIntentId }
+        : {})
+})
 
         const verification = await response.json();
 
