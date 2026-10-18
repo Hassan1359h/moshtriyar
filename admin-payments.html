@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مدیریت پرداخت‌ها | مشتری‌یار</title>
+<link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+<style>
+    :root { --primary: #4f46e5; --bg: #f8fafc; --card: #ffffff; --text-main: #1e293b; --text-muted: #64748b; --success: #10b981; --danger: #ef4444; }
+    *{box-sizing:border-box;margin:0;padding:0;font-family:'Vazirmatn', sans-serif;}
+    body{background:var(--bg);color:var(--text-main);line-height:1.7;padding-bottom:50px;}
+    .header{background:var(--card);box-shadow:0 4px 20px rgba(0,0,0,.03);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+    .header a{text-decoration:none;color:var(--text-muted);font-weight:700;font-size:14px;}
+    .container{max-width:800px;margin:20px auto;padding:0 16px;}
+    
+    .page-title{text-align:center;margin-bottom:24px;}
+    .page-title h1{font-size:22px;font-weight:900;}
+    
+    /* لیست پرداخت‌ها */
+    .payment-card {background: var(--card); border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border-right: 4px solid var(--primary);}
+    .payment-header {display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;}
+    .user-name {font-weight: 900; font-size: 16px; color: var(--text-main);}
+    .payment-date {font-size: 12px; color: var(--text-muted);}
+    
+    .payment-details {display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; font-size: 13px;}
+    .detail-item {background: #f8fafc; padding: 8px 12px; border-radius: 8px;}
+    .detail-label {color: var(--text-muted); font-size: 11px; display: block;}
+    .detail-value {font-weight: 800; color: var(--primary);}
+    
+    .action-btns {display: flex; gap: 10px;}
+    .btn-approve {flex: 2; background: var(--success); color: white; border: none; padding: 12px; border-radius: 10px; font-family: inherit; font-weight: 800; cursor: pointer; transition: 0.2s;}
+    .btn-approve:hover {background: #059669;}
+    .btn-reject {flex: 1; background: #fee2e2; color: var(--danger); border: none; padding: 12px; border-radius: 10px; font-family: inherit; font-weight: 800; cursor: pointer; transition: 0.2s;}
+    .btn-reject:hover {background: #fca5a5;}
+    
+    .empty-state {text-align: center; padding: 40px; color: var(--text-muted);}
+    .empty-state div {font-size: 40px; margin-bottom: 10px;}
+</style>
+</head>
+<body>
+
+<div class="header">
+    <a href="dashboard.html">← بازگشت به داشبورد</a>
+    <div style="font-weight:800; font-size:15px;">مدیریت پرداخت‌ها</div>
+    <div style="width:20px;"></div>
+</div>
+
+<div class="container">
+    <div class="page-title">
+        <h1>پرداخت‌های در انتظار تایید</h1>
+        <p style="font-size:13px; color:var(--text-muted); margin-top:8px;">در این بخش، واریزی‌های کاربران را بررسی و تایید کنید.</p>
+    </div>
+
+    <div id="paymentsList">
+        <div class="empty-state">
+            <div>⏳</div>
+            <p>در حال دریافت اطلاعات...</p>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+import { supabase } from './js/supabase.js'; 
+const $ = id => document.getElementById(id);
+let currentUserId = null;
+
+async function init() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { window.location.href = 'login.html'; return; }
+    currentUserId = session.user.id;
+
+    // بررسی اینکه آیا کاربر ادمین است یا خیر
+    const { data: profile } = await supabase.from('profiles').select('plan').eq('id', currentUserId).single();
+    if (profile?.plan !== 'admin') {
+        alert('شما دسترسی به این صفحه ندارید.');
+        window.location.href = 'dashboard.html';
+        return;
+    }
+
+    loadPendingPayments();
+}
+
+async function loadPendingPayments() {
+    // دریافت پرداخت‌های در انتظار به همراه اطلاعات کاربر
+    const { data, error } = await supabase
+        .from('payments')
+        .select(`
+            *,
+            profiles:user_id (full_name, email)
+        `)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
+
+    const listDiv = $('paymentsList');
+
+    if (error) {
+        listDiv.innerHTML = `<div class="empty-state" style="color:red;">خطا در دریافت اطلاعات: ${error.message}</div>`;
+        return;
+    }
+
+    if (!data || data.length === 0) {
+        listDiv.innerHTML = `
+            <div class="empty-state">
+                <div>✅</div>
+                <p style="font-weight:800; color:var(--success);">هیچ پرداخت در انتظاری وجود ندارد.</p>
+            </div>
+        `;
+        return;
+    }
+
+    listDiv.innerHTML = '';
+    data.forEach(payment => {
+        // استخراج تعداد پیامک از نوع پکیج (مثلا sms1000 => 1000)
+        const smsAmount = parseInt(payment.plan.replace(/\D/g, '')) || 0;
+        const userName = payment.profiles?.full_name || 'کاربر بدون نام';
+        const userEmail = payment.profiles?.email || '-';
+
+        listDiv.innerHTML += `
+            <div class="payment-card" id="card-${payment.id}">
+                <div class="payment-header">
+                    <div class="user-name">👤 ${userName}</div>
+                    <div class="payment-date">${new Date(payment.created_at).toLocaleString('fa-IR')}</div>
+                </div>
+                
+                <div class="payment-details">
+                    <div class="detail-item">
+                        <span class="detail-label">ایمیل کاربر</span>
+                        <span class="detail-value" style="font-size:11px; direction:ltr;">${userEmail}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">پکیج درخواستی</span>
+                        <span class="detail-value">${payment.plan}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">مبلغ (تومان)</span>
+                        <span class="detail-value">${payment.amount.toLocaleString('fa-IR')}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">شماره پیگیری</span>
+                        <span class="detail-value" style="direction:ltr;">${payment.tracking_code}</span>
+                    </div>
+                </div>
+
+                <div class="action-btns" id="btns-${payment.id}">
+                    <button class="btn-approve" onclick="approvePayment('${payment.id}', '${payment.user_id}', ${smsAmount})">
+                        ✅ تایید و شارژ ${smsAmount} پیامک
+                    </button>
+                    <button class="btn-reject" onclick="rejectPayment('${payment.id}')">
+                        ❌ رد کردن
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+}
+
+window.approvePayment = async function(paymentId, userId, smsAmount) {
+    if(!confirm('آیا از تایید این پرداخت و شارژ پیامک‌ها اطمینان دارید؟')) return;
+
+    const btns = $(`btns-${paymentId}`);
+    btns.innerHTML = '<span style="color:var(--primary); font-weight:800;">در حال پردازش...</span>';
+
+    try {
+        // 1. دریافت سقف فعلی پیامک کاربر
+        const { data: profile } = await supabase.from('profiles').select('sms_limit').eq('id', userId).single();
+        const currentLimit = profile?.sms_limit || 0;
+
+        // 2. آپدیت سقف پیامک کاربر
+        const { error: profileError } = await supabase.from('profiles')
+            .update({ sms_limit: currentLimit + smsAmount })
+            .eq('id', userId);
+        
+        if (profileError) throw profileError;
+
+        // 3. تغییر وضعیت پرداخت به تایید شده
+        const { error: paymentError } = await supabase.from('payments')
+            .update({ status: 'approved' })
+            .eq('id', paymentId);
+
+        if (paymentError) throw paymentError;
+
+        alert('✅ پرداخت با موفقیت تایید و پیامک‌ها به کاربر شارژ شد.');
+        loadPendingPayments(); // رفرش لیست
+
+    } catch (err) {
+        alert(`❌ خطا در تایید: ${err.message}`);
+        btns.innerHTML = '<span style="color:red;">خطا! صفحه را رفرش کنید.</span>';
+    }
+}
+
+window.rejectPayment = async function(paymentId) {
+    if(!confirm('آیا از رد کردن این پرداخت اطمینان دارید؟')) return;
+
+    const btns = $(`btns-${paymentId}`);
+    btns.innerHTML = '<span style="color:var(--danger); font-weight:800;">در حال پردازش...</span>';
+
+    try {
+        const { error } = await supabase.from('payments')
+            .update({ status: 'rejected' })
+            .eq('id', paymentId);
+
+        if (error) throw error;
+        
+        alert('پرداخت رد شد.');
+        loadPendingPayments();
+
+    } catch (err) {
+        alert(`❌ خطا: ${err.message}`);
+    }
+}
+
+init();
+</script>
+</body>
+</html>
