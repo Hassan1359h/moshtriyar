@@ -12,9 +12,14 @@
     .header{background:var(--card);padding:16px 20px;display:flex;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,.03);}
     .header a{text-decoration:none;color:var(--text-muted);font-weight:700;font-size:14px;}
     .container{max-width:650px;margin:20px auto;padding:0 16px;}
-    .quota-card {background: linear-gradient(135deg, var(--primary), #8b5cf6);color: white;border-radius: 20px;padding: 20px;margin-bottom: 20px;display: flex;justify-content: space-between;align-items: center;box-shadow: 0 10px 25px rgba(79,70,229,0.2);}
-    .quota-value {font-size: 26px;font-weight: 900;}
     
+    /* کارت اعتبار با دکمه خرید */
+    .quota-card {background: linear-gradient(135deg, var(--primary), #8b5cf6);color: white;border-radius: 20px;padding: 20px;margin-bottom: 20px;display: flex;justify-content: space-between;align-items: center;box-shadow: 0 10px 25px rgba(79,70,229,0.2);}
+    .quota-info h3{font-size:13px;opacity:.9;font-weight:400;margin-bottom:4px;}
+    .quota-value {font-size: 26px;font-weight: 900;}
+    .btn-buy-sms {background: #fff; color: var(--primary); border: none; padding: 10px 16px; border-radius: 12px; font-family: inherit; font-weight: 800; font-size: 13px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: 0.2s;}
+    .btn-buy-sms:hover {transform: translateY(-2px);}
+
     .form-group{margin-bottom:16px;}
     label{display:block;font-weight:800;margin-bottom:8px;font-size:13px;}
     select, input[type="text"], textarea {width:100%;padding:14px;border:1px solid #e2e8f0;border-radius:12px;font-family:inherit;font-size:14px;background:var(--card);}
@@ -29,22 +34,46 @@
     
     .log-item {background:var(--card);border:1px solid #e2e8f0;border-radius:12px;padding:12px;margin-bottom:8px;font-size:12px;}
     .log-header {display:flex;justify-content:space-between;font-weight:800;margin-bottom:6px;color:var(--primary);}
+
+    /* --- استایل مودال‌ها (خرید و پرداخت) --- */
+    .modal-overlay {position: fixed;top: 0;left: 0;right: 0;bottom: 0;background: rgba(15, 23, 42, 0.6);backdrop-filter: blur(4px);display: none;justify-content: center;align-items: center;z-index: 9999;padding: 20px;overflow-y: auto;}
+    .modal-content {background: var(--card);border-radius: 24px;padding: 24px;max-width: 450px;width: 100%;box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); margin: auto;}
+    
+    /* طراحی کارت بانکی */
+    .bank-card-box {background: linear-gradient(135deg, #0f172a, #334155);color: white;border-radius: 16px;padding: 20px;margin-bottom: 20px;box-shadow: 0 10px 20px rgba(0,0,0,0.2);position: relative;overflow: hidden;direction: ltr;}
+    .chip {width: 40px;height: 30px;background: linear-gradient(135deg, #fcd34d, #f59e0b);border-radius: 6px;margin-bottom: 16px;}
+    .bank-card-title {font-size: 12px;opacity: 0.7;margin-bottom: 6px;text-align: right;direction: rtl;}
+    .bank-card-number {font-size: 20px;font-weight: 700;letter-spacing: 2px;margin-bottom: 12px;font-family: 'Courier New', monospace;}
+    .copy-btn {background: rgba(255,255,255,0.15);color: white;border: 1px solid rgba(255,255,255,0.3);padding: 6px 12px;border-radius: 6px;font-family: inherit;font-size: 11px;cursor: pointer;}
+
+    .sms-packages-grid{display:grid;grid-template-columns:repeat(2, 1fr);gap:10px;margin-bottom:16px;}
+    .sms-pack-card{border:2px solid #e2e8f0;border-radius:12px;padding:12px;text-align:center;cursor:pointer;transition:0.2s;}
+    .sms-pack-card:hover, .sms-pack-card.selected {border-color:var(--primary); background:#f5f3ff;}
+    .sms-pack-count{font-size:18px;font-weight:900;}
+    .sms-pack-price{font-size:12px;color:var(--primary);font-weight:700;margin-top:4px;}
+
+    .modal-btns{display:flex;gap:10px;margin-top:16px;}
+    .btn-cancel{flex:1;padding:12px;background:#f1f5f9;color:var(--text-main);border:none;border-radius:12px;font-family:inherit;font-weight:800;cursor:pointer;}
+    .btn-submit{flex:2;padding:12px;background:var(--primary);color:#fff;border:none;border-radius:12px;font-family:inherit;font-weight:800;cursor:pointer;}
 </style>
 </head>
 <body>
 <div class="header"><a href="dashboard.html">← بازگشت</a><div style="font-weight:800;">پنل پیامک هوشمند</div><div style="width:20px;"></div></div>
 
 <div class="container">
+    <!-- کارت اعتبار با دکمه خرید -->
     <div class="quota-card">
-        <div><div style="font-size:13px;opacity:.9;">اعتبار پیامک</div><div class="quota-value" id="quotaDisplay">...</div></div>
-        <div style="font-size:36px;opacity:.8;">✉️</div>
+        <div class="quota-info">
+            <h3>اعتبار پیامک شما</h3>
+            <div class="quota-value" id="quotaDisplay">...</div>
+        </div>
+        <button class="btn-buy-sms" onclick="openBuyModal()">💳 خرید اعتبار</button>
     </div>
 
     <!-- انتخاب خط ارسال -->
     <div class="form-group">
         <label>انتخاب سر خط ارسال:</label>
         <select id="senderLine">
-            <!-- شماره اصلاح شده دقیقا طبق درخواست شما -->
             <option value="98500039586936605">98500039586936605</option>
         </select>
     </div>
@@ -75,10 +104,69 @@
     <!-- گزارش ارسال -->
     <div class="section-title" style="margin-top:24px;font-weight:800;font-size:15px;">📋 گزارش ارسال‌ها</div>
     <div id="smsLogsList"><p style="color:var(--text-muted);font-size:13px;">در حال دریافت...</p></div>
-
 </div>
 
 <button class="btn-send" id="sendBtn" onclick="sendBulkSms()">🚀 ارسال پیامک</button>
+
+<!-- مودال ۱: انتخاب پکیج و نمایش کارت -->
+<div class="modal-overlay" id="buyModal">
+    <div class="modal-content">
+        <h3 style="text-align:center;margin-bottom:16px;">خرید اعتبار پیامک</h3>
+        
+        <!-- کارت بانکی -->
+        <div class="bank-card-box">
+            <div class="chip"></div>
+            <div class="bank-card-title">شماره کارت جهت واریز</div>
+            <!-- شماره کارت خود را اینجا جایگزین کنید -->
+            <div class="bank-card-number" id="cardNumberText">6037 9977 1234 5678</div>
+            <button class="copy-btn" onclick="copyCardNumber()">📋 کپی شماره کارت</button>
+        </div>
+
+        <label style="text-align:center; display:block; margin-bottom:10px;">پکیج مورد نظر را انتخاب کنید:</label>
+        <div class="sms-packages-grid">
+            <div class="sms-pack-card" onclick="selectPack(this, 'sms500', '۵۰۰ پیامک', 150000)">
+                <div class="sms-pack-count">۵۰۰</div>
+                <div class="sms-pack-price">۱۵۰,۰۰۰ تومان</div>
+            </div>
+            <div class="sms-pack-card" onclick="selectPack(this, 'sms1000', '۱۰۰۰ پیامک', 300000)">
+                <div class="sms-pack-count">۱۰۰۰</div>
+                <div class="sms-pack-price">۳۰۰,۰۰۰ تومان</div>
+            </div>
+            <div class="sms-pack-card" onclick="selectPack(this, 'sms1500', '۱۵۰۰ پیامک', 450000)">
+                <div class="sms-pack-count">۱۵۰۰</div>
+                <div class="sms-pack-price">۴۵۰,۰۰۰ تومان</div>
+            </div>
+            <div class="sms-pack-card" onclick="selectPack(this, 'sms2000', '۲۰۰۰ پیامک', 600000)">
+                <div class="sms-pack-count">۲۰۰۰</div>
+                <div class="sms-pack-price">۶۰۰,۰۰۰ تومان</div>
+            </div>
+        </div>
+
+        <div class="modal-btns">
+            <button class="btn-cancel" onclick="document.getElementById('buyModal').style.display='none'">انصراف</button>
+            <button class="btn-submit" id="nextToPayBtn" onclick="goToPaymentStep()" disabled>ادامه و ثبت پرداخت</button>
+        </div>
+    </div>
+</div>
+
+<!-- مودال ۲: ثبت شماره پیگیری -->
+<div class="modal-overlay" id="paymentModal">
+    <div class="modal-content">
+        <h3 id="modalTitle" style="text-align:center;margin-bottom:16px;">ثبت اطلاعات پرداخت</h3>
+        <p id="modalDesc" style="font-size:14px; color:var(--primary); font-weight:800; margin-bottom:16px; text-align:center;"></p>
+        
+        <div class="form-group">
+            <label>شماره پیگیری / ۴ رقم آخر کارت:</label>
+            <input type="text" id="trackingCode" placeholder="مثلاً 1234" style="direction:ltr; text-align:left;">
+        </div>
+        
+        <div class="modal-btns">
+            <button class="btn-cancel" onclick="document.getElementById('paymentModal').style.display='none'">انصراف</button>
+            <button class="btn-submit" id="submitPayBtn" onclick="submitManualPayment()">ثبت نهایی</button>
+        </div>
+        <div id="paymentMsg" style="text-align:center; font-size:12px; font-weight:700; margin-top:12px;"></div>
+    </div>
+</div>
 
 <script type="module">
 import { supabase } from './js/supabase.js'; 
@@ -86,6 +174,7 @@ const $ = id => document.getElementById(id);
 let currentUserId = null;
 let userSmsLimit = 0; let userSmsUsed = 0;
 let allCustomers = []; let selectedMobiles = new Set();
+let selectedPackage = {};
 
 async function init() {
     const { data: { session } } = await supabase.auth.getSession();
@@ -104,10 +193,76 @@ function updateQuotaUI() {
     const remaining = userSmsLimit - userSmsUsed;
     $('quotaDisplay').textContent = remaining.toLocaleString('fa-IR') + ' عدد';
     if (remaining <= 0) {
-        $('quotaDisplay').textContent = '۰ (ارتقا دهید)';
-        $('sendBtn').disabled = true; $('sendBtn').textContent = '❌ اعتبار کافی نیست';
+        $('quotaDisplay').textContent = '۰ عدد';
+        $('sendBtn').disabled = true; $('sendBtn').textContent = '❌ اعتبار کافی نیست (خرید کنید)';
+    } else {
+        $('sendBtn').disabled = false; $('sendBtn').textContent = '🚀 ارسال پیامک';
     }
 }
+
+/* --- توابع خرید پیامک (داخل همین صفحه) --- */
+window.openBuyModal = function() {
+    $('buyModal').style.display = 'flex';
+    // ریست کردن انتخاب‌ها
+    document.querySelectorAll('.sms-pack-card').forEach(el => el.classList.remove('selected'));
+    selectedPackage = {};
+    $('nextToPayBtn').disabled = true;
+}
+
+window.selectPack = function(element, type, name, price) {
+    document.querySelectorAll('.sms-pack-card').forEach(el => el.classList.remove('selected'));
+    element.classList.add('selected');
+    selectedPackage = { type, name, price };
+    $('nextToPayBtn').disabled = false;
+}
+
+window.copyCardNumber = function() {
+    const cardText = $('cardNumberText').innerText.replace(/\s/g, '');
+    navigator.clipboard.writeText(cardText).then(() => alert('✅ شماره کارت کپی شد!'));
+}
+
+window.goToPaymentStep = function() {
+    if(!selectedPackage.type) return;
+    $('buyModal').style.display = 'none';
+    $('modalTitle').textContent = 'ثبت اطلاعات پرداخت';
+    $('modalDesc').textContent = `خرید: ${selectedPackage.name} - مبلغ: ${selectedPackage.price.toLocaleString('fa-IR')} تومان`;
+    $('trackingCode').value = '';
+    $('paymentMsg').textContent = '';
+    $('paymentModal').style.display = 'flex';
+}
+
+window.submitManualPayment = async function() {
+    const trackingCode = $('trackingCode').value.trim();
+    const btn = $('submitPayBtn');
+    const msg = $('paymentMsg');
+
+    if (!trackingCode) { msg.textContent = 'شماره پیگیری الزامی است.'; msg.style.color = '#dc2626'; return; }
+
+    btn.disabled = true; btn.textContent = 'در حال ثبت...';
+
+    try {
+        const { error } = await supabase.from('payments').insert({
+            user_id: currentUserId,
+            plan: selectedPackage.type,
+            amount: selectedPackage.price,
+            tracking_code: trackingCode,
+            description: '-', status: 'pending'
+        });
+
+        if (error) throw error;
+
+        msg.textContent = '✅ پرداخت شما ثبت شد. پس از تایید مدیر، اعتبار اضافه می‌شود.';
+        msg.style.color = '#16a34a';
+        
+        setTimeout(() => { $('paymentModal').style.display = 'none'; }, 2500);
+
+    } catch (error) {
+        msg.textContent = `❌ ${error?.message || 'خطا در ثبت'}`; msg.style.color = '#dc2626';
+    } finally {
+        btn.disabled = false; btn.textContent = 'ثبت نهایی';
+    }
+}
+/* --------------------------------------- */
 
 async function loadCustomers() {
     const { data } = await supabase.from('customers').select('id, name, phone, status, total_purchase').eq('user_id', currentUserId);
