@@ -125,23 +125,33 @@ async function checkSmsTerms() {
 }
 
 // 2. ثبت تایید قوانین
-window.acceptSmsTerms = async function() {
+    window.acceptSmsTerms = async function() {
     const btn = $('smsTermsBtn');
     btn.textContent = 'در حال ثبت...';
+    btn.disabled = true; // جلوگیری از کلیک مجدد
     
-    const { error } = await supabase.from('profiles').update({
-        sms_terms_accepted: true,
-        sms_terms_accepted_at: new Date().toISOString()
-    }).eq('id', currentUserId);
+    try {
+        const { data, error } = await supabase.from('profiles').update({
+            sms_terms_accepted: true,
+            sms_terms_accepted_at: new Date().toISOString()
+        }).eq('id', currentUserId).select(); // .select() برای برگرداندن نتیجه
 
-    if (!error) {
+        if (error) {
+            // نمایش خطای دقیق‌تر برای عیب‌یابی
+            throw new Error(`خطای دیتابیس: ${error.message} (کد: ${error.code})`);
+        }
+
+        // اگر موفق بود
         $('termsModal').style.display = 'none';
         checkSmsTerms(); // دوباره چک کن و لود کن
-    } else {
-        alert('خطا در ثبت قوانین. لطفاً دوباره تلاش کنید.');
+        
+    } catch (err) {
+        console.error('SMS Terms Error:', err);
+        alert(`خطا در ثبت قوانین: ${err.message}\nلطفاً از تنظیمات RLS و مجوزها مطمئن شوید.`);
         btn.textContent = 'تایید و ورود به پنل پیامک';
+        btn.disabled = false;
     }
-}
+   }
 
 // 3. آپدیت نمایش اعتبار
 function updateQuotaUI() {
