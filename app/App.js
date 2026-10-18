@@ -256,9 +256,11 @@ export default function App() {
       // خرید اشتراک کافه‌بازار با پشتیبانی از تخفیف
       if (data.type === 'buyBazaarSubscription') {
         const allowed = [
-          'moshtriyar_vip_yearly',
-          'moshtriyar_business_30',
-          'moshtriyar_pro_30',
+         'moshtriyar_vip_yearly',
+         'moshtriyar_business_30',
+         'moshtriyar_pro_30',
+         'moshtriyar_test_5min'
+
         ];
 
         if (!allowed.includes(data.productId)) {
