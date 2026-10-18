@@ -22,6 +22,25 @@
     .btn-send{width:100%;padding:14px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;border:none;border-radius:12px;font-family:inherit;font-weight:800;font-size:16px;cursor:pointer;box-shadow:0 6px 16px rgba(59,130,246,.25)}
     .btn-send:disabled{opacity:0.6;cursor:not-allowed}
     .status{margin-top:12px;text-align:center;font-weight:700;font-size:14px;}
+
+    /* استایل پنجره قوانین (Modal) */
+    .modal-overlay {
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(15, 23, 42, 0.7);
+        display: none; justify-content: center; align-items: center;
+        z-index: 9999; padding: 20px;
+    }
+    .modal-content {
+        background: #fff; border-radius: 16px; padding: 24px;
+        max-width: 500px; width: 100%; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        border-top: 5px solid #dc2626;
+    }
+    .modal-title { color: #dc2626; font-size: 18px; font-weight: 800; margin-bottom: 12px; }
+    .modal-text { font-size: 14px; color: #334155; line-height: 1.8; margin-bottom: 16px; text-align: justify; }
+    .modal-checkbox { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 20px; background: #fef2f2; padding: 12px; border-radius: 10px; }
+    .modal-checkbox input { width: 20px; height: 20px; margin-top: 2px; cursor: pointer; accent-color: #dc2626; }
+    .modal-btn { width: 100%; padding: 14px; background: #dc2626; color: #fff; border: none; border-radius: 10px; font-family: inherit; font-weight: 800; font-size: 15px; cursor: pointer; }
+    .modal-btn:disabled { background: #fca5a5; cursor: not-allowed; }
 </style>
 </head>
 <body>
@@ -30,10 +49,33 @@
     <a href="dashboard.html">← بازگشت به داشبورد</a>
 </div>
 
+<!-- پنجره قوانین پیامک -->
+<div class="modal-overlay" id="termsModal">
+    <div class="modal-content">
+        <div class="modal-title">⚠️ تاییدیه مسئولیت پنل پیامک</div>
+        <div class="modal-text">
+            مسئولیت استفاده از پنل پیامک با مدیر سایت و ثبت‌نام‌شونده می‌باشد. هرگونه تخلف و ارسال پیام مغایر با قانون اساسی جمهوری اسلامی ایران، مباحث سیاسی، محتوای جنسی و سوءاستفاده از پنل پیامک مشتری‌یار تخلف محسوب می‌شود و مسئولیت مراجع قضایی را می‌پذیرم.
+        </div>
+        <div class="modal-checkbox">
+            <input type="checkbox" id="smsTermsCheck" onchange="document.getElementById('smsTermsBtn').disabled = !this.checked">
+            <label for="smsTermsCheck" style="font-size: 13px; font-weight: 700; cursor: pointer;">
+                تمامی موارد فوق را خوانده‌ام و مسئولیت آن را می‌پذیرم.
+            </label>
+        </div>
+        <button class="modal-btn" id="smsTermsBtn" disabled onclick="acceptSmsTerms()">تایید و ورود به پنل پیامک</button>
+    </div>
+</div>
+
 <div class="container">
     <div class="card">
         <h2 style="margin-bottom:16px;">✉️ ارسال پیامک انبوه</h2>
         
+        <!-- نمایش اعتبار پیامک -->
+        <div id="smsQuotaBox" style="background:#eff6ff; border:1px solid #bfdbfe; padding:12px; border-radius:10px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:13px; font-weight:700; color:#1e3a8a;">اعتبار پیامک شما:</span>
+            <span id="smsQuotaText" style="font-weight:900; color:#2563eb;">در حال محاسبه...</span>
+        </div>
+
         <div class="form-group">
             <label>انتخاب مشتریان:</label>
             <div class="customer-list" id="customerList">
@@ -56,15 +98,71 @@
 import { supabase } from './js/supabase.js'; 
 const $ = id => document.getElementById(id);
 let selectedMobiles = [];
+let currentUserId = null;
+let userSmsLimit = 0;
+let userSmsUsed = 0;
 
-async function loadCustomers() {
+// 1. بررسی تایید قوانین
+async function checkSmsTerms() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { window.location.href = 'login.html'; return; }
+    currentUserId = session.user.id;
 
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('sms_terms_accepted, sms_limit, sms_used')
+        .eq('id', currentUserId)
+        .single();
+
+    if (!profile || !profile.sms_terms_accepted) {
+        $('termsModal').style.display = 'flex';
+    } else {
+        userSmsLimit = profile.sms_limit || 0;
+        userSmsUsed = profile.sms_used || 0;
+        updateQuotaUI();
+        loadCustomers();
+    }
+}
+
+// 2. ثبت تایید قوانین
+window.acceptSmsTerms = async function() {
+    const btn = $('smsTermsBtn');
+    btn.textContent = 'در حال ثبت...';
+    
+    const { error } = await supabase.from('profiles').update({
+        sms_terms_accepted: true,
+        sms_terms_accepted_at: new Date().toISOString()
+    }).eq('id', currentUserId);
+
+    if (!error) {
+        $('termsModal').style.display = 'none';
+        checkSmsTerms(); // دوباره چک کن و لود کن
+    } else {
+        alert('خطا در ثبت قوانین. لطفاً دوباره تلاش کنید.');
+        btn.textContent = 'تایید و ورود به پنل پیامک';
+    }
+}
+
+// 3. آپدیت نمایش اعتبار
+function updateQuotaUI() {
+    const remaining = userSmsLimit - userSmsUsed;
+    $('smsQuotaText').textContent = `${remaining.toLocaleString('fa-IR')} پیامک`;
+    
+    if (remaining <= 0) {
+        $('smsQuotaText').style.color = '#dc2626';
+        $('smsQuotaBox').style.background = '#fef2f2';
+        $('smsQuotaBox').style.borderColor = '#fecaca';
+        $('sendBtn').disabled = true;
+        $('sendBtn').textContent = '❌ اعتبار کافی نیست (ارتقا دهید)';
+    }
+}
+
+// 4. لود مشتریان
+async function loadCustomers() {
     const { data: customers, error } = await supabase
         .from('customers')
         .select('id, name, phone')
-        .eq('user_id', session.user.id);
+        .eq('user_id', currentUserId);
 
     const listDiv = $('customerList');
     if (error || !customers || !customers.length) {
@@ -85,6 +183,7 @@ async function loadCustomers() {
     });
 }
 
+// 5. مدیریت انتخاب مشتریان
 window.toggleCustomer = function(checkbox) {
     const phone = checkbox.value;
     if (checkbox.checked) {
@@ -94,11 +193,13 @@ window.toggleCustomer = function(checkbox) {
     }
 }
 
+// 6. شمارنده کاراکتر
 window.updateCharCount = function() {
     const len = $('messageText').value.length;
     $('charCount').textContent = `${len.toLocaleString('fa-IR')} / ۷۰ کاراکتر`;
 }
 
+// 7. ارسال پیامک
 window.sendBulkSms = async function() {
     const message = $('messageText').value.trim();
     const btn = $('sendBtn');
@@ -112,43 +213,53 @@ window.sendBulkSms = async function() {
         status.innerHTML = '<span style="color:#dc2626;">متن پیامک نمی‌تواند خالی باشد.</span>';
         return;
     }
+    if (selectedMobiles.length > (userSmsLimit - userSmsUsed)) {
+        status.innerHTML = '<span style="color:#dc2626;">تعداد مشتریان انتخاب شده بیشتر از اعتبار شماست.</span>';
+        return;
+    }
 
     btn.disabled = true;
     btn.textContent = 'در حال ارسال...';
     status.innerHTML = '<span style="color:#2563eb;">در حال ارتباط با سرور...</span>';
 
     try {
-        // اینجا دقیقاً نام تابع را چک می‌کنیم
         const { data, error } = await supabase.functions.invoke('send-sms', {
             body: { mobiles: selectedMobiles, message: message }
         });
 
         if (error) throw error;
 
-        // بررسی پاسخ موفقیت‌آمیز از sms.ir
         if (data && data.success && data.data && data.data.status === 1) {
             status.innerHTML = '<span style="color:#16a34a;">✅ پیامک‌ها با موفقیت ارسال شدند!</span>';
             $('messageText').value = '';
             updateCharCount();
-            
             document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
             selectedMobiles = [];
+            
+            // آپدیت اعتبار در صفحه
+            userSmsUsed += selectedMobiles.length;
+            updateQuotaUI();
         } else {
-            // اگر sms.ir خطا داده باشد
             const errorMsg = data?.data?.message || 'خطای ناشناخته در ارسال';
             status.innerHTML = `<span style="color:#dc2626;">❌ ${errorMsg}</span>`;
         }
-
     } catch (err) {
         console.error(err);
-        status.innerHTML = `<span style="color:#dc2626;">❌ خطای سیستم: ${err.message}</span>`;
+        if (err.message.includes('اعتبار پیامک شما کافی نیست')) {
+            status.innerHTML = `<span style="color:#dc2626;">❌ ${err.message} <br> <a href="billing.html" style="color:#2563eb;text-decoration:underline;">خرید پکیج پیامک</a></span>`;
+        } else {
+            status.innerHTML = `<span style="color:#dc2626;">❌ خطای سیستم: ${err.message}</span>`;
+        }
     } finally {
         btn.disabled = false;
-        btn.textContent = '🚀 ارسال پیامک';
+        if (userSmsLimit - userSmsUsed > 0) {
+            btn.textContent = '🚀 ارسال پیامک';
+        }
     }
 }
 
-loadCustomers();
+// شروع برنامه
+checkSmsTerms();
 </script>
 </body>
-  </html>
+</html>
