@@ -130,7 +130,6 @@ async function checkSmsTerms() {
     btn.textContent = 'در حال ثبت...';
     btn.disabled = true;
 
-    // بررسی اینکه آیا کاربر لاگین است
     if (!currentUserId) {
         alert('خطا: شناسه کاربر یافت نشد. لطفاً صفحه را رفرش کنید.');
         btn.textContent = 'تایید و ورود به پنل پیامک';
@@ -139,24 +138,21 @@ async function checkSmsTerms() {
     }
 
     try {
-        const { data, error } = await supabase.from('profiles').update({
+        const { error } = await supabase.from('profiles').update({
             sms_terms_accepted: true,
             sms_terms_accepted_at: new Date().toISOString()
-        }).eq('id', currentUserId).select();
+        }).eq('id', currentUserId);
 
         if (error) {
-            // نمایش دقیق خطای دیتابیس
             throw new Error(`کد خطا: ${error.code} - ${error.message}`);
         }
 
-        // اگر موفق بود
-        $('termsModal').style.display = 'none';
-        checkSmsTerms(); 
+        // اگر موفق بود، صفحه را رفرش کن تا از نو لود شود
+        window.location.reload();
 
     } catch (err) {
         console.error('SMS Terms Error:', err);
-        // نمایش هشدار روی صفحه
-        alert(`❌ خطا در ثبت قوانین:\n${err.message}\n\nلطفاً مطمئن شوید کد SQL مربوط به دسترسی‌ها را در Supabase اجرا کرده‌اید.`);
+        alert(`❌ خطا در ثبت قوانین:\n${err.message}`);
         
         btn.textContent = 'تایید و ورود به پنل پیامک';
         btn.disabled = false;
