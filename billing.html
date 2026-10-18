@@ -30,14 +30,18 @@
     .badge-popular{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--primary);color:#fff;font-size:11px;font-weight:800;padding:4px 12px;border-radius:20px;}
     .badge-vip{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--vip);color:#fff;font-size:11px;font-weight:800;padding:4px 12px;border-radius:20px;}
     .plan-name{font-size:18px;font-weight:900;margin-bottom:8px;}
-    .plan-price{font-size:24px;font-weight:900;color:var(--primary);margin-bottom:16px;}
-    .plan-card.vip .plan-price {color:var(--vip);}
+    
+    /* تغییر قیمت به رایگان */
+    .plan-price{font-size:22px;font-weight:900;color:var(--success);margin-bottom:16px;}
+    .plan-card.vip .plan-price {color:var(--success);}
+    
     .plan-features{font-size:12px;color:var(--text-muted);margin-bottom:20px;list-style:none;text-align:right;}
     .plan-features li{margin-bottom:8px;}
     .plan-features li::before{content:'✓';color:var(--success);font-weight:900;margin-left:6px;}
+    
     .btn-buy{width:100%;padding:14px;background:var(--bg);color:var(--text-main);border:1px solid #cbd5e1;border-radius:12px;font-family:inherit;font-weight:800;font-size:14px;cursor:pointer;transition:0.2s;}
-    .plan-card:hover .btn-buy{background:var(--primary);color:#fff;border-color:var(--primary);}
-    .plan-card.vip:hover .btn-buy{background:var(--vip);border-color:var(--vip);}
+    .plan-card:hover .btn-buy{background:var(--success);color:#fff;border-color:var(--success);}
+    .plan-card.vip:hover .btn-buy{background:var(--vip);border-color:var(--vip);color:#fff;}
 
     /* گرید پکیج‌های پیامک */
     .sms-packages{display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:12px;}
@@ -71,7 +75,7 @@
 <div class="container">
     <div class="page-title">
         <h1>ارتقای مشتری‌یار</h1>
-        <p>پلن یا پکیج پیامک خود را انتخاب کنید.</p>
+        <p>همین حالا پلن خود را رایگان فعال کنید.</p>
     </div>
 
     <div class="section-title">
@@ -83,45 +87,45 @@
         <div class="plan-card popular">
             <div class="badge-popular">پیشنهاد ما</div>
             <div class="plan-name">حرفه‌ای</div>
-            <div class="plan-price">۳۹۰,۰۰۰ <span style="font-size:12px;font-weight:400;">تومان/ماه</span></div>
+            <div class="plan-price">رایگان</div>
             <ul class="plan-features">
-                <li>🎁 ۶۰ پیامک هدیه ماهانه</li>
+                <li>🎁 ۶۰ پیامک هدیه</li>
                 <li>مدیریت چک و اقساط</li>
                 <li>پشتیبانی کامل</li>
             </ul>
-            <button class="btn-buy" onclick="openPaymentModal('pro', 'پلن حرفه‌ای', 390000)">ارتقا به حرفه‌ای</button>
+            <button class="btn-buy" onclick="activateFreePlan('pro', 'پلن حرفه‌ای', 60)">فعال‌سازی پلن</button>
         </div>
 
         <!-- پلن کسب و کار -->
         <div class="plan-card">
             <div class="plan-name">کسب‌وکار</div>
-            <div class="plan-price">۷۹۰,۰۰۰ <span style="font-size:12px;font-weight:400;">تومان/ماه</span></div>
+            <div class="plan-price">رایگان</div>
             <ul class="plan-features">
-                <li>🎁 ۲۰۰ پیامک هدیه ماهانه</li>
+                <li>🎁 ۲۰۰ پیامک هدیه</li>
                 <li>پنل اپراتور و وب‌سایت</li>
                 <li>پشتیبانی اختصاصی</li>
             </ul>
-            <button class="btn-buy" onclick="openPaymentModal('business', 'پلن کسب‌وکار', 790000)">ارتقا به کسب‌وکار</button>
+            <button class="btn-buy" onclick="activateFreePlan('business', 'پلن کسب‌وکار', 200)">فعال‌سازی پلن</button>
         </div>
 
         <!-- پلن ویژه (VIP) -->
         <div class="plan-card vip">
             <div class="badge-vip">ویژه</div>
             <div class="plan-name">ویژه (VIP)</div>
-            <div class="plan-price">۱,۴۹۰,۰۰۰ <span style="font-size:12px;font-weight:400;">تومان/ماه</span></div>
+            <div class="plan-price">رایگان</div>
             <ul class="plan-features">
-                <li>🎁 ۵۰۰ پیامک هدیه ماهانه</li>
+                <li>🎁 ۵۰۰ پیامک هدیه</li>
                 <li>تمام امکانات نامحدود</li>
                 <li>پشتیبانی VIP</li>
             </ul>
-            <button class="btn-buy" onclick="openPaymentModal('vip', 'پلن ویژه', 1490000)">ارتقا به ویژه</button>
+            <button class="btn-buy" onclick="activateFreePlan('vip', 'پلن ویژه', 500)">فعال‌سازی پلن</button>
         </div>
     </div>
 
     <!-- بخش خرید پکیج پیامک -->
     <div class="section-title" style="margin-top:32px;">
         <div>✉️ خرید پکیج پیامک اضافه</div>
-        <span>تعرفه: ۳۰۰ تومان</span>
+        <span>تعرفه: ۳۰۰ تومان به ازای هر پیامک</span>
     </div>
     
     <div class="sms-packages">
@@ -152,7 +156,7 @@
     </div>
 </div>
 
-<!-- مودال ثبت پرداخت (شماره پیگیری) -->
+<!-- مودال ثبت پرداخت (مخصوص پکیج‌های پیامک) -->
 <div class="modal-overlay" id="paymentModal">
     <div class="modal-content">
         <h3 id="modalTitle">تایید خرید</h3>
@@ -187,6 +191,33 @@ async function start() {
     me = session.user;
 }
 
+// 1. تابع فعال‌سازی رایگان پلن‌ها
+window.activateFreePlan = async function(type, name, smsGift) {
+    if (!confirm(`آیا می‌خواهید ${name} را به صورت رایگان فعال کنید؟ (${smsGift} پیامک هدیه)`)) return;
+
+    try {
+        // دریافت سقف پیامک فعلی
+        const { data: profile } = await supabase.from('profiles').select('sms_limit').eq('id', me.id).maybeSingle();
+        let currentLimit = profile?.sms_limit || 0;
+
+        // آپدیت دیتابیس: تغییر پلن و اضافه کردن هدیه پیامک
+        const { error } = await supabase.from('profiles').update({
+            plan: type,
+            sms_limit: currentLimit + smsGift
+        }).eq('id', me.id);
+
+        if (error) throw error;
+
+        alert(`✅ ${name} با موفقیت فعال شد!\n🎁 ${smsGift} پیامک هدیه به حساب شما اضافه شد.`);
+        window.location.reload();
+
+    } catch (err) {
+        console.error(err);
+        alert(`❌ خطا در فعال‌سازی: ${err.message}`);
+    }
+}
+
+// 2. مودال پرداخت (برای پکیج‌های پیامک)
 window.openPaymentModal = function(type, name, price) {
     selectedPackage = { type, name, price };
     $('modalTitle').textContent = `ثبت پرداخت: ${name}`;
@@ -213,14 +244,14 @@ window.submitManualPayment = async function() {
     btn.textContent = 'در حال ثبت...';
 
     try {
-        // ثبت در جدول payments (شما باید این جدول را در سوپابیس داشته باشید)
+        // ثبت در جدول payments (جهت تایید دستی توسط مدیر)
         const { error } = await supabase.from('payments').insert({
             user_id: me.id,
             plan: selectedPackage.type,
             amount: selectedPackage.price,
             tracking_code: trackingCode,
             description: description || '-',
-            status: 'pending' // در انتظار تایید مدیر
+            status: 'pending'
         });
 
         if (error) throw error;
