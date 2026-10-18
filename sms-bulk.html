@@ -13,12 +13,81 @@
     .header a{text-decoration:none;color:var(--text-muted);font-weight:700;font-size:14px;}
     .container{max-width:650px;margin:20px auto;padding:0 16px;}
     
-    /* کارت اعتبار با دکمه خرید */
-    .quota-card {background: linear-gradient(135deg, var(--primary), #8b5cf6);color: white;border-radius: 20px;padding: 20px;margin-bottom: 20px;display: flex;justify-content: space-between;align-items: center;box-shadow: 0 10px 25px rgba(79,70,229,0.2);}
-    .quota-info h3{font-size:13px;opacity:.9;font-weight:400;margin-bottom:4px;}
-    .quota-value {font-size: 26px;font-weight: 900;}
-    .btn-buy-sms {background: #fff; color: var(--primary); border: none; padding: 10px 16px; border-radius: 12px; font-family: inherit; font-weight: 800; font-size: 13px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: 0.2s;}
-    .btn-buy-sms:hover {transform: translateY(-2px);}
+    /* --- طراحی جدید: دو باکس کنار هم --- */
+    .dashboard-stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* دو ستون مساوی */
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+    .stat-box {
+        border-radius: 20px;
+        padding: 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+    }
+    .stat-box:active { transform: scale(0.97); }
+    
+    /* باکس اعتبار (رنگ بنفش) */
+    .credit-box {
+        background: linear-gradient(135deg, var(--primary), #8b5cf6);
+        color: white;
+        box-shadow: 0 10px 20px rgba(79,70,229,0.2);
+    }
+    .credit-box .stat-icon {
+        background: rgba(255,255,255,0.2);
+        color: white;
+    }
+    
+    /* باکس خرید (رنگ سفید) */
+    .buy-box {
+        background: var(--card);
+        color: var(--text-main);
+        border: 2px solid #e2e8f0;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    }
+    .buy-box:hover { border-color: var(--primary); }
+    .buy-box .stat-icon {
+        background: #eff6ff;
+        color: var(--primary);
+    }
+    
+    .stat-icon {
+        font-size: 22px;
+        width: 46px;
+        height: 46px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 14px;
+        flex-shrink: 0;
+    }
+    .stat-info {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .stat-label {
+        font-size: 12px;
+        opacity: 0.8;
+        margin-bottom: 2px;
+        font-weight: 700;
+    }
+    .credit-box .stat-value {
+        font-size: 22px;
+        font-weight: 900;
+        line-height: 1.2;
+    }
+    .buy-box .stat-action {
+        font-size: 14px;
+        font-weight: 900;
+        color: var(--primary);
+        margin-top: 2px;
+    }
+    /* ----------------------------------- */
 
     .form-group{margin-bottom:16px;}
     label{display:block;font-weight:800;margin-bottom:8px;font-size:13px;}
@@ -61,13 +130,26 @@
 <div class="header"><a href="dashboard.html">← بازگشت</a><div style="font-weight:800;">پنل پیامک هوشمند</div><div style="width:20px;"></div></div>
 
 <div class="container">
-    <!-- کارت اعتبار با دکمه خرید -->
-    <div class="quota-card">
-        <div class="quota-info">
-            <h3>اعتبار پیامک شما</h3>
-            <div class="quota-value" id="quotaDisplay">...</div>
+    
+    <!-- بخش بالایی: دو باکس شیک کنار هم -->
+    <div class="dashboard-stats">
+        <!-- باکس ۱: اعتبار مانده -->
+        <div class="stat-box credit-box">
+            <div class="stat-icon">💼</div>
+            <div class="stat-info">
+                <span class="stat-label">اعتبار مانده</span>
+                <span class="stat-value" id="quotaDisplay">...</span>
+            </div>
         </div>
-        <button class="btn-buy-sms" onclick="openBuyModal()">💳 خرید اعتبار</button>
+        
+        <!-- باکس ۲: خرید پیامک -->
+        <div class="stat-box buy-box" onclick="openBuyModal()">
+            <div class="stat-icon">💳</div>
+            <div class="stat-info">
+                <span class="stat-label">خرید پیامک</span>
+                <span class="stat-action">افزایش اعتبار +</span>
+            </div>
+        </div>
     </div>
 
     <!-- انتخاب خط ارسال -->
@@ -191,19 +273,24 @@ async function init() {
 
 function updateQuotaUI() {
     const remaining = userSmsLimit - userSmsUsed;
-    $('quotaDisplay').textContent = remaining.toLocaleString('fa-IR') + ' عدد';
+    
+    // تغییر متن باکس اعتبار
     if (remaining <= 0) {
-        $('quotaDisplay').textContent = '۰ عدد';
-        $('sendBtn').disabled = true; $('sendBtn').textContent = '❌ اعتبار کافی نیست (خرید کنید)';
+        $('quotaDisplay').textContent = '۰';
+        $('quotaDisplay').style.color = '#fca5a5'; // قرمز ملایم برای هشدار
+        $('sendBtn').disabled = true; 
+        $('sendBtn').textContent = '❌ اعتبار کافی نیست (خرید کنید)';
     } else {
-        $('sendBtn').disabled = false; $('sendBtn').textContent = '🚀 ارسال پیامک';
+        $('quotaDisplay').textContent = remaining.toLocaleString('fa-IR');
+        $('quotaDisplay').style.color = 'white';
+        $('sendBtn').disabled = false; 
+        $('sendBtn').textContent = '🚀 ارسال پیامک';
     }
 }
 
-/* --- توابع خرید پیامک (داخل همین صفحه) --- */
+/* --- توابع خرید پیامک --- */
 window.openBuyModal = function() {
     $('buyModal').style.display = 'flex';
-    // ریست کردن انتخاب‌ها
     document.querySelectorAll('.sms-pack-card').forEach(el => el.classList.remove('selected'));
     selectedPackage = {};
     $('nextToPayBtn').disabled = true;
