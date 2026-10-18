@@ -126,7 +126,7 @@ async function loadCoupons() {
     });
 }
 
-// 🧠 موتور هوشمند تولید متن (با استفاده از حافظه مرورگر)
+// 🧠 تولید متن و انتقال با متد Base64 (ضد خطا)
 window.generateAIText = function(id, code, percent, expiry) {
     const btn = $(`aiBtn-${id}`);
     btn.innerHTML = 'در حال نوشتن متن... <span class="loading-spinner"></span>';
@@ -144,11 +144,11 @@ window.generateAIText = function(id, code, percent, expiry) {
 
         const randomText = templates[Math.floor(Math.random() * templates.length)];
         
-        // ذخیره در حافظه گوشی
-        localStorage.setItem('campaign_sms_text', randomText);
+        // کد کردن متن به Base64
+        const encodedText = btoa(unescape(encodeURIComponent(randomText)));
         
-        // انتقال به صفحه پیامک
-        window.location.href = 'sms-bulk.html';
+        // انتقال به صفحه پیامک با پارامتر Base64
+        window.location.href = `sms-bulk.html?text=${encodedText}`;
     }, 800);
 }
 
@@ -176,8 +176,8 @@ window.toggleStatus = async function(id, currentStatus) {
 
 window.sendToBulkSms = function(code, percent, expiry) {
     const text = `🎁 مشتری عزیز، با کد تخفیف ${code} می‌توانید ${percent}٪ تخفیف بگیرید. اعتبار تا: ${expiry}`;
-    localStorage.setItem('campaign_sms_text', text);
-    window.location.href = 'sms-bulk.html';
+    const encodedText = btoa(unescape(encodeURIComponent(text)));
+    window.location.href = `sms-bulk.html?text=${encodedText}`;
 }
 
 window.shareCoupon = function(code, platform) {
