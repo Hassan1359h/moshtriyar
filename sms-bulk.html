@@ -2,332 +2,210 @@
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>پنل پیامک هوشمند | مشتری‌یار</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>پنل پیامک | مشتری‌یار</title>
 <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
 <style>
-    :root {
-        --primary: #4f46e5;
-        --primary-light: #818cf8;
-        --bg: #f8fafc;
-        --card: #ffffff;
-        --text-main: #1e293b;
-        --text-muted: #64748b;
-        --danger: #ef4444;
-        --success: #10b981;
-    }
+    :root { --primary: #4f46e5; --bg: #f8fafc; --card: #ffffff; --text-main: #1e293b; --text-muted: #64748b; --danger: #ef4444; --success: #10b981; }
     *{box-sizing:border-box;margin:0;padding:0;font-family:'Vazirmatn', sans-serif;}
-    body{background:var(--bg);color:var(--text-main);line-height:1.7;padding-bottom:80px;overflow-x:hidden;}
-    
-    /* هدر شیک */
-    .header{background:var(--card);box-shadow:0 4px 20px rgba(0,0,0,.03);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;backdrop-filter:blur(10px);background:rgba(255,255,255,0.9);}
-    .header a{text-decoration:none;color:var(--text-muted);font-weight:700;font-size:14px;display:flex;align-items:center;gap:6px;transition:0.2s;}
-    .header a:hover{color:var(--primary);}
-    
+    body{background:var(--bg);color:var(--text-main);line-height:1.7;padding-bottom:80px;}
+    .header{background:var(--card);padding:16px 20px;display:flex;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,.03);}
+    .header a{text-decoration:none;color:var(--text-muted);font-weight:700;font-size:14px;}
     .container{max-width:650px;margin:20px auto;padding:0 16px;}
+    .quota-card {background: linear-gradient(135deg, var(--primary), #8b5cf6);color: white;border-radius: 20px;padding: 20px;margin-bottom: 20px;display: flex;justify-content: space-between;align-items: center;box-shadow: 0 10px 25px rgba(79,70,229,0.2);}
+    .quota-value {font-size: 26px;font-weight: 900;}
     
-    /* کارت اعتبار */
-    .quota-card {background: linear-gradient(135deg, var(--primary), #8b5cf6);color: white;border-radius: 20px;padding: 20px;margin-bottom: 20px;display: flex;justify-content: space-between;align-items: center;box-shadow: 0 10px 25px rgba(79, 70, 229, 0.2);position: relative;overflow: hidden;}
-    .quota-card::after {content:'';position:absolute;right:-20px;top:-20px;width:100px;height:100px;background:rgba(255,255,255,0.1);border-radius:50%;}
-    .quota-title {font-size: 14px;opacity: 0.9;margin-bottom: 4px;}
-    .quota-value {font-size: 28px;font-weight: 900;}
+    .form-group{margin-bottom:16px;}
+    label{display:block;font-weight:800;margin-bottom:8px;font-size:13px;}
+    select, input[type="text"], textarea {width:100%;padding:14px;border:1px solid #e2e8f0;border-radius:12px;font-family:inherit;font-size:14px;background:var(--card);}
+    select:focus, textarea:focus {outline:none;border-color:var(--primary);}
     
-    /* جستجو و انتخاب همه */
-    .toolbar {display: flex;gap: 10px;margin-bottom: 16px;}
-    .search-box {flex: 1;position: relative;}
-    .search-box input {width: 100%;padding: 14px 16px 14px 40px;border: 1px solid #e2e8f0;border-radius: 14px;font-family: inherit;font-size: 14px;background: var(--card);transition: 0.2s;}
-    .search-box input:focus {outline: none;border-color: var(--primary);box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);}
-    .search-icon {position: absolute;right: 14px;top: 50%;transform: translateY(-50%);color: var(--text-muted);font-size: 18px;}
-    .btn-select-all {background: var(--card);border: 1px solid #e2e8f0;padding: 0 16px;border-radius: 14px;font-family: inherit;font-weight: 700;font-size: 13px;color: var(--text-main);cursor: pointer;transition: 0.2s;display: flex;align-items: center;gap: 6px;}
-    .btn-select-all:hover {background: #f1f5f9;}
-
-    /* لیست مشتریان */
-    .customer-list {background: var(--card);border-radius: 16px;padding: 8px;box-shadow: 0 4px 15px rgba(0,0,0,.02);max-height: 300px;overflow-y: auto;border: 1px solid #f1f5f9;margin-bottom: 20px;}
-    .customer-item {display: flex;align-items: center;gap: 12px;padding: 14px;border-bottom: 1px solid #f1f5f9;transition: 0.2s;}
+    .customer-list {background: var(--card);border-radius: 16px;padding: 8px;border: 1px solid #f1f5f9;max-height: 250px;overflow-y: auto;display: none;}
+    .customer-item {display: flex;align-items: center;gap: 12px;padding: 12px;border-bottom: 1px solid #f1f5f9;}
     .customer-item:last-child {border-bottom: none;}
-    .customer-item:hover {background: #f8fafc;border-radius: 10px;}
-    .customer-item input[type="checkbox"] {width: 22px;height: 22px;accent-color: var(--primary);cursor: pointer;border-radius: 6px;}
-    .customer-info {flex: 1;display: flex;flex-direction: column;}
-    .c-name {font-weight: 800;font-size: 14px;}
-    .c-phone {font-size: 12px;color: var(--text-muted);direction: ltr;text-align: right;}
-
-    /* کادر متن پیام */
-    .message-box {background: var(--card);border-radius: 16px;padding: 20px;box-shadow: 0 4px 15px rgba(0,0,0,.02);border: 1px solid #f1f5f9;margin-bottom: 20px;}
-    textarea {width: 100%;padding: 16px;border: 1px solid #e2e8f0;border-radius: 14px;font-family: inherit;font-size: 15px;resize: vertical;min-height: 120px;transition: 0.2s;background: #f8fafc;}
-    textarea:focus {outline: none;border-color: var(--primary);background: var(--card);box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);}
-    .char-count {display: flex;justify-content: space-between;font-size: 12px;color: var(--text-muted);margin-top: 8px;font-weight: 700;}
-
-    /* دکمه ارسال */
-    .btn-send {position: fixed;bottom: 20px;left: 20px;right: 20px;max-width: 618px;margin: 0 auto;padding: 18px;background: linear-gradient(135deg, var(--primary), #8b5cf6);color: #fff;border: none;border-radius: 16px;font-family: inherit;font-weight: 800;font-size: 16px;cursor: pointer;box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);transition: 0.3s;display: flex;justify-content: center;align-items: center;gap: 8px;z-index: 90;}
-    .btn-send:active {transform: scale(0.98);}
-    .btn-send:disabled {background: #cbd5e1;box-shadow: none;cursor: not-allowed;transform: none;}
-
-    /* مودال قوانین */
-    .modal-overlay {position: fixed;top: 0;left: 0;right: 0;bottom: 0;background: rgba(15, 23, 42, 0.6);backdrop-filter: blur(4px);display: none;justify-content: center;align-items: center;z-index: 9999;padding: 20px;opacity: 0;transition: opacity 0.3s ease;}
-    .modal-content {background: var(--card);border-radius: 24px;padding: 28px;max-width: 500px;width: 100%;box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);transform: translateY(20px);transition: transform 0.3s ease;}
-    .modal-overlay.show {display: flex;opacity: 1;}
-    .modal-overlay.show .modal-content {transform: translateY(0);}
-    .modal-icon {font-size: 40px;text-align: center;margin-bottom: 16px;}
-    .modal-title {color: var(--danger);font-size: 18px;font-weight: 900;margin-bottom: 16px;text-align: center;}
-    .modal-text {font-size: 13px;color: var(--text-muted);line-height: 2;margin-bottom: 24px;text-align: justify;background: #fef2f2;padding: 16px;border-radius: 12px;border: 1px solid #fecaca;}
-    .modal-checkbox {display: flex;align-items: flex-start;gap: 12px;margin-bottom: 24px;cursor: pointer;}
-    .modal-checkbox input {width: 22px;height: 22px;accent-color: var(--danger);cursor: pointer;}
-    .modal-checkbox label {font-size: 14px;font-weight: 700;cursor: pointer;}
-    .modal-btn {width: 100%;padding: 16px;background: var(--danger);color: #fff;border: none;border-radius: 14px;font-family: inherit;font-weight: 800;font-size: 15px;cursor: pointer;transition: 0.2s;}
-    .modal-btn:disabled {background: #fca5a5;cursor: not-allowed;}
+    .customer-item input {width: 20px;height: 20px;accent-color: var(--primary);}
     
-    /* لودینگ */
-    .loading-spinner {display: inline-block;width: 20px;height: 20px;border: 3px solid rgba(255,255,255,0.3);border-radius: 50%;border-top-color: #fff;animation: spin 1s ease-in-out infinite;}
-    @keyframes spin { to { transform: rotate(360deg); } }
+    .btn-send {position: fixed;bottom: 20px;left: 20px;right: 20px;max-width: 618px;margin: 0 auto;padding: 18px;background: var(--primary);color: #fff;border: none;border-radius: 16px;font-family: inherit;font-weight: 800;font-size: 16px;cursor: pointer;z-index: 90;box-shadow: 0 10px 25px rgba(79,70,229,0.3);}
+    
+    .log-item {background:var(--card);border:1px solid #e2e8f0;border-radius:12px;padding:12px;margin-bottom:8px;font-size:12px;}
+    .log-header {display:flex;justify-content:space-between;font-weight:800;margin-bottom:6px;color:var(--primary);}
 </style>
 </head>
 <body>
-
-<header class="header">
-    <a href="dashboard.html">← بازگشت</a>
-    <div style="font-weight:800; color:var(--text-main); font-size:15px;">پنل پیامک هوشمند</div>
-    <div style="width:24px;"></div> <!-- برای تعادل هدر -->
-</header>
+<div class="header"><a href="dashboard.html">← بازگشت</a><div style="font-weight:800;">پنل پیامک هوشمند</div><div style="width:20px;"></div></div>
 
 <div class="container">
-    <!-- کارت اعتبار -->
     <div class="quota-card">
-        <div>
-            <div class="quota-title">اعتبار پیامک شما</div>
-            <div class="quota-value" id="quotaDisplay">...</div>
-        </div>
-        <div style="font-size:36px; opacity:0.8;">✉️</div>
+        <div><div style="font-size:13px;opacity:.9;">اعتبار پیامک</div><div class="quota-value" id="quotaDisplay">...</div></div>
+        <div style="font-size:36px;opacity:.8;">✉️</div>
     </div>
 
-    <!-- ابزارها (جستجو و انتخاب همه) -->
-    <div class="toolbar">
-        <div class="search-box">
-            <input type="text" id="searchInput" placeholder="جستجوی نام یا شماره..." oninput="filterCustomers()">
-            <span class="search-icon">🔍</span>
-        </div>
-        <button class="btn-select-all" onclick="toggleSelectAll()" id="selectAllBtn">
-            انتخاب همه
-        </button>
+    <!-- انتخاب خط ارسال -->
+    <div class="form-group">
+        <label>انتخاب سر خط ارسال:</label>
+        <select id="senderLine">
+            <option value="500039586936605">5000xxxx (خط اصلی)</option>
+            <!-- خطوط بعدی را اینجا اضافه کنید -->
+        </select>
+    </div>
+
+    <!-- نوع گیرندگان -->
+    <div class="form-group">
+        <label>ارسال به:</label>
+        <select id="recipientType" onchange="handleRecipientTypeChange()">
+            <option value="single">تکی (انتخاب از لیست)</option>
+            <option value="all">همه مشتریان</option>
+            <option value="debtors">بدهکاران</option>
+        </select>
     </div>
 
     <!-- لیست مشتریان -->
-    <div class="customer-list" id="customerList">
-        <div style="text-align:center; padding:20px; color:var(--text-muted);">در حال دریافت مشتریان...</div>
-    </div>
+    <div class="customer-list" id="customerList"></div>
 
-    <!-- کادر متن -->
-    <div class="message-box">
-        <textarea id="messageText" placeholder="متن پیامک خود را اینجا بنویسید..." oninput="updateCharCount()"></textarea>
-        <div class="char-count">
+    <!-- متن پیام -->
+    <div class="form-group" style="margin-top:16px;">
+        <label>متن پیامک:</label>
+        <textarea id="messageText" rows="4" placeholder="متن خود را بنویسید..." oninput="updateCharCount()"></textarea>
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-top:8px;">
             <span id="charCount">۰ کاراکتر</span>
             <span id="smsCountDisplay">۰ پیامک</span>
         </div>
     </div>
+
+    <!-- گزارش ارسال -->
+    <div class="section-title" style="margin-top:24px;font-weight:800;font-size:15px;">📋 گزارش ارسال‌ها</div>
+    <div id="smsLogsList"><p style="color:var(--text-muted);font-size:13px;">در حال دریافت...</p></div>
+
 </div>
 
-<!-- دکمه ارسال ثابت -->
-<button class="btn-send" id="sendBtn" onclick="sendBulkSms()">
-    🚀 ارسال پیامک
-</button>
-
-<!-- مودال قوانین -->
-<div class="modal-overlay" id="termsModal">
-    <div class="modal-content">
-        <div class="modal-icon">⚠️</div>
-        <div class="modal-title">تاییدیه مسئولیت پنل پیامک</div>
-        <div class="modal-text">
-            مسئولیت استفاده از پنل پیامک با مدیر سایت و ثبت‌نام‌شونده می‌باشد. هرگونه تخلف و ارسال پیام مغایر با قانون اساسی جمهوری اسلامی ایران، مباحث سیاسی، محتوای جنسی و سوءاستفاده از پنل پیامک مشتری‌یار تخلف محسوب می‌شود و مسئولیت مراجع قضایی را می‌پذیرم.
-        </div>
-        <label class="modal-checkbox" for="smsTermsCheck">
-            <input type="checkbox" id="smsTermsCheck" onchange="document.getElementById('smsTermsBtn').disabled = !this.checked">
-            <span>تمامی موارد فوق را خوانده‌ام و مسئولیت آن را می‌پذیرم.</span>
-        </label>
-        <button class="modal-btn" id="smsTermsBtn" disabled onclick="acceptSmsTerms()">تایید و ورود به پنل</button>
-        <div id="modalError" style="color:var(--danger); font-size:12px; text-align:center; margin-top:10px; font-weight:700;"></div>
-    </div>
-</div>
+<button class="btn-send" id="sendBtn" onclick="sendBulkSms()">🚀 ارسال پیامک</button>
 
 <script type="module">
 import { supabase } from './js/supabase.js'; 
 const $ = id => document.getElementById(id);
-
 let currentUserId = null;
-let userSmsLimit = 0;
-let userSmsUsed = 0;
-let allCustomers = [];
-let selectedMobiles = new Set(); // استفاده از Set برای جلوگیری از تکراری شدن
+let userSmsLimit = 0; let userSmsUsed = 0;
+let allCustomers = []; let selectedMobiles = new Set();
 
 async function init() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { window.location.href = 'login.html'; return; }
     currentUserId = session.user.id;
 
-    // دریافت پروفایل
-    const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('sms_terms_accepted, sms_limit, sms_used')
-        .eq('id', currentUserId)
-        .maybeSingle();
+    const { data: profile } = await supabase.from('profiles').select('sms_limit, sms_used').eq('id', currentUserId).maybeSingle();
+    userSmsLimit = profile?.sms_limit || 0; userSmsUsed = profile?.sms_used || 0;
+    updateQuotaUI();
 
-    if (error) console.error("Profile fetch error:", error);
-
-    if (!profile || profile.sms_terms_accepted !== true) {
-        $('termsModal').classList.add('show');
-    } else {
-        userSmsLimit = profile.sms_limit || 0;
-        userSmsUsed = profile.sms_used || 0;
-        updateQuotaUI();
-        loadCustomers();
-    }
-}
-
-window.acceptSmsTerms = async function() {
-    const btn = $('smsTermsBtn');
-    btn.innerHTML = '<span class="loading-spinner"></span>';
-    btn.disabled = true;
-    $('modalError').textContent = '';
-
-    try {
-        const { error } = await supabase.from('profiles').update({
-            sms_terms_accepted: true,
-            sms_terms_accepted_at: new Date().toISOString()
-        }).eq('id', currentUserId);
-
-        if (error) throw error;
-
-        // بستن مودال با انیمیشن
-        $('termsModal').classList.remove('show');
-        
-        // آپدیت وضعیت بدون رفرش صفحه (حل مشکل حلقه)
-        if (userSmsLimit === 0 && userSmsUsed === 0) {
-            const { data: newProfile } = await supabase.from('profiles').select('sms_limit, sms_used').eq('id', currentUserId).maybeSingle();
-            if(newProfile) { userSmsLimit = newProfile.sms_limit || 0; userSmsUsed = newProfile.sms_used || 0; }
-        }
-        updateQuotaUI();
-        loadCustomers();
-
-    } catch (err) {
-        console.error(err);
-        $('modalError').textContent = `خطا در ثبت: ${err.message}`;
-        btn.innerHTML = 'تلاش مجدد';
-        btn.disabled = false;
-    }
+    await loadCustomers();
+    loadLogs();
 }
 
 function updateQuotaUI() {
     const remaining = userSmsLimit - userSmsUsed;
     $('quotaDisplay').textContent = remaining.toLocaleString('fa-IR') + ' عدد';
-    
     if (remaining <= 0) {
         $('quotaDisplay').textContent = '۰ (ارتقا دهید)';
-        $('sendBtn').disabled = true;
-        $('sendBtn').innerHTML = '❌ اعتبار کافی نیست';
-    } else {
-        $('sendBtn').disabled = false;
+        $('sendBtn').disabled = true; $('sendBtn').textContent = '❌ اعتبار کافی نیست';
     }
 }
 
 async function loadCustomers() {
-    const { data, error } = await supabase.from('customers').select('id, name, phone').eq('user_id', currentUserId);
-    if (error || !data) return;
-
-    allCustomers = data.filter(c => c.phone); // فقط کسانی که شماره دارند
+    const { data } = await supabase.from('customers').select('id, name, phone, status, total_purchase').eq('user_id', currentUserId);
+    allCustomers = data || [];
     renderCustomerList(allCustomers);
 }
 
 function renderCustomerList(customers) {
     const listDiv = $('customerList');
-    if (!customers.length) {
-        listDiv.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">مشتری‌ای یافت نشد.</div>';
-        return;
-    }
-
     listDiv.innerHTML = '';
     customers.forEach(c => {
+        if(!c.phone) return;
         const isChecked = selectedMobiles.has(c.phone) ? 'checked' : '';
-        const div = document.createElement('label');
-        div.className = 'customer-item';
-        div.innerHTML = `
-            <input type="checkbox" value="${c.phone}" ${isChecked} onchange="toggleCustomer(this)">
-            <div class="customer-info">
-                <span class="c-name">${c.name}</span>
-                <span class="c-phone">${c.phone}</span>
-            </div>
+        listDiv.innerHTML += `
+            <label class="customer-item">
+                <input type="checkbox" value="${c.phone}" ${isChecked} onchange="toggleCustomer(this)">
+                <span style="flex:1;">${c.name} <small style="color:var(--text-muted);">(${c.phone})</small></span>
+            </label>
         `;
-        listDiv.appendChild(div);
     });
 }
 
-window.toggleCustomer = function(checkbox) {
-    if (checkbox.checked) selectedMobiles.add(checkbox.value);
-    else selectedMobiles.delete(checkbox.value);
+window.toggleCustomer = function(cb) {
+    if(cb.checked) selectedMobiles.add(cb.value); else selectedMobiles.delete(cb.value);
 }
 
-window.filterCustomers = function() {
-    const term = $('searchInput').value.trim().toLowerCase();
-    const filtered = allCustomers.filter(c => c.name.toLowerCase().includes(term) || c.phone.includes(term));
-    renderCustomerList(filtered);
-}
-
-window.toggleSelectAll = function() {
-    const checkboxes = document.querySelectorAll('.customer-item input[type="checkbox"]');
-    const isAllChecked = document.querySelectorAll('.customer-item input[type="checkbox"]:checked').length === checkboxes.length;
+window.handleRecipientTypeChange = function() {
+    const type = $('recipientType').value;
+    selectedMobiles.clear();
     
-    checkboxes.forEach(cb => {
-        cb.checked = !isAllChecked;
-        if(!isAllChecked) selectedMobiles.add(cb.value);
-        else selectedMobiles.delete(cb.value);
-    });
-    
-    $('selectAllBtn').textContent = isAllChecked ? 'انتخاب همه' : 'لغو همه';
+    if (type === 'single') {
+        $('customerList').style.display = 'block';
+        renderCustomerList(allCustomers);
+    } else if (type === 'all') {
+        $('customerList').style.display = 'none';
+        allCustomers.forEach(c => { if(c.phone) selectedMobiles.add(c.phone); });
+    } else if (type === 'debtors') {
+        $('customerList').style.display = 'none';
+        const debtors = allCustomers.filter(c => c.status === 'debtor' || c.total_purchase < 0);
+        debtors.forEach(c => { if(c.phone) selectedMobiles.add(c.phone); });
+    }
 }
 
 window.updateCharCount = function() {
-    const text = $('messageText').value;
-    $('charCount').textContent = text.length.toLocaleString('fa-IR') + ' کاراکتر';
-    
-    // تخمین تعداد پیامک (هر 70 کاراکتر فارسی = 1 پیامک)
-    const smsCount = text.length === 0 ? 0 : Math.ceil(text.length / 70);
-    $('smsCountDisplay').textContent = smsCount.toLocaleString('fa-IR') + ' پیامک';
+    const len = $('messageText').value.length;
+    $('charCount').textContent = len.toLocaleString('fa-IR') + ' کاراکتر';
+    $('smsCountDisplay').textContent = (len === 0 ? 0 : Math.ceil(len / 70)).toLocaleString('fa-IR') + ' پیامک';
 }
 
 window.sendBulkSms = async function() {
     const message = $('messageText').value.trim();
     const mobiles = Array.from(selectedMobiles);
+    const lineNumber = $('senderLine').value;
+    const recipientType = $('recipientType').value;
     const btn = $('sendBtn');
 
-    if (mobiles.length === 0) return alert('لطفاً حداقل یک مشتری را انتخاب کنید.');
-    if (!message) return alert('متن پیامک نمی‌تواند خالی باشد.');
-    if (mobiles.length > (userSmsLimit - userSmsUsed)) return alert('تعداد مشتریان انتخاب شده بیشتر از اعتبار شماست.');
+    if (mobiles.length === 0) return alert('گیرنده‌ای انتخاب نشده است.');
+    if (!message) return alert('متن پیامک خالی است.');
 
-    btn.innerHTML = '<span class="loading-spinner"></span> در حال ارسال...';
-    btn.disabled = true;
+    btn.innerHTML = 'در حال ارسال...'; btn.disabled = true;
 
     try {
         const { data, error } = await supabase.functions.invoke('send-sms', {
-            body: { mobiles, message }
+            body: { mobiles, message, lineNumber, recipientType }
         });
 
         if (error) throw error;
-
-        if (data && data.success && data.data && data.data.status === 1) {
+        if (data && data.success && data.data.status === 1) {
             alert('✅ پیامک‌ها با موفقیت ارسال شدند!');
-            $('messageText').value = '';
-            updateCharCount();
-            document.querySelectorAll('.customer-item input[type="checkbox"]').forEach(cb => cb.checked = false);
-            selectedMobiles.clear();
-            
-            userSmsUsed += mobiles.length;
-            updateQuotaUI();
+            $('messageText').value = ''; updateCharCount();
+            selectedMobiles.clear(); handleRecipientTypeChange();
+            userSmsUsed += mobiles.length; updateQuotaUI();
+            loadLogs();
         } else {
             throw new Error(data?.data?.message || 'خطا در ارسال');
         }
-    } catch (err) {
-        alert(`❌ خطا: ${err.message}`);
-    } finally {
-        btn.innerHTML = '🚀 ارسال پیامک';
-        if (userSmsLimit - userSmsUsed > 0) btn.disabled = false;
-    }
+    } catch (err) { alert(`❌ خطا: ${err.message}`); } 
+    finally { btn.innerHTML = '🚀 ارسال پیامک'; if(userSmsLimit - userSmsUsed > 0) btn.disabled = false; }
+}
+
+async function loadLogs() {
+    const { data } = await supabase.from('sms_logs').select('*').eq('user_id', currentUserId).order('created_at', { ascending: false }).limit(5);
+    const list = $('smsLogsList');
+    if (!data || !data.length) { list.innerHTML = '<p style="color:var(--text-muted);font-size:13px;">گزارشی یافت نشد.</p>'; return; }
+    
+    list.innerHTML = '';
+    data.forEach(log => {
+        list.innerHTML += `
+            <div class="log-item">
+                <div class="log-header">
+                    <span>${log.recipient_type === 'all' ? 'همه مشتریان' : log.recipient_type === 'debtors' ? 'بدهکاران' : 'تکی'}</span>
+                    <span style="color:var(--success);">${log.status}</span>
+                </div>
+                <div style="color:var(--text-muted);margin-bottom:4px;">${new Date(log.created_at).toLocaleString('fa-IR')} | خط: ${log.line_number}</div>
+                <div>${log.message_text.substring(0, 30)}... (${log.recipient_count} نفر)</div>
+            </div>
+        `;
+    });
 }
 
 init();
