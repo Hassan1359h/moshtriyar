@@ -17,17 +17,38 @@
     .page-title h1{font-size:22px;font-weight:900;}
     .page-title p{font-size:13px;color:var(--text-muted);margin-top:8px;}
 
-    /* باکس شماره کارت */
-    .bank-card-box {background: linear-gradient(135deg, #1e293b, #334155);color: white;border-radius: 20px;padding: 24px;text-align: center;margin-bottom: 32px;box-shadow: 0 10px 25px rgba(0,0,0,0.15);position: relative;}
-    .bank-card-title {font-size: 14px;opacity: 0.8;margin-bottom: 12px;}
-    .bank-card-number {font-size: 22px;font-weight: 900;letter-spacing: 2px;direction: ltr;margin-bottom: 16px;font-family: monospace;}
-    .copy-btn {background: rgba(255,255,255,0.2);color: white;border: none;padding: 8px 16px;border-radius: 8px;font-family: inherit;font-size: 13px;cursor: pointer;transition: 0.2s;}
+    /* طراحی کارت بانکی واقعی */
+    .bank-card-box {
+        background: linear-gradient(135deg, #0f172a, #334155);
+        color: white;
+        border-radius: 20px;
+        padding: 24px;
+        margin-bottom: 32px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        position: relative;
+        overflow: hidden;
+        direction: ltr; /* برای نمایش شماره کارت چپ به راست */
+    }
+    .bank-card-box::after {
+        content: ''; position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: rgba(255,255,255,0.05); border-radius: 50%;
+    }
+    .bank-card-box::before {
+        content: ''; position: absolute; bottom: -60px; left: -20px; width: 200px; height: 200px; background: rgba(255,255,255,0.05); border-radius: 50%;
+    }
+    .chip { width: 45px; height: 35px; background: linear-gradient(135deg, #fcd34d, #f59e0b); border-radius: 6px; margin-bottom: 20px; position: relative; box-shadow: inset 0 0 5px rgba(0,0,0,0.2); }
+    .chip::after { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: rgba(0,0,0,0.2); }
+    .chip::before { content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 1px; background: rgba(0,0,0,0.2); }
+    
+    .bank-card-title {font-size: 13px; opacity: 0.7; margin-bottom: 8px; font-family: sans-serif; text-align: right; direction: rtl;}
+    .bank-card-number {font-size: 24px;font-weight: 700;letter-spacing: 2px;margin-bottom: 20px;font-family: 'Courier New', monospace;text-shadow: 1px 1px 2px rgba(0,0,0,0.5); text-align: left;}
+    .bank-card-footer { display: flex; justify-content: space-between; align-items: flex-end; }
+    .bank-card-owner { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; font-family: sans-serif; text-align: left; }
+    .copy-btn {background: rgba(255,255,255,0.15);color: white;border: 1px solid rgba(255,255,255,0.3);padding: 8px 16px;border-radius: 8px;font-family: inherit;font-size: 12px;cursor: pointer;transition: 0.2s; position: relative; z-index: 2;}
     .copy-btn:hover {background: rgba(255,255,255,0.3);}
     
     .section-title{font-size:16px;font-weight:800;margin:24px 0 16px;display:flex;align-items:center;justify-content:space-between;}
     .section-title span {font-size:12px; color:var(--text-muted); font-weight: 500;}
     
-    /* گرید پکیج‌های پیامک */
     .sms-packages{display:grid;grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));gap:16px;}
     .sms-card{background:var(--card);border:2px solid #e2e8f0;border-radius:20px;padding:24px 16px;text-align:center;transition:0.3s;}
     .sms-card:hover{border-color:var(--primary);transform: translateY(-4px);box-shadow:0 10px 25px rgba(79,70,229,0.1);}
@@ -37,7 +58,6 @@
     .btn-buy{width:100%;padding:14px;background:var(--bg);color:var(--text-main);border:1px solid #cbd5e1;border-radius:12px;font-family:inherit;font-weight:800;cursor:pointer;transition:0.2s;}
     .sms-card:hover .btn-buy{background:var(--primary);color:#fff;border-color:var(--primary);}
     
-    /* مودال پرداخت */
     .modal-overlay {position: fixed;top: 0;left: 0;right: 0;bottom: 0;background: rgba(15, 23, 42, 0.6);backdrop-filter: blur(4px);display: none;justify-content: center;align-items: center;z-index: 9999;padding: 20px;}
     .modal-content {background: var(--card);border-radius: 24px;padding: 24px;max-width: 400px;width: 100%;box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);}
     .modal-content h3{font-size:18px;font-weight:900;margin-bottom:16px;text-align:center;}
@@ -60,20 +80,24 @@
 <div class="container">
     <div class="page-title">
         <h1>خرید پکیج پیامک</h1>
-        <p>جهت شارژ حساب، ابتدا مبلغ را واریز و سپس شماره پیگیری را ثبت کنید.</p>
+        <p>جهت شارژ حساب، مبلغ را به کارت زیر واریز و شماره پیگیری را ثبت کنید.</p>
     </div>
 
-    <!-- باکس شماره کارت (شماره کارت خود را اینجا جایگزین کنید) -->
+    <!-- کارت بانکی شبیه سازی شده -->
     <div class="bank-card-box">
-        <div class="bank-card-title">شماره کارت جهت واریز وجه</div>
-        <!-- ⚠️ شماره کارت خود را به جای 6037-9977-1234-5678 در خط زیر بگذارید -->
-        <div class="bank-card-number" id="cardNumberText">6037-9977-1234-5678</div>
-        <button class="copy-btn" onclick="copyCardNumber()">📋 کپی شماره کارت</button>
+        <div class="chip"></div>
+        <div class="bank-card-title">شماره کارت جهت واریز</div>
+        <!-- ⚠️ شماره کارت خود را در خط زیر جایگزین کنید -->
+        <div class="bank-card-number" id="cardNumberText">6037 9977 1234 5678</div>
+        <div class="bank-card-footer">
+            <div class="bank-card-owner">MOSHTARIYAR</div>
+            <button class="copy-btn" onclick="copyCardNumber()">📋 کپی کارت</button>
+        </div>
     </div>
 
     <div class="section-title">
         <div>✉️ پکیج‌های پیامک</div>
-        <span>تعرفه: ۳۰۰ تومان به ازای هر پیامک</span>
+        <span>تعرفه: ۳۰۰ تومان</span>
     </div>
     
     <div class="sms-packages">
@@ -104,7 +128,6 @@
     </div>
 </div>
 
-<!-- مودال ثبت پرداخت -->
 <div class="modal-overlay" id="paymentModal">
     <div class="modal-content">
         <h3 id="modalTitle">تایید خرید</h3>
@@ -135,13 +158,12 @@ async function start() {
     me = session.user;
 }
 
-// تابع کپی کردن شماره کارت
 window.copyCardNumber = function() {
-    const cardText = $('cardNumberText').innerText;
-    navigator.clipboard.writeText(cardText.replace(/-/g, '')).then(() => {
+    const cardText = $('cardNumberText').innerText.replace(/\s/g, '');
+    navigator.clipboard.writeText(cardText).then(() => {
         alert('✅ شماره کارت کپی شد!');
     }).catch(err => {
-        alert('خطا در کپی کردن شماره کارت');
+        alert('خطا در کپی. لطفا دستی انتخاب کنید.');
     });
 }
 
