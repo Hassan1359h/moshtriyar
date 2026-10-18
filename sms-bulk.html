@@ -12,7 +12,6 @@
     .header{background:var(--card);padding:16px 20px;display:flex;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,.03);}
     .header a{text-decoration:none;color:var(--text-muted);font-weight:700;font-size:14px;}
     .container{max-width:650px;margin:20px auto;padding:0 16px;}
-    
     .dashboard-stats {display: grid;grid-template-columns: 1fr 1fr;gap: 12px;margin-bottom: 24px;}
     .stat-box {border-radius: 20px;padding: 16px;display: flex;align-items: center;gap: 12px;transition: transform 0.2s ease;}
     .credit-box {background: linear-gradient(135deg, var(--primary), #8b5cf6);color: white;box-shadow: 0 10px 20px rgba(79,70,229,0.2);}
@@ -24,18 +23,15 @@
     .stat-label {font-size: 12px;opacity: 0.8;margin-bottom: 2px;font-weight: 700;}
     .credit-box .stat-value {font-size: 22px;font-weight: 900;}
     .buy-box .stat-action {font-size: 14px;font-weight: 900;color: var(--primary);}
-
     .form-group{margin-bottom:16px;}
     label{display:block;font-weight:800;margin-bottom:8px;font-size:13px;}
     select, input[type="text"], textarea {width:100%;padding:14px;border:1px solid #e2e8f0;border-radius:12px;font-family:inherit;font-size:14px;background:var(--card);}
     .customer-list {background: var(--card);border-radius: 16px;padding: 8px;border: 1px solid #f1f5f9;max-height: 250px;overflow-y: auto;display: none;}
     .customer-item {display: flex;align-items: center;gap: 12px;padding: 12px;border-bottom: 1px solid #f1f5f9;}
     .customer-item input {width: 20px;height: 20px;accent-color: var(--primary);}
-    
     .btn-send {position: fixed;bottom: 20px;left: 20px;right: 20px;max-width: 618px;margin: 0 auto;padding: 18px;background: var(--primary);color: #fff;border: none;border-radius: 16px;font-family: inherit;font-weight: 800;font-size: 16px;cursor: pointer;z-index: 90;box-shadow: 0 10px 25px rgba(79,70,229,0.3);}
     .log-item {background:var(--card);border:1px solid #e2e8f0;border-radius:12px;padding:12px;margin-bottom:8px;font-size:12px;}
     .log-header {display:flex;justify-content:space-between;font-weight:800;margin-bottom:6px;color:var(--primary);}
-
     .modal-overlay {position: fixed;top: 0;left: 0;right: 0;bottom: 0;background: rgba(15, 23, 42, 0.6);backdrop-filter: blur(4px);display: none;justify-content: center;align-items: center;z-index: 9999;padding: 20px;overflow-y: auto;}
     .modal-content {background: var(--card);border-radius: 24px;padding: 24px;max-width: 450px;width: 100%;margin: auto;}
     .bank-card-box {background: linear-gradient(135deg, #0f172a, #334155);color: white;border-radius: 16px;padding: 20px;margin-bottom: 20px;direction: ltr;}
@@ -158,6 +154,20 @@ async function init() {
     if (!session) { window.location.href = 'login.html'; return; }
     currentUserId = session.user.id;
 
+    // 🌟 خواندن و رمزگشایی متن از آدرس (Base64)
+    const urlParams = new URLSearchParams(window.location.search);
+    const encodedText = urlParams.get('text');
+    
+    if (encodedText) {
+        try {
+            const decodedText = decodeURIComponent(escape(atob(encodedText)));
+            $('messageText').value = decodedText;
+            updateCharCount();
+        } catch (e) {
+            console.error("خطا در خواندن متن:", e);
+        }
+    }
+
     const { data: profile } = await supabase.from('profiles').select('sms_limit, sms_used, plan').eq('id', currentUserId).maybeSingle();
     
     if (profile?.plan === 'admin') {
@@ -187,7 +197,6 @@ function updateQuotaUI() {
     }
 }
 
-/* --- توابع خرید --- */
 window.openBuyModal = function() {
     $('buyModal').style.display = 'flex';
     document.querySelectorAll('.sms-pack-card').forEach(el => el.classList.remove('selected'));
@@ -225,7 +234,6 @@ window.submitManualPayment = async function() {
         $('paymentMsg').textContent = `❌ ${error?.message}`; $('paymentMsg').style.color = '#dc2626';
     } finally { btn.disabled = false; btn.textContent = 'ثبت نهایی'; }
 }
-/* --------------------------------------- */
 
 async function loadCustomers() {
     const { data } = await supabase.from('customers').select('id, name, phone, status, total_purchase').eq('user_id', currentUserId);
@@ -261,7 +269,6 @@ window.sendBulkSms = async function() {
     if (mobiles.length === 0) return alert('گیرنده‌ای انتخاب نشده است.');
     if (!message) return alert('متن پیامک خالی است.');
 
-    // چک کردن اعتبار (اگر ادمین نباشد)
     if (!isAdmin && mobiles.length > (userSmsLimit - userSmsUsed)) {
         return alert('اعتبار پیامک شما کافی نیست.');
     }
@@ -296,4 +303,4 @@ async function loadLogs() {
 init();
 </script>
 </body>
-                </html>
+</html>
