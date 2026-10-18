@@ -128,31 +128,40 @@ async function checkSmsTerms() {
     window.acceptSmsTerms = async function() {
     const btn = $('smsTermsBtn');
     btn.textContent = 'در حال ثبت...';
-    btn.disabled = true; // جلوگیری از کلیک مجدد
-    
+    btn.disabled = true;
+
+    // بررسی اینکه آیا کاربر لاگین است
+    if (!currentUserId) {
+        alert('خطا: شناسه کاربر یافت نشد. لطفاً صفحه را رفرش کنید.');
+        btn.textContent = 'تایید و ورود به پنل پیامک';
+        btn.disabled = false;
+        return;
+    }
+
     try {
         const { data, error } = await supabase.from('profiles').update({
             sms_terms_accepted: true,
             sms_terms_accepted_at: new Date().toISOString()
-        }).eq('id', currentUserId).select(); // .select() برای برگرداندن نتیجه
+        }).eq('id', currentUserId).select();
 
         if (error) {
-            // نمایش خطای دقیق‌تر برای عیب‌یابی
-            throw new Error(`خطای دیتابیس: ${error.message} (کد: ${error.code})`);
+            // نمایش دقیق خطای دیتابیس
+            throw new Error(`کد خطا: ${error.code} - ${error.message}`);
         }
 
         // اگر موفق بود
         $('termsModal').style.display = 'none';
-        checkSmsTerms(); // دوباره چک کن و لود کن
-        
+        checkSmsTerms(); 
+
     } catch (err) {
         console.error('SMS Terms Error:', err);
-        alert(`خطا در ثبت قوانین: ${err.message}\nلطفاً از تنظیمات RLS و مجوزها مطمئن شوید.`);
+        // نمایش هشدار روی صفحه
+        alert(`❌ خطا در ثبت قوانین:\n${err.message}\n\nلطفاً مطمئن شوید کد SQL مربوط به دسترسی‌ها را در Supabase اجرا کرده‌اید.`);
+        
         btn.textContent = 'تایید و ورود به پنل پیامک';
         btn.disabled = false;
     }
-   }
-
+}
 // 3. آپدیت نمایش اعتبار
 function updateQuotaUI() {
     const remaining = userSmsLimit - userSmsUsed;
