@@ -12,29 +12,21 @@
     .header{background:var(--card);box-shadow:0 4px 20px rgba(0,0,0,.03);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
     .header a{text-decoration:none;color:var(--text-muted);font-weight:700;font-size:14px;}
     .container{max-width:800px;margin:20px auto;padding:0 16px;}
-    
     .form-card {background: var(--card);border-radius: 20px;padding: 24px;box-shadow: 0 4px 15px rgba(0,0,0,.03);margin-bottom: 24px;border-top: 4px solid var(--primary);}
     .form-card h2{font-size:18px;font-weight:900;margin-bottom:20px;}
     .form-group{margin-bottom:16px;}
     label{display:block;font-weight:800;margin-bottom:8px;font-size:13px;}
     input {width:100%;padding:14px;border:1px solid #e2e8f0;border-radius:12px;font-family:inherit;font-size:14px;background:#f8fafc;}
     input:focus{outline:none;border-color:var(--primary);background:var(--card);}
-    
     .btn-save {width:100%;padding:16px;background:linear-gradient(135deg, var(--primary), #8b5cf6);color:#fff;border:none;border-radius:12px;font-family:inherit;font-weight:800;font-size:15px;cursor:pointer;box-shadow: 0 6px 16px rgba(217,70,239,.25);}
-    
     .section-title{font-size:18px;font-weight:900;margin:32px 0 16px;display:flex;align-items:center;gap:8px;}
-    
-    /* کارت‌های کد تخفیف */
     .coupon-card {background: var(--card);border-radius: 16px;padding: 20px;box-shadow: 0 4px 15px rgba(0,0,0,.03);margin-bottom: 16px;border-right: 5px solid var(--primary);position: relative;transition:0.3s;}
     .coupon-card.inactive {border-right-color: var(--text-muted);opacity: 0.7;}
     .coupon-header {display: flex;justify-content: space-between;align-items: flex-start;margin-bottom: 12px;}
     .coupon-code {font-size: 20px;font-weight: 900;color: var(--primary);letter-spacing: 1px;direction: ltr;}
     .coupon-title {font-size: 13px;color: var(--text-muted);margin-bottom: 4px;}
     .coupon-discount {font-size: 16px;font-weight: 900;color: var(--danger);}
-    
     .coupon-stats {display: flex;justify-content: space-between;background: #f8fafc;padding: 10px;border-radius: 10px;font-size: 12px;font-weight: 700;margin-bottom: 16px;}
-    
-    /* دکمه‌های اشتراک‌گذاری */
     .share-btns {display: grid;grid-template-columns: repeat(2, 1fr);gap: 8px;margin-bottom: 16px;}
     .share-btn {padding: 12px;border: none;border-radius: 10px;font-family: inherit;font-size: 12px;font-weight: 800;cursor: pointer;display: flex;align-items: center; justify-content: center; gap: 6px;color: white; transition: 0.2s;}
     .share-btn:hover {opacity: 0.9; transform: translateY(-1px);}
@@ -45,12 +37,10 @@
     .btn-rubika {background: #7c3aed;}
     .btn-bulk {background: #4f46e5; grid-column: span 2; padding: 14px; font-size: 14px;}
     .btn-copy {background: #64748b; grid-column: span 2;}
-    
     .toggle-status {position: absolute;top: 20px;left: 20px;width: 40px;height: 22px;background: #e2e8f0;border-radius: 20px;cursor: pointer;transition: 0.3s;}
     .toggle-status::after {content: '';position: absolute;top: 2px;left: 2px;width: 18px;height: 18px;background: #fff;border-radius: 50%;transition: 0.3s;}
     .toggle-status.active {background: var(--success);}
     .toggle-status.active::after {left: 20px;}
-
     .loading-spinner {display: inline-block;width: 16px;height: 16px;border: 2px solid rgba(255,255,255,0.3);border-radius: 50%;border-top-color: #fff;animation: spin 1s ease-in-out infinite;margin-left: 8px;}
     @keyframes spin { to { transform: rotate(360deg); } }
 </style>
@@ -64,37 +54,19 @@
 </div>
 
 <div class="container">
-    <!-- فرم ساخت کد -->
     <div class="form-card">
         <h2>🎁 ساخت کمپین جدید</h2>
-        <div class="form-group">
-            <label>عنوان (برای خودتان):</label>
-            <input type="text" id="campaignTitle" placeholder="مثلاً: تخفیف مشتریان وفادار">
-        </div>
-        <div class="form-group">
-            <label>کد تخفیف (انگلیسی):</label>
-            <input type="text" id="couponCode" placeholder="مثلاً: VIP20" style="text-transform:uppercase; direction:ltr; text-align:left;">
-        </div>
-        <div class="form-group">
-            <label>درصد تخفیف (%):</label>
-            <input type="number" id="discountPercent" min="1" max="100" placeholder="مثلاً: 20">
-        </div>
-        <div class="form-group">
-            <label>تاریخ انقضا:</label>
-            <input type="text" id="expiryDate" placeholder="1405/08/15">
-        </div>
-        <div class="form-group">
-            <label>حداکثر تعداد استفاده (اختیاری):</label>
-            <input type="number" id="maxUsage" placeholder="مثلاً: 100" value="100">
-        </div>
+        <div class="form-group"><label>عنوان (برای خودتان):</label><input type="text" id="campaignTitle" placeholder="مثلاً: تخفیف مشتریان وفادار"></div>
+        <div class="form-group"><label>کد تخفیف (انگلیسی):</label><input type="text" id="couponCode" placeholder="مثلاً: VIP20" style="text-transform:uppercase; direction:ltr; text-align:left;"></div>
+        <div class="form-group"><label>درصد تخفیف (%):</label><input type="number" id="discountPercent" min="1" max="100" placeholder="مثلاً: 20"></div>
+        <div class="form-group"><label>تاریخ انقضا:</label><input type="text" id="expiryDate" placeholder="1405/08/15"></div>
+        <div class="form-group"><label>حداکثر تعداد استفاده (اختیاری):</label><input type="number" id="maxUsage" placeholder="مثلاً: 100" value="100"></div>
         <button class="btn-save" onclick="saveCampaign()">💾 ساخت کد تخفیف</button>
         <div id="statusMsg" style="text-align:center;margin-top:12px;font-weight:700;font-size:14px;"></div>
     </div>
 
     <div class="section-title">📋 کدهای فعال شما</div>
-    <div id="couponList">
-        <p style="color:var(--text-muted);font-size:13px;">در حال دریافت...</p>
-    </div>
+    <div id="couponList"><p style="color:var(--text-muted);font-size:13px;">در حال دریافت...</p></div>
 </div>
 
 <script type="module">
@@ -111,23 +83,11 @@ async function init() {
 }
 
 async function loadCoupons() {
-    const { data, error } = await supabase
-        .from('discount_campaigns')
-        .select('*')
-        .eq('user_id', currentUserId)
-        .order('created_at', { ascending: false });
-
+    const { data, error } = await supabase.from('discount_campaigns').select('*').eq('user_id', currentUserId).order('created_at', { ascending: false });
     const listDiv = $('couponList');
-    if (error || !data) {
-        listDiv.innerHTML = '<p style="color:red;">خطا در دریافت اطلاعات.</p>';
-        return;
+    if (error || !data || data.length === 0) {
+        listDiv.innerHTML = '<p style="color:var(--text-muted);">هنوز کدی نساخته‌اید.</p>'; return;
     }
-
-    if (data.length === 0) {
-        listDiv.innerHTML = '<p style="color:var(--text-muted);">هنوز کدی نساخته‌اید.</p>';
-        return;
-    }
-
     couponsData = data; 
     listDiv.innerHTML = '';
     
@@ -139,7 +99,6 @@ async function loadCoupons() {
         listDiv.innerHTML += `
             <div class="coupon-card ${isActive ? '' : 'inactive'}">
                 <div class="toggle-status ${isActive ? 'active' : ''}" onclick="toggleStatus('${c.id}', ${isActive})"></div>
-                
                 <div class="coupon-header">
                     <div>
                         <div class="coupon-title">${c.title}</div>
@@ -147,29 +106,19 @@ async function loadCoupons() {
                     </div>
                     <div class="coupon-discount">${c.discount_percent}٪</div>
                 </div>
-                
                 <div class="coupon-stats">
                     <span>استفاده شده: ${used} از ${max}</span>
                     <span>انقضا: ${c.expiry_date}</span>
                 </div>
-
                 <div class="share-btns">
-                    <!-- دکمه هوش مصنوعی -->
                     <button class="share-btn btn-ai" id="aiBtn-${c.id}" onclick="generateAIText('${c.id}', '${c.code}', '${c.discount_percent}', '${c.expiry_date}')">
                         ✨ تولید متن با هوش مصنوعی و ارسال
                     </button>
-                    
-                    <!-- برنامه‌های اجتماعی -->
                     <button class="share-btn btn-wa" onclick="shareCoupon('${c.code}', 'whatsapp')">واتساپ</button>
                     <button class="share-btn btn-telegram" onclick="shareCoupon('${c.code}', 'telegram')">تلگرام</button>
                     <button class="share-btn btn-eitaa" onclick="shareCoupon('${c.code}', 'eitaa')">ایتا</button>
                     <button class="share-btn btn-rubika" onclick="shareCoupon('${c.code}', 'rubika')">روبیکا</button>
-                    
-                    <!-- اتصال به پنل پیامک -->
-                    <button class="share-btn btn-bulk" onclick="sendToBulkSms('${c.code}', '${c.discount_percent}', '${c.expiry_date}')">
-                        ✉️ ارسال به پنل پیامک انبوه
-                    </button>
-                    
+                    <button class="share-btn btn-bulk" onclick="sendToBulkSms('${c.code}', '${c.discount_percent}', '${c.expiry_date}')">✉️ ارسال به پنل پیامک انبوه</button>
                     <button class="share-btn btn-copy" onclick="shareCoupon('${c.code}', 'copy')">📋 کپی متن</button>
                 </div>
             </div>
@@ -177,11 +126,9 @@ async function loadCoupons() {
     });
 }
 
-// 🧠 موتور هوشمند تولید متن (بدون نیاز به کلید خارجی)
+// 🧠 موتور هوشمند تولید متن (با استفاده از حافظه مرورگر)
 window.generateAIText = function(id, code, percent, expiry) {
     const btn = $(`aiBtn-${id}`);
-    const originalHtml = btn.innerHTML;
-    
     btn.innerHTML = 'در حال نوشتن متن... <span class="loading-spinner"></span>';
     btn.disabled = true;
 
@@ -197,9 +144,12 @@ window.generateAIText = function(id, code, percent, expiry) {
 
         const randomText = templates[Math.floor(Math.random() * templates.length)];
         
-        // انتقال به صفحه پیامک با متن تولید شده
-        window.location.href = `sms-bulk.html?text=${encodeURIComponent(randomText)}`;
-    }, 1000); // 1 ثانیه تاخیر برای حس هوش مصنوعی
+        // ذخیره در حافظه گوشی
+        localStorage.setItem('campaign_sms_text', randomText);
+        
+        // انتقال به صفحه پیامک
+        window.location.href = 'sms-bulk.html';
+    }, 800);
 }
 
 window.saveCampaign = async function() {
@@ -209,61 +159,37 @@ window.saveCampaign = async function() {
     const expiry = $('expiryDate').value.trim();
     const maxUse = $('maxUsage').value || 100;
     const status = $('statusMsg');
-
-    if (!title || !code || !percent) {
-        status.innerHTML = '<span style="color:#dc2626;">لطفاً فیلدهای اصلی را پر کنید.</span>';
-        return;
-    }
-
-    const { error } = await supabase.from('discount_campaigns').insert({
-        user_id: currentUserId, title: title, code: code, discount_percent: parseInt(percent), expiry_date: expiry, max_usage: parseInt(maxUse), usage_count: 0, is_active: true
-    });
-
-    if (error) {
-        status.innerHTML = `<span style="color:#dc2626;">❌ خطا: ${error.message}</span>`;
-    } else {
-        status.innerHTML = '<span style="color:#16a34a;">✅ کد با موفقیت ساخته شد!</span>';
+    if (!title || !code || !percent) { status.innerHTML = '<span style="color:#dc2626;">لطفاً فیلدها را پر کنید.</span>'; return; }
+    const { error } = await supabase.from('discount_campaigns').insert({ user_id: currentUserId, title: title, code: code, discount_percent: parseInt(percent), expiry_date: expiry, max_usage: parseInt(maxUse), usage_count: 0, is_active: true });
+    if (error) { status.innerHTML = `<span style="color:#dc2626;">❌ خطا: ${error.message}</span>`; } 
+    else {
+        status.innerHTML = '<span style="color:#16a34a;">✅ کد ساخته شد!</span>';
         $('campaignTitle').value = ''; $('couponCode').value = ''; $('discountPercent').value = ''; $('expiryDate').value = '';
         loadCoupons();
     }
 }
 
 window.toggleStatus = async function(id, currentStatus) {
-    const newStatus = !currentStatus;
-    const { error } = await supabase.from('discount_campaigns').update({ is_active: newStatus }).eq('id', id);
-    if (!error) loadCoupons();
+    await supabase.from('discount_campaigns').update({ is_active: !currentStatus }).eq('id', id);
+    loadCoupons();
 }
 
-// تابع ارسال به پنل پیامک انبوه (بدون هوش مصنوعی)
 window.sendToBulkSms = function(code, percent, expiry) {
     const text = `🎁 مشتری عزیز، با کد تخفیف ${code} می‌توانید ${percent}٪ تخفیف بگیرید. اعتبار تا: ${expiry}`;
-    window.location.href = `sms-bulk.html?text=${encodeURIComponent(text)}`;
+    localStorage.setItem('campaign_sms_text', text);
+    window.location.href = 'sms-bulk.html';
 }
 
-// تابع اشتراک‌گذاری در شبکه‌های اجتماعی
 window.shareCoupon = function(code, platform) {
     const coupon = couponsData.find(c => c.code === code);
     if(!coupon) return;
-
-    const text = `🎁 مشتری عزیز، از طرف ما یک هدیه دارید!\n\nبا کد تخفیف زیر می‌توانید ${coupon.discount_percent}٪ تخفیف بگیرید:\n\n🎫 ${code}\n\n⏳ این کد تا تاریخ ${coupon.expiry_date} معتبر است.`;
-
-    if (platform === 'whatsapp') {
-        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-    } 
-    else if (platform === 'telegram') {
-        window.open(`https://t.me/share/url?url=${encodeURIComponent(window.location.origin)}&text=${encodeURIComponent(text)}`, '_blank');
-    } 
-    else if (platform === 'eitaa') {
-        window.open(`https://eitaa.com/share/url?url=${encodeURIComponent(window.location.origin)}&text=${encodeURIComponent(text)}`, '_blank');
-    }
-    else if (platform === 'rubika') {
-        window.open(`https://rubika.ir/share/url?url=${encodeURIComponent(window.location.origin)}&text=${encodeURIComponent(text)}`, '_blank');
-    } 
-    else if (platform === 'copy') {
-        navigator.clipboard.writeText(text).then(() => alert('✅ متن تخفیف کپی شد.'));
-    }
+    const text = `🎁 مشتری عزیز، با کد تخفیف ${code} می‌توانید ${coupon.discount_percent}٪ تخفیف بگیرید.\n⏳ اعتبار تا: ${coupon.expiry_date}`;
+    if (platform === 'whatsapp') window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    else if (platform === 'telegram') window.open(`https://t.me/share/url?url=${encodeURIComponent(window.location.origin)}&text=${encodeURIComponent(text)}`, '_blank');
+    else if (platform === 'eitaa') window.open(`https://eitaa.com/share/url?url=${encodeURIComponent(window.location.origin)}&text=${encodeURIComponent(text)}`, '_blank');
+    else if (platform === 'rubika') window.open(`https://rubika.ir/share/url?url=${encodeURIComponent(window.location.origin)}&text=${encodeURIComponent(text)}`, '_blank');
+    else if (platform === 'copy') navigator.clipboard.writeText(text).then(() => alert('✅ متن کپی شد.'));
 }
-
 init();
 </script>
 </body>
