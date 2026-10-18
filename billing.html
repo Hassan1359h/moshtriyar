@@ -6,275 +6,136 @@
 <title>خرید و ارتقا | مشتری‌یار</title>
 <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
 <style>
-    :root { --primary: #4f46e5; --bg: #f8fafc; --card: #ffffff; --text-main: #1e293b; --text-muted: #64748b; --success: #10b981; --vip: #d946ef; --danger: #ef4444; }
+    :root { --primary: #4f46e5; --bg: #f8fafc; --card: #ffffff; --text-main: #1e293b; --text-muted: #64748b; --success: #10b981; --vip: #d946ef; }
     *{box-sizing:border-box;margin:0;padding:0;font-family:'Vazirmatn', sans-serif;}
     body{background:var(--bg);color:var(--text-main);line-height:1.7;padding-bottom:50px;}
-    
     .header{background:var(--card);box-shadow:0 4px 20px rgba(0,0,0,.03);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
     .header a{text-decoration:none;color:var(--text-muted);font-weight:700;font-size:14px;}
-    
     .container{max-width:800px;margin:20px auto;padding:0 16px;}
     .page-title{text-align:center;margin-bottom:24px;}
-    .page-title h1{font-size:22px;font-weight:900;color:var(--text-main);}
-    .page-title p{font-size:13px;color:var(--text-muted);margin-top:8px;}
-    
+    .page-title h1{font-size:22px;font-weight:900;}
     .section-title{font-size:16px;font-weight:800;margin:24px 0 16px;display:flex;align-items:center;justify-content:space-between;}
     .section-title span {font-size:12px; color:var(--text-muted); font-weight: 500;}
-    
-    /* گرید پلن‌ها */
     .plans-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:16px;}
     .plan-card{background:var(--card);border:2px solid #e2e8f0;border-radius:20px;padding:24px;text-align:center;transition:0.3s;position:relative;}
-    .plan-card:hover{border-color:var(--primary);transform:translateY(-4px);box-shadow:0 10px 25px rgba(79,70,229,0.1);}
+    .plan-card:hover{border-color:var(--primary);transform:translateY(-4px);}
     .plan-card.popular{border-color:var(--primary);background:linear-gradient(180deg, #fff, #f5f3ff);}
     .plan-card.vip{border-color: var(--vip); background:linear-gradient(180deg, #fff, #fdf4ff);}
-    .badge-popular{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--primary);color:#fff;font-size:11px;font-weight:800;padding:4px 12px;border-radius:20px;}
-    .badge-vip{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--vip);color:#fff;font-size:11px;font-weight:800;padding:4px 12px;border-radius:20px;}
+    .badge-popular,.badge-vip{position:absolute;top:-12px;left:50%;transform:translateX(-50%);color:#fff;font-size:11px;font-weight:800;padding:4px 12px;border-radius:20px;}
+    .badge-popular{background:var(--primary);} .badge-vip{background:var(--vip);}
     .plan-name{font-size:18px;font-weight:900;margin-bottom:8px;}
-    
-    /* تغییر قیمت به رایگان */
     .plan-price{font-size:22px;font-weight:900;color:var(--success);margin-bottom:16px;}
-    .plan-card.vip .plan-price {color:var(--success);}
-    
-    .plan-features{font-size:12px;color:var(--text-muted);margin-bottom:20px;list-style:none;text-align:right;}
+    .plan-features{font-size:13px;color:var(--text-muted);margin-bottom:20px;list-style:none;text-align:right;}
     .plan-features li{margin-bottom:8px;}
     .plan-features li::before{content:'✓';color:var(--success);font-weight:900;margin-left:6px;}
-    
-    .btn-buy{width:100%;padding:14px;background:var(--bg);color:var(--text-main);border:1px solid #cbd5e1;border-radius:12px;font-family:inherit;font-weight:800;font-size:14px;cursor:pointer;transition:0.2s;}
+    .btn-buy{width:100%;padding:14px;background:var(--bg);color:var(--text-main);border:1px solid #cbd5e1;border-radius:12px;font-family:inherit;font-weight:800;cursor:pointer;transition:0.2s;}
     .plan-card:hover .btn-buy{background:var(--success);color:#fff;border-color:var(--success);}
-    .plan-card.vip:hover .btn-buy{background:var(--vip);border-color:var(--vip);color:#fff;}
-
-    /* گرید پکیج‌های پیامک */
     .sms-packages{display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:12px;}
     .sms-card{background:var(--card);border:1px solid #e2e8f0;border-radius:16px;padding:20px 10px;text-align:center;transition:0.2s;}
-    .sms-card:hover{border-color:var(--primary);box-shadow:0 4px 15px rgba(0,0,0,.05);}
-    .sms-count{font-size:24px;font-weight:900;color:var(--text-main);}
+    .sms-card:hover{border-color:var(--primary);}
+    .sms-count{font-size:24px;font-weight:900;}
     .sms-label{font-size:12px;color:var(--text-muted);margin-bottom:12px;}
     .sms-price{font-size:14px;font-weight:800;color:var(--primary);margin-bottom:16px;}
-    
-    /* مودال پرداخت (ثبت شماره پیگیری) */
-    .modal-overlay {position: fixed;top: 0;left: 0;right: 0;bottom: 0;background: rgba(15, 23, 42, 0.6);backdrop-filter: blur(4px);display: none;justify-content: center;align-items: center;z-index: 9999;padding: 20px;}
-    .modal-content {background: var(--card);border-radius: 24px;padding: 28px;max-width: 450px;width: 100%;box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);}
-    .modal-content h3{font-size:18px;font-weight:900;margin-bottom:16px;text-align:center;}
+    .modal-overlay {position: fixed;top: 0;left: 0;right: 0;bottom: 0;background: rgba(15, 23, 42, 0.6);display: none;justify-content: center;align-items: center;z-index: 9999;padding: 20px;}
+    .modal-content {background: var(--card);border-radius: 24px;padding: 24px;max-width: 400px;width: 100%;}
     .form-group{margin-bottom:16px;}
-    .form-group label{display:block;font-size:13px;font-weight:700;margin-bottom:8px;}
-    .form-group input{width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:14px;}
-    .form-group input:focus{outline:none;border-color:var(--primary);}
-    .modal-btns{display:flex;gap:10px;margin-top:20px;}
-    .btn-cancel{flex:1;padding:14px;background:#f1f5f9;color:var(--text-main);border:none;border-radius:12px;font-family:inherit;font-weight:800;cursor:pointer;}
-    .btn-submit{flex:2;padding:14px;background:var(--primary);color:#fff;border:none;border-radius:12px;font-family:inherit;font-weight:800;cursor:pointer;}
+    .form-group input{width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:10px;font-family:inherit;}
+    .modal-btns{display:flex;gap:10px;}
+    .btn-cancel{flex:1;padding:12px;background:#f1f5f9;border:none;border-radius:10px;font-family:inherit;font-weight:800;}
+    .btn-submit{flex:2;padding:12px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-family:inherit;font-weight:800;}
 </style>
 </head>
 <body>
-
-<div class="header">
-    <a href="dashboard.html">← بازگشت به داشبورد</a>
-    <div style="font-weight:800; font-size:15px;">خرید و ارتقا</div>
-    <div style="width:20px;"></div>
-</div>
-
+<div class="header"><a href="dashboard.html">← بازگشت</a><div style="font-weight:800;">خرید و ارتقا</div><div style="width:20px;"></div></div>
 <div class="container">
-    <div class="page-title">
-        <h1>ارتقای مشتری‌یار</h1>
-        <p>همین حالا پلن خود را رایگان فعال کنید.</p>
-    </div>
-
-    <div class="section-title">
-        <div>🚀 پلن‌های اشتراک</div>
-    </div>
+    <div class="page-title"><h1>ارتقای مشتری‌یار</h1><p>پلن خود را فعال کنید و هدیه بگیرید.</p></div>
+    
+    <div class="section-title"><div>🚀 پلن‌های اشتراک</div></div>
     <div class="plans-grid">
-        
-        <!-- پلن حرفه‌ای -->
         <div class="plan-card popular">
             <div class="badge-popular">پیشنهاد ما</div>
             <div class="plan-name">حرفه‌ای</div>
             <div class="plan-price">رایگان</div>
-            <ul class="plan-features">
-                <li>🎁 ۶۰ پیامک هدیه</li>
-                <li>مدیریت چک و اقساط</li>
-                <li>پشتیبانی کامل</li>
-            </ul>
+            <ul class="plan-features"><li>🎁 ۶۰ پیامک هدیه</li><li>مدیریت چک و اقساط</li><li>پشتیبانی کامل</li></ul>
             <button class="btn-buy" onclick="activateFreePlan('pro', 'پلن حرفه‌ای', 60)">فعال‌سازی پلن</button>
         </div>
-
-        <!-- پلن کسب و کار -->
         <div class="plan-card">
             <div class="plan-name">کسب‌وکار</div>
             <div class="plan-price">رایگان</div>
-            <ul class="plan-features">
-                <li>🎁 ۲۰۰ پیامک هدیه</li>
-                <li>پنل اپراتور و وب‌سایت</li>
-                <li>پشتیبانی اختصاصی</li>
-            </ul>
+            <ul class="plan-features"><li>🎁 ۲۰۰ پیامک هدیه</li><li>پنل اپراتور و وب‌سایت</li><li>پشتیبانی اختصاصی</li></ul>
             <button class="btn-buy" onclick="activateFreePlan('business', 'پلن کسب‌وکار', 200)">فعال‌سازی پلن</button>
         </div>
-
-        <!-- پلن ویژه (VIP) -->
         <div class="plan-card vip">
             <div class="badge-vip">ویژه</div>
             <div class="plan-name">ویژه (VIP)</div>
             <div class="plan-price">رایگان</div>
-            <ul class="plan-features">
-                <li>🎁 ۵۰۰ پیامک هدیه</li>
-                <li>تمام امکانات نامحدود</li>
-                <li>پشتیبانی VIP</li>
-            </ul>
+            <ul class="plan-features"><li>🎁 ۵۰۰ پیامک هدیه</li><li>تمام امکانات نامحدود</li><li>پشتیبانی VIP</li></ul>
             <button class="btn-buy" onclick="activateFreePlan('vip', 'پلن ویژه', 500)">فعال‌سازی پلن</button>
         </div>
     </div>
 
-    <!-- بخش خرید پکیج پیامک -->
-    <div class="section-title" style="margin-top:32px;">
-        <div>✉️ خرید پکیج پیامک اضافه</div>
-        <span>تعرفه: ۳۰۰ تومان به ازای هر پیامک</span>
-    </div>
-    
+    <div class="section-title" style="margin-top:32px;"><div>✉️ خرید پکیج پیامک اضافه</div><span>تعرفه: ۳۰۰ تومان</span></div>
     <div class="sms-packages">
-        <div class="sms-card">
-            <div class="sms-count">۵۰۰</div>
-            <div class="sms-label">پیامک</div>
-            <div class="sms-price">۱۵۰,۰۰۰ تومان</div>
-            <button class="btn-buy" onclick="openPaymentModal('sms500', '۵۰۰ پیامک', 150000)">خرید</button>
-        </div>
-        <div class="sms-card">
-            <div class="sms-count">۱۰۰۰</div>
-            <div class="sms-label">پیامک</div>
-            <div class="sms-price">۳۰۰,۰۰۰ تومان</div>
-            <button class="btn-buy" onclick="openPaymentModal('sms1000', '۱۰۰۰ پیامک', 300000)">خرید</button>
-        </div>
-        <div class="sms-card">
-            <div class="sms-count">۱۵۰۰</div>
-            <div class="sms-label">پیامک</div>
-            <div class="sms-price">۴۵۰,۰۰۰ تومان</div>
-            <button class="btn-buy" onclick="openPaymentModal('sms1500', '۱۵۰۰ پیامک', 450000)">خرید</button>
-        </div>
-        <div class="sms-card">
-            <div class="sms-count">۲۰۰۰</div>
-            <div class="sms-label">پیامک</div>
-            <div class="sms-price">۶۰۰,۰۰۰ تومان</div>
-            <button class="btn-buy" onclick="openPaymentModal('sms2000', '۲۰۰۰ پیامک', 600000)">خرید</button>
-        </div>
+        <div class="sms-card"><div class="sms-count">۵۰۰</div><div class="sms-label">پیامک</div><div class="sms-price">۱۵۰,۰۰۰ تومان</div><button class="btn-buy" onclick="openPaymentModal('sms500', '۵۰۰ پیامک', 150000)">خرید</button></div>
+        <div class="sms-card"><div class="sms-count">۱۰۰۰</div><div class="sms-label">پیامک</div><div class="sms-price">۳۰۰,۰۰۰ تومان</div><button class="btn-buy" onclick="openPaymentModal('sms1000', '۱۰۰۰ پیامک', 300000)">خرید</button></div>
+        <div class="sms-card"><div class="sms-count">۱۵۰۰</div><div class="sms-label">پیامک</div><div class="sms-price">۴۵۰,۰۰۰ تومان</div><button class="btn-buy" onclick="openPaymentModal('sms1500', '۱۵۰۰ پیامک', 450000)">خرید</button></div>
+        <div class="sms-card"><div class="sms-count">۲۰۰۰</div><div class="sms-label">پیامک</div><div class="sms-price">۶۰۰,۰۰۰ تومان</div><button class="btn-buy" onclick="openPaymentModal('sms2000', '۲۰۰۰ پیامک', 600000)">خرید</button></div>
     </div>
 </div>
 
-<!-- مودال ثبت پرداخت (مخصوص پکیج‌های پیامک) -->
 <div class="modal-overlay" id="paymentModal">
     <div class="modal-content">
-        <h3 id="modalTitle">تایید خرید</h3>
-        <p id="modalDesc" style="font-size:13px; color:var(--text-muted); margin-bottom:16px; text-align:center;"></p>
-        
-        <div class="form-group">
-            <label>شماره پیگیری / ۴ رقم آخر کارت:</label>
-            <input type="text" id="trackingCode" placeholder="مثلاً 1234" style="direction:ltr; text-align:left;">
-        </div>
-        <div class="form-group">
-            <label>توضیحات (اختیاری):</label>
-            <input type="text" id="description" placeholder="مثلاً پرداخت از بانک ملی">
-        </div>
-
+        <h3 id="modalTitle" style="text-align:center;margin-bottom:16px;">تایید خرید</h3>
+        <p id="modalDesc" style="font-size:13px;color:var(--text-muted);margin-bottom:16px;text-align:center;"></p>
+        <div class="form-group"><label>شماره پیگیری:</label><input type="text" id="trackingCode" placeholder="مثلاً 1234" style="direction:ltr;"></div>
         <div class="modal-btns">
             <button class="btn-cancel" onclick="document.getElementById('paymentModal').style.display='none'">انصراف</button>
             <button class="btn-submit" id="submitPayBtn" onclick="submitManualPayment()">ثبت پرداخت</button>
         </div>
-        <div id="paymentMsg" style="text-align:center; font-size:12px; font-weight:700; margin-top:12px;"></div>
+        <div id="paymentMsg" style="text-align:center;font-size:12px;margin-top:10px;"></div>
     </div>
 </div>
 
 <script type="module">
 import { supabase } from './js/supabase.js'; 
 const $ = id => document.getElementById(id);
-let me = null;
-let selectedPackage = {};
-
+let me = null; let selectedPackage = {};
 async function start() {
-    const { data: { session }, error } = await supabase.auth.getSession();
-    if (error || !session) { window.location.href = 'login.html'; return; }
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { window.location.href = 'login.html'; return; }
     me = session.user;
 }
-
-// 1. تابع فعال‌سازی رایگان پلن‌ها
 window.activateFreePlan = async function(type, name, smsGift) {
-    if (!confirm(`آیا می‌خواهید ${name} را به صورت رایگان فعال کنید؟ (${smsGift} پیامک هدیه)`)) return;
-
+    if (!confirm(`آیا می‌خواهید ${name} را رایگان فعال کنید؟ (${smsGift} پیامک هدیه)`)) return;
     try {
-        // دریافت سقف پیامک فعلی
         const { data: profile } = await supabase.from('profiles').select('sms_limit').eq('id', me.id).maybeSingle();
         let currentLimit = profile?.sms_limit || 0;
-
-        // آپدیت دیتابیس: تغییر پلن و اضافه کردن هدیه پیامک
-        const { error } = await supabase.from('profiles').update({
-            plan: type,
-            sms_limit: currentLimit + smsGift
-        }).eq('id', me.id);
-
+        const { error } = await supabase.from('profiles').update({ plan: type, sms_limit: currentLimit + smsGift }).eq('id', me.id);
         if (error) throw error;
-
-        alert(`✅ ${name} با موفقیت فعال شد!\n🎁 ${smsGift} پیامک هدیه به حساب شما اضافه شد.`);
+        alert(`✅ ${name} فعال شد!\n🎁 ${smsGift} پیامک هدیه اضافه شد.`);
         window.location.reload();
-
-    } catch (err) {
-        console.error(err);
-        alert(`❌ خطا در فعال‌سازی: ${err.message}`);
-    }
+    } catch (err) { alert(`❌ خطا: ${err.message}`); }
 }
-
-// 2. مودال پرداخت (برای پکیج‌های پیامک)
 window.openPaymentModal = function(type, name, price) {
     selectedPackage = { type, name, price };
     $('modalTitle').textContent = `ثبت پرداخت: ${name}`;
-    $('modalDesc').textContent = `مبلغ قابل پرداخت: ${price.toLocaleString('fa-IR')} تومان`;
+    $('modalDesc').textContent = `مبلغ: ${price.toLocaleString('fa-IR')} تومان`;
     $('paymentModal').style.display = 'flex';
-    $('paymentMsg').textContent = '';
-    $('trackingCode').value = '';
-    $('description').value = '';
+    $('paymentMsg').textContent = ''; $('trackingCode').value = '';
 }
-
 window.submitManualPayment = async function() {
     const trackingCode = $('trackingCode').value.trim();
-    const description = $('description').value.trim();
-    const btn = $('submitPayBtn');
-    const msg = $('paymentMsg');
-
-    if (!trackingCode) {
-        msg.textContent = 'لطفاً شماره پیگیری را وارد کنید.';
-        msg.style.color = '#dc2626';
-        return;
-    }
-
-    btn.disabled = true;
-    btn.textContent = 'در حال ثبت...';
-
+    if (!trackingCode) { $('paymentMsg').textContent = 'شماره پیگیری الزامی است.'; $('paymentMsg').style.color = '#dc2626'; return; }
+    const btn = $('submitPayBtn'); btn.disabled = true; btn.textContent = 'در حال ثبت...';
     try {
-        // ثبت در جدول payments (جهت تایید دستی توسط مدیر)
-        const { error } = await supabase.from('payments').insert({
-            user_id: me.id,
-            plan: selectedPackage.type,
-            amount: selectedPackage.price,
-            tracking_code: trackingCode,
-            description: description || '-',
-            status: 'pending'
-        });
-
+        const { error } = await supabase.from('payments').insert({ user_id: me.id, plan: selectedPackage.type, amount: selectedPackage.price, tracking_code: trackingCode, status: 'pending' });
         if (error) throw error;
-
-        msg.textContent = '✅ پرداخت شما ثبت شد و در انتظار تایید مدیر است.';
-        msg.style.color = '#16a34a';
-        
-        setTimeout(() => {
-            $('paymentModal').style.display = 'none';
-        }, 2000);
-
-    } catch (error) {
-        console.error(error);
-        let errorMessage = error?.message || 'خطای نامشخص';
-        if (error?.code === '42501') errorMessage = 'دسترسی ثبت پرداخت مجاز نیست (RLS).';
-        msg.textContent = `❌ ${errorMessage}`;
-        msg.style.color = '#dc2626';
-    } finally {
-        btn.disabled = false;
-        btn.textContent = 'ثبت پرداخت';
-    }
+        $('paymentMsg').textContent = '✅ ثبت شد. در انتظار تایید مدیر.';
+        $('paymentMsg').style.color = '#16a34a';
+        setTimeout(() => { $('paymentModal').style.display = 'none'; }, 2000);
+    } catch (error) { $('paymentMsg').textContent = `❌ خطا: ${error.message}`; $('paymentMsg').style.color = '#dc2626'; } 
+    finally { btn.disabled = false; btn.textContent = 'ثبت پرداخت'; }
 }
-
 start();
 </script>
 </body>
