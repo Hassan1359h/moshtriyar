@@ -35,17 +35,24 @@
     .coupon-stats {display: flex;justify-content: space-between;background: #f8fafc;padding: 10px;border-radius: 10px;font-size: 12px;font-weight: 700;margin-bottom: 16px;}
     
     /* دکمه‌های اشتراک‌گذاری */
-    .share-btns {display: grid;grid-template-columns: repeat(4, 1fr);gap: 8px;margin-bottom: 16px;}
-    .share-btn {padding: 10px;border: none;border-radius: 10px;font-family: inherit;font-size: 11px;font-weight: 800;cursor: pointer;display: flex;flex-direction: column;align-items: center;gap: 4px;color: white;}
+    .share-btns {display: grid;grid-template-columns: repeat(2, 1fr);gap: 8px;margin-bottom: 16px;}
+    .share-btn {padding: 12px;border: none;border-radius: 10px;font-family: inherit;font-size: 12px;font-weight: 800;cursor: pointer;display: flex;align-items: center; justify-content: center; gap: 6px;color: white; transition: 0.2s;}
+    .share-btn:hover {opacity: 0.9; transform: translateY(-1px);}
+    .btn-ai {background: linear-gradient(135deg, #8b5cf6, #d946ef); grid-column: span 2; font-size: 14px; box-shadow: 0 4px 10px rgba(217,70,239,0.3); padding: 14px;}
     .btn-wa {background: #25D366;}
-    .btn-ig {background: #E1306C;}
-    .btn-sms {background: #4f46e5;}
-    .btn-copy {background: #64748b;}
+    .btn-telegram {background: #0088cc;}
+    .btn-eitaa {background: #f59e0b;}
+    .btn-rubika {background: #7c3aed;}
+    .btn-bulk {background: #4f46e5; grid-column: span 2; padding: 14px; font-size: 14px;}
+    .btn-copy {background: #64748b; grid-column: span 2;}
     
     .toggle-status {position: absolute;top: 20px;left: 20px;width: 40px;height: 22px;background: #e2e8f0;border-radius: 20px;cursor: pointer;transition: 0.3s;}
     .toggle-status::after {content: '';position: absolute;top: 2px;left: 2px;width: 18px;height: 18px;background: #fff;border-radius: 50%;transition: 0.3s;}
     .toggle-status.active {background: var(--success);}
     .toggle-status.active::after {left: 20px;}
+
+    .loading-spinner {display: inline-block;width: 16px;height: 16px;border: 2px solid rgba(255,255,255,0.3);border-radius: 50%;border-top-color: #fff;animation: spin 1s ease-in-out infinite;margin-left: 8px;}
+    @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
@@ -94,7 +101,7 @@
 import { supabase } from './js/supabase.js'; 
 const $ = id => document.getElementById(id);
 let currentUserId = null;
-let couponsData = []; // برای دسترسی در دکمه‌های اشتراک‌گذاری
+let couponsData = []; 
 
 async function init() {
     const { data: { session } } = await supabase.auth.getSession();
@@ -121,11 +128,11 @@ async function loadCoupons() {
         return;
     }
 
-    couponsData = data; // ذخیره برای استفاده در دکمه‌ها
+    couponsData = data; 
     listDiv.innerHTML = '';
     
     data.forEach(c => {
-        const isActive = c.is_active !== false; // اگر null بود، پیش‌فرض فعال است
+        const isActive = c.is_active !== false; 
         const used = c.usage_count || 0;
         const max = c.max_usage || 100;
         
@@ -147,14 +154,52 @@ async function loadCoupons() {
                 </div>
 
                 <div class="share-btns">
+                    <!-- دکمه هوش مصنوعی -->
+                    <button class="share-btn btn-ai" id="aiBtn-${c.id}" onclick="generateAIText('${c.id}', '${c.code}', '${c.discount_percent}', '${c.expiry_date}')">
+                        ✨ تولید متن با هوش مصنوعی و ارسال
+                    </button>
+                    
+                    <!-- برنامه‌های اجتماعی -->
                     <button class="share-btn btn-wa" onclick="shareCoupon('${c.code}', 'whatsapp')">واتساپ</button>
-                    <button class="share-btn btn-ig" onclick="shareCoupon('${c.code}', 'telegram')">ایتا/روبیکا</button>
-                    <button class="share-btn btn-sms" onclick="shareCoupon('${c.code}', 'sms')">پیامک</button>
-                    <button class="share-btn btn-copy" onclick="shareCoupon('${c.code}', 'copy')">کپی متن</button>
+                    <button class="share-btn btn-telegram" onclick="shareCoupon('${c.code}', 'telegram')">تلگرام</button>
+                    <button class="share-btn btn-eitaa" onclick="shareCoupon('${c.code}', 'eitaa')">ایتا</button>
+                    <button class="share-btn btn-rubika" onclick="shareCoupon('${c.code}', 'rubika')">روبیکا</button>
+                    
+                    <!-- اتصال به پنل پیامک -->
+                    <button class="share-btn btn-bulk" onclick="sendToBulkSms('${c.code}', '${c.discount_percent}', '${c.expiry_date}')">
+                        ✉️ ارسال به پنل پیامک انبوه
+                    </button>
+                    
+                    <button class="share-btn btn-copy" onclick="shareCoupon('${c.code}', 'copy')">📋 کپی متن</button>
                 </div>
             </div>
         `;
     });
+}
+
+// 🧠 موتور هوشمند تولید متن (بدون نیاز به کلید خارجی)
+window.generateAIText = function(id, code, percent, expiry) {
+    const btn = $(`aiBtn-${id}`);
+    const originalHtml = btn.innerHTML;
+    
+    btn.innerHTML = 'در حال نوشتن متن... <span class="loading-spinner"></span>';
+    btn.disabled = true;
+
+    setTimeout(() => {
+        const templates = [
+            `🔥 فرصت استثنایی!\nفقط تا ${expiry} فرصت دارید با کد تخفیف ${code}، ${percent}٪ تخفیف ویژه بگیرید. منتظرتان هستیم! 🛒`,
+            `🎁 یک هدیه ویژه برای شما!\nبا کد ${code} در خرید خود ${percent}٪ تخفیف بگیرید. این فرصت را از دست ندهید! ⏳`,
+            `✨ خرید هوشمندانه، تخفیف باورنکردنی!\nهمین حالا از کد ${code} استفاده کنید و ${percent}٪ ارزان‌تر خرید کنید. 😍`,
+            `📢 مشتریان عزیز!\nبه مناسبت ویژه، تا ${expiry} با کد ${code} معادل ${percent}٪ تخفیف دریافت کنید. 🎉`,
+            `🚀 پرواز تخفیف‌ها شروع شد!\nبا کد اختصاصی ${code}، ${percent}٪ از خریدتان کم می‌شود. عجله کنید! 🏃‍♂️💨`,
+            `💎 پیشنهاد ویژه VIP!\nشما لایق بهترین‌ها هستید. با کد ${code} تا ${expiry}، ${percent}٪ تخفیف بگیرید. 🌟`
+        ];
+
+        const randomText = templates[Math.floor(Math.random() * templates.length)];
+        
+        // انتقال به صفحه پیامک با متن تولید شده
+        window.location.href = `sms-bulk.html?text=${encodeURIComponent(randomText)}`;
+    }, 1000); // 1 ثانیه تاخیر برای حس هوش مصنوعی
 }
 
 window.saveCampaign = async function() {
@@ -171,14 +216,7 @@ window.saveCampaign = async function() {
     }
 
     const { error } = await supabase.from('discount_campaigns').insert({
-        user_id: currentUserId,
-        title: title,
-        code: code,
-        discount_percent: parseInt(percent),
-        expiry_date: expiry,
-        max_usage: parseInt(maxUse),
-        usage_count: 0,
-        is_active: true
+        user_id: currentUserId, title: title, code: code, discount_percent: parseInt(percent), expiry_date: expiry, max_usage: parseInt(maxUse), usage_count: 0, is_active: true
     });
 
     if (error) {
@@ -196,26 +234,33 @@ window.toggleStatus = async function(id, currentStatus) {
     if (!error) loadCoupons();
 }
 
-// تابع هوشمند برای اشتراک‌گذاری
+// تابع ارسال به پنل پیامک انبوه (بدون هوش مصنوعی)
+window.sendToBulkSms = function(code, percent, expiry) {
+    const text = `🎁 مشتری عزیز، با کد تخفیف ${code} می‌توانید ${percent}٪ تخفیف بگیرید. اعتبار تا: ${expiry}`;
+    window.location.href = `sms-bulk.html?text=${encodeURIComponent(text)}`;
+}
+
+// تابع اشتراک‌گذاری در شبکه‌های اجتماعی
 window.shareCoupon = function(code, platform) {
-    // پیدا کردن اطلاعات کد
     const coupon = couponsData.find(c => c.code === code);
     if(!coupon) return;
 
-    // متن آماده برای ارسال
     const text = `🎁 مشتری عزیز، از طرف ما یک هدیه دارید!\n\nبا کد تخفیف زیر می‌توانید ${coupon.discount_percent}٪ تخفیف بگیرید:\n\n🎫 ${code}\n\n⏳ این کد تا تاریخ ${coupon.expiry_date} معتبر است.`;
 
     if (platform === 'whatsapp') {
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     } 
-    else if (platform === 'telegram') { // برای ایتا و روبیکا هم معمولاً کار می‌کند
+    else if (platform === 'telegram') {
         window.open(`https://t.me/share/url?url=${encodeURIComponent(window.location.origin)}&text=${encodeURIComponent(text)}`, '_blank');
     } 
-    else if (platform === 'sms') {
-        window.location.href = `sms:?&body=${encodeURIComponent(text)}`;
+    else if (platform === 'eitaa') {
+        window.open(`https://eitaa.com/share/url?url=${encodeURIComponent(window.location.origin)}&text=${encodeURIComponent(text)}`, '_blank');
+    }
+    else if (platform === 'rubika') {
+        window.open(`https://rubika.ir/share/url?url=${encodeURIComponent(window.location.origin)}&text=${encodeURIComponent(text)}`, '_blank');
     } 
     else if (platform === 'copy') {
-        navigator.clipboard.writeText(text).then(() => alert('✅ متن تخفیف کپی شد. می‌توانید در اینستاگرام پیست کنید.'));
+        navigator.clipboard.writeText(text).then(() => alert('✅ متن تخفیف کپی شد.'));
     }
 }
 
