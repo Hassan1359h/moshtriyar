@@ -848,8 +848,17 @@ window.addEventListener('moshtriyarBazaarPurchaseResult', async function (event)
             throw new Error(verification.error || 'تأیید پرداخت ناموفق بود.');
         }
 
-        alert('✅ خرید تأیید شد و اشتراک شما فعال گردید.');
-        window.location.reload();
+        if (verification.alreadyVerified || verification.result?.alreadyVerified) {
+    alert('⚠️ این توکن خرید قبلاً ثبت شده است. خرید جدید هنوز تأیید نشده؛ لطفاً دوباره پرداخت نکنید و با پشتیبانی تماس بگیرید.');
+    return;
+}
+
+if (verification.result?.success !== true) {
+    throw new Error('فعال‌سازی اشتراک توسط سرور تأیید نشد.');
+}
+
+alert('✅ خرید جدید تأیید شد و اشتراک شما فعال گردید.');
+window.location.reload();
 
     } catch (err) {
         alert('❌ خطا در فعال‌سازی اشتراک: ' + err.message);
