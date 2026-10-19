@@ -54,26 +54,19 @@ export default function App() {
     webViewRef.current?.reload();
   };
 
-  // =========================================================
-  // ابزارهای مدیریت فایل
-  // =========================================================
-
   const getFileName = (url, fallback = 'moshtriyar-ai-agent.zip') => {
     try {
       const cleanUrl = String(url || '').split('?')[0];
       const part = cleanUrl.split('/').pop();
-
       if (part && part.includes('.')) {
         return decodeURIComponent(part);
       }
     } catch (_) {}
-
     return fallback;
   };
 
   const isPluginDownloadUrl = (url) => {
     const value = String(url || '').toLowerCase();
-
     return (
       value.includes('/api/wordpress-plugin') ||
       value.includes('/api/download-plugin') ||
@@ -84,7 +77,6 @@ export default function App() {
     );
   };
 
-  // تشخیص لینک نصب APK
   const isApkUrl = (url) => {
     try {
       return /\.apk$/i.test(new URL(url).pathname);
@@ -93,10 +85,6 @@ export default function App() {
     }
   };
 
-  // =========================================================
-  // دانلود افزونه وردپرس
-  // =========================================================
-
   const downloadFileFromWebView = async (url, requestedFileName) => {
     if (!url || !/^https?:\/\//i.test(url)) {
       Alert.alert('خطا', 'لینک دانلود معتبر نیست.');
@@ -104,44 +92,25 @@ export default function App() {
     }
 
     if (isApkUrl(url)) {
-      Alert.alert(
-        'به‌روزرسانی برنامه',
-        'نسخه بازار مشتری‌یار را از طریق کافه‌بازار به‌روزرسانی کنید.'
-      );
+      Alert.alert('به‌روزرسانی برنامه', 'نسخه بازار مشتری‌یار را از طریق کافه‌بازار به‌روزرسانی کنید.');
       return;
     }
 
     try {
       let fileName = requestedFileName || getFileName(url);
-
-      if (!fileName.toLowerCase().endsWith('.zip')) {
-        fileName = 'moshtriyar-ai-agent.zip';
-      }
-
+      if (!fileName.toLowerCase().endsWith('.zip')) fileName = 'moshtriyar-ai-agent.zip';
       fileName = fileName.replace(/[\\/:*?"<>|]/g, '_');
 
       const fileUri = `${FileSystem.cacheDirectory}${Date.now()}-${fileName}`;
-
-      Alert.alert(
-        'دانلود افزونه',
-        'فایل افزونه در حال دانلود است. پس از اتمام، پنجره ذخیره‌سازی باز می‌شود.'
-      );
+      Alert.alert('دانلود افزونه', 'فایل افزونه در حال دانلود است. پس از اتمام، پنجره ذخیره‌سازی باز می‌شود.');
 
       const result = await FileSystem.downloadAsync(url, fileUri, {
-        headers: {
-          Accept: 'application/zip, application/octet-stream, */*',
-        },
+        headers: { Accept: 'application/zip, application/octet-stream, */*' },
       });
 
-      if (result.status < 200 || result.status >= 300) {
-        throw new Error(`پاسخ ناموفق سرور: ${result.status}`);
-      }
-
+      if (result.status < 200 || result.status >= 300) throw new Error(`پاسخ ناموفق سرور: ${result.status}`);
       const info = await FileSystem.getInfoAsync(result.uri);
-
-      if (!info.exists || !info.size || info.size < 100) {
-        throw new Error('فایل دانلودشده معتبر نیست.');
-      }
+      if (!info.exists || !info.size || info.size < 100) throw new Error('فایل دانلودشده معتبر نیست.');
 
       const content = await FileSystem.readAsStringAsync(result.uri, {
         encoding: FileSystem.EncodingType.Base64,
@@ -149,25 +118,12 @@ export default function App() {
         position: 0,
       });
 
-      const looksLikeZip =
-        content.startsWith('UEsDB') ||
-        content.startsWith('UEsFB') ||
-        content.startsWith('UEsBA') ||
-        content.startsWith('UEsD');
-
-      if (!looksLikeZip) {
-        throw new Error(
-          'سرور فایل ZIP برنگرداند. احتمالاً لینک منقضی شده یا دسترسی دانلود معتبر نیست.'
-        );
-      }
+      const looksLikeZip = content.startsWith('UEsDB') || content.startsWith('UEsFB') || content.startsWith('UEsBA') || content.startsWith('UEsD');
+      if (!looksLikeZip) throw new Error('سرور فایل ZIP برنگرداند.');
 
       const sharingAvailable = await Sharing.isAvailableAsync();
-
       if (!sharingAvailable) {
-        Alert.alert(
-          'دانلود کامل شد',
-          `فایل در این مسیر ذخیره شد:\n${result.uri}`
-        );
+        Alert.alert('دانلود کامل شد', `فایل در این مسیر ذخیره شد:\n${result.uri}`);
         return;
       }
 
@@ -178,51 +134,27 @@ export default function App() {
       });
     } catch (err) {
       console.error('Plugin download error:', err);
-
-      Alert.alert(
-        'خطا در دانلود',
-        err?.message || 'دانلود افزونه انجام نشد. دوباره تلاش کنید.'
-      );
+      Alert.alert('خطا در دانلود', err?.message || 'دانلود افزونه انجام نشد.');
     }
   };
-
-  // =========================================================
-  // مدیریت دانلود Native
-  // =========================================================
 
   const handleFileDownload = ({ nativeEvent }) => {
     const url = nativeEvent?.downloadUrl;
-
     if (!url) return;
-
     if (isApkUrl(url)) {
-      Alert.alert(
-        'به‌روزرسانی برنامه',
-        'برای دریافت نسخه جدید مشتری‌یار از کافه‌بازار استفاده کنید.'
-      );
+      Alert.alert('به‌روزرسانی برنامه', 'برای دریافت نسخه جدید مشتری‌یار از کافه‌بازار استفاده کنید.');
       return;
     }
-
     downloadFileFromWebView(url);
   };
 
-  // =========================================================
-  // ذخیره PDF و سایر فایل‌ها
-  // =========================================================
-
   const saveFileFromWebView = async (base64Data, filename, mimeType) => {
     try {
-      if (!base64Data || !filename) {
-        throw new Error('اطلاعات فایل ناقص است.');
-      }
-
+      if (!base64Data || !filename) throw new Error('اطلاعات فایل ناقص است.');
       const safeName = String(filename).replace(/[\\/:*?"<>|]/g, '_');
       const uri = `${FileSystem.documentDirectory}${safeName}`;
 
-      await FileSystem.writeAsStringAsync(uri, base64Data, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
-
+      await FileSystem.writeAsStringAsync(uri, base64Data, { encoding: FileSystem.EncodingType.Base64 });
       const sharingAvailable = await Sharing.isAvailableAsync();
 
       if (sharingAvailable) {
@@ -236,186 +168,87 @@ export default function App() {
       }
     } catch (err) {
       console.error('Save file error:', err);
-
-      Alert.alert(
-        'خطا در ذخیره فایل',
-        err?.message || 'خطای نامشخص'
-      );
+      Alert.alert('خطا در ذخیره فایل', err?.message || 'خطای نامشخص');
     }
   };
   
-  // =========================================================
-  // پیام‌های WebView
-  // =========================================================
-      const handleMessage = async (event) => {
-  try {
-    const rawData = event?.nativeEvent?.data;
-    const data = JSON.parse(rawData); // 👈 اینجا اصلاح شد
+  const handleMessage = async (event) => {
+    try {
+      const rawData = event?.nativeEvent?.data;
+      const data = JSON.parse(rawData);
 
-    // خرید اشتراک کافه‌بازار با پشتیبانی از تخفیف
-    if (data.type === 'buyBazaarSubscription') {
-      const allowed = [
-        'moshtriyar_vip_yearly',
-        'moshtriyar_business_30',
-        'moshtriyar_pro_30',
-        'moshtriyar_test_5min'
-      ];
+      if (data.type === 'buyBazaarSubscription') {
+        const allowed = ['moshtriyar_vip_yearly', 'moshtriyar_business_30', 'moshtriyar_pro_30', 'moshtriyar_test_5min'];
 
-      if (!allowed.includes(data.productId)) {
-        throw new Error('شناسه محصول اشتراک معتبر نیست.');
-      }
-
-      const purchaseOptions = {};
-
-      if (data.dynamicPriceToken && data.discountIntentId) {
-        purchaseOptions.dynamicPriceToken = data.dynamicPriceToken;
-        purchaseOptions.developerPayload = data.discountIntentId;
-      }
-
-      try {
-        await CafeBazaarBilling.connect({
-          // 👇👇 کلید عمومی RSA خود را دقیقا بین دو دابل کوتیشن زیر کپی کنید 👇👇
-          rsaPublicKey: "MIHNMA0GCSqGSIb3DQEBAQUAA4G7ADCBtwKBrwCgzISx4+sHzIMA0DxRq7cUAMFTeekhYJEeQGEiQ49npxyyHwyWVNIoxP1kntq01qtF+wPr/OuIni5bAbIWPcFmB2xCW98MhNFtoLi1qdkxHu9ARELpFDxn41Wn9begMC6Z6NK6/6Ci1saSBrcf5wYnEvM7/Z3rzx6e1u5QTVYnBY1x+hC+DkHdMGxpqqyOgIek0q6T90ozofI5BIKx5mMpbjE/MLlscZJj+XKRgrECAwEAAQ==", 
-        });
-
-        const purchase = await CafeBazaarBilling.subscribeProduct(
-          String(data.productId), // اطمینان از رشته بودن شناسه محصول
-          purchaseOptions
-        );
-
-        const result = {
-          success: true,
-          productId: purchase.productId,
-          purchaseToken: purchase.purchaseToken,
-          orderId: purchase.orderId,
-        };
-
-        if (data.discountIntentId) {
-          result.discountIntentId = data.discountIntentId;
+        if (!allowed.includes(data.productId)) {
+          throw new Error('شناسه محصول اشتراک معتبر نیست.');
         }
 
-        webViewRef.current?.injectJavaScript(
-          "window.dispatchEvent(new CustomEvent('moshtriyarBazaarPurchaseResult',{detail:" +
-            JSON.stringify(result) +
-            "}));true;"
-        );
-      } catch (e) {
-        // نمایش متن دقیق خطا به کاربر
-        Alert.alert(
-          "خطای دقیق بازار",
-          String(e?.message || e || 'خطای نامشخص')
-        );
+        const purchaseOptions = {};
+        if (data.dynamicPriceToken && data.discountIntentId) {
+          purchaseOptions.dynamicPriceToken = data.dynamicPriceToken;
+          purchaseOptions.developerPayload = data.discountIntentId;
+        }
 
-        webViewRef.current?.injectJavaScript(
-          "window.dispatchEvent(new CustomEvent('moshtriyarBazaarPurchaseResult',{detail:" +
-            JSON.stringify({
-              success: false,
-              error: e?.message || 'خرید ناموفق بود',
-            }) +
-            "}));true;"
-        );
-      } finally {
         try {
-          await CafeBazaarBilling.disconnect();
-        } catch (_) {}
-      }
+          await CafeBazaarBilling.connect({
+            rsaPublicKey: "MIHNMA0GCSqGSIb3DQEBAQUAA4G7ADCBtwKBrwCgzISx4+sHzIMA0DxRq7cUAMFTeekhYJEeQGEiQ49npxyyHwyWVNIoxP1kntq01qtF+wPr/OuIni5bAbIWPcFmB2xCW98MhNFtoLi1qdkxHu9ARELpFDxn41Wn9begMC6Z6NK6/6Ci1saSBrcf5wYnEvM7/Z3rzx6e1u5QTVYnBY1x+hC+DkHdMGxpqqyOgIek0q6T90ozofI5BIKx5mMpbjE/MLlscZJj+XKRgrECAwEAAQ==", 
+          });
 
-      return;
-    }
+          const purchase = await CafeBazaarBilling.subscribeProduct(String(data.productId), purchaseOptions);
 
-    // ذخیره فایل دریافتی از WebView
-    if (data.type === 'saveFile') {
-      await saveFileFromWebView(
-        data.data,
-        data.filename,
-        data.mimeType
-      );
-      return;
-    }
+          const result = {
+            success: true,
+            productId: purchase.productId,
+            purchaseToken: purchase.purchaseToken,
+            orderId: purchase.orderId,
+          };
 
-    // جلوگیری از دانلود مستقیم APK
-    if (data.type === 'downloadAPK') {
-      Alert.alert(
-        'به‌روزرسانی مشتری‌یار',
-        'برای دریافت نسخه جدید برنامه، از کافه‌بازار استفاده کنید.'
-      );
-      return;
-    }
+          if (data.discountIntentId) result.discountIntentId = data.discountIntentId;
 
-    // دانلود فایل
-    if (data.type === 'downloadFile') {
-      if (isApkUrl(data.url)) {
-        Alert.alert(
-          'به‌روزرسانی مشتری‌یار',
-          'نسخه جدید برنامه را از کافه‌بازار دریافت کنید.'
-        );
+          webViewRef.current?.injectJavaScript(
+            "window.dispatchEvent(new CustomEvent('moshtriyarBazaarPurchaseResult',{detail:" +
+              JSON.stringify(result) + "}));true;"
+          );
+        } catch (e) {
+          Alert.alert("خطای دقیق بازار", String(e?.message || e || 'خطای نامشخص'));
+          
+          webViewRef.current?.injectJavaScript(
+            "window.dispatchEvent(new CustomEvent('moshtriyarBazaarPurchaseResult',{detail:" +
+              JSON.stringify({ success: false, error: e?.message || 'خرید ناموفق بود' }) + "}));true;"
+          );
+        } finally {
+          try {
+            await CafeBazaarBilling.disconnect();
+          } catch (_) {}
+        }
         return;
       }
 
-      await downloadFileFromWebView(data.url, data.filename);
-      return;
-    }
-
-    // باز کردن لینک خارجی
-    if (data.type === 'openUrl' && data.url) {
-      if (isApkUrl(data.url)) {
-        Alert.alert(
-          'به‌روزرسانی مشتری‌یار',
-          'نسخه جدید برنامه را از کافه‌بازار دریافت کنید.'
-        );
-        return;
-      }
-
-      await Linking.openURL(data.url);
-    }
-  } catch (err) { // 👈 این catch برای try اصلی بود که جا افتاده بود
-    console.error('WebView message error:', err);
-  }
-};
-
-      // ذخیره فایل دریافتی از WebView
       if (data.type === 'saveFile') {
-        await saveFileFromWebView(
-          data.data,
-          data.filename,
-          data.mimeType
-        );
+        await saveFileFromWebView(data.data, data.filename, data.mimeType);
         return;
       }
 
-      // جلوگیری از دانلود مستقیم APK
       if (data.type === 'downloadAPK') {
-        Alert.alert(
-          'به‌روزرسانی مشتری‌یار',
-          'برای دریافت نسخه جدید برنامه، از کافه‌بازار استفاده کنید.'
-        );
+        Alert.alert('به‌روزرسانی مشتری‌یار', 'برای دریافت نسخه جدید برنامه، از کافه‌بازار استفاده کنید.');
         return;
       }
 
-      // دانلود فایل
       if (data.type === 'downloadFile') {
         if (isApkUrl(data.url)) {
-          Alert.alert(
-            'به‌روزرسانی مشتری‌یار',
-            'نسخه جدید برنامه را از کافه‌بازار دریافت کنید.'
-          );
+          Alert.alert('به‌روزرسانی مشتری‌یار', 'نسخه جدید برنامه را از کافه‌بازار دریافت کنید.');
           return;
         }
-
         await downloadFileFromWebView(data.url, data.filename);
         return;
       }
 
-      // باز کردن لینک خارجی
       if (data.type === 'openUrl' && data.url) {
         if (isApkUrl(data.url)) {
-          Alert.alert(
-            'به‌روزرسانی مشتری‌یار',
-            'نسخه جدید برنامه را از کافه‌بازار دریافت کنید.'
-          );
+          Alert.alert('به‌روزرسانی مشتری‌یار', 'نسخه جدید برنامه را از کافه‌بازار دریافت کنید.');
           return;
         }
-
         await Linking.openURL(data.url);
       }
     } catch (err) {
@@ -423,31 +256,20 @@ export default function App() {
     }
   };
 
-  // =========================================================
-  // مدیریت لینک‌های WebView
-  // =========================================================
-
   const handleShouldStartLoad = (request) => {
     const url = String(request?.url || '');
-
     if (!url) return false;
 
-    // جلوگیری از دانلود APK
     if (isApkUrl(url)) {
-      Alert.alert(
-        'به‌روزرسانی مشتری‌یار',
-        'نسخه جدید برنامه را از طریق کافه‌بازار دریافت کنید.'
-      );
+      Alert.alert('به‌روزرسانی مشتری‌یار', 'نسخه جدید برنامه را از طریق کافه‌بازار دریافت کنید.');
       return false;
     }
 
-    // دانلود افزونه وردپرس
     if (isPluginDownloadUrl(url)) {
       downloadFileFromWebView(url);
       return false;
     }
 
-    // لینک‌های داخلی سایت
     if (
       url.startsWith('https://moshtriyar.ir') ||
       url.startsWith('https://moshtriyar.vercel.app') ||
@@ -458,55 +280,33 @@ export default function App() {
       return true;
     }
 
-    // لینک‌های اپلیکیشن‌های خارجی
     if (
-      url.startsWith('whatsapp://') ||
-      url.startsWith('https://wa.me/') ||
-      url.startsWith('tg://') ||
-      url.startsWith('https://t.me/') ||
-      url.startsWith('eitaa://') ||
-      url.startsWith('https://eitaa.com/') ||
-      url.startsWith('sms:') ||
-      url.startsWith('tel:') ||
-      url.startsWith('mailto:')
+      url.startsWith('whatsapp://') || url.startsWith('https://wa.me/') ||
+      url.startsWith('tg://') || url.startsWith('https://t.me/') ||
+      url.startsWith('eitaa://') || url.startsWith('https://eitaa.com/') ||
+      url.startsWith('sms:') || url.startsWith('tel:') || url.startsWith('mailto:')
     ) {
       Linking.openURL(url).catch(() => {
         Alert.alert('خطا', 'امکان باز کردن این لینک وجود ندارد.');
       });
-
       return false;
     }
 
-    // سایر لینک‌های خارجی
     Linking.openURL(url).catch(() => {
       Alert.alert('خطا', 'امکان باز کردن لینک خارجی وجود ندارد.');
     });
-
     return false;
   };
-
-  // =========================================================
-  // صفحه خطا
-  // =========================================================
 
   if (error) {
     return (
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="light-content" backgroundColor="#2563eb" />
-
         <View style={styles.errorBox}>
           <Text style={styles.errorIcon}>📡</Text>
-
           <Text style={styles.errorTitle}>اتصال برقرار نشد</Text>
-
-          <Text style={styles.errorText}>
-            لطفاً اتصال اینترنت خود را بررسی کنید و دوباره تلاش کنید.
-          </Text>
-
-          <TouchableOpacity
-            style={styles.retryBtn}
-            onPress={handleRetry}
-          >
+          <Text style={styles.errorText}>لطفاً اتصال اینترنت خود را بررسی کنید و دوباره تلاش کنید.</Text>
+          <TouchableOpacity style={styles.retryBtn} onPress={handleRetry}>
             <Text style={styles.retryText}>🔄 تلاش مجدد</Text>
           </TouchableOpacity>
         </View>
@@ -514,14 +314,9 @@ export default function App() {
     );
   }
 
-  // =========================================================
-  // WebView
-  // =========================================================
-
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#2563eb" />
-
       <WebView
         ref={webViewRef}
         source={{ uri: APP_URL }}
@@ -540,26 +335,19 @@ export default function App() {
         cacheEnabled
         cacheMode="LOAD_DEFAULT"
         onShouldStartLoadWithRequest={handleShouldStartLoad}
-        onFileDownload={
-          Platform.OS === 'android' ? handleFileDownload : undefined
-        }
+        onFileDownload={Platform.OS === 'android' ? handleFileDownload : undefined}
         onMessage={handleMessage}
         onLoadStart={() => setLoading(true)}
         onLoadEnd={() => setLoading(false)}
         onError={handleError}
-        onNavigationStateChange={(navState) =>
-          setCanGoBack(navState.canGoBack)
-        }
-        onPermissionRequest={(event) =>
-          event.grant(event.resources)
-        }
+        onNavigationStateChange={(navState) => setCanGoBack(navState.canGoBack)}
+        onPermissionRequest={(event) => event.grant(event.resources)}
         userAgent="Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
       />
 
       {loading && (
         <View style={styles.loadingOverlay}>
           <ActivityIndicator size="large" color="#2563eb" />
-
           <Text style={styles.loadingText}>در حال بارگذاری...</Text>
         </View>
       )}
@@ -567,75 +355,18 @@ export default function App() {
   );
 }
 
-// =========================================================
-// Styles
-// =========================================================
-
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#2563eb',
-  },
-
-  webview: {
-    flex: 1,
-  },
-
+  container: { flex: 1, backgroundColor: '#2563eb' },
+  webview: { flex: 1 },
   loadingOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: '#ffffff',
-    justifyContent: 'center',
-    alignItems: 'center',
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: '#ffffff', justifyContent: 'center', alignItems: 'center',
   },
-
-  loadingText: {
-    marginTop: 15,
-    color: '#64748b',
-    fontSize: 14,
-  },
-
-  errorBox: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 30,
-    backgroundColor: '#ffffff',
-  },
-
-  errorIcon: {
-    fontSize: 80,
-    marginBottom: 20,
-  },
-
-  errorTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#1e293b',
-    marginBottom: 10,
-  },
-
-  errorText: {
-    fontSize: 15,
-    color: '#64748b',
-    textAlign: 'center',
-    marginBottom: 30,
-    lineHeight: 24,
-  },
-
-  retryBtn: {
-    backgroundColor: '#2563eb',
-    paddingHorizontal: 30,
-    paddingVertical: 14,
-    borderRadius: 12,
-  },
-
-  retryText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
+  loadingText: { marginTop: 15, color: '#64748b', fontSize: 14 },
+  errorBox: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 30, backgroundColor: '#ffffff' },
+  errorIcon: { fontSize: 80, marginBottom: 20 },
+  errorTitle: { fontSize: 22, fontWeight: 'bold', color: '#1e293b', marginBottom: 10 },
+  errorText: { fontSize: 15, color: '#64748b', textAlign: 'center', marginBottom: 30, lineHeight: 24 },
+  retryBtn: { backgroundColor: '#2563eb', paddingHorizontal: 30, paddingVertical: 14, borderRadius: 12 },
+  retryText: { color: '#ffffff', fontSize: 16, fontWeight: 'bold' },
 });
