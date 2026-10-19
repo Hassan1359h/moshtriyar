@@ -1,4 +1,3 @@
-
 {
   "expo": {
     "name": "مشتری‌یار",
@@ -34,10 +33,10 @@
         "android.permission.CAMERA",
         "android.permission.VIBRATE",
         "android.permission.POST_NOTIFICATIONS",
-        "android.permission.WAKE_LOCK"
+        "android.permission.WAKE_LOCK",
+        "com.farsitel.bazaar.permission.PAY_THROUGH_BAZAAR"
       ],
       "blockedPermissions": [
-        "android.permission.REQUEST_INSTALL_PACKAGES",
         "android.permission.SYSTEM_ALERT_WINDOW",
         "android.permission.READ_PHONE_STATE",
         "android.permission.READ_EXTERNAL_STORAGE",
@@ -61,8 +60,7 @@
         "android.permission.NFC",
         "android.permission.SCHEDULE_EXACT_ALARM",
         "android.permission.USE_EXACT_ALARM",
-        "android.permission.FOREGROUND_SERVICE",
-        "android.permission.QUERY_ALL_PACKAGES"
+        "android.permission.FOREGROUND_SERVICE"
       ]
     },
     "web": {
