@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import {
   StyleSheet,
@@ -276,7 +275,8 @@ export default function App() {
 
         try {
           await CafeBazaarBilling.connect({
-            rsaPublicKey: process.env.EXPO_PUBLIC_CAFEBAZAAR_RSA_KEY,
+            // 👇👇 کلید عمومی RSA خود را دقیقا بین دو دابل کوتیشن زیر کپی کنید 👇👇
+            rsaPublicKey: "MIHNMA0GCSqGSIb3DQEBAQUAA4G7ADCBtwKBrwCgzISx4+sHzIMA0DxRq7cUAMFTeekhYJEeQGEiQ49npxyyHwyWVNIoxP1kntq01qtF+wPr/OuIni5bAbIWPcFmB2xCW98MhNFtoLi1qdkxHu9ARELpFDxn41Wn9begMC6Z6NK6/6Ci1saSBrcf5wYnEvM7/Z3rzx6e1u5QTVYnBY1x+hC+DkHdMGxpqqyOgIek0q6T90ozofI5BIKx5mMpbjE/MLlscZJj+XKRgrECAwEAAQ==", 
           });
 
           const purchase = await CafeBazaarBilling.subscribeProduct(
