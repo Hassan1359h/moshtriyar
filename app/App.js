@@ -247,76 +247,131 @@ export default function App() {
   // =========================================================
   // پیام‌های WebView
   // =========================================================
-  const handleMessage = async (event) => {
-    try {
-      const rawData = event?.nativeEvent?.data;
-      const data = JSON.parse(rawData);
+      const handleMessage = async (event) => {
+  try {
+    const rawData = event?.nativeEvent?.data;
+    const data = JSON.parse(rawData); // 👈 اینجا اصلاح شد
 
-      // خرید اشتراک کافه‌بازار با پشتیبانی از تخفیف
-      if (data.type === 'buyBazaarSubscription') {
-        const allowed = [
-         'moshtriyar_vip_yearly',
-         'moshtriyar_business_30',
-         'moshtriyar_pro_30',
-         'moshtriyar_test_5min'
+    // خرید اشتراک کافه‌بازار با پشتیبانی از تخفیف
+    if (data.type === 'buyBazaarSubscription') {
+      const allowed = [
+        'moshtriyar_vip_yearly',
+        'moshtriyar_business_30',
+        'moshtriyar_pro_30',
+        'moshtriyar_test_5min'
+      ];
 
-        ];
+      if (!allowed.includes(data.productId)) {
+        throw new Error('شناسه محصول اشتراک معتبر نیست.');
+      }
 
-        if (!allowed.includes(data.productId)) {
-          throw new Error('شناسه محصول اشتراک معتبر نیست.');
+      const purchaseOptions = {};
+
+      if (data.dynamicPriceToken && data.discountIntentId) {
+        purchaseOptions.dynamicPriceToken = data.dynamicPriceToken;
+        purchaseOptions.developerPayload = data.discountIntentId;
+      }
+
+      try {
+        await CafeBazaarBilling.connect({
+          // 👇👇 کلید عمومی RSA خود را دقیقا بین دو دابل کوتیشن زیر کپی کنید 👇👇
+          rsaPublicKey: "MIHNMA0GCSqGSIb3DQEBAQUAA4G7ADCBtwKBrwCgzISx4+sHzIMA0DxRq7cUAMFTeekhYJEeQGEiQ49npxyyHwyWVNIoxP1kntq01qtF+wPr/OuIni5bAbIWPcFmB2xCW98MhNFtoLi1qdkxHu9ARELpFDxn41Wn9begMC6Z6NK6/6Ci1saSBrcf5wYnEvM7/Z3rzx6e1u5QTVYnBY1x+hC+DkHdMGxpqqyOgIek0q6T90ozofI5BIKx5mMpbjE/MLlscZJj+XKRgrECAwEAAQ==", 
+        });
+
+        const purchase = await CafeBazaarBilling.subscribeProduct(
+          String(data.productId), // اطمینان از رشته بودن شناسه محصول
+          purchaseOptions
+        );
+
+        const result = {
+          success: true,
+          productId: purchase.productId,
+          purchaseToken: purchase.purchaseToken,
+          orderId: purchase.orderId,
+        };
+
+        if (data.discountIntentId) {
+          result.discountIntentId = data.discountIntentId;
         }
 
-        const purchaseOptions = {};
+        webViewRef.current?.injectJavaScript(
+          "window.dispatchEvent(new CustomEvent('moshtriyarBazaarPurchaseResult',{detail:" +
+            JSON.stringify(result) +
+            "}));true;"
+        );
+      } catch (e) {
+        // نمایش متن دقیق خطا به کاربر
+        Alert.alert(
+          "خطای دقیق بازار",
+          String(e?.message || e || 'خطای نامشخص')
+        );
 
-        if (data.dynamicPriceToken && data.discountIntentId) {
-          purchaseOptions.dynamicPriceToken = data.dynamicPriceToken;
-          purchaseOptions.developerPayload = data.discountIntentId;
-        }
-
+        webViewRef.current?.injectJavaScript(
+          "window.dispatchEvent(new CustomEvent('moshtriyarBazaarPurchaseResult',{detail:" +
+            JSON.stringify({
+              success: false,
+              error: e?.message || 'خرید ناموفق بود',
+            }) +
+            "}));true;"
+        );
+      } finally {
         try {
-          await CafeBazaarBilling.connect({
-            // 👇👇 کلید عمومی RSA خود را دقیقا بین دو دابل کوتیشن زیر کپی کنید 👇👇
-            rsaPublicKey: "MIHNMA0GCSqGSIb3DQEBAQUAA4G7ADCBtwKBrwCgzISx4+sHzIMA0DxRq7cUAMFTeekhYJEeQGEiQ49npxyyHwyWVNIoxP1kntq01qtF+wPr/OuIni5bAbIWPcFmB2xCW98MhNFtoLi1qdkxHu9ARELpFDxn41Wn9begMC6Z6NK6/6Ci1saSBrcf5wYnEvM7/Z3rzx6e1u5QTVYnBY1x+hC+DkHdMGxpqqyOgIek0q6T90ozofI5BIKx5mMpbjE/MLlscZJj+XKRgrECAwEAAQ==", 
-          });
+          await CafeBazaarBilling.disconnect();
+        } catch (_) {}
+      }
 
-          const purchase = await CafeBazaarBilling.subscribeProduct(
-            data.productId,
-            purchaseOptions
-          );
+      return;
+    }
 
-          const result = {
-            success: true,
-            productId: purchase.productId,
-            purchaseToken: purchase.purchaseToken,
-            orderId: purchase.orderId,
-          };
+    // ذخیره فایل دریافتی از WebView
+    if (data.type === 'saveFile') {
+      await saveFileFromWebView(
+        data.data,
+        data.filename,
+        data.mimeType
+      );
+      return;
+    }
 
-          if (data.discountIntentId) {
-            result.discountIntentId = data.discountIntentId;
-          }
+    // جلوگیری از دانلود مستقیم APK
+    if (data.type === 'downloadAPK') {
+      Alert.alert(
+        'به‌روزرسانی مشتری‌یار',
+        'برای دریافت نسخه جدید برنامه، از کافه‌بازار استفاده کنید.'
+      );
+      return;
+    }
 
-          webViewRef.current?.injectJavaScript(
-            "window.dispatchEvent(new CustomEvent('moshtriyarBazaarPurchaseResult',{detail:" +
-              JSON.stringify(result) +
-              "}));true;"
-          );
-        } catch (e) {
-          webViewRef.current?.injectJavaScript(
-            "window.dispatchEvent(new CustomEvent('moshtriyarBazaarPurchaseResult',{detail:" +
-              JSON.stringify({
-                success: false,
-                error: e?.message || 'خرید ناموفق بود',
-              }) +
-              "}));true;"
-          );
-        } finally {
-          try {
-            await CafeBazaarBilling.disconnect();
-          } catch (_) {}
-        }
-
+    // دانلود فایل
+    if (data.type === 'downloadFile') {
+      if (isApkUrl(data.url)) {
+        Alert.alert(
+          'به‌روزرسانی مشتری‌یار',
+          'نسخه جدید برنامه را از کافه‌بازار دریافت کنید.'
+        );
         return;
       }
+
+      await downloadFileFromWebView(data.url, data.filename);
+      return;
+    }
+
+    // باز کردن لینک خارجی
+    if (data.type === 'openUrl' && data.url) {
+      if (isApkUrl(data.url)) {
+        Alert.alert(
+          'به‌روزرسانی مشتری‌یار',
+          'نسخه جدید برنامه را از کافه‌بازار دریافت کنید.'
+        );
+        return;
+      }
+
+      await Linking.openURL(data.url);
+    }
+  } catch (err) { // 👈 این catch برای try اصلی بود که جا افتاده بود
+    console.error('WebView message error:', err);
+  }
+};
 
       // ذخیره فایل دریافتی از WebView
       if (data.type === 'saveFile') {
