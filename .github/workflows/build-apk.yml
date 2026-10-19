@@ -43,12 +43,11 @@ jobs:
       # --- تزریق امن امضای دیجیتال ---
       - name: Decode Keystore
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > ./app/android/app/release.keystore
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | tr -d '\n\r ' | base64 --decode > ./app/android/app/release.keystore
 
       - name: Patch build.gradle for Signing
         working-directory: ./app/android/app
         run: |
-          # ایجاد یک فایل جداگانه برای تنظیمات امضا
           cat <<EOF > signing.gradle
           android {
               signingConfigs {
@@ -66,9 +65,7 @@ jobs:
               }
           }
           EOF
-          # فراخوانی فایل تنظیمات در build.gradle اصلی
           echo "apply from: 'signing.gradle'" >> build.gradle
-      # ------------------------------
 
       - name: Make gradlew executable
         working-directory: ./app/android
