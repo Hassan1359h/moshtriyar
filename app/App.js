@@ -381,7 +381,7 @@ export default function App() {
         onError={handleError}
         onNavigationStateChange={(navState) => setCanGoBack(navState.canGoBack)}
         onPermissionRequest={(event) => event.grant(event.resources)}
-        userAgent="Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
+        userAgent="Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36 MoshtriyarApp"
       />
 
       {loading && (
