@@ -52,13 +52,47 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;li
 .loading{text-align:center;padding:60px;color:#64748b}
 .hidden{display:none!important}
 
-/* گرید کارت‌های مربعی */
-.menu-grid {display: grid;grid-template-columns: repeat(2, 1fr);gap: 12px;margin-bottom: 20px;}
-.grid-card {background: #fff;border-radius: 16px;padding: 16px 8px;display: flex;flex-direction: column;align-items: center;justify-content: center;text-align: center;box-shadow: 0 2px 10px rgba(0,0,0,.04);aspect-ratio: 1 / 1;text-decoration: none;color: inherit;border: 1px solid #f1f5f9;transition: transform 0.2s ease;}
-.grid-card:active {transform: scale(0.96);}
-.grid-icon {width: 50px;height: 50px;border-radius: 14px;display: flex;align-items: center;justify-content: center;font-size: 26px;margin-bottom: 10px;}
-.grid-title {font-size: 13px;font-weight: 800;color: #1e293b;margin-bottom: 4px;}
-.grid-subtitle {font-size: 10px;color: #64748b;line-height: 1.4;}
+/* گرید کارت‌های مربعی (طراحی جدید و برجسته) */
+.menu-grid {display: grid;grid-template-columns: repeat(2, 1fr);gap: 16px;margin-bottom: 24px;}
+
+.grid-card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 20px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+    border: 1px solid #f1f5f9;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s ease;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+}
+.grid-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 15px 35px rgba(139, 92, 246, 0.2);
+    border-color: #d8b4fe;
+}
+.grid-card:active {transform: scale(0.97);}
+
+.grid-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    margin-bottom: 12px;
+    box-shadow: inset 0 2px 4px rgba(255,255,255,0.5), 0 4px 10px rgba(0,0,0,0.05);
+}
+.grid-title {font-size: 15px;font-weight: 900;color: #1e293b;margin-bottom: 6px;}
+.grid-subtitle {font-size: 11px;color: #64748b;line-height: 1.5;}
 
 /* منوی پایین */
 .bottom-nav {position: fixed;bottom: 0;left: 0;right: 0;background: #fff;box-shadow: 0 -2px 10px rgba(0,0,0,.05);display: flex;justify-content: space-around;align-items: center;padding: 8px 0;z-index: 1000;border-top: 1px solid #f1f5f9;}
@@ -186,6 +220,12 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;li
            <div class="grid-title">کمپین تخفیف</div>
            <div class="grid-subtitle">کد تخفیف و باشگاه مشتریان</div>
         </a>
+        <!-- کارت جدید ساخت لوگو -->
+   <a href="#" onclick="event.preventDefault(); window.checkLogoAccess();" class="grid-card">
+      <div class="grid-icon" style="color:#8b5cf6; background:#f3e8ff;">🎨</div>
+      <div class="grid-title">ساخت لوگو با AI</div>
+      <div class="grid-subtitle">طراحی لوگو اختصاصی کسب‌وکار</div>
+  </a>
         <!-- کارت مدیریت سیستم (فقط برای ادمین) -->
     <a href="admin-payments.html" class="grid-card hidden" id="adminCard">
       <div class="grid-icon" style="color:#dc2626; background:#fef2f2;">💳</div>
@@ -216,7 +256,63 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;li
     <a href="reports.html"><span>📊</span><span>گزارش</span></a>
     <a id="adminNav" href="admin.html" style="display:none; color:#7c3aed;"><span>⚙️</span><span>مدیریت</span></a>
 </nav> 
+<!-- مودال (پنجره) ساخت لوگو -->
+<div id="logo-modal" style="display:none; position:fixed; inset:0; background:rgba(15, 23, 42, 0.8); z-index:9999; align-items:center; justify-content:center; padding:20px; backdrop-filter: blur(5px);">
+    <div style="background:#fff; border-radius:24px; padding:30px; max-width:500px; width:100%; max-height: 90vh; overflow-y: auto; position: relative; box-shadow:0 25px 60px rgba(0,0,0,0.3);">
+        
+        <button onclick="document.getElementById('logo-modal').style.display='none'" style="position:absolute; top:15px; left:15px; background:#f1f5f9; border:none; width:36px; height:36px; border-radius:50%; font-size:20px; cursor:pointer; color:#64748b; display:flex; align-items:center; justify-content:center;">×</button>
 
+        <div style="text-align:center; margin-bottom:20px; padding-top:10px;">
+            <div style="font-size:48px; margin-bottom:10px;">🎨</div>
+            <h2 style="font-size:22px; color:#1e293b; font-weight:800;">دستیار طراحی لوگو</h2>
+        </div>
+        
+        <p id="logo-limit-text" style="color:#3b82f6; font-size:14px; margin-bottom:20px; font-weight:bold; text-align:center; background:#eff6ff; padding:10px; border-radius:10px;"></p>
+
+        <div id="logo-step-1">
+            <label style="font-size:14px; font-weight:bold; color:#475569;">نام کسب و کار شما چیست؟</label>
+            <input type="text" id="logo-name" placeholder="مثلاً: کافه رستوران بهار" style="width:100%; padding:12px; margin:8px 0 15px; border:1px solid #cbd5e1; border-radius:10px; font-family:inherit;">
+            
+            <label style="font-size:14px; font-weight:bold; color:#475569;">حوزه فعالیت شما چیست؟</label>
+            <input type="text" id="logo-type" placeholder="مثلاً: کافه، فروشگاه لباس، آژانس" style="width:100%; padding:12px; margin:8px 0 15px; border:1px solid #cbd5e1; border-radius:10px; font-family:inherit;">
+            
+            <label style="font-size:14px; font-weight:bold; color:#475569;">شکل لوگو؟</label>
+            <select id="logo-shape" style="width:100%; padding:12px; margin:8px 0 15px; border:1px solid #cbd5e1; border-radius:10px; font-family:inherit;">
+                <option value="circle">دایره (Circle)</option>
+                <option value="square">مربع (Square)</option>
+                <option value="rectangle">مستطیل (Rectangle)</option>
+                <option value="abstract">ساده و انتزاعی (Abstract)</option>
+            </select>
+
+            <label style="font-size:14px; font-weight:bold; color:#475569;">رنگ اصلی مورد علاقه؟</label>
+            <input type="text" id="logo-color" placeholder="مثلاً: آبی نفتی، طلایی، سبز" style="width:100%; padding:12px; margin:8px 0 20px; border:1px solid #cbd5e1; border-radius:10px; font-family:inherit;">
+
+            <button onclick="window.generateLogo()" id="logo-generate-btn" style="background:linear-gradient(135deg, #8b5cf6, #3b82f6); color:#fff; width:100%; padding:15px; border-radius:12px; border:none; font-weight:bold; font-size:16px; cursor:pointer;">
+                🚀 شروع ساخت لوگو
+            </button>
+        </div>
+
+        <div id="logo-loading" style="display:none; text-align:center; padding:40px 0;">
+            <div style="font-size:50px; margin-bottom:20px;">🎨</div>
+            <h3 style="color:#2563eb;">هوش مصنوعی در حال طراحی است...</h3>
+            <p style="color:#64748b; font-size:14px;">لطفاً ۱۰ تا ۲۰ ثانیه صبر کنید</p>
+        </div>
+
+        <div id="logo-result" style="display:none; text-align:center;">
+            <h3 style="color:#10b981; margin-bottom:15px;">✅ لوگوی شما آماده شد!</h3>
+            <img id="generated-logo-img" src="" style="width:100%; max-width:300px; border-radius:15px; box-shadow:0 10px 25px rgba(0,0,0,0.1); margin-bottom:20px;">
+            
+            <div style="display:flex; gap:10px;">
+                <button onclick="window.downloadLogo()" style="background:#2563eb; color:#fff; flex:1; padding:15px; border-radius:12px; border:none; font-weight:bold; cursor:pointer;">
+                    📥 دانلود
+                </button>
+                <button onclick="window.resetLogo()" style="background:#f1f5f9; color:#334155; flex:1; padding:15px; border-radius:12px; border:none; font-weight:bold; cursor:pointer;">
+                    🔄 مجدد
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 <!-- ============================================== -->
 <!-- اسکریپت‌های اصلی شما (دست نخورده) -->
 <!-- ============================================== -->
@@ -484,6 +580,123 @@ function renderTrialBanner(banner) {
 }
 
 showTrialWarning();
+    // ==========================================
+// توابع ساخت لوگو با هوش مصنوعی
+// ==========================================
+let currentLogoDataUrl = '';
+
+window.checkLogoAccess = async function() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+        alert('لطفاً ابتدا وارد حساب کاربری خود شوید.');
+        return;
+    }
+
+    try {
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('plan_name, logo_count, subscription_end_date')
+            .eq('id', session.user.id)
+            .single();
+
+        const now = new Date();
+        const isActive = profile.subscription_end_date && new Date(profile.subscription_end_date) > now;
+        const plan = profile.plan_name || 'free';
+        const logoCount = profile.logo_count || 0;
+
+        if (!isActive || plan === 'test' || plan === 'free') {
+            alert('⚠️ جهت ساخت لوگو با هوش مصنوعی، لطفاً اشتراک کسب‌وکار یا اشتراک سالیانه تهیه کنید.');
+            return;
+        }
+
+        if (plan === 'pro' && logoCount >= 5) {
+            alert(`⚠️ شما از ۵ لوگوی مجاز در پلن حرفه‌ای استفاده کرده‌اید (${logoCount}/۵).\nبرای ساخت نامحدود لوگو، پلن خود را به کسب‌وکار ارتقا دهید.`);
+            return;
+        }
+
+        document.getElementById('logo-modal').style.display = 'flex';
+        
+        if (plan === 'pro') {
+            document.getElementById('logo-limit-text').innerText = `شما ${5 - logoCount} لوگوی دیگر در پلن حرفه‌ای می‌توانید بسازید.`;
+        } else {
+            document.getElementById('logo-limit-text').innerText = `✨ شما دسترسی نامحدود به ساخت لوگو دارید.`;
+        }
+
+    } catch (err) {
+        alert('خطا در بررسی وضعیت اشتراک.');
+    }
+}
+
+window.generateLogo = async function() {
+    const businessName = document.getElementById('logo-name').value.trim();
+    const businessType = document.getElementById('logo-type').value.trim();
+    const shape = document.getElementById('logo-shape').value;
+    const color = document.getElementById('logo-color').value.trim();
+
+    if (!businessName || !businessType) {
+        alert('لطفاً نام و نوع کسب و کار را وارد کنید.');
+        return;
+    }
+
+    document.getElementById('logo-step-1').style.display = 'none';
+    document.getElementById('logo-loading').style.display = 'block';
+
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+
+        const response = await fetch('/api/generate-logo', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + session.access_token
+            },
+            body: JSON.stringify({ businessType, businessName, shape, color, style: 'modern' })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.error || 'خطا در ساخت لوگو');
+        }
+
+        currentLogoDataUrl = data.imageUrl; 
+        document.getElementById('generated-logo-img').src = currentLogoDataUrl;
+        
+        document.getElementById('logo-loading').style.display = 'none';
+        document.getElementById('logo-result').style.display = 'block';
+
+    } catch (err) {
+        alert(err.message); 
+        document.getElementById('logo-loading').style.display = 'none';
+        document.getElementById('logo-step-1').style.display = 'block';
+    }
+}
+
+window.resetLogo = function() {
+    document.getElementById('logo-result').style.display = 'none';
+    document.getElementById('logo-step-1').style.display = 'block';
+}
+
+window.downloadLogo = function() {
+    if (!currentLogoDataUrl) return;
+
+    if (window.ReactNativeWebView && typeof window.ReactNativeWebView.postMessage === 'function') {
+        const base64Data = currentLogoDataUrl.split(',')[1];
+        window.ReactNativeWebView.postMessage(JSON.stringify({
+            type: 'saveFile',
+            data: base64Data,
+            filename: 'moshtriyar-logo.jpg',
+            mimeType: 'image/jpeg'
+        }));
+    } else {
+        const link = document.createElement('a');
+        link.href = currentLogoDataUrl;
+        link.download = 'moshtriyar-logo.jpg';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+}
 </script>
 </body>
 </html>
