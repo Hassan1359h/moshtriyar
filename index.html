@@ -692,25 +692,6 @@ window.openPayment = async function (planKey) {
 
     
 if (isAndroidApp) {
-    // Developer-only test subscription
-const params = new URLSearchParams(window.location.search);
-
-if (params.get('bazaar_test') === '1') {
-    const confirmed = confirm(
-        'خرید اشتراک تستی ۵ دقیقه‌ای بازار با مبلغ ۱٬۰۰۰ تومان انجام شود؟'
-    );
-
-    if (!confirmed) return;
-
-    window.ReactNativeWebView.postMessage(
-        JSON.stringify({
-            type: 'buyBazaarSubscription',
-            productId: 'moshtriyar_test_5min'
-        })
-    );
-
-    return;
-}
     const products = {
         pro: 'moshtriyar_pro_30',
         business: 'moshtriyar_business_30',
