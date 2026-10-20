@@ -666,6 +666,152 @@ window.generateLogo = async function() {
         document.getElementById('logo-result').style.display = 'block';
 
     } catch (err) {
+// ⏰ هشدار دوره آزمایشی (از profiles دیتابیس)
+async function showTrialWarning() {
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+        
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('plan, subscription_end_date')
+            .eq('id', session.user.id)
+            .maybeSingle();
+
+        if (!profile) return;
+        if (profile.plan === 'admin') return;
+        if (!profile.subscription_end_date) return;
+
+        const now = new Date();
+        const expires = new Date(profile.subscription_end_date);
+        const diffMs = expires - now;
+        const hoursLeft = Math.floor(diffMs / (1000 * 60 * 60));
+        const daysLeft = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        let banner = null;
+
+        if (diffMs <= 0) {
+            banner = { color: '#991b1b', bg: '#fee2e2', border: '#dc2626', icon: '🔒', title: 'پلن شما منقضی شده است', text: 'برای ادامه استفاده از مشتری‌یار، لطفاً پلن خود را تمدید کنید.', cta: '💳 تمدید پلن', ctaLink: 'index.html?plan=pro' };
+        } else if (hoursLeft <= 24) {
+            banner = { color: '#991b1b', bg: '#fee2e2', border: '#dc2626', icon: '⚠️', title: 'آخرین روز پلن شما!', text: 'فقط ' + hoursLeft + ' ساعت تا پایان اشتراک مونده. همین حالا تمدید کن.', cta: '🚀 تمدید فوری', ctaLink: 'index.html?plan=pro' };
+        } else if (daysLeft <= 3) {
+            banner = { color: '#92400e', bg: '#fef3c7', border: '#f59e0b', icon: '🔥', title: daysLeft + ' روز تا پایان پلن', text: 'برای ادامه بدون وقفه، از قبل تمدید کنید.', cta: 'مشاهده پلن‌ها', ctaLink: 'index.html?plan=pro' };
+        } else if (daysLeft <= 7) {
+            banner = { color: '#92400e', bg: '#fffbeb', border: '#f59e0b', icon: '⏰', title: daysLeft + ' روز تا پایان پلن', text: 'به‌زودی باید پلن خود را تمدید کنید.', cta: 'تمدید پلن', ctaLink: 'index.html?plan=pro' };
+        }
+
+        if (banner) renderTrialBanner(banner);
+    } catch (err) {
+        console.error('Trial warning error:', err);
+    }
+}
+
+function renderTrialBanner(banner) {
+    const el = document.getElementById('trialBanner');
+    if (!el) return;
+    el.style.cssText = 'display: flex; justify-content: space-between; align-items: center;' + 'gap: 15px; flex-wrap: wrap;' + 'background: ' + banner.bg + '; color: ' + banner.color + ';' + 'padding: 16px 20px; border-radius: 14px;' + 'border-right: 5px solid ' + banner.border + ';' + 'margin-bottom: 20px; font-size: 14px;';
+    
+    var ctaHtml = '';
+    if (banner.cta) {
+        ctaHtml = '<a href="' + banner.ctaLink + '" style="' + 'background: ' + banner.color + '; color: #fff;' + 'padding: 10px 18px; border-radius: 10px;' + 'text-decoration: none; font-weight: 800;' + 'font-size: 13px; white-space: nowrap;">' + banner.cta + '</a>';
+    }
+    el.innerHTML = '<div style="flex: 1; min-width: 200px;">' + '<div style="font-weight: 800; margin-bottom: 4px;">' + banner.icon + ' ' + banner.title + '</div>' + '<div style="font-size: 12px; opacity: .85;">' + banner.text + '</div>' + '</div>' + ctaHtml;
+}
+
+showTrialWarning();
+
+// ==========================================
+// توابع ساخت لوگو با هوش مصنوعی
+// ==========================================
+let currentLogoDataUrl = '';
+
+window.checkLogoAccess = async function() {
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !session) {
+        alert('لطفاً ابتدا وارد حساب کاربری خود شوید.');
+        return;
+    }
+
+    try {
+        const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('plan, logo_count, subscription_end_date')
+            .eq('id', session.user.id)
+            .single();
+
+        if (profileError) {
+            console.error('Profile fetch error:', profileError);
+            alert('خطای دیتابیس: ' + profileError.message);
+            return;
+        }
+
+        const now = new Date();
+        const isActive = profile.subscription_end_date && new Date(profile.subscription_end_date) > now;
+        const plan = profile.plan || 'free'; 
+        const logoCount = profile.logo_count || 0;
+
+        if (!isActive || plan === 'test' || plan === 'free' || plan === 'trial') {
+            alert('⚠️ جهت ساخت لوگو با هوش مصنوعی، لطفاً اشتراک کسب‌وکار یا اشتراک سالیانه تهیه کنید.');
+            return;
+        }
+
+        if (plan === 'pro' && logoCount >= 5) {
+            alert(`⚠️ شما از ۵ لوگوی مجاز در پلن حرفه‌ای استفاده کرده‌اید (${logoCount}/۵).\nبرای ساخت نامحدود لوگو، پلن خود را به کسب‌وکار ارتقا دهید.`);
+            return;
+        }
+
+        document.getElementById('logo-modal').style.display = 'flex';
+        
+        if (plan === 'pro') {
+            document.getElementById('logo-limit-text').innerText = `شما ${5 - logoCount} لوگوی دیگر در پلن حرفه‌ای می‌توانید بسازید.`;
+        } else {
+            document.getElementById('logo-limit-text').innerText = `✨ شما دسترسی نامحدود به ساخت لوگو دارید.`;
+        }
+
+    } catch (err) {
+        console.error('Check logo access error:', err);
+        alert('خطای غیرمنتظره: ' + err.message);
+    }
+}
+
+window.generateLogo = async function() {
+    const businessName = document.getElementById('logo-name').value.trim();
+    const businessType = document.getElementById('logo-type').value.trim();
+    const shape = document.getElementById('logo-shape').value;
+    const color = document.getElementById('logo-color').value.trim();
+
+    if (!businessName || !businessType) {
+        alert('لطفاً نام و نوع کسب و کار را وارد کنید.');
+        return;
+    }
+
+    document.getElementById('logo-step-1').style.display = 'none';
+    document.getElementById('logo-loading').style.display = 'block';
+
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+
+        const response = await fetch('/api/generate-logo', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + session.access_token
+            },
+            body: JSON.stringify({ businessType, businessName, shape, color, style: 'modern' })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.error || 'خطا در ساخت لوگو');
+        }
+
+        currentLogoDataUrl = data.imageUrl; 
+        document.getElementById('generated-logo-img').src = currentLogoDataUrl;
+        
+        document.getElementById('logo-loading').style.display = 'none';
+        document.getElementById('logo-result').style.display = 'block';
+
+    } catch (err) {
         alert(err.message); 
         document.getElementById('logo-loading').style.display = 'none';
         document.getElementById('logo-step-1').style.display = 'block';
@@ -688,7 +834,7 @@ window.downloadLogo = function() {
             filename: 'moshtriyar-logo.jpg',
             mimeType: 'image/jpeg'
         }));
-    } else {
+        } else {
         const link = document.createElement('a');
         link.href = currentLogoDataUrl;
         link.download = 'moshtriyar-logo.jpg';
