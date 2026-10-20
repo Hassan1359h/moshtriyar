@@ -736,11 +736,16 @@ window.checkLogoAccess = async function() {
             .from('profiles')
             .select('plan, logo_count, subscription_end_date')
             .eq('id', session.user.id)
-            .single();
+            .maybeSingle();
 
         if (profileError) {
             console.error('Profile fetch error:', profileError);
             alert('خطای دیتابیس: ' + profileError.message);
+            return;
+        }
+
+        if (!profile) {
+            alert('پروفایل کاربری یافت نشد.');
             return;
         }
 
@@ -834,7 +839,7 @@ window.downloadLogo = function() {
             filename: 'moshtriyar-logo.jpg',
             mimeType: 'image/jpeg'
         }));
-        } else {
+    } else {
         const link = document.createElement('a');
         link.href = currentLogoDataUrl;
         link.download = 'moshtriyar-logo.jpg';
