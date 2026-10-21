@@ -195,23 +195,25 @@ async function init() {
         const expiresAt = profileCheck.subscription_end_date;
         if (expiresAt && new Date(expiresAt) < new Date()) { window.location.href = 'locked.html'; return; }
     }
-    // نمایش بخش مدیریت فقط برای ادمین اصلی
-const isAdmin = profileCheck?.plan === 'admin';
 
-if (isAdmin) {
-    const adminCard = $('adminCard');
-    if (adminCard) adminCard.classList.remove('hidden');
+    // نمایش بخش مدیریت برای ادمین اصلی (بر اساس ایمیل یا پلن دیتابیس)
+    const adminEmail = 'hahass12na@gmail.com';
+    const isAdmin = (profileCheck && profileCheck.plan === 'admin') || (me && me.email === adminEmail);
     
-    const adminNav = $('adminNav');
-    if (adminNav) adminNav.style.display = 'flex';
-} else {
-    // برای غیر ادمین‌ها، کارت و منو مخفی بماند
-    const adminCard = $('adminCard');
-    if (adminCard) adminCard.classList.add('hidden');
-    
-    const adminNav = $('adminNav');
-    if (adminNav) adminNav.style.display = 'none';
-}
+    if (isAdmin) {
+        const adminCard = $('adminCard');
+        if (adminCard) adminCard.classList.remove('hidden');
+        
+        const adminNav = $('adminNav');
+        if (adminNav) adminNav.style.display = 'flex';
+    } else {
+        // برای غیر ادمین‌ها، کارت و منو مخفی بماند
+        const adminCard = $('adminCard');
+        if (adminCard) adminCard.classList.add('hidden');
+        
+        const adminNav = $('adminNav');
+        if (adminNav) adminNav.style.display = 'none';
+    }
     
     await Promise.allSettled([ loadCustomers(), loadFinancialStats(), loadSubscription() ]);
     $('loading').classList.add('hidden');
