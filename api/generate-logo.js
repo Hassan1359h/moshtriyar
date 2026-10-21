@@ -56,23 +56,30 @@ export default async function handler(req, res) {
         if (!businessType || !businessName) {
             return res.status(400).json({ success: false, error: 'نام و نوع کسب و کار الزامی است.' });
         }
+         
+       // پرامپت ساده‌تر
+      const prompt = `A professional minimal logo for a ${businessType} named "${businessName}". Flat vector design, clean lines, modern, ${shape} shape, ${color} color theme, solid white background.`;
+      const encodedPrompt = encodeURIComponent(prompt);
 
-        // پرامپت جدید و ساده‌تر
-        const prompt = `A professional minimal logo for a ${businessType} named "${businessName}". Flat vector design, clean lines, modern, ${shape} shape, ${color} color theme, solid white background.`;
-        const encodedPrompt = encodeURIComponent(prompt); // 👈 سمی کالن اضافه شد
-        const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&seed=${Date.now()}`;
+      // 👇 حذف seed برای استفاده از کش (سرعت بالا) و اضافه کردن مدل استاندارد
+      const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&model=flux`;
 
-        const imageResponse = await fetch(imageUrl);
-        const arrayBuffer = await imageResponse.arrayBuffer();
-        
-        // 👈 چک کردن سالم بودن عکس
-        if (!imageResponse.ok || arrayBuffer.byteLength === 0) {
-            throw new Error('هوش مصنوعی نتوانست عکس را تولید کند. لطفاً دوباره تلاش کنید.');
-        }
-        
-        const base64Image = Buffer.from(arrayBuffer).toString('base64');
-        const dataUrl = `data:image/jpeg;base64,${base64Image}`;
+       const imageResponse = await fetch(imageUrl);
 
+  // 👇 اگر سرویس اصلی جواب نداد، ارور بده
+    if (!imageResponse.ok) {
+    console.error('Pollinations API error:', imageResponse.status);
+    throw new Error('سرور هوش مصنوعی موقتاً شلوغ است. لطفاً ۱۰ ثانیه دیگر دوباره تلاش کنید.');
+}
+
+const arrayBuffer = await imageResponse.arrayBuffer();
+
+if (arrayBuffer.byteLength === 0) {
+    throw new Error('تصویر دریافتی خالی است. دوباره تلاش کنید.');
+}
+
+const base64Image = Buffer.from(arrayBuffer).toString('base64');
+const dataUrl = `data:image/jpeg;base64,${base64Image}`;
         // ۵. افزایش تعداد لوگو (فقط پلن حرفه‌ای و غیر ادمین)
         if (!isAdminEmail && plan === 'pro') {
             await supabaseAdmin
