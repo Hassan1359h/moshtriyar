@@ -200,7 +200,7 @@ const adminCard = $('adminCard');
 if (adminCard) adminCard.classList.remove('hidden');
 const adminNav = $('adminNav');
 if (adminNav) adminNav.style.display = 'flex';
-    }
+    
     await Promise.allSettled([ loadCustomers(), loadFinancialStats(), loadSubscription() ]);
     $('loading').classList.add('hidden');
     $('main').classList.remove('hidden');
