@@ -352,7 +352,6 @@ showTrialWarning();
 
 let currentLogoDataUrl = '';
 
-
 window.checkLogoAccess = async function() {
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     if (sessionError || !session) {
@@ -360,8 +359,15 @@ window.checkLogoAccess = async function() {
         return;
     }
 
+    // 👇 ۱. چک کردن ایمیل ادمین در همان ابتدا (بدون نیاز به دیتابیس)
+    if (session.user.email === 'hahass12na@gmail.com') {
+        document.getElementById('logo-modal').style.display = 'flex';
+        document.getElementById('logo-limit-text').innerText = `✨ شما به عنوان ادمین دسترسی نامحدود به ساخت لوگو دارید.`;
+        return;
+    }
+
     try {
-        // دریافت اطلاعات پروفایل به روش امن‌تر
+        // دریافت اطلاعات پروفایل
         const { data: profileData, error: profileError } = await supabase
             .from('profiles')
             .select('plan, logo_count, subscription_end_date')
@@ -376,10 +382,8 @@ window.checkLogoAccess = async function() {
 
         const profile = profileData && profileData.length > 0 ? profileData[0] : null;
 
-        // اگر پروفایل پیدا نشد (مثلاً ادمین)، اجازه تست بده
         if (!profile) {
-            document.getElementById('logo-modal').style.display = 'flex';
-            document.getElementById('logo-limit-text').innerText = `✨ شما دسترسی تست دارید (پروفایل یافت نشد).`;
+            alert('⚠️ پروفایل کاربری یافت نشد.');
             return;
         }
 
@@ -389,7 +393,7 @@ window.checkLogoAccess = async function() {
         const isActive = profile.subscription_end_date && new Date(profile.subscription_end_date) > now;
 
         // قانون ۱: پلن تست و رایگان
-        if (plan === 'test' || plan === 'free' || plan === 'trial') {
+        if (!isActive || plan === 'test' || plan === 'free' || plan === 'trial') {
             alert('⚠️ جهت ساخت لوگو با هوش مصنوعی، لطفاً اشتراک کسب‌وکار یا اشتراک سالیانه تهیه کنید.');
             return;
         }
@@ -405,21 +409,22 @@ window.checkLogoAccess = async function() {
             return;
         }
 
-        // قانون ۳: پلن کسب‌وکار و سالیانه (نامحدود)
-        if (plan === 'business' || plan === 'vip_yearly') {
+        // قانون ۳: پلن کسب‌وکار و سالیانه (یا ادمین اگر از طریق دیتابیس شناسایی شد)
+        if (plan === 'business' || plan === 'vip_yearly' || plan === 'admin') {
             document.getElementById('logo-modal').style.display = 'flex';
             document.getElementById('logo-limit-text').innerText = `✨ شما دسترسی نامحدود به ساخت لوگو دارید.`;
             return;
         }
 
-        // قانون ۴: سایر پلن‌ها
-        alert('⚠️ جهت ساخت لوگو با هوش مصنوعی، لطفاً اشتراک کسب‌وکار یا اشتراک سالیانه تهیه کنید.');
+        // اگر هیچکدام نبود
+        alert('⚠️ جهت ساخت لوگو، لطفاً اشتراک تهیه کنید.');
 
     } catch (err) {
         console.error('Check logo access error:', err);
         alert('خطای غیرمنتظره: ' + err.message);
     }
 }
+
 window.generateLogo = async function() {
     const businessName = document.getElementById('logo-name').value.trim();
     const businessType = document.getElementById('logo-type').value.trim();
