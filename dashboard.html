@@ -452,66 +452,253 @@ window.checkLogoAccess = async function() {
         console.error('Check logo access error:', err);
         alert('خطای غیرمنتظره: ' + err.message);
     }
+
+let generatedLogos = [];
+let selectedLogoIndex = 0;
+let generatingLogo = false;
+
+function logoSvgUrl(svg) {
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
 }
 
-window.generateLogo = async function() {
+window.generateLogo = async function () {
+    if (generatingLogo) return;
+
     const businessName = document.getElementById('logo-name').value.trim();
     const businessType = document.getElementById('logo-type').value.trim();
     const shape = document.getElementById('logo-shape').value;
     const color = document.getElementById('logo-color').value.trim();
-    if (!businessName || !businessType) { alert('لطفاً نام و نوع کسب و کار را وارد کنید.'); return; }
-    document.getElementById('logo-step-1').style.display = 'none';
-    document.getElementById('logo-loading').style.display = 'block';
+
+    if (!businessName || !businessType) {
+        alert('لطفاً نام برند و نوع کسب‌وکار را وارد کنید.');
+        return;
+    }
+
+    const generateBtn = document.getElementById('logo-generate-btn');
+    const step1 = document.getElementById('logo-step-1');
+    const loading = document.getElementById('logo-loading');
+    const result = document.getElementById('logo-result');
+
+    generatingLogo = true;
+    if (generateBtn) generateBtn.disabled = true;
+
+    step1.style.display = 'none';
+    loading.style.display = 'block';
+    result.style.display = 'none';
+
     try {
-        const { data: { session } } = await supabase.auth.getSession();
-        const response = await fetch('/api/generate-logo', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token }, body: JSON.stringify({ businessType, businessName, shape, color, style: 'modern' }) });
+        const { data: { session }, error: sessionError } =
+            await supabase.auth.getSession();
+
+        if (sessionError || !session) {
+            throw new Error('لطفاً دوباره وارد حساب کاربری شوید.');
+        }
+
+        const response = await fetch('/api/generate-logo', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + session.access_token
+            },
+            body: JSON.stringify({
+                businessName,
+                businessType,
+                shape,
+                color,
+                style: 'modern'
+            })
+        });
+
         const data = await response.json();
-        if (!response.ok || !data.success) { throw new Error(data.error || 'خطا در ساخت لوگو'); }
-        currentLogoDataUrl = data.imageUrl; 
-        document.getElementById('generated-logo-img').src = currentLogoDataUrl;
-        document.getElementById('logo-loading').style.display = 'none';
-        document.getElementById('logo-result').style.display = 'block';
-    } catch (err) { alert(err.message); document.getElementById('logo-loading').style.display = 'none'; document.getElementById('logo-step-1').style.display = 'block'; }
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.error || data.message || 'ساخت لوگو ناموفق بود.');
+        }
+
+        if (!Array.isArray(data.logos) || data.logos.length === 0) {
+            throw new Error('هیچ طرحی از سرور دریافت نشد.');
+        }
+
+        generatedLogos = data.logos;
+        selectedLogoIndex = 0;
+
+        window.renderLogoOptions();
+
+        loading.style.display = 'none';
+        result.style.display = 'block';
+
+    } catch (error) {
+        console.error('Logo generation error:', error);
+        alert(error.message || 'خطایی در ساخت لوگو رخ داد.');
+
+        loading.style.display = 'none';
+        step1.style.display = 'block';
+
+    } finally {
+        generatingLogo = false;
+        if (generateBtn) generateBtn.disabled = false;
+    }
+};
+
+window.renderLogoOptions = function () {
+    const container = document.getElementById('logo-options');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    generatedLogos.forEach((svg, index) => {
+        const card = document.createElement('button');
+        card.type = 'button';
+
+        card.style.cssText = `
+            border: 3px solid ${index === selectedLogoIndex ? '#2563eb' : '#e2e8f0'};
+            border-radius: 14px;
+            padding: 8px;
+            background: white;
+            cursor: pointer;
+            position: relative;
+            min-width: 0;
+            font-family: inherit;
+        `;
+
+        const img = document.createElement('img');
+        img.src = logoSvgUrl(svg);
+        img.alt = 'طرح لوگو ' + (index + 1);
+        img.style.cssText = `
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: contain;
+            display: block;
+            border-radius: 8px;
+        `;
+
+        const caption = document.createElement('div');
+        caption.textContent = index === selectedLogoIndex
+            ? '✓ طرح ' + (index + 1) + ' - انتخاب شده'
+            : 'طرح ' + (index + 1);
+
+        caption.style.cssText = `
+            margin-top: 8px;
+            font-size: 12px;
+            font-weight: bold;
+            color: ${index === selectedLogoIndex ? '#2563eb' : '#64748b'};
+        `;
+
+        card.appendChild(img);
+        card.appendChild(caption);
+
+        card.onclick = function () {
+            selectedLogoIndex = index;
+            window.renderLogoOptions();
+        };
+
+        container.appendChild(card);
+    });
+};
+
+window.resetLogo = function () {
+    generatedLogos = [];
+    selectedLogoIndex = 0;
+
+    document.getElementById('logo-result').style.display = 'none';
+    document.getElementById('logo-loading').style.display = 'none';
+    document.getElementById('logo-step-1').style.display = 'block';
+
+    const options = document.getElementById('logo-options');
+    if (options) options.innerHTML = '';
+};
+
+function saveLogoFile(blob, filename) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onloadend = function () {
+            const dataUrl = reader.result;
+
+            if (window.ReactNativeWebView) {
+                window.ReactNativeWebView.postMessage(JSON.stringify({
+                    type: 'saveFile',
+                    filename: filename,
+                    data: dataUrl
+                }));
+            } else {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+
+                link.href = url;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+            }
+
+            resolve();
+        };
+
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
 }
 
-window.resetLogo = function() { document.getElementById('logo-result').style.display = 'none'; document.getElementById('logo-step-1').style.display = 'block'; }
+window.downloadLogo = async function (format = 'png') {
+    if (!generatedLogos.length) {
+        alert('ابتدا یک لوگو بسازید.');
+        return;
+    }
 
-window.downloadLogo = async function() {
-    if (!currentLogoDataUrl) return;
+    const svg = generatedLogos[selectedLogoIndex];
+    const safeName = (
+        document.getElementById('logo-name').value.trim() || 'moshtriyar-logo'
+    )
+        .replace(/[\\/:*?"<>|]/g, '-')
+        .slice(0, 50);
 
     try {
-        // اگر داخل اپلیکیشن (WebView) بودیم
-        if (window.ReactNativeWebView && typeof window.ReactNativeWebView.postMessage === 'function') {
-            const b64 = currentLogoDataUrl.split(',')[1];
-            window.ReactNativeWebView.postMessage(JSON.stringify({
-                type: 'saveFile',
-                data: b64,
-                filename: 'moshtriyar-logo.jpg',
-                mimeType: 'image/jpeg'
-            }));
+        if (format === 'svg') {
+            const blob = new Blob([svg], {
+                type: 'image/svg+xml;charset=utf-8'
+            });
+
+            await saveLogoFile(blob, safeName + '.svg');
             return;
         }
 
-        // اگر داخل مرورگر بودیم (استفاده از روش fetch که بسیار پایدارتر است)
-        const response = await fetch(currentLogoDataUrl);
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
+        if (format !== 'png') {
+            throw new Error('فرمت دانلود نامعتبر است.');
+        }
 
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'moshtriyar-logo.jpg';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        const image = new Image();
 
-        // پاکسازی حافظه
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        await new Promise((resolve, reject) => {
+            image.onload = resolve;
+            image.onerror = () => reject(new Error('بارگذاری طرح لوگو ناموفق بود.'));
+            image.src = logoSvgUrl(svg);
+        });
 
-    } catch (err) {
-        console.error('Download error:', err);
-        alert('خطا در دانلود تصویر. لطفاً دوباره تلاش کنید.');
+        const canvas = document.createElement('canvas');
+        canvas.width = 1536;
+        canvas.height = 1536;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('امکان ساخت فایل PNG وجود ندارد.');
+
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+        const blob = await new Promise(resolve => {
+            canvas.toBlob(resolve, 'image/png');
+        });
+
+        if (!blob) throw new Error('تبدیل لوگو به PNG ناموفق بود.');
+
+        await saveLogoFile(blob, safeName + '.png');
+
+    } catch (error) {
+        console.error('Logo download error:', error);
+        alert(error.message || 'خطا در دانلود لوگو.');
     }
-}
+};
 </script>
 </body>
 </html>
