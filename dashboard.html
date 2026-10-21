@@ -338,24 +338,74 @@ showTrialWarning();
 
 let currentLogoDataUrl = '';
 
+
 window.checkLogoAccess = async function() {
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError || !session) { alert('لطفاً ابتدا وارد حساب کاربری خود شوید.'); return; }
+    if (sessionError || !session) {
+        alert('لطفاً ابتدا وارد حساب کاربری خود شوید.');
+        return;
+    }
+
     try {
-        const { data: profile, error: profileError } = await supabase.from('profiles').select('plan, logo_count, subscription_end_date').eq('id', session.user.id).maybeSingle();
-        if (profileError) { console.error('Profile fetch error:', profileError); alert('خطای دیتابیس: ' + profileError.message); return; }
-        if (!profile) { alert('پروفایل کاربری یافت نشد.'); return; }
+        // دریافت اطلاعات پروفایل به روش امن‌تر
+        const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('plan, logo_count, subscription_end_date')
+            .eq('id', session.user.id)
+            .limit(1);
+
+        if (profileError) {
+            console.error('Profile fetch error:', profileError);
+            alert('خطای دیتابیس: ' + profileError.message);
+            return;
+        }
+
+        const profile = profileData && profileData.length > 0 ? profileData[0] : null;
+
+        // اگر پروفایل پیدا نشد (مثلاً ادمین)، اجازه تست بده
+        if (!profile) {
+            document.getElementById('logo-modal').style.display = 'flex';
+            document.getElementById('logo-limit-text').innerText = `✨ شما دسترسی تست دارید (پروفایل یافت نشد).`;
+            return;
+        }
+
+        const plan = profile.plan || 'free';
+        const logoCount = profile.logo_count || 0;
         const now = new Date();
         const isActive = profile.subscription_end_date && new Date(profile.subscription_end_date) > now;
-        const plan = profile.plan || 'free'; 
-        const logoCount = profile.logo_count || 0;
-        if (!isActive || plan === 'test' || plan === 'free' || plan === 'trial') { alert('⚠️ جهت ساخت لوگو با هوش مصنوعی، لطفاً اشتراک کسب‌وکار یا اشتراک سالیانه تهیه کنید.'); return; }
-        if (plan === 'pro' && logoCount >= 5) { alert(`⚠️ شما از ۵ لوگوی مجاز در پلن حرفه‌ای استفاده کرده‌اید (${logoCount}/۵).\nبرای ساخت نامحدود لوگو، پلن خود را به کسب‌وکار ارتقا دهید.`); return; }
-        document.getElementById('logo-modal').style.display = 'flex';
-        if (plan === 'pro') { document.getElementById('logo-limit-text').innerText = `شما ${5 - logoCount} لوگوی دیگر در پلن حرفه‌ای می‌توانید بسازید.`; } else { document.getElementById('logo-limit-text').innerText = `✨ شما دسترسی نامحدود به ساخت لوگو دارید.`; }
-    } catch (err) { console.error('Check logo access error:', err); alert('خطای غیرمنتظره: ' + err.message); }
-}
 
+        // قانون ۱: پلن تست و رایگان
+        if (plan === 'test' || plan === 'free' || plan === 'trial') {
+            alert('⚠️ جهت ساخت لوگو با هوش مصنوعی، لطفاً اشتراک کسب‌وکار یا اشتراک سالیانه تهیه کنید.');
+            return;
+        }
+
+        // قانون ۲: پلن حرفه‌ای (محدودیت ۵ عدد)
+        if (plan === 'pro') {
+            if (logoCount >= 5) {
+                alert(`⚠️ شما از ۵ لوگوی مجاز در پلن حرفه‌ای استفاده کرده‌اید (${logoCount}/۵).\nبرای ساخت نامحدود لوگو، پلن خود را به کسب‌وکار ارتقا دهید.`);
+                return;
+            }
+            document.getElementById('logo-modal').style.display = 'flex';
+            document.getElementById('logo-limit-text').innerText = `شما ${5 - logoCount} لوگوی دیگر در پلن حرفه‌ای می‌توانید بسازید.`;
+            return;
+        }
+
+        // قانون ۳: پلن کسب‌وکار و سالیانه (نامحدود)
+        if (plan === 'business' || plan === 'vip_yearly') {
+            document.getElementById('logo-modal').style.display = 'flex';
+            document.getElementById('logo-limit-text').innerText = `✨ شما دسترسی نامحدود به ساخت لوگو دارید.`;
+            return;
+        }
+
+        // قانون ۴: سایر پلن‌ها
+        alert('⚠️ جهت ساخت لوگو با هوش مصنوعی، لطفاً اشتراک کسب‌وکار یا اشتراک سالیانه تهیه کنید.');
+
+    } catch (err) {
+        console.error('Check logo access error:', err);
+        alert('خطای غیرمنتظره: ' + err.message);
+    }
+}
 window.generateLogo = async function() {
     const businessName = document.getElementById('logo-name').value.trim();
     const businessType = document.getElementById('logo-type').value.trim();
