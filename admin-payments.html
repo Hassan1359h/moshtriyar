@@ -147,9 +147,12 @@ const paymentTitle = isSmsPayment ? `بسته ${smsAmount} پیامکی` : (paym
                 </div>
 
                 <div class="action-btns" id="btns-${payment.id}">
-                    <button class="btn-approve" onclick="approvePayment('${payment.id}', '${payment.user_id}', ${smsAmount})">
-                        ✅ تایید و شارژ ${smsAmount} پیامک
-                    </button>
+                    
+${isSmsPayment
+    ? `<button class="btn-approve" disabled style="opacity:.5;cursor:not-allowed;">تأیید پیامک؛ در انتظار اتصال امن</button>`
+    : `<button class="btn-approve" onclick="approvePayment('${payment.id}')">✅ تأیید و فعال‌سازی اشتراک</button>`
+}
+
                     <button class="btn-reject" onclick="rejectPayment('${payment.id}')">
                         ❌ رد کردن
                     </button>
@@ -159,39 +162,46 @@ const paymentTitle = isSmsPayment ? `بسته ${smsAmount} پیامکی` : (paym
     });
 }
 
-window.approvePayment = async function(paymentId, userId, smsAmount) {
-    if(!confirm('آیا از تایید این پرداخت و شارژ پیامک‌ها اطمینان دارید؟')) return;
+
+
+window.approvePayment = async function(paymentId) {
+    if (!confirm('آیا از تأیید پرداخت و فعال‌سازی اشتراک اطمینان دارید؟')) return;
 
     const btns = $(`btns-${paymentId}`);
-    btns.innerHTML = '<span style="color:var(--primary); font-weight:800;">در حال پردازش...</span>';
+    if (btns) btns.innerHTML = '<span>در حال پردازش...</span>';
 
     try {
-        // 1. دریافت سقف فعلی پیامک کاربر
-        const { data: profile } = await supabase.from('profiles').select('sms_limit').eq('id', userId).single();
-        const currentLimit = profile?.sms_limit || 0;
+        const { data: { session }, error: sessionError } =
+            await supabase.auth.getSession();
 
-        // 2. آپدیت سقف پیامک کاربر
-        const { error: profileError } = await supabase.from('profiles')
-            .update({ sms_limit: currentLimit + smsAmount })
-            .eq('id', userId);
-        
-        if (profileError) throw profileError;
+        if (sessionError || !session) {
+            throw new Error('لطفاً دوباره وارد حساب ادمین شوید.');
+        }
 
-        // 3. تغییر وضعیت پرداخت به تایید شده
-        const { error: paymentError } = await supabase.from('payments')
-            .update({ status: 'approved' })
-            .eq('id', paymentId);
+        const response = await fetch('/api/approve-payment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + session.access_token
+            },
+            body: JSON.stringify({ paymentId })
+        });
 
-        if (paymentError) throw paymentError;
+        const data = await response.json();
 
-        alert('✅ پرداخت با موفقیت تایید و پیامک‌ها به کاربر شارژ شد.');
-        loadPendingPayments(); // رفرش لیست
+        if (!response.ok || !data.success) {
+            throw new Error(data.error || 'تأیید پرداخت ناموفق بود.');
+        }
+
+        alert('✅ پرداخت تأیید و اشتراک مشتری فعال شد.');
+        await loadPendingPayments();
 
     } catch (err) {
-        alert(`❌ خطا در تایید: ${err.message}`);
-        btns.innerHTML = '<span style="color:red;">خطا! صفحه را رفرش کنید.</span>';
+        console.error('Approve payment error:', err);
+        alert('❌ خطا: ' + err.message);
+        await loadPendingPayments();
     }
-}
+};
 
 window.rejectPayment = async function(paymentId) {
     if(!confirm('آیا از رد کردن این پرداخت اطمینان دارید؟')) return;
