@@ -59,8 +59,8 @@ export default async function handler(req, res) {
             return res.status(400).json({ success: false, error: 'نام و نوع کسب و کار الزامی است.' });
         }
 
-        // پرامپت حرفه‌ای برای هوش مصنوعی
-        const prompt = `A professional, minimalist vector logo for a ${businessType} named "${businessName}". Shape: ${shape}. Primary color: ${color}. Style: ${style}. Flat design, white background, high quality, corporate identity, no realistic photos, no 3D, clean lines.`;
+        // پرامپت حرفه‌ای و سخت‌گیرانه برای هوش مصنوعی
+const prompt = `A professional, minimal, flat vector logo icon for a ${businessType} named "${businessName}". The logo should be a simple geometric shape (${shape}), using a primary color of ${color}. Clean lines, solid white background, highly professional, corporate identity, symmetrical, no text, no letters, no realistic elements, no 3D effects, no gradients, vector art style, svg style.`;
         const encodedPrompt = encodeURIComponent(prompt);
         const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&seed=${Date.now()}`;
 
