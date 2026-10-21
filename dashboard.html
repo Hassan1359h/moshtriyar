@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#2563eb">
+<title>داشبورد | مشتری‌یار</title>
+<link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+<link rel="icon" href="icon-192.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;line-height:1.7;padding-bottom:80px}
+.header{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.05);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100}
+.header-brand{display:flex;align-items:center;gap:10px}
+.header-logo{width:38px;height:38px;border-radius:10px}
+.header-name{font-size:17px;font-weight:800;color:#1e293b}
+.header-actions{display:flex;gap:6px;align-items:center}
+.header-actions a{background:#2563eb;color:#fff;text-decoration:none;padding:8px 14px;border-radius:10px;font-weight:700;font-size:13px}
+.btn-logout{background:#fee2e2;color:#dc2626;border:none;padding:8px 14px;border-radius:10px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer}
+.container{max-width:800px;margin:0 auto;padding:20px}
+.welcome{margin-bottom:20px}
+.welcome h1{font-size:22px;font-weight:800;color:#1e293b;margin-bottom:4px}
+.welcome p{color:#64748b;font-size:14px}
+.card{background:#fff;border-radius:18px;padding:20px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,.04)}
+.card-title{font-size:16px;font-weight:800;color:#1e293b;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.card-title span.badge{font-size:11px;background:#fee2e2;color:#dc2626;padding:3px 10px;border-radius:20px;font-weight:800}
+.card.danger-card{background:linear-gradient(135deg,#fef2f2,#fff);border:2px solid #fecaca}
+.card.warn-card{background:linear-gradient(135deg,#fffbeb,#fff);border:2px solid #fde68a}
+.card.success-card{background:linear-gradient(135deg,#f0fdf4,#fff);border:2px solid #bbf7d0}
+.todo-item{display:flex;align-items:center;gap:12px;padding:12px;background:#f8fafc;border-radius:12px;margin-bottom:8px;border-right:3px solid #e2e8f0}
+.todo-item.urgent{border-right-color:#dc2626;background:#fef2f2}
+.todo-item.warn{border-right-color:#f59e0b;background:#fffbeb}
+.todo-item.good{border-right-color:#16a34a;background:#f0fdf4}
+.todo-icon{font-size:20px}
+.todo-content{flex:1}
+.todo-name{font-weight:800;font-size:14px;color:#1e293b}
+.todo-reason{font-size:12px;color:#64748b;margin-top:2px}
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.stat{background:#f8fafc;border-radius:12px;padding:14px;text-align:center}
+.stat b{font-size:20px;display:block;font-weight:900;color:#2563eb}
+.stat span{font-size:11px;color:#64748b;font-weight:700}
+.risk-summary{text-align:center}
+.risk-amount{font-size:28px;font-weight:900;color:#dc2626;margin:10px 0}
+.risk-desc{font-size:13px;color:#64748b;margin-bottom:14px}
+.btn-main{display:block;width:100%;padding:14px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;text-decoration:none;text-align:center;border-radius:12px;font-weight:800;font-size:14px;border:none;font-family:inherit;cursor:pointer;box-shadow:0 6px 16px rgba(59,130,246,.25)}
+.btn-main:hover{transform:translateY(-1px)}
+.status-active{background:linear-gradient(135deg,#f0fdf4,#fff);border:2px solid #bbf7d0;border-radius:14px;padding:16px;text-align:center}
+.status-active h3{color:#16a34a;font-size:15px;font-weight:800;margin-bottom:6px}
+.status-active p{color:#64748b;font-size:13px}
+.status-active .days{font-size:24px;font-weight:900;color:#16a34a;margin:8px 0}
+.empty-note{text-align:center;padding:20px;color:#94a3b8;font-size:13px}
+.loading{text-align:center;padding:60px;color:#64748b}
+.hidden{display:none!important}
+@media(max-width:600px){
+    .stats-grid{grid-template-columns:1fr}
+    .header-name{font-size:15px}
+    .header-actions a{padding:6px 10px;font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<header style="background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.05);padding:12px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;">
+    <div style="display:flex;align-items:center;gap:10px;">
+        <svg style="width:38px;height:38px;border-radius:10px;" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#3b82f6"/>
+                    <stop offset="100%" stop-color="#8b5cf6"/>
+                </linearGradient>
+            </defs>
+            <rect width="100" height="100" rx="22" fill="url(#lg)"/>
+            <circle cx="50" cy="42" r="11" fill="#fff"/>
+            <path d="M 32 78 Q 32 58 50 58 Q 68 58 68 78 Z" fill="#fff"/>
+            <path d="M 50 15 L 53 24 L 62 24 L 55 30 L 58 39 L 50 33 L 42 39 L 45 30 L 38 24 L 47 24 Z" fill="#fbbf24"/>
+            <circle cx="50" cy="68" r="6" fill="#2563eb"/>
+            <path d="M 46 68 L 49 71 L 54 66" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span style="font-size:17px;font-weight:800;color:#1e293b;">مشتری‌یار</span>
+    </div>
+    <a href="help.html" style="background:#475569;color:#fff;text-decoration:none;padding:8px 14px;border-radius:10px;font-weight:700;font-size:13px;">📚 راهنما</a>
+    <button id="logoutBtn" style="background:#fee2e2;color:#dc2626;border:none;padding:8px 14px;border-radius:10px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;">خروج</button>
+</header>
+
+<div class="loading" id="loading">در حال بارگذاری...</div>
+
+<div class="container hidden" id="main">
+    <div id="trialBanner" style="display:none;"></div>
+    <div class="welcome">
+        <h1>سلام <span id="userName">👋</span></h1>
+        <p id="welcomeText">به داشبورد مشتری‌یار خوش آمدید</p>
+    </div>
+
+    <!-- کارهای فوری -->
+    <div class="card" id="todosCard">
+        <div class="card-title">
+            🔴 کارهای فوری امروز
+            <span class="badge" id="todoCount">0</span>
+        </div>
+        <div id="todoList"></div>
+    </div>
+    
+    <!-- آمار -->
+    <div class="card">
+        <div class="card-title">📊 این ماه</div>
+        <div class="stats-grid">
+            <div class="stat"><b id="totalCustomers">0</b><span id="label_total">کل مشتریان</span></div>
+            <div class="stat"><b id="activeCustomers">0</b><span id="label_active">مشتری فعال</span></div>
+            <div class="stat"><b id="totalSales">۰</b><span id="label_sales">فروش (تومان)</span></div>
+            <div class="stat"><b id="newCustomers">0</b><span id="label_new">اضافه شده این ماه</span></div>
+        </div>
+    </div>
+
+    <!-- مشتریان در خطر -->
+    <div class="card danger-card hidden" id="riskCard">
+        <div class="card-title">⚠️ <span id="label_atrisk">مشتریان در خطر از دست رفتن</span></div>
+        <div class="risk-summary">
+            <div class="risk-amount"><span id="riskCount">0</span> مشتری</div>
+            <div class="risk-desc">ارزش در خطر: <strong id="riskValue">۰</strong> تومان</div>
+        </div>
+        <a href="customers.html" class="btn-main">مشاهده و پیگیری</a>
+    </div>
+
+    <!-- وضعیت اشتراک -->
+    <div class="card" id="subCard">
+        <div class="card-title">💳 وضعیت اشتراک</div>
+        <div id="subContent"></div>
+    </div>
+    <!-- 🎯 نوع کسب‌وکار -->
+<div class="card">
+    <div class="card-title">🎯 نوع کسب‌وکار</div>
+    <p style="color:#64748b;font-size:13px;line-height:1.8;margin-bottom:14px;">
+        نوع کسب‌وکار فعلی: <strong id="currentBT" style="color:#2563eb;">—</strong>
+    </p>
+    <a href="business-type.html" class="btn-main" style="display:block;text-align:center;text-decoration:none;">
+        🔄 تغییر نوع کسب‌وکار
+    </a>
+</div>
+    <!-- 💳 چک‌ها و اقساط -->
+<div class="card">
+    <div class="card-title">💳 چک‌ها و اقساط</div>
+    <p style="color:#64748b;font-size:13px;line-height:1.8;margin-bottom:14px;">
+        مدیریت چک‌های دریافتی، سررسیدها و قراردادهای اقساطی.
+    </p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <a href="checks.html" class="btn-main" style="display:block;text-align:center;text-decoration:none;background:linear-gradient(135deg,#f59e0b,#d97706);">💳 چک‌ها</a>
+        <a href="installments.html" class="btn-main" style="display:block;text-align:center;text-decoration:none;background:linear-gradient(135deg,#8b5cf6,#7c3aed);">📅 اقساط</a>
+    </div>
+</div>
+   <!-- 📊 آمار چک و اقساط -->
+<div class="card" id="financialStats" style="display:none;">
+    <div class="card-title">📊 وضعیت مالی</div>
+    <div class="stats-grid">
+        <div class="stat">
+            <b id="statPendingChecks" style="color:#d97706;">۰</b>
+            <span>چک در انتظار</span>
+        </div>
+        <div class="stat">
+            <b id="statOverdueChecks" style="color:#dc2626;">۰</b>
+            <span>چک معوق</span>
+        </div>
+        <div class="stat">
+            <b id="statActiveInst" style="color:#8b5cf6;">۰</b>
+            <span>قرارداد فعال</span>
+        </div>
+        <div class="stat">
+            <b id="statOverdueInst" style="color:#dc2626;">۰</b>
+            <span>قسط معوق</span>
+        </div>
+    </div>
+</div> 
+    
+   <!-- 📊 گزارش مالی -->
+<div class="card">
+    <div class="card-title">📊 گزارش مالی</div>
+    <p style="color:#64748b;font-size:13px;line-height:1.8;margin-bottom:14px;">
+        گزارش کامل چک‌ها، اقساط و درآمد وصول‌شده با امکان دانلود Excel و PDF.
+    </p>
+    <a href="financial-reports.html" class="btn-main" style="display:block;text-align:center;text-decoration:none;background:linear-gradient(135deg,#2563eb,#1d4ed8);">
+        📊 مشاهده گزارش مالی
+    </a>
+</div>
+
+    <!-- 📞 پنل اپراتور -->
+<div class="card">
+    <div class="card-title">📞 پنل اپراتور من</div>
+
+    <p style="color:#64748b;font-size:13px;line-height:1.8;margin-bottom:14px;">
+        تماس‌های صوتی مشتریان سایت‌تان را از اینجا پاسخ دهید. این صفحه را در یک تب باز نگه دارید.
+    </p>
+
+    <a href="operator.html"
+       class="btn-main"
+       style="display:block;text-align:center;text-decoration:none;background:linear-gradient(135deg,#10b981,#059669);">
+        🎧 ورود به پنل اپراتور
+    </a>
+</div>
+  <div class="card">
+    <div class="card-title">🌐 اتصال به وب‌سایت</div>
+
+    <p style="color:#64748b;font-size:13px;line-height:1.8;margin-bottom:14px;">
+        وب‌سایت خود را به مشتری‌یار متصل کنید و یک دستیار هوشمند فروش برای سایت خود بسازید.
+    </p>
+
+    <a href="website-agent.html"
+       class="btn-main"
+       style="display:block;text-align:center;text-decoration:none;">
+        🌐 اتصال وب‌سایت
+    </a>
+  </div>  
+<div class="card hidden" id="adminCard">
+    <div class="card-title">👑 مدیریت سیستم</div>
+
+    <p style="color:#64748b;font-size:13px;margin-bottom:14px;">
+        مدیریت کاربران، پرداخت‌ها و اشتراک‌ها
+    </p>
+
+    <a href="admin.html"
+       class="btn-main"
+       style="display:block;text-align:center;text-decoration:none;">
+        ⚙️ ورود به پنل مدیریت
+    </a>
+</div>
+<script type="module">
+import { supabase } from './js/supabase.js';
+import { getLabels } from './js/labels.js';
+import { loadBusinessType, isShamsiPast } from './js/helpers.js';
+const $ = id => document.getElementById(id);
+let me = null;
+let customers = [];
+let myLabels = null;
+let myBusinessType = null;    
+
+async function loadFinancialStats() {
+    try {
+        const { data: checksData } = await supabase
+            .from('checks')
+            .select('amount, status, due_date')
+            .eq('user_id', me.id)
+            .eq('status', 'pending');
+
+        const now = new Date();
+        let pendingCount = 0;
+        let overdueCount = 0;
+
+        (checksData || []).forEach(c => {
+            pendingCount++;
+            if (c.due_date && isShamsiPast(c.due_date)) {
+                overdueCount++;
+            }
+        });
+
+        const { data: paymentsData } = await supabase
+            .from('installment_payments')
+            .select('status, due_date')
+            .eq('user_id', me.id)
+            .eq('status', 'pending');
+
+        let overdueInst = 0;
+        (paymentsData || []).forEach(p => {
+        if (p.due_date && isShamsiPast(p.due_date)) { 
+                overdueInst++;
+            }
+        });
+
+        const { data: contractsData } = await supabase
+            .from('installments')
+            .select('id')
+            .eq('user_id', me.id);
+
+        const activeInst = (contractsData || []).length;
+
+        if (pendingCount > 0 || activeInst > 0) {
+            $('financialStats').style.display = 'block';
+        }
+
+        $('statPendingChecks').textContent = pendingCount;
+        $('statOverdueChecks').textContent = overdueCount;
+        $('statActiveInst').textContent = activeInst;
+        $('statOverdueInst').textContent = overdueInst;
+
+    } catch (e) {
+        console.error("Financial stats error:", e);
+    }
+}
+async function init() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { window.location.href = 'login.html'; return; }
+    me = session.user;
+    
+    // 🎯 لود نوع کسب‌وکار
+    
+myBusinessType = await loadBusinessType(supabase, me.id);
+    myLabels = getLabels(myBusinessType);
+
+    // 🎯 نمایش نام کسب‌وکار فعلی
+const BT_NAMES = {
+    shop: '🛍️ فروشگاه',
+    medical: '👨‍⚕️ پزشکی',
+    dental: '🦷 دندانپزشکی',
+    lab: '🧪 آزمایشگاه',
+    salon: '💇 سالن زیبایی',
+    gym: '🏋️ باشگاه',
+    school: '🏫 آموزشگاه',
+    legal: '⚖️ خدمات حقوقی',
+    realestate: '🏠 املاک',
+    technical: '🔧 خدمات فنی',
+    general: '➕ عمومی'
+};
+setTimeout(() => {
+    const el = $('currentBT');
+    if (el) el.textContent = BT_NAMES[myBusinessType] || '🛍️ فروشگاه';
+}, 100);
+
+    // 🎯 اعمال متن‌های پویا
+if ($('label_total')) $('label_total').textContent = myLabels.customers;
+if ($('label_active')) $('label_active').textContent = myLabels.customer + ' فعال';
+if ($('label_atrisk')) $('label_atrisk').textContent = myLabels.customers + ' در خطر';
+if ($('label_sales')) $('label_sales').textContent = myLabels.sale + ' (تومان)';
+    
+    // 🎯 چک انقضای پلن — اگه منقضی، برو به locked.html
+    const { data: profileCheck } = await supabase
+        .from('profiles')
+        .select('plan, subscription_end_date')
+        .eq('id', me.id)
+        .maybeSingle();
+    
+    if (profileCheck && profileCheck.plan !== 'admin') {
+        const expiresAt = profileCheck.subscription_end_date;
+        if (expiresAt && new Date(expiresAt) < new Date()) {
+            window.location.href = 'locked.html';
+            return;
+        }
+    }
+    // پایان چک انقضا
+    
+    const isAdmin = profileCheck?.plan === 'admin';
+
+    if (isAdmin) {
+        $('adminCard').classList.remove('hidden');
+        $('adminNav').style.display = 'flex';
+    }
+
+ 
+console.time('Dashboard Loading');
+
+const results = await Promise.allSettled([
+    loadProfile(),
+    loadCustomers(),
+    loadFinancialStats(),
+    loadSubscription()
+]);
+
+results.forEach((result, index) => {
+    if (result.status === 'rejected') {
+        console.error(
+            'Dashboard task failed:',
+            index,
+            result.reason
+        );
+    }
+});
+
+$('loading').classList.add('hidden');
+$('main').classList.remove('hidden');
+
+console.timeEnd('Dashboard Loading');
+   
+}
+async function loadProfile() {
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', me.id)
+        .maybeSingle();
+
+    const name = profile?.full_name || me.user_metadata?.full_name || me.email?.split('@')[0] || 'کاربر';
+    $('userName').textContent = name;
+}
+
+async function loadCustomers() {
+    const { data, error } = await supabase
+        .from('customers')
+        .select('*')
+        .eq('user_id', me.id);
+
+    if (error) { console.error(error); return; }
+    customers = data || [];
+
+    // آمار
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    $('totalCustomers').textContent = customers.length;
+    $('activeCustomers').textContent = customers.filter(c => c.status === 'loyal' || c.status === 'waiting' || c.status === 'new').length;
+
+    const thisMonthCustomers = customers.filter(c => new Date(c.created_at) >= monthStart).length;
+    $('newCustomers').textContent = thisMonthCustomers;
+
+    const totalSales = customers.reduce((sum, c) => sum + (parseInt(c.total_purchase) || 0), 0);
+    $('totalSales').textContent = totalSales.toLocaleString('fa-IR');
+
+    // کارهای فوری
+    renderTodos();
+
+    // مشتریان در خطر
+    renderRisk();
+}
+
+function daysSince(dateStr) {
+    if (!dateStr) return null;
+    return Math.floor((Date.now() - new Date(dateStr)) / 86400000);
+}
+
+function getTodos() {
+    const todos = [];
+
+    customers.forEach(c => {
+        // تماس‌های عقب‌افتاده
+        const days = daysSince(c.last_contact_at);
+        if (c.status !== 'lost' && (days === null || days >= 14)) {
+            todos.push({
+                type: 'contact',
+                urgency: days === null || days >= 30 ? 'urgent' : 'warn',
+                icon: '📞',
+                name: c.name,
+                reason: days === null ? 'هنوز تماسی ثبت نشده' : `${days} روز بدون پیگیری`,
+                customer: c
+            });
+        }
+
+        // تولد
+        if (c.birthday) {
+            const bday = new Date(c.birthday);
+            const today = new Date();
+            if (bday.getMonth() === today.getMonth() && bday.getDate() === today.getDate()) {
+                todos.push({
+                    type: 'birthday',
+                    urgency: 'good',
+                    icon: '🎂',
+                    name: c.name,
+                    reason: 'امروز تولدشه!',
+                    customer: c
+                });
+            }
+        }
+    });
+
+    // مرتب‌سازی: urgent اول
+    const order = { urgent: 0, warn: 1, good: 2 };
+    todos.sort((a, b) => order[a.urgency] - order[b.urgency]);
+
+    return todos.slice(0, 5);
+}
+
+function renderTodos() {
+    const todos = getTodos();
+    $('todoCount').textContent = todos.length;
+
+    if (!todos.length) {
+        $('todoList').innerHTML = `
+            <div class="empty-note">
+                ${customers.length ? '✅ امروز کار فوری نداری. آفرین!' : 'مشتری‌ای نداری. اول مشتری اضافه کن.'}
+            </div>
+        `;
+        return;
+    }
+
+    $('todoList').innerHTML = '';
+    todos.forEach(t => {
+        const div = document.createElement('div');
+        div.className = 'todo-item ' + t.urgency;
+        div.innerHTML = `
+            <div class="todo-icon">${t.icon}</div>
+            <div class="todo-content">
+                <div class="todo-name">${t.name}</div>
+                <div class="todo-reason">${t.reason}</div>
+            </div>
+            <div style="font-size:12px;color:#2563eb;font-weight:700;">پیگیری ←</div>
+        `;
+        div.style.cursor = 'pointer';
+        div.onclick = () => { window.location.href = 'customers.html'; };
+        $('todoList').appendChild(div);
+    });
+}
+
+function renderRisk() {
+    const risky = customers.filter(c => {
+        if (c.status === 'lost') return false;
+        const days = daysSince(c.last_contact_at);
+        if (days === null) return true;
+        return days >= 21;
+    });
+
+    if (!risky.length) {
+        $('riskCard').classList.add('hidden');
+        return;
+    }
+
+    const value = risky.reduce((sum, c) => sum + (parseInt(c.total_purchase) || 3000000), 0);
+
+    $('riskCount').textContent = risky.length;
+    $('riskValue').textContent = value.toLocaleString('fa-IR');
+    $('riskCard').classList.remove('hidden');
+}
+
+async function loadSubscription() {
+
+    const role = me?.user_metadata?.role;
+
+    
+if (role === 'admin') {
+
+    $('subCard').classList.add('hidden');
+
+    return;
+    }
+
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('subscription_end_date')
+        .eq('id', me.id)
+        .maybeSingle();
+
+    const endDate =
+        profile?.subscription_end_date
+            ? new Date(profile.subscription_end_date)
+            : null;
+
+    const now = new Date();
+
+    if (endDate && endDate > now) {
+
+        const days = Math.ceil(
+            (endDate - now) / 86400000
+        );
+
+        $('subContent').innerHTML = `
+            <div class="status-active">
+                <h3>✅ اشتراک شما فعال است</h3>
+                <div class="days">${days} روز باقی‌مانده</div>
+                <p>تا تاریخ ${endDate.toLocaleDateString('fa-IR')}</p>
+            </div>
+        `;
+
+    } else {
+
+        $('subContent').innerHTML = `
+            <div style="text-align:center;padding:10px;">
+                <p style="color:#dc2626;font-weight:800;margin-bottom:12px;">
+                    ⚠️ اشتراک شما فعال نیست
+                </p>
+
+                <p style="color:#64748b;font-size:13px;margin-bottom:14px;">
+                    برای فعال‌سازی، پرداخت را ثبت کنید.
+                </p>
+
+                <a href="billing.html" class="btn-main">
+                    💳 ثبت پرداخت
+                </a>
+            </div>
+        `;
+    }
+}
+    
+$('logoutBtn').onclick = async () => {
+    await supabase.auth.signOut();
+    window.location.href = 'index.html';
+};
+
+init();
+   
+// ⏰ هشدار دوره آزمایشی (از profiles دیتابیس)
+async function showTrialWarning() {
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('plan, subscription_end_date')
+            .eq('id', session.user.id)
+            .maybeSingle();
+
+        if (!profile) return;
+        if (profile.plan === 'admin') return;
+        if (!profile.subscription_end_date) return;
+
+        const now = new Date();
+        const expires = new Date(profile.subscription_end_date);
+        const diffMs = expires - now;
+        const hoursLeft = Math.floor(diffMs / (1000 * 60 * 60));
+        const daysLeft = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+        let banner = null;
+
+        if (diffMs <= 0) {
+            banner = {
+                color: '#991b1b', bg: '#fee2e2', border: '#dc2626',
+                icon: '🔒',
+                title: 'پلن شما منقضی شده است',
+                text: 'برای ادامه استفاده از مشتری‌یار، لطفاً پلن خود را تمدید کنید.',
+                cta: '💳 تمدید پلن', ctaLink: 'index.html?plan=pro'
+            };
+        } else if (hoursLeft <= 24) {
+            banner = {
+                color: '#991b1b', bg: '#fee2e2', border: '#dc2626',
+                icon: '⚠️',
+                title: 'آخرین روز پلن شما!',
+                text: 'فقط ' + hoursLeft + ' ساعت تا پایان اشتراک مونده. همین حالا تمدید کن.',
+                cta: '🚀 تمدید فوری', ctaLink: 'index.html?plan=pro'
+            };
+        } else if (daysLeft <= 3) {
+            banner = {
+                color: '#92400e', bg: '#fef3c7', border: '#f59e0b',
+                icon: '🔥',
+                title: daysLeft + ' روز تا پایان پلن',
+                text: 'برای ادامه بدون وقفه، از قبل تمدید کنید.',
+                cta: 'مشاهده پلن‌ها', ctaLink: 'index.html?plan=pro'
+            };
+        } else if (daysLeft <= 7) {
+            banner = {
+                color: '#92400e', bg: '#fffbeb', border: '#f59e0b',
+                icon: '⏰',
+                title: daysLeft + ' روز تا پایان پلن',
+                text: 'به‌زودی باید پلن خود را تمدید کنید.',
+                cta: 'تمدید پلن', ctaLink: 'index.html?plan=pro'
+            };
+        }
+
+        if (banner) renderTrialBanner(banner);
+    } catch (err) {
+        console.error('Trial warning error:', err);
+    }
+    }
+
+function renderTrialBanner(banner) {
+    const el = document.getElementById('trialBanner');
+    if (!el) return;
+
+    el.style.cssText =
+        'display: flex; justify-content: space-between; align-items: center;' +
+        'gap: 15px; flex-wrap: wrap;' +
+        'background: ' + banner.bg + '; color: ' + banner.color + ';' +
+        'padding: 16px 20px; border-radius: 14px;' +
+        'border-right: 5px solid ' + banner.border + ';' +
+        'margin-bottom: 20px; font-size: 14px;';
+
+    var ctaHtml = '';
+    if (banner.cta) {
+        ctaHtml = '<a href="' + banner.ctaLink + '" style="' +
+            'background: ' + banner.color + '; color: #fff;' +
+            'padding: 10px 18px; border-radius: 10px;' +
+            'text-decoration: none; font-weight: 800;' +
+            'font-size: 13px; white-space: nowrap;">' +
+            banner.cta + '</a>';
+    }
+
+    el.innerHTML =
+        '<div style="flex: 1; min-width: 200px;">' +
+            '<div style="font-weight: 800; margin-bottom: 4px;">' +
+                banner.icon + ' ' + banner.title +
+            '</div>' +
+            '<div style="font-size: 12px; opacity: .85;">' +
+                banner.text +
+            '</div>' +
+        '</div>' +
+        ctaHtml;
+}
+
+showTrialWarning(); 
+</script>
+   <nav id="bottomNav" style="position:fixed;bottom:0;right:0;left:0;background:#fff;box-shadow:0 -2px 10px rgba(0,0,0,.05);display:flex;justify-content:space-around;padding:8px 0;z-index:100;">
+
+    <a href="dashboard.html" style="flex:1;text-align:center;text-decoration:none;color:#2563eb;padding:6px;display:flex;flex-direction:column;align-items:center;gap:2px;">
+        <span style="font-size:20px;">🏠</span>
+        <span style="font-size:11px;font-weight:700;">داشبورد</span>
+    </a>
+
+    <a href="customers.html" style="flex:1;text-align:center;text-decoration:none;color:#64748b;padding:6px;display:flex;flex-direction:column;align-items:center;gap:2px;">
+        <span style="font-size:20px;">👥</span>
+        <span style="font-size:11px;font-weight:700;">مشتریان</span>
+    </a>
+   <a href="products.html"
+   style="flex:1;text-align:center;text-decoration:none;color:#64748b;padding:6px;display:flex;flex-direction:column;align-items:center;gap:2px;">
+    <span style="font-size:20px;">📦</span>
+    <span style="font-size:11px;font-weight:700;">محصولات</span>
+</a>
+   <a href="invoice.html"
+   style="flex:1;text-align:center;text-decoration:none;color:#64748b;padding:6px;display:flex;flex-direction:column;align-items:center;gap:2px;">
+    <span style="font-size:20px;">🧾</span>
+    <span style="font-size:11px;font-weight:700;">فاکتور</span>
+   </a>    
+    <a href="ai.html" style="flex:1;text-align:center;text-decoration:none;color:#64748b;padding:6px;display:flex;flex-direction:column;align-items:center;gap:2px;">
+        <span style="font-size:20px;">✨</span>
+        <span style="font-size:11px;font-weight:700;">دستیار</span>
+    </a>
+
+    <a href="reports.html" style="flex:1;text-align:center;text-decoration:none;color:#64748b;padding:6px;display:flex;flex-direction:column;align-items:center;gap:2px;">
+        <span style="font-size:20px;">📊</span>
+        <span style="font-size:11px;font-weight:700;">گزارش</span>
+    </a>
+
+    <a id="adminNav"
+       href="admin.html"
+       style="display:none;flex:1;text-align:center;text-decoration:none;color:#7c3aed;padding:6px;flex-direction:column;align-items:center;gap:2px;">
+        <span style="font-size:20px;">⚙️</span>
+        <span style="font-size:11px;font-weight:700;">مدیریت</span>
+    </a>
+
+   </nav> 
+</body>
+  </html>
+
+
