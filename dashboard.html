@@ -195,11 +195,11 @@ async function init() {
         const expiresAt = profileCheck.subscription_end_date;
         if (expiresAt && new Date(expiresAt) < new Date()) { window.location.href = 'locked.html'; return; }
     }
-    const isAdmin = profileCheck?.plan === 'admin';
-    if (isAdmin) {
-        $('adminCard').classList.remove('hidden');
-        const adminNav = $('adminNav');
-        if(adminNav) adminNav.style.display = 'flex';
+    // نمایش همیشگی بخش مدیریت (بدون توجه به پلن)
+const adminCard = $('adminCard');
+if (adminCard) adminCard.classList.remove('hidden');
+const adminNav = $('adminNav');
+if (adminNav) adminNav.style.display = 'flex';
     }
     await Promise.allSettled([ loadCustomers(), loadFinancialStats(), loadSubscription() ]);
     $('loading').classList.add('hidden');
