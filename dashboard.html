@@ -447,40 +447,37 @@ window.generateLogo = async function() {
 
 window.resetLogo = function() { document.getElementById('logo-result').style.display = 'none'; document.getElementById('logo-step-1').style.display = 'block'; }
 
-window.downloadLogo = function() {
+window.downloadLogo = async function() {
     if (!currentLogoDataUrl) return;
-    try {
-        // تبدیل بیس۶۴ به فایل استاندارد (Blob) برای جلوگیری از خطای فرمت
-        const parts = currentLogoDataUrl.split(',');
-        const mime = parts[0].match(/:(.*?);/)[1];
-        const b64 = parts[1];
-        const byteCharacters = atob(b64);
-        const byteNumbers = new Array(byteCharacters.length);
-        for (let i = 0; i < byteCharacters.length; i++) {
-            byteNumbers[i] = byteCharacters.charCodeAt(i);
-        }
-        const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], {type: mime});
-        const url = URL.createObjectURL(blob);
 
-        // اگر داخل اپلیکیشن (WebView) بودیم:
+    try {
+        // اگر داخل اپلیکیشن (WebView) بودیم
         if (window.ReactNativeWebView && typeof window.ReactNativeWebView.postMessage === 'function') {
+            const b64 = currentLogoDataUrl.split(',')[1];
             window.ReactNativeWebView.postMessage(JSON.stringify({
                 type: 'saveFile',
                 data: b64,
                 filename: 'moshtriyar-logo.jpg',
-                mimeType: mime
+                mimeType: 'image/jpeg'
             }));
-        } else {
-            // اگر داخل مرورگر بودیم (مثل گوگل کروم یا سافاری):
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = 'moshtriyar-logo.jpg';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url); // آزاد کردن حافظه
+            return;
         }
+
+        // اگر داخل مرورگر بودیم (استفاده از روش fetch که بسیار پایدارتر است)
+        const response = await fetch(currentLogoDataUrl);
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'moshtriyar-logo.jpg';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // پاکسازی حافظه
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+
     } catch (err) {
         console.error('Download error:', err);
         alert('خطا در دانلود تصویر. لطفاً دوباره تلاش کنید.');
