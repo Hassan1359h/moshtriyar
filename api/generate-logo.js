@@ -1,6 +1,144 @@
 
 import { createClient } from '@supabase/supabase-js';
 
+const escapeXml = value => String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+
+const palettes = {
+    blue: ['#2563eb', '#0f172a'],
+    green: ['#059669', '#064e3b'],
+    gold: ['#b8860b', '#292524'],
+    purple: ['#7c3aed', '#312e81'],
+    red: ['#dc2626', '#450a0a'],
+    black: ['#171717', '#525252']
+};
+
+function chooseColor(input) {
+    const value = String(input || '').toLowerCase();
+    if (/سبز|green/.test(value)) return 'green';
+    if (/طلایی|gold|زرد/.test(value)) return 'gold';
+    if (/بنفش|purple/.test(value)) return 'purple';
+    if (/قرمز|red/.test(value)) return 'red';
+    if (/مشکی|سیاه|black/.test(value)) return 'black';
+    return 'blue';
+}
+
+function getSymbol(type, primary) {
+    const t = String(type).toLowerCase();
+
+    if (/کافه|قهوه|رستوران|coffee|cafe|food/.test(t)) {
+        return `<path d="M-48 -28 H35 V14 A42 42 0 0 1 -48 14Z"
+            fill="none" stroke="${primary}" stroke-width="12"
+            stroke-linejoin="round"/>
+            <path d="M35 -20 H51 A24 24 0 0 1 51 28 H29"
+            fill="none" stroke="${primary}" stroke-width="12"/>
+            <path d="M-50 49 H48 M-23 -62 V-46 M7 -62 V-46"
+            stroke="${primary}" stroke-width="10" stroke-linecap="round"/>`;
+    }
+
+    if (/زیبایی|آرایش|گل|beauty|salon|flower/.test(t)) {
+        return Array.from({length: 6}, (_, i) =>
+            `<ellipse cx="0" cy="-32" rx="17" ry="37"
+            fill="${primary}" opacity=".85"
+            transform="rotate(${i * 60})"/>`
+        ).join('') +
+        `<circle r="13" fill="white"/>`;
+    }
+
+    if (/فروشگاه|خرید|shop|store|لباس/.test(t)) {
+        return `<path d="M-43 -20 H43 L36 53 H-36Z"
+            fill="none" stroke="${primary}" stroke-width="12"
+            stroke-linejoin="round"/>
+            <path d="M-22 -17 V-33 A22 22 0 0 1 22 -33 V-17"
+            fill="none" stroke="${primary}" stroke-width="12"
+            stroke-linecap="round"/>`;
+    }
+
+    if (/نرم افزار|نرم‌افزار|فناوری|هوش|مشتری|tech|software|crm/.test(t)) {
+        return `<circle cx="-28" cy="-22" r="16" fill="${primary}"/>
+            <circle cx="30" cy="-22" r="16" fill="${primary}"/>
+            <circle cx="0" cy="31" r="16" fill="${primary}"/>
+            <path d="M-13 -22 H15 M-21 -8 L-7 17 M22 -8 L8 17"
+            fill="none" stroke="${primary}" stroke-width="9"
+            stroke-linecap="round"/>`;
+    }
+
+    if (/املاک|ساختمان|خانه|realestate|home/.test(t)) {
+        return `<path d="M-52 -4 L0 -49 L52 -4 V49 H-52Z"
+            fill="none" stroke="${primary}" stroke-width="12"
+            stroke-linejoin="round"/>
+            <path d="M-12 49 V7 H13 V49"
+            fill="none" stroke="${primary}" stroke-width="10"/>`;
+    }
+
+    // نماد عمومی برای سایر کسب‌وکارها
+    return `<path d="M0 -58 L49 -28 V28 L0 58 L-49 28 V-28Z"
+        fill="none" stroke="${primary}" stroke-width="12"
+        stroke-linejoin="round"/>
+        <circle r="18" fill="${primary}"/>
+        <path d="M0 -43 V-23 M0 23 V43 M-34 0 H-23 M23 0 H34"
+        stroke="${primary}" stroke-width="7" stroke-linecap="round"/>`;
+}
+
+function createLogo(name, type, shape, colors, variant) {
+    const [primary, dark] = colors;
+    const symbol = getSymbol(type, primary);
+
+    const frames = {
+        circle: `<circle r="94" fill="none" stroke="${primary}" stroke-width="5"/>`,
+        square: `<rect x="-94" y="-94" width="188" height="188"
+            rx="19" fill="none" stroke="${primary}" stroke-width="5"/>`,
+        rectangle: `<rect x="-110" y="-78" width="220" height="156"
+            rx="20" fill="none" stroke="${primary}" stroke-width="5"/>`,
+        abstract: ''
+    };
+
+    const frame = frames[shape] ?? frames.circle;
+
+    const configurations = [
+        { scale: 1, frame: true, line: false },
+        { scale: 1.12, frame: false, line: true },
+        { scale: .88, frame: true, line: true },
+        { scale: 1.23, frame: false, line: false }
+    ];
+
+    const config = configurations[variant];
+    const safeName = escapeXml(name);
+    const fontSize = name.length > 22 ? 29 : name.length > 13 ? 37 : 46;
+
+    return `<svg xmlns="http://www.w3.org/2000/svg"
+        xmlns:xlink="http://www.w3.org/1999/xlink"
+        width="768" height="768" viewBox="0 0 768 768">
+        <rect width="768" height="768" fill="#ffffff"/>
+        <g transform="translate(384 303)">
+            ${config.frame ? frame : ''}
+            <g transform="scale(${config.scale})">
+                ${symbol}
+            </g>
+        </g>
+        ${config.line ?
+            `<path d="M300 458 H468" stroke="${primary}"
+                stroke-width="4" stroke-linecap="round"/>` : ''}
+        <text x="384" y="532"
+            text-anchor="middle"
+            direction="rtl"
+            font-family="Vazirmatn,Tahoma,sans-serif"
+            font-size="${fontSize}"
+            font-weight="800"
+            fill="${dark}">${safeName}</text>
+        <text x="384" y="573"
+            text-anchor="middle"
+            direction="rtl"
+            font-family="Vazirmatn,Tahoma,sans-serif"
+            font-size="19"
+            fill="${primary}">${escapeXml(type)}</text>
+    </svg>`;
+}
+
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({
@@ -10,36 +148,36 @@ export default async function handler(req, res) {
     }
 
     try {
-        const authHeader = req.headers.authorization || '';
+        const authorization = req.headers.authorization || '';
 
-        if (!authHeader.startsWith('Bearer ')) {
+        if (!authorization.startsWith('Bearer ')) {
             return res.status(401).json({
                 success: false,
-                error: 'لطفاً وارد حساب خود شوید.'
+                error: 'لطفاً وارد حساب شوید.'
             });
         }
 
-        const supabaseAdmin = createClient(
+        const supabase = createClient(
             process.env.SUPABASE_URL,
             process.env.SUPABASE_SERVICE_ROLE_KEY
         );
 
-        const { data: { user }, error: userError } =
-            await supabaseAdmin.auth.getUser(
-                authHeader.slice(7).trim()
+        const { data: { user }, error: authError } =
+            await supabase.auth.getUser(
+                authorization.slice(7).trim()
             );
 
-        if (userError || !user) {
+        if (authError || !user) {
             return res.status(401).json({
                 success: false,
-                error: 'نشست شما منقضی شده است.'
+                error: 'نشست نامعتبر است.'
             });
         }
 
         const { data: profile, error: profileError } =
-            await supabaseAdmin
+            await supabase
                 .from('profiles')
-                .select('plan, logo_count, subscription_end_date')
+                .select('plan,logo_count,subscription_end_date')
                 .eq('id', user.id)
                 .single();
 
@@ -50,33 +188,27 @@ export default async function handler(req, res) {
             });
         }
 
-        const plan = profile.plan || 'free';
-        const logoCount = profile.logo_count || 0;
-
-        const isSubscriptionActive =
-            profile.subscription_end_date &&
-            new Date(profile.subscription_end_date) > new Date();
-
-        // شناسه ادمین را در متغیر محیطی تنظیم کنید
-        const isAdmin =
-            Boolean(process.env.ADMIN_USER_ID) &&
+        const isAdmin = Boolean(process.env.ADMIN_USER_ID) &&
             user.id === process.env.ADMIN_USER_ID;
 
+        const plan = profile.plan || 'free';
+        const count = profile.logo_count || 0;
+
+        const active = profile.subscription_end_date &&
+            new Date(profile.subscription_end_date) > new Date();
+
         if (!isAdmin) {
-            if (
-                !isSubscriptionActive ||
-                ['free', 'test', 'trial'].includes(plan)
-            ) {
+            if (!active || !['pro', 'business', 'vip_yearly'].includes(plan)) {
                 return res.status(403).json({
                     success: false,
-                    error: 'برای ساخت لوگو اشتراک معتبر تهیه کنید.'
+                    error: 'اشتراک معتبر برای ساخت لوگو لازم است.'
                 });
             }
 
-            if (plan === 'pro' && logoCount >= 5) {
+            if (plan === 'pro' && count >= 5) {
                 return res.status(403).json({
                     success: false,
-                    error: 'سقف ۵ لوگوی پلن حرفه‌ای تکمیل شده است.'
+                    error: 'سهمیه ساخت لوگوی شما تمام شده است.'
                 });
             }
         }
@@ -85,8 +217,7 @@ export default async function handler(req, res) {
             businessName,
             businessType,
             shape = 'circle',
-            color = 'blue',
-            style = 'minimal'
+            color = 'blue'
         } = req.body || {};
 
         if (
@@ -94,146 +225,60 @@ export default async function handler(req, res) {
             typeof businessType !== 'string' ||
             !businessName.trim() ||
             !businessType.trim() ||
-            businessName.length > 100 ||
-            businessType.length > 100
+            businessName.length > 60 ||
+            businessType.length > 60
         ) {
             return res.status(400).json({
                 success: false,
-                error: 'نام و نوع کسب‌وکار معتبر الزامی است.'
+                error: 'نام و نوع کسب‌وکار معتبر وارد کنید.'
             });
         }
 
-        const safeOption = (value, fallback) =>
-            typeof value === 'string'
-                ? value.slice(0, 40).replace(/[^\p{L}\p{N}\s#-]/gu, '') || fallback
-                : fallback;
+        const palette = palettes[chooseColor(color)];
+        const allowedShapes = ['circle', 'square', 'rectangle', 'abstract'];
+        const safeShape = allowedShapes.includes(shape) ? shape : 'circle';
 
-        const safeShape = safeOption(shape, 'circle');
-        const safeColor = safeOption(color, 'blue');
-        const safeStyle = safeOption(style, 'minimal');
+        const logos = Array.from({length: 4}, (_, index) =>
+            createLogo(
+                businessName.trim(),
+                businessType.trim(),
+                safeShape,
+                palette,
+                index
+            )
+        );
 
-        // طراحی نماد بدون نوشته برای جلوگیری از خرابی متن فارسی
-        const prompt = `
-Create a premium professional brand logo symbol.
-
-Business category: ${businessType.trim()}
-Brand concept: ${businessName.trim()}
-
-Design requirements:
-- Professional visual identity
-- ${safeStyle} design style
-- ${safeShape} composition
-- Primary color: ${safeColor}
-- Clean flat vector-style illustration
-- Strong recognizable silhouette
-- Balanced geometric proportions
-- Creative negative space
-- Suitable for real commercial branding
-- Centered composition
-- Solid white background
-- High contrast
-- Maximum three colors
-
-STRICT RULES:
-- Symbol only
-- Absolutely no text or letters
-- No typography
-- No mockup
-- No 3D rendering
-- No shadows
-- No gradients
-- No watermark
-- No decorative background
-- No generic clipart
-- No photographic elements
-
-The result must look like a professionally designed
-brand identity symbol, not an AI-generated poster.
-        `.trim();
-
-        const encodedPrompt = encodeURIComponent(prompt);
-
-        // بدون seed
-        const imageUrl =
-            `https://image.pollinations.ai/prompt/${encodedPrompt}` +
-            `?width=768&height=768&nologo=true&model=flux`;
-
-        // جلوگیری از انتظار نامحدود
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 45000);
-
-        let imageResponse;
-
-        try {
-            imageResponse = await fetch(imageUrl, {
-                method: 'GET',
-                signal: controller.signal
-            });
-        } finally {
-            clearTimeout(timeout);
-        }
-
-        if (!imageResponse.ok) {
-            throw new Error(
-                'سرویس تولید تصویر در دسترس نیست. لطفاً دوباره تلاش کنید.'
-            );
-        }
-
-        const contentType =
-            imageResponse.headers.get('content-type') || '';
-
-        const mimeType = contentType.split(';')[0].trim().toLowerCase();
-
-        if (!['image/jpeg', 'image/png', 'image/webp'].includes(mimeType)) {
-            throw new Error('پاسخ دریافتی تصویر معتبر نیست.');
-        }
-
-        const arrayBuffer = await imageResponse.arrayBuffer();
-
-        if (!arrayBuffer.byteLength) {
-            throw new Error('تصویر دریافتی خالی است.');
-        }
-
-        const base64Image =
-            Buffer.from(arrayBuffer).toString('base64');
-
-        const dataUrl =
-            `data:${mimeType};base64,${base64Image}`;
-
-        // افزایش شمارنده با شرط سقف فعلی
+        // ثبت یک نوبت تولید برای چهار طرح
         if (!isAdmin && plan === 'pro') {
             const { data: updated, error: updateError } =
-                await supabaseAdmin
+                await supabase
                     .from('profiles')
-                    .update({ logo_count: logoCount + 1 })
+                    .update({ logo_count: count + 1 })
                     .eq('id', user.id)
-                    .eq('logo_count', logoCount)
+                    .eq('logo_count', count)
                     .lt('logo_count', 5)
                     .select('logo_count');
 
             if (updateError || !updated?.length) {
-                throw new Error(
-                    'ثبت سهمیه لوگو ناموفق بود. لطفاً دوباره تلاش کنید.'
-                );
+                return res.status(409).json({
+                    success: false,
+                    error: 'ثبت سهمیه ناموفق بود. دوباره تلاش کنید.'
+                });
             }
         }
 
         return res.status(200).json({
             success: true,
-            imageUrl: dataUrl,
-            promptUsed: prompt
+            logos,
+            count: logos.length
         });
 
     } catch (error) {
         console.error('Logo generation error:', error);
 
-        const isTimeout = error.name === 'AbortError';
-
-        return res.status(isTimeout ? 504 : 500).json({
+        return res.status(500).json({
             success: false,
-            error: isTimeout
-                ? 'زمان تولید تصویر بیش از حد طول کشید. دوباره تلاش کنید.'
-                : error.message || 'خطا در تولید لوگو'
+            error: 'خطا در ساخت لوگو. دوباره تلاش کنید.'
         });
     }
 }
