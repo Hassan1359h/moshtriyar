@@ -806,7 +806,7 @@ window.addEventListener('moshtriyarBazaarPurchaseResult', async function (event)
         if (error) throw error;
         if (!session) throw new Error('برای فعال‌سازی اشتراک، ابتدا وارد حساب شوید.');
 
-        const response = await fetch('/api/verify-bazaar-purchase', {
+        const response = await fetch('/api/extend-subscription?mode=bazaar', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
