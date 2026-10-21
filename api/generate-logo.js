@@ -25,7 +25,7 @@ export default async function handler(req, res) {
         // ۲. بررسی وضعیت اشتراک و تعداد لوگوهای ساخته‌شده
         const { data: profile, error: profileError } = await supabaseAdmin
             .from('profiles')
-            .select('plan_name, logo_count, subscription_end_date')
+            .select('plan, logo_count, subscription_end_date') // 👈 اصلاح شد به plan
             .eq('id', user.id)
             .single();
 
@@ -35,17 +35,23 @@ export default async function handler(req, res) {
 
         const now = new Date();
         const isSubscriptionActive = profile.subscription_end_date && new Date(profile.subscription_end_date) > now;
-        const plan = profile.plan_name || 'free';
+        const plan = profile.plan || 'free'; // 👈 اصلاح شد به plan
         const logoCount = profile.logo_count || 0;
 
-        // ۳. اعمال محدودیت‌ها بر اساس پلن
-        if (!isSubscriptionActive || plan === 'test' || plan === 'free') {
-            return res.status(403).json({ success: false, error: 'جهت ساخت لوگو، لطفاً اشتراک کسب‌وکار یا اشتراک سالیانه تهیه کنید.' });
-        }
+        // 👇👇 تکه اضافه شده: دور زدن محدودیت برای ادمین 👇👇
+        const isAdminEmail = user.email === 'hahass12na@gmail.com';
 
-        if (plan === 'pro' && logoCount >= 5) {
-            return res.status(403).json({ success: false, error: 'شما به سقف ۵ لوگوی مجاز در پلن حرفه‌ای رسیده‌اید. برای ساخت نامحدود، به پلن کسب‌وکار ارتقا دهید.' });
+        // ۳. اعمال محدودیت‌ها (اگر ادمین نباشد)
+        if (!isAdminEmail) {
+            if (!isSubscriptionActive || plan === 'test' || plan === 'free' || plan === 'trial') {
+                return res.status(403).json({ success: false, error: 'جهت ساخت لوگو، لطفاً اشتراک کسب‌وکار یا اشتراک سالیانه تهیه کنید.' });
+            }
+
+            if (plan === 'pro' && logoCount >= 5) {
+                return res.status(403).json({ success: false, error: 'شما به سقف ۵ لوگوی مجاز در پلن حرفه‌ای رسیده‌اید. برای ساخت نامحدود، به پلن کسب‌وکار ارتقا دهید.' });
+            }
         }
+        // 👆👆 پایان تکه اضافه شده 👆👆
 
         // ۴. پردازش درخواست و ساخت لوگو
         const { businessType, businessName, shape, color, style } = req.body;
@@ -63,8 +69,8 @@ export default async function handler(req, res) {
         const base64Image = Buffer.from(arrayBuffer).toString('base64');
         const dataUrl = `data:image/jpeg;base64,${base64Image}`;
 
-        // ۵. افزایش تعداد لوگو (فقط اگر پلن حرفه‌ای باشد)
-        if (plan === 'pro') {
+        // ۵. افزایش تعداد لوگو (فقط اگر پلن حرفه‌ای باشد و ادمین نباشد)
+        if (!isAdminEmail && plan === 'pro') {
             await supabaseAdmin
                 .from('profiles')
                 .update({ logo_count: logoCount + 1 })
