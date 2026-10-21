@@ -1,14 +1,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const escapeXml = value => String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
-
-const palettes = {
+const PALETTES = {
     blue: ['#2563eb', '#0f172a'],
     green: ['#059669', '#064e3b'],
     gold: ['#b8860b', '#292524'],
@@ -17,130 +10,168 @@ const palettes = {
     black: ['#171717', '#525252']
 };
 
+function escapeXml(value) {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&apos;');
+}
+
 function chooseColor(input) {
     const value = String(input || '').toLowerCase();
+
     if (/سبز|green/.test(value)) return 'green';
     if (/طلایی|gold|زرد/.test(value)) return 'gold';
     if (/بنفش|purple/.test(value)) return 'purple';
     if (/قرمز|red/.test(value)) return 'red';
     if (/مشکی|سیاه|black/.test(value)) return 'black';
+
     return 'blue';
 }
 
-function getSymbol(type, primary) {
-    const t = String(type).toLowerCase();
-
-    if (/کافه|قهوه|رستوران|coffee|cafe|food/.test(t)) {
-        return `<path d="M-48 -28 H35 V14 A42 42 0 0 1 -48 14Z"
-            fill="none" stroke="${primary}" stroke-width="12"
-            stroke-linejoin="round"/>
-            <path d="M35 -20 H51 A24 24 0 0 1 51 28 H29"
-            fill="none" stroke="${primary}" stroke-width="12"/>
-            <path d="M-50 49 H48 M-23 -62 V-46 M7 -62 V-46"
-            stroke="${primary}" stroke-width="10" stroke-linecap="round"/>`;
+const DESIGN_STYLES = [
+    {
+        name: 'minimal',
+        description:
+            'Minimalist premium identity, geometric simplicity, ' +
+            'bold recognizable silhouette, generous negative space.'
+    },
+    {
+        name: 'luxury',
+        description:
+            'Luxury editorial brand identity, elegant symmetry, ' +
+            'refined ornamental geometry, sophisticated visual balance.'
+    },
+    {
+        name: 'geometric',
+        description:
+            'Distinctive geometric emblem, clever negative-space ' +
+            'concept, crisp vector-like edges, memorable modern shape.'
+    },
+    {
+        name: 'creative',
+        description:
+            'Creative boutique brand mark, unexpected organic ' +
+            'shapes, expressive composition, distinctive artistic concept.'
     }
+];
 
-    if (/زیبایی|آرایش|گل|beauty|salon|flower/.test(t)) {
-        return Array.from({length: 6}, (_, i) =>
-            `<ellipse cx="0" cy="-32" rx="17" ry="37"
-            fill="${primary}" opacity=".85"
-            transform="rotate(${i * 60})"/>`
-        ).join('') +
-        `<circle r="13" fill="white"/>`;
-    }
-
-    if (/فروشگاه|خرید|shop|store|لباس/.test(t)) {
-        return `<path d="M-43 -20 H43 L36 53 H-36Z"
-            fill="none" stroke="${primary}" stroke-width="12"
-            stroke-linejoin="round"/>
-            <path d="M-22 -17 V-33 A22 22 0 0 1 22 -33 V-17"
-            fill="none" stroke="${primary}" stroke-width="12"
-            stroke-linecap="round"/>`;
-    }
-
-    if (/نرم افزار|نرم‌افزار|فناوری|هوش|مشتری|tech|software|crm/.test(t)) {
-        return `<circle cx="-28" cy="-22" r="16" fill="${primary}"/>
-            <circle cx="30" cy="-22" r="16" fill="${primary}"/>
-            <circle cx="0" cy="31" r="16" fill="${primary}"/>
-            <path d="M-13 -22 H15 M-21 -8 L-7 17 M22 -8 L8 17"
-            fill="none" stroke="${primary}" stroke-width="9"
-            stroke-linecap="round"/>`;
-    }
-
-    if (/املاک|ساختمان|خانه|realestate|home/.test(t)) {
-        return `<path d="M-52 -4 L0 -49 L52 -4 V49 H-52Z"
-            fill="none" stroke="${primary}" stroke-width="12"
-            stroke-linejoin="round"/>
-            <path d="M-12 49 V7 H13 V49"
-            fill="none" stroke="${primary}" stroke-width="10"/>`;
-    }
-
-    // نماد عمومی برای سایر کسب‌وکارها
-    return `<path d="M0 -58 L49 -28 V28 L0 58 L-49 28 V-28Z"
-        fill="none" stroke="${primary}" stroke-width="12"
-        stroke-linejoin="round"/>
-        <circle r="18" fill="${primary}"/>
-        <path d="M0 -43 V-23 M0 23 V43 M-34 0 H-23 M23 0 H34"
-        stroke="${primary}" stroke-width="7" stroke-linecap="round"/>`;
-}
-
-function createLogo(name, type, shape, colors, variant) {
-    const [primary, dark] = colors;
-    const symbol = getSymbol(type, primary);
-
-    const frames = {
-        circle: `<circle r="94" fill="none" stroke="${primary}" stroke-width="5"/>`,
-        square: `<rect x="-94" y="-94" width="188" height="188"
-            rx="19" fill="none" stroke="${primary}" stroke-width="5"/>`,
-        rectangle: `<rect x="-110" y="-78" width="220" height="156"
-            rx="20" fill="none" stroke="${primary}" stroke-width="5"/>`,
-        abstract: ''
+function buildPrompt({
+    businessName,
+    businessType,
+    shape,
+    primary,
+    dark,
+    description
+}) {
+    const shapes = {
+        circle: 'Use a circular composition or circular emblem.',
+        square: 'Use a balanced square composition.',
+        rectangle: 'Use a horizontal rectangular composition.',
+        abstract: 'Use a free-form abstract composition without a frame.'
     };
 
-    const frame = frames[shape] ?? frames.circle;
+    return [
+        'Design an original, professional, commercially usable logo symbol.',
+        `Business name: ${businessName}.`,
+        `Business category: ${businessType}.`,
+        'Understand the business category and invent a relevant visual concept.',
+        `Art direction: ${description}`,
+        `Primary brand color: ${primary}.`,
+        `Secondary brand color: ${dark}.`,
+        shapes[shape] || shapes.circle,
+        'Use a transparent background.',
+        'Create one centered logo mark only.',
+        'No mockups, photographs, products, scenery, shadows, or watermarks.',
+        'Do not draw any text, letters, numbers, words, or typography.',
+        'Do not reuse a generic stock icon.',
+        'Make the visual concept substantially different from ordinary template logos.',
+        'Use clean edges and a polished, professional brand identity aesthetic.'
+    ].join('\n');
+}
 
-    const configurations = [
-        { scale: 1, frame: true, line: false },
-        { scale: 1.12, frame: false, line: true },
-        { scale: .88, frame: true, line: true },
-        { scale: 1.23, frame: false, line: false }
-    ];
-
-    const config = configurations[variant];
-    const safeName = escapeXml(name);
-    const fontSize = name.length > 22 ? 29 : name.length > 13 ? 37 : 46;
+function makeSvgLogo(pngBase64, businessName, businessType, colors) {
+    const [primary, dark] = colors;
+    const safeName = escapeXml(businessName);
+    const safeType = escapeXml(businessType);
+    const fontSize =
+        businessName.length > 22 ? 27 :
+        businessName.length > 13 ? 35 : 43;
 
     return `<svg xmlns="http://www.w3.org/2000/svg"
         xmlns:xlink="http://www.w3.org/1999/xlink"
         width="768" height="768" viewBox="0 0 768 768">
         <rect width="768" height="768" fill="#ffffff"/>
-        <g transform="translate(384 303)">
-            ${config.frame ? frame : ''}
-            <g transform="scale(${config.scale})">
-                ${symbol}
-            </g>
-        </g>
-        ${config.line ?
-            `<path d="M300 458 H468" stroke="${primary}"
-                stroke-width="4" stroke-linecap="round"/>` : ''}
-        <text x="384" y="532"
-            text-anchor="middle"
-            direction="rtl"
+        <image x="114" y="20" width="540" height="500"
+            preserveAspectRatio="xMidYMid meet"
+            href="data:image/png;base64,${pngBase64}"
+            xlink:href="data:image/png;base64,${pngBase64}"/>
+        <path d="M284 548 H484" stroke="${primary}"
+            stroke-width="4" stroke-linecap="round"/>
+        <text x="384" y="605" text-anchor="middle"
+            direction="rtl" unicode-bidi="plaintext"
             font-family="Vazirmatn,Tahoma,sans-serif"
-            font-size="${fontSize}"
-            font-weight="800"
+            font-size="${fontSize}" font-weight="800"
             fill="${dark}">${safeName}</text>
-        <text x="384" y="573"
-            text-anchor="middle"
-            direction="rtl"
+        <text x="384" y="650" text-anchor="middle"
+            direction="rtl" unicode-bidi="plaintext"
             font-family="Vazirmatn,Tahoma,sans-serif"
-            font-size="19"
-            fill="${primary}">${escapeXml(type)}</text>
+            font-size="19" fill="${primary}">${safeType}</text>
     </svg>`;
+}
+
+async function generateImage(apiKey, prompt) {
+    const response = await fetch(
+        'https://api.openai.com/v1/images/generations',
+        {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: 'gpt-image-1',
+                prompt,
+                size: '1024x1024',
+                quality: 'medium',
+                background: 'transparent',
+                output_format: 'png',
+                n: 1
+            })
+        }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok) {
+        console.error(
+            'OpenAI image generation failed:',
+            response.status,
+            result?.error?.code || 'unknown_error'
+        );
+
+        throw new Error('IMAGE_GENERATION_FAILED');
+    }
+
+    const image = result?.data?.[0]?.b64_json;
+
+    if (
+        typeof image !== 'string' ||
+        image.length === 0 ||
+        image.length > 15_000_000
+    ) {
+        throw new Error('INVALID_IMAGE_RESPONSE');
+    }
+
+    return image;
 }
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
+        res.setHeader('Allow', 'POST');
+
         return res.status(405).json({
             success: false,
             error: 'Method not allowed'
@@ -157,15 +188,29 @@ export default async function handler(req, res) {
             });
         }
 
+        if (
+            !process.env.SUPABASE_URL ||
+            !process.env.SUPABASE_SERVICE_ROLE_KEY
+        ) {
+            console.error('Supabase server environment is incomplete.');
+
+            return res.status(500).json({
+                success: false,
+                error: 'تنظیمات سرور ناقص است.'
+            });
+        }
+
         const supabase = createClient(
             process.env.SUPABASE_URL,
             process.env.SUPABASE_SERVICE_ROLE_KEY
         );
 
-        const { data: { user }, error: authError } =
-            await supabase.auth.getUser(
-                authorization.slice(7).trim()
-            );
+        const {
+            data: { user },
+            error: authError
+        } = await supabase.auth.getUser(
+            authorization.slice(7).trim()
+        );
 
         if (authError || !user) {
             return res.status(401).json({
@@ -188,17 +233,23 @@ export default async function handler(req, res) {
             });
         }
 
-        const isAdmin = Boolean(process.env.ADMIN_USER_ID) &&
+        const isAdmin =
+            Boolean(process.env.ADMIN_USER_ID) &&
             user.id === process.env.ADMIN_USER_ID;
 
         const plan = profile.plan || 'free';
-        const count = profile.logo_count || 0;
+        const count = Number(profile.logo_count || 0);
 
-        const active = profile.subscription_end_date &&
-            new Date(profile.subscription_end_date) > new Date();
+        const active =
+            profile.subscription_end_date &&
+            new Date(profile.subscription_end_date).getTime() >
+                Date.now();
 
         if (!isAdmin) {
-            if (!active || !['pro', 'business', 'vip_yearly'].includes(plan)) {
+            if (
+                !active ||
+                !['pro', 'business', 'vip_yearly'].includes(plan)
+            ) {
                 return res.status(403).json({
                     success: false,
                     error: 'اشتراک معتبر برای ساخت لوگو لازم است.'
@@ -225,8 +276,8 @@ export default async function handler(req, res) {
             typeof businessType !== 'string' ||
             !businessName.trim() ||
             !businessType.trim() ||
-            businessName.length > 60 ||
-            businessType.length > 60
+            businessName.trim().length > 60 ||
+            businessType.trim().length > 60
         ) {
             return res.status(400).json({
                 success: false,
@@ -234,21 +285,57 @@ export default async function handler(req, res) {
             });
         }
 
-        const palette = palettes[chooseColor(color)];
-        const allowedShapes = ['circle', 'square', 'rectangle', 'abstract'];
-        const safeShape = allowedShapes.includes(shape) ? shape : 'circle';
+        if (!process.env.OPENAI_API_KEY) {
+            console.error('OPENAI_API_KEY is not configured.');
 
-        const logos = Array.from({length: 4}, (_, index) =>
-            createLogo(
-                businessName.trim(),
-                businessType.trim(),
-                safeShape,
-                palette,
-                index
+            return res.status(500).json({
+                success: false,
+                error: 'سرویس تولید تصویر تنظیم نشده است.'
+            });
+        }
+
+        const name = businessName.trim();
+        const type = businessType.trim();
+
+        const allowedShapes = [
+            'circle',
+            'square',
+            'rectangle',
+            'abstract'
+        ];
+
+        const safeShape = allowedShapes.includes(shape)
+            ? shape
+            : 'circle';
+
+        const colors = PALETTES[chooseColor(color)];
+
+        const common = {
+            businessName: name,
+            businessType: type,
+            shape: safeShape,
+            primary: colors[0],
+            dark: colors[1]
+        };
+
+        // چهار درخواست مستقل با چهار جهت هنری متفاوت
+        const images = await Promise.all(
+            DESIGN_STYLES.map(style =>
+                generateImage(
+                    process.env.OPENAI_API_KEY,
+                    buildPrompt({
+                        ...common,
+                        description: style.description
+                    })
+                )
             )
         );
 
-        // ثبت یک نوبت تولید برای چهار طرح
+        const logos = images.map(image =>
+            makeSvgLogo(image, name, type, colors)
+        );
+
+        // ثبت سهمیه فقط برای پلن Pro؛ چهار طرح یک نوبت محسوب می‌شوند.
         if (!isAdmin && plan === 'pro') {
             const { data: updated, error: updateError } =
                 await supabase
@@ -274,11 +361,15 @@ export default async function handler(req, res) {
         });
 
     } catch (error) {
-        console.error('Logo generation error:', error);
+        console.error(
+            'Logo generation error:',
+            error?.message || 'unknown_error'
+        );
 
         return res.status(500).json({
             success: false,
-            error: 'خطا در ساخت لوگو. دوباره تلاش کنید.'
+            error:
+                'ساخت لوگو ناموفق بود. لطفاً کمی بعد دوباره تلاش کنید.'
         });
     }
 }
