@@ -111,7 +111,12 @@ async function loadPendingPayments() {
     listDiv.innerHTML = '';
     data.forEach(payment => {
         // استخراج تعداد پیامک از نوع پکیج (مثلا sms1000 => 1000)
-        const smsAmount = parseInt(payment.plan.replace(/\D/g, '')) || 0;
+        
+const planCode = String(payment.plan || '');
+const isSmsPayment = /^sms\d+$/i.test(planCode);
+const smsAmount = isSmsPayment ? parseInt(planCode.replace(/\D/g, ''), 10) : 0;
+const paymentTitle = isSmsPayment ? `بسته ${smsAmount} پیامکی` : (payment.plan_name || planCode || 'اشتراک نامشخص');
+        
         const userName = payment.profiles?.full_name || 'کاربر بدون نام';
         const userEmail = payment.profiles?.email || '-';
 
@@ -129,7 +134,7 @@ async function loadPendingPayments() {
                     </div>
                     <div class="detail-item">
                         <span class="detail-label">پکیج درخواستی</span>
-                        <span class="detail-value">${payment.plan}</span>
+                        <span class="detail-value">${paymentTitle}</span>
                     </div>
                     <div class="detail-item">
                         <span class="detail-label">مبلغ (تومان)</span>
