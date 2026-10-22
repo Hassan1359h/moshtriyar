@@ -147,30 +147,100 @@ export default function App() {
     }
     downloadFileFromWebView(url);
   };
-
-  const saveFileFromWebView = async (base64Data, filename, mimeType) => {
-    try {
-      if (!base64Data || !filename) throw new Error('اطلاعات فایل ناقص است.');
-      const safeName = String(filename).replace(/[\\/:*?"<>|]/g, '_');
-      const uri = `${FileSystem.documentDirectory}${safeName}`;
-
-      await FileSystem.writeAsStringAsync(uri, base64Data, { encoding: FileSystem.EncodingType.Base64 });
-      const sharingAvailable = await Sharing.isAvailableAsync();
-
-      if (sharingAvailable) {
-        await Sharing.shareAsync(uri, {
-          mimeType: mimeType || 'application/octet-stream',
-          dialogTitle: 'ذخیره یا اشتراک‌گذاری فایل',
-          UTI: mimeType === 'application/pdf' ? 'com.adobe.pdf' : undefined,
-        });
-      } else {
-        Alert.alert('ذخیره شد', `فایل در این مسیر ذخیره شد:\n${uri}`);
-      }
-    } catch (err) {
-      console.error('Save file error:', err);
-      Alert.alert('خطا در ذخیره فایل', err?.message || 'خطای نامشخص');
+  
+const saveFileFromWebView = async (fileData, filename, mimeType) => {
+  try {
+    if (typeof fileData !== 'string' || !fileData.trim() || !filename) {
+      throw new Error('اطلاعات فایل ناقص است.');
     }
-  };
+
+    const safeName = String(filename)
+      .replace(/[\\/:*?"<>|]/g, '_')
+      .slice(0, 120);
+
+    // Accept both a full Data URL and raw Base64.
+    let base64Data = fileData.trim();
+
+    if (/^data:/i.test(base64Data)) {
+      const commaIndex = base64Data.indexOf(',');
+
+      if (commaIndex === -1) {
+        throw new Error('ساختار اطلاعات فایل نامعتبر است.');
+      }
+
+      const header = base64Data.slice(0, commaIndex);
+
+      if (!/;base64$/i.test(header)) {
+        throw new Error('فرمت فایل ارسالی Base64 نیست.');
+      }
+
+      base64Data = base64Data.slice(commaIndex + 1);
+    }
+
+    // Remove whitespace introduced during message transfer.
+    base64Data = base64Data.replace(/\s/g, '');
+
+    // Basic Base64 validation.
+    if (
+      !base64Data ||
+      base64Data.length % 4 !== 0 ||
+      !/^[A-Za-z0-9+/]*={0,2}$/.test(base64Data)
+    ) {
+      throw new Error('اطلاعات Base64 فایل معتبر نیست.');
+    }
+
+    const uri = `${FileSystem.documentDirectory}${Date.now()}-${safeName}`;
+
+    await FileSystem.writeAsStringAsync(uri, base64Data, {
+      encoding: FileSystem.EncodingType.Base64
+    });
+
+    const info = await FileSystem.getInfoAsync(uri);
+
+    if (!info.exists || !info.size) {
+      throw new Error('فایل ذخیره‌شده خالی است.');
+    }
+
+    const sharingAvailable = await Sharing.isAvailableAsync();
+
+    if (sharingAvailable) {
+      const extension = safeName.split('.').pop().toLowerCase();
+
+      const detectedMimeType =
+        extension === 'png' ? 'image/png' :
+        extension === 'svg' ? 'image/svg+xml' :
+        extension === 'pdf' ? 'application/pdf' :
+        extension === 'zip' ? 'application/zip' :
+        'application/octet-stream';
+
+      const finalMimeType = mimeType || detectedMimeType;
+
+      await Sharing.shareAsync(uri, {
+        mimeType: finalMimeType,
+        dialogTitle: 'ذخیره یا اشتراک‌گذاری فایل',
+        UTI: finalMimeType === 'application/pdf'
+          ? 'com.adobe.pdf'
+          : undefined
+      });
+    } else {
+      Alert.alert(
+        'ذخیره شد',
+        `فایل در این مسیر ذخیره شد:\n${uri}`
+      );
+    }
+
+  } catch (err) {
+    console.error('Save file error:', err);
+
+    Alert.alert(
+      'خطا در ذخیره فایل',
+      err?.message || 'خطای نامشخص'
+    );
+  }
+};
+
+
+  
   const handleMessage = async (event) => {
   try {
     const rawData = event?.nativeEvent?.data;
