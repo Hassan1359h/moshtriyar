@@ -59,15 +59,26 @@ export default async function handler(req, res) {
         const name = businessName.trim();
         const type = businessType.trim();
 
-        // ایجاد لینک مستقیم به موتور سریع تولید تصویر هوش مصنوعی (بدون معطلی و خطای تایم‌اوت Vercel)
-        const encodedType = encodeURIComponent(`Professional minimalist vector logo symbol for ${type}, corporate branding, clean design, white background`);
+        // --- اصلاح پرامپت‌ها ---
+        // ۱. نام برند (name) به پرامپت اضافه شد.
+        // ۲. از کلمات کلیدی بهتر برای طراحی لوگو استفاده شد.
+        // ۳. هر ۴ طرح استایل متفاوتی دارند تا شبیه هم نشوند.
         
-        const logos = [
-            `https://image.pollinations.ai/prompt/${encodedType}%20style%201?width=512&height=512&nologo=true&seed=101`,
-            `https://image.pollinations.ai/prompt/${encodedType}%20style%202?width=512&height=512&nologo=true&seed=202`,
-            `https://image.pollinations.ai/prompt/${encodedType}%20style%203?width=512&height=512&nologo=true&seed=303`,
-            `https://image.pollinations.ai/prompt/${encodedType}%20style%204?width=512&height=512&nologo=true&seed=404`
+        const basePrompt = `Professional vector logo for "${name}", a ${type} business, ${color} color theme, isolated on white background, high quality, flat design, trending on dribbble,`;
+        
+        const prompts = [
+            `${basePrompt} minimalist geometric symbol, clean lines, corporate identity`, // طرح 1
+            `${basePrompt} abstract modern mark, simple typography, sleek`, // طرح 2
+            `${basePrompt} vintage badge style, emblem, classic, elegant`, // طرح 3
+            `${basePrompt} creative mascot or lettermark, unique, bold` // طرح 4
         ];
+
+        // تولید لینک‌های تصویر با سیدهای متفاوت برای تنوع
+        const logos = prompts.map((prompt, index) => {
+            const encodedPrompt = encodeURIComponent(prompt);
+            const seed = Math.floor(Math.random() * 100000); // سید رندوم برای تنوع بیشتر
+            return `https://image.pollinations.ai/prompt/${encodedPrompt}?width=512&height=512&nologo=true&seed=${seed}`;
+        });
 
         if (!isAdmin && plan === 'pro') {
             await supabase
