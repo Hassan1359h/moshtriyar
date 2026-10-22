@@ -1,11 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
 
-// تابع هوشمند ساخت پرامپت تخصصی برای هر نوع کسب‌وکار
-function getProfessionalLogoPrompt(name, type, color) {
-    const cleanType = type.replaceAll(/[/\\#,$]/g, ' ');
-    return `Minimalist vector logo symbol for ${cleanType}, modern corporate brand identity, flat design, clean geometric lines, ${color} color palette, elegant symbol, professional graphic design, solid white background --no text, letters, realistic photo, 3d render, shading, complex details`;
-}
-
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
         res.setHeader('Allow', 'POST');
@@ -65,30 +59,15 @@ export default async function handler(req, res) {
         const name = businessName.trim();
         const type = businessType.trim();
 
-        // تولید ۴ پرامپت مختلف و حرفه‌ای بر اساس نوع صنف
-        const prompt = getProfessionalLogoPrompt(name, type, color);
+        // ایجاد لینک مستقیم به موتور سریع تولید تصویر هوش مصنوعی (بدون معطلی و خطای تایم‌اوت Vercel)
+        const encodedType = encodeURIComponent(`Professional minimalist vector logo symbol for ${type}, corporate branding, clean design, white background`);
         
-        // درخواست همزمان ۴ طرح متفاوت از مدل هوش مصنوعی مولد تصویر (با Seedهای مختلف برای تنوع)
-        const seeds = [
-            Math.floor(Math.random() * 99999),
-            Math.floor(Math.random() * 99999),
-            Math.floor(Math.random() * 99999),
-            Math.floor(Math.random() * 99999)
+        const logos = [
+            `https://image.pollinations.ai/prompt/${encodedType}%20style%201?width=512&height=512&nologo=true&seed=101`,
+            `https://image.pollinations.ai/prompt/${encodedType}%20style%202?width=512&height=512&nologo=true&seed=202`,
+            `https://image.pollinations.ai/prompt/${encodedType}%20style%203?width=512&height=512&nologo=true&seed=303`,
+            `https://image.pollinations.ai/prompt/${encodedType}%20style%204?width=512&height=512&nologo=true&seed=404`
         ];
-
-        const logoPromises = seeds.map(async (seed) => {
-            const encodedPrompt = encodeURIComponent(prompt);
-            const aiUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=800&height=800&seed=${seed}&model=flux&nologo=true`;
-            
-            const response = await fetch(aiUrl);
-            if (!response.ok) throw new Error('AI service failed');
-
-            const buffer = await response.arrayBuffer();
-            const base64 = Buffer.from(buffer).toString('base64');
-            return `data:image/png;base64,${base64}`;
-        });
-
-        const logos = await Promise.all(logoPromises);
 
         if (!isAdmin && plan === 'pro') {
             await supabase
