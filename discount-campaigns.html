@@ -1,195 +1,456 @@
+
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>کمپین تخفیف | مشتری‌یار</title>
-<link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
 <style>
-    :root { --primary: #d946ef; --bg: #f8fafc; --card: #ffffff; --text-main: #1e293b; --text-muted: #64748b; --success: #10b981; --danger: #ef4444; }
-    *{box-sizing:border-box;margin:0;padding:0;font-family:'Vazirmatn', sans-serif;}
-    body{background:var(--bg);color:var(--text-main);line-height:1.7;padding-bottom:80px;}
-    .header{background:var(--card);box-shadow:0 4px 20px rgba(0,0,0,.03);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
-    .header a{text-decoration:none;color:var(--text-muted);font-weight:700;font-size:14px;}
-    .container{max-width:800px;margin:20px auto;padding:0 16px;}
-    .form-card {background: var(--card);border-radius: 20px;padding: 24px;box-shadow: 0 4px 15px rgba(0,0,0,.03);margin-bottom: 24px;border-top: 4px solid var(--primary);}
-    .form-card h2{font-size:18px;font-weight:900;margin-bottom:20px;}
-    .form-group{margin-bottom:16px;}
-    label{display:block;font-weight:800;margin-bottom:8px;font-size:13px;}
-    input {width:100%;padding:14px;border:1px solid #e2e8f0;border-radius:12px;font-family:inherit;font-size:14px;background:#f8fafc;}
-    input:focus{outline:none;border-color:var(--primary);background:var(--card);}
-    .btn-save {width:100%;padding:16px;background:linear-gradient(135deg, var(--primary), #8b5cf6);color:#fff;border:none;border-radius:12px;font-family:inherit;font-weight:800;font-size:15px;cursor:pointer;box-shadow: 0 6px 16px rgba(217,70,239,.25);}
-    .section-title{font-size:18px;font-weight:900;margin:32px 0 16px;display:flex;align-items:center;gap:8px;}
-    .coupon-card {background: var(--card);border-radius: 16px;padding: 20px;box-shadow: 0 4px 15px rgba(0,0,0,.03);margin-bottom: 16px;border-right: 5px solid var(--primary);position: relative;transition:0.3s;}
-    .coupon-card.inactive {border-right-color: var(--text-muted);opacity: 0.7;}
-    .coupon-header {display: flex;justify-content: space-between;align-items: flex-start;margin-bottom: 12px;}
-    .coupon-code {font-size: 20px;font-weight: 900;color: var(--primary);letter-spacing: 1px;direction: ltr;}
-    .coupon-title {font-size: 13px;color: var(--text-muted);margin-bottom: 4px;}
-    .coupon-discount {font-size: 16px;font-weight: 900;color: var(--danger);}
-    .coupon-stats {display: flex;justify-content: space-between;background: #f8fafc;padding: 10px;border-radius: 10px;font-size: 12px;font-weight: 700;margin-bottom: 16px;}
-    .share-btns {display: grid;grid-template-columns: repeat(2, 1fr);gap: 8px;margin-bottom: 16px;}
-    .share-btn {padding: 12px;border: none;border-radius: 10px;font-family: inherit;font-size: 12px;font-weight: 800;cursor: pointer;display: flex;align-items: center; justify-content: center; gap: 6px;color: white; transition: 0.2s;}
-    .share-btn:hover {opacity: 0.9; transform: translateY(-1px);}
-    .btn-ai {background: linear-gradient(135deg, #8b5cf6, #d946ef); grid-column: span 2; font-size: 14px; box-shadow: 0 4px 10px rgba(217,70,239,0.3); padding: 14px;}
-    .btn-wa {background: #25D366;}
-    .btn-telegram {background: #0088cc;}
-    .btn-eitaa {background: #f59e0b;}
-    .btn-rubika {background: #7c3aed;}
-    .btn-bulk {background: #4f46e5; grid-column: span 2; padding: 14px; font-size: 14px;}
-    .btn-copy {background: #64748b; grid-column: span 2;}
-    .toggle-status {position: absolute;top: 20px;left: 20px;width: 40px;height: 22px;background: #e2e8f0;border-radius: 20px;cursor: pointer;transition: 0.3s;}
-    .toggle-status::after {content: '';position: absolute;top: 2px;left: 2px;width: 18px;height: 18px;background: #fff;border-radius: 50%;transition: 0.3s;}
-    .toggle-status.active {background: var(--success);}
-    .toggle-status.active::after {left: 20px;}
-    .loading-spinner {display: inline-block;width: 16px;height: 16px;border: 2px solid rgba(255,255,255,0.3);border-radius: 50%;border-top-color: #fff;animation: spin 1s ease-in-out infinite;margin-left: 8px;}
-    @keyframes spin { to { transform: rotate(360deg); } }
+:root {
+    --primary:#9333ea;
+    --bg:#f8fafc;
+    --card:#fff;
+    --text:#1e293b;
+    --muted:#64748b;
+    --success:#059669;
+    --danger:#dc2626;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Vazirmatn,Tahoma,sans-serif;line-height:1.8;padding-bottom:60px}
+button,input,textarea{font:inherit}
+.header{background:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10;box-shadow:0 3px 15px #00000008}
+.header a{text-decoration:none;color:var(--muted);font-size:13px;font-weight:800}
+.container{max-width:800px;margin:22px auto;padding:0 15px}
+.card{background:var(--card);padding:22px;border-radius:18px;margin-bottom:20px;box-shadow:0 4px 18px #00000008}
+.form-card{border-top:4px solid var(--primary)}
+h2{font-size:18px;margin:0 0 18px}
+label{display:block;font-size:13px;font-weight:800;margin:12px 0 6px}
+input,textarea{width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:11px;background:#fff;color:var(--text)}
+textarea{resize:vertical;min-height:165px;line-height:2}
+input:focus,textarea:focus{outline:none;border-color:var(--primary)}
+button{border:0;border-radius:11px;padding:12px;cursor:pointer;font-weight:800}
+button:disabled{opacity:.55;cursor:not-allowed}
+.btn-main{background:linear-gradient(135deg,#9333ea,#d946ef);color:#fff;width:100%;margin-top:12px}
+.message{font-size:13px;font-weight:700;margin-top:10px;white-space:pre-wrap}
+.section-title{font-size:18px;font-weight:900;margin:25px 0 13px}
+.coupon-card{border-right:5px solid var(--primary)}
+.coupon-card.inactive{border-right-color:#94a3b8;opacity:.75}
+.coupon-top{display:flex;justify-content:space-between;gap:12px;align-items:start}
+.coupon-title{font-size:13px;color:var(--muted)}
+.coupon-code{font-size:22px;font-weight:900;color:var(--primary);direction:ltr;text-align:right}
+.discount{color:var(--danger);font-size:19px;font-weight:900}
+.stats{background:#f8fafc;border-radius:10px;padding:10px;margin:12px 0;font-size:12px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}
+.actions button{font-size:12px;color:white}
+.full{grid-column:1/-1}
+.ai{background:linear-gradient(135deg,#7c3aed,#d946ef);font-size:14px!important}
+.wa{background:#16a34a}
+.tg{background:#0284c7}
+.eitaa{background:#e69b12}
+.rubika{background:#7c3aed}
+.sms{background:#4f46e5}
+.copy{background:#475569}
+.native{background:#0f766e}
+.secondary{background:#e2e8f0;color:#334155!important}
+.editor{background:#faf5ff;border:1px solid #e9d5ff;border-radius:13px;padding:15px;margin-top:15px}
+.editor[hidden]{display:none}
+.editor h3{margin:0 0 8px;font-size:15px}
+.hint{font-size:12px;color:var(--muted);margin:7px 0}
+.status-btn{background:#f1f5f9;color:#334155;font-size:12px;padding:7px 12px}
+.status-btn.on{background:#dcfce7;color:#166534}
+.empty{font-size:13px;color:var(--muted)}
+@media(max-width:420px){.card{padding:16px}.actions{gap:7px}.actions button{padding:11px 5px}}
 </style>
 </head>
 <body>
 
 <div class="header">
     <a href="dashboard.html">← بازگشت به داشبورد</a>
-    <div style="font-weight:800; font-size:15px;">کمپین تخفیف</div>
-    <div style="width:20px;"></div>
+    <strong>کمپین تخفیف</strong>
+    <span></span>
 </div>
 
 <div class="container">
-    <div class="form-card">
+    <div class="card form-card">
         <h2>🎁 ساخت کمپین جدید</h2>
-        <div class="form-group"><label>عنوان (برای خودتان):</label><input type="text" id="campaignTitle" placeholder="مثلاً: تخفیف مشتریان وفادار"></div>
-        <div class="form-group"><label>کد تخفیف (انگلیسی):</label><input type="text" id="couponCode" placeholder="مثلاً: VIP20" style="text-transform:uppercase; direction:ltr; text-align:left;"></div>
-        <div class="form-group"><label>درصد تخفیف (%):</label><input type="number" id="discountPercent" min="1" max="100" placeholder="مثلاً: 20"></div>
-        <div class="form-group"><label>تاریخ انقضا:</label><input type="text" id="expiryDate" placeholder="1405/08/15"></div>
-        <div class="form-group"><label>حداکثر تعداد استفاده (اختیاری):</label><input type="number" id="maxUsage" placeholder="مثلاً: 100" value="100"></div>
-        <button class="btn-save" onclick="saveCampaign()">💾 ساخت کد تخفیف</button>
-        <div id="statusMsg" style="text-align:center;margin-top:12px;font-weight:700;font-size:14px;"></div>
+
+        <label for="campaignTitle">عنوان (برای خودتان):</label>
+        <input id="campaignTitle" maxlength="100" placeholder="مثلاً: تخفیف مشتریان وفادار">
+
+        <label for="couponCode">کد تخفیف (انگلیسی):</label>
+        <input id="couponCode" maxlength="30" dir="ltr" style="text-transform:uppercase;text-align:left" placeholder="VIP20">
+
+        <label for="discountPercent">درصد تخفیف:</label>
+        <input id="discountPercent" type="number" min="1" max="100" placeholder="20">
+
+        <label for="expiryDate">تاریخ انقضا:</label>
+        <input id="expiryDate" placeholder="1405/08/15">
+
+        <label for="maxUsage">حداکثر تعداد استفاده (اختیاری):</label>
+        <input id="maxUsage" type="number" min="1" value="100">
+
+        <button class="btn-main" id="saveBtn" type="button">💾 ساخت کد تخفیف</button>
+        <div class="message" id="statusMsg" role="status"></div>
     </div>
 
-    <div class="section-title">📋 کدهای فعال شما</div>
-    <div id="couponList"><p style="color:var(--text-muted);font-size:13px;">در حال دریافت...</p></div>
+    <div class="section-title">📋 کمپین‌های شما</div>
+    <div id="couponList"><p class="empty">در حال دریافت...</p></div>
 </div>
 
 <script type="module">
-import { supabase } from './js/supabase.js'; 
+import { supabase } from './js/supabase.js';
+
 const $ = id => document.getElementById(id);
 let currentUserId = null;
-let couponsData = []; 
+let couponsData = [];
+const campaignTexts = new Map();
+
+function showStatus(text, ok = false) {
+    $('statusMsg').textContent = text;
+    $('statusMsg').style.color = ok ? '#059669' : '#dc2626';
+}
+
+function fallbackText(c) {
+    return `🎁 ${c.title}\n\nمشتری عزیز، با کد ${c.code} از ${c.discount_percent}٪ تخفیف ویژه استفاده کنید.\n⏳ اعتبار تا: ${c.expiry_date}\n✨ منتظر حضور شما هستیم!`;
+}
+
+function encodeBase64Unicode(value) {
+    const bytes = new TextEncoder().encode(value);
+    let binary = '';
+    for (const byte of bytes) binary += String.fromCharCode(byte);
+    return btoa(binary);
+}
+
+async function copyText(text) {
+    try {
+        await navigator.clipboard.writeText(text);
+        alert('✅ متن کپی شد.');
+    } catch {
+        const box = document.createElement('textarea');
+        box.value = text;
+        box.style.position = 'fixed';
+        box.style.opacity = '0';
+        document.body.appendChild(box);
+        box.select();
+        const copied = document.execCommand('copy');
+        box.remove();
+        alert(copied ? '✅ متن کپی شد.' : 'کپی خودکار انجام نشد؛ متن را دستی کپی کنید.');
+    }
+}
+
+function element(tag, className, content) {
+    const el = document.createElement(tag);
+    if (className) el.className = className;
+    if (content !== undefined) el.textContent = content;
+    return el;
+}
+
+function addButton(parent, title, className, callback) {
+    const btn = element('button', className, title);
+    btn.type = 'button';
+    btn.addEventListener('click', callback);
+    parent.appendChild(btn);
+    return btn;
+}
 
 async function init() {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) { window.location.href = 'login.html'; return; }
+    const { data: { session }, error } = await supabase.auth.getSession();
+
+    if (error || !session) {
+        location.href = 'login.html';
+        return;
+    }
+
     currentUserId = session.user.id;
-    loadCoupons();
+    $('saveBtn').addEventListener('click', saveCampaign);
+    await loadCoupons();
 }
 
 async function loadCoupons() {
-    const { data, error } = await supabase.from('discount_campaigns').select('*').eq('user_id', currentUserId).order('created_at', { ascending: false });
-    const listDiv = $('couponList');
-    if (error || !data || data.length === 0) {
-        listDiv.innerHTML = '<p style="color:var(--text-muted);">هنوز کدی نساخته‌اید.</p>'; return;
+    const list = $('couponList');
+    list.replaceChildren(element('p', 'empty', 'در حال دریافت...'));
+
+    const { data, error } = await supabase
+        .from('discount_campaigns')
+        .select('*')
+        .eq('user_id', currentUserId)
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        list.replaceChildren(element('p', 'message', '❌ خطا در دریافت کمپین‌ها: ' + error.message));
+        return;
     }
-    couponsData = data; 
-    listDiv.innerHTML = '';
-    
-    data.forEach(c => {
-        const isActive = c.is_active !== false; 
-        const used = c.usage_count || 0;
-        const max = c.max_usage || 100;
-        
-        listDiv.innerHTML += `
-            <div class="coupon-card ${isActive ? '' : 'inactive'}">
-                <div class="toggle-status ${isActive ? 'active' : ''}" onclick="toggleStatus('${c.id}', ${isActive})"></div>
-                <div class="coupon-header">
-                    <div>
-                        <div class="coupon-title">${c.title}</div>
-                        <div class="coupon-code">${c.code}</div>
-                    </div>
-                    <div class="coupon-discount">${c.discount_percent}٪</div>
-                </div>
-                <div class="coupon-stats">
-                    <span>استفاده شده: ${used} از ${max}</span>
-                    <span>انقضا: ${c.expiry_date}</span>
-                </div>
-                <div class="share-btns">
-                    <button class="share-btn btn-ai" id="aiBtn-${c.id}" onclick="generateAIText('${c.id}', '${c.code}', '${c.discount_percent}', '${c.expiry_date}')">
-                        ✨ تولید متن با هوش مصنوعی و ارسال
-                    </button>
-                    <button class="share-btn btn-wa" onclick="shareCoupon('${c.code}', 'whatsapp')">واتساپ</button>
-                    <button class="share-btn btn-telegram" onclick="shareCoupon('${c.code}', 'telegram')">تلگرام</button>
-                    <button class="share-btn btn-eitaa" onclick="shareCoupon('${c.code}', 'eitaa')">ایتا</button>
-                    <button class="share-btn btn-rubika" onclick="shareCoupon('${c.code}', 'rubika')">روبیکا</button>
-                    <button class="share-btn btn-bulk" onclick="sendToBulkSms('${c.code}', '${c.discount_percent}', '${c.expiry_date}')">✉️ ارسال به پنل پیامک انبوه</button>
-                    <button class="share-btn btn-copy" onclick="shareCoupon('${c.code}', 'copy')">📋 کپی متن</button>
-                </div>
-            </div>
-        `;
+
+    couponsData = data || [];
+    list.replaceChildren();
+
+    if (!couponsData.length) {
+        list.appendChild(element('p', 'empty', 'هنوز کمپینی نساخته‌اید.'));
+        return;
+    }
+
+    couponsData.forEach(c => list.appendChild(renderCoupon(c)));
+}
+
+function renderCoupon(c) {
+    const active = c.is_active !== false;
+    const card = element('div', 'card coupon-card' + (active ? '' : ' inactive'));
+
+    const top = element('div', 'coupon-top');
+    const details = element('div');
+    details.appendChild(element('div', 'coupon-title', c.title || 'کمپین'));
+    details.appendChild(element('div', 'coupon-code', c.code || ''));
+    top.appendChild(details);
+    top.appendChild(element('div', 'discount', `${c.discount_percent}٪`));
+    card.appendChild(top);
+
+    const stats = element('div', 'stats');
+    stats.appendChild(element('span', '', `استفاده شده: ${c.usage_count || 0} از ${c.max_usage || 100}`));
+    stats.appendChild(element('span', '', `انقضا: ${c.expiry_date || 'ثبت نشده'}`));
+    card.appendChild(stats);
+
+    const statusButton = addButton(
+        card,
+        active ? '🟢 فعال — برای غیرفعال‌کردن بزنید' : '⚪ غیرفعال — برای فعال‌کردن بزنید',
+        'status-btn' + (active ? ' on' : ''),
+        async () => {
+            statusButton.disabled = true;
+            const { error } = await supabase
+                .from('discount_campaigns')
+                .update({ is_active: !active })
+                .eq('id', c.id)
+                .eq('user_id', currentUserId);
+
+            if (error) {
+                alert('خطا: ' + error.message);
+                statusButton.disabled = false;
+                return;
+            }
+
+            await loadCoupons();
+        }
+    );
+
+    const editor = element('div', 'editor');
+    editor.hidden = true;
+    editor.appendChild(element('h3', '', '✍️ متن آماده ارسال کمپین'));
+    editor.appendChild(element('p', 'hint', 'متن را بررسی و در صورت نیاز ویرایش کنید. تمام دکمه‌های ارسال از همین متن استفاده می‌کنند.'));
+
+    const textarea = element('textarea');
+    textarea.placeholder = 'متن کمپین اینجا نمایش داده می‌شود...';
+    textarea.value = campaignTexts.get(c.id) || fallbackText(c);
+    textarea.addEventListener('input', () => campaignTexts.set(c.id, textarea.value));
+    editor.appendChild(textarea);
+
+    const editorStatus = element('div', 'message');
+    editorStatus.setAttribute('role', 'status');
+    editor.appendChild(editorStatus);
+
+    const actions = element('div', 'actions');
+
+    function getText() {
+        const text = textarea.value.trim();
+        if (!text) {
+            editor.hidden = false;
+            alert('ابتدا متن کمپین را بنویسید یا تولید کنید.');
+            return null;
+        }
+        campaignTexts.set(c.id, text);
+        return text;
+    }
+
+    function checkActive() {
+        if (!active) {
+            alert('این کمپین غیرفعال است. ابتدا آن را فعال کنید.');
+            return false;
+        }
+        return true;
+    }
+
+    const aiBtn = addButton(actions, '✨ تولید متن اختصاصی با هوش مصنوعی', 'ai full', async () => {
+        if (!checkActive()) return;
+
+        editor.hidden = false;
+        aiBtn.disabled = true;
+        aiBtn.textContent = '⏳ در حال تولید متن...';
+        editorStatus.textContent = '';
+
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+
+            if (!session?.access_token) {
+                location.href = 'login.html';
+                return;
+            }
+
+            const response = await fetch('/api/generate-campaign-text', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify({
+                    title: c.title,
+                    code: c.code,
+                    percent: c.discount_percent,
+                    expiry: c.expiry_date
+                })
+            });
+
+            const result = await response.json();
+
+            if (!response.ok || !result.success || !result.text) {
+                throw new Error(result.error || 'تولید متن انجام نشد.');
+            }
+
+            textarea.value = result.text;
+            campaignTexts.set(c.id, result.text);
+            editorStatus.textContent = '✅ متن اختصاصی تولید شد. می‌توانید آن را ویرایش کنید.';
+            editorStatus.style.color = '#059669';
+
+        } catch (error) {
+            editorStatus.textContent = '❌ ' + (error.message || 'ارتباط با سرویس هوش مصنوعی برقرار نشد.');
+            editorStatus.style.color = '#dc2626';
+        } finally {
+            aiBtn.disabled = false;
+            aiBtn.textContent = '✨ تولید دوباره متن با هوش مصنوعی';
+        }
     });
+
+    addButton(actions, '💬 واتساپ', 'wa', () => {
+        if (!checkActive()) return;
+        const text = getText();
+        if (text) location.href = 'https://wa.me/?text=' + encodeURIComponent(text);
+    });
+
+    addButton(actions, '✈️ تلگرام', 'tg', () => {
+        if (!checkActive()) return;
+        const text = getText();
+        if (text) location.href =
+            'https://t.me/share/url?url=' +
+            encodeURIComponent('https://moshtriyar.ir') +
+            '&text=' + encodeURIComponent(text);
+    });
+
+    addButton(actions, '🟠 ایتا (کپی و بازکردن)', 'eitaa', async () => {
+        if (!checkActive()) return;
+        const text = getText();
+        if (!text) return;
+        await copyText(text);
+        location.href = 'https://eitaa.com/';
+    });
+
+    addButton(actions, '🟣 روبیکا (کپی و بازکردن)', 'rubika', async () => {
+        if (!checkActive()) return;
+        const text = getText();
+        if (!text) return;
+        await copyText(text);
+        location.href = 'https://rubika.ir/';
+    });
+
+    addButton(actions, '📤 اشتراک‌گذاری با برنامه‌های گوشی', 'native full', async () => {
+        if (!checkActive()) return;
+        const text = getText();
+        if (!text) return;
+
+        if (navigator.share) {
+            try {
+                await navigator.share({ text });
+            } catch (error) {
+                if (error.name !== 'AbortError') await copyText(text);
+            }
+        } else {
+            await copyText(text);
+            alert('در این دستگاه اشتراک‌گذاری مستقیم پشتیبانی نمی‌شود؛ متن کپی شد.');
+        }
+    });
+
+    addButton(actions, '✉️ انتقال متن به پنل پیامک انبوه', 'sms full', () => {
+        if (!checkActive()) return;
+        const text = getText();
+        if (!text) return;
+
+        // فقط متن منتقل می‌شود؛ ارسال واقعی در صفحه پیامک
+        // پس از انتخاب مخاطبان و تأیید نهایی انجام خواهد شد.
+        location.href = 'sms-bulk.html?text=' + encodeURIComponent(encodeBase64Unicode(text));
+    });
+
+    addButton(actions, '📋 کپی متن کمپین', 'copy full', async () => {
+        const text = getText();
+        if (text) await copyText(text);
+    });
+
+    addButton(actions, '✏️ نمایش / ویرایش متن', 'secondary full', () => {
+        editor.hidden = !editor.hidden;
+    });
+
+    card.appendChild(actions);
+    card.appendChild(editor);
+    return card;
 }
 
-// 🧠 تولید متن و انتقال با متد Base64 (ضد خطا)
-window.generateAIText = function(id, code, percent, expiry) {
-    const btn = $(`aiBtn-${id}`);
-    btn.innerHTML = 'در حال نوشتن متن... <span class="loading-spinner"></span>';
-    btn.disabled = true;
-
-    setTimeout(() => {
-        const templates = [
-            `🔥 فرصت استثنایی!\nفقط تا ${expiry} فرصت دارید با کد تخفیف ${code}، ${percent}٪ تخفیف ویژه بگیرید. منتظرتان هستیم! 🛒`,
-            `🎁 یک هدیه ویژه برای شما!\nبا کد ${code} در خرید خود ${percent}٪ تخفیف بگیرید. این فرصت را از دست ندهید! ⏳`,
-            `✨ خرید هوشمندانه، تخفیف باورنکردنی!\nهمین حالا از کد ${code} استفاده کنید و ${percent}٪ ارزان‌تر خرید کنید. 😍`,
-            `📢 مشتریان عزیز!\nبه مناسبت ویژه، تا ${expiry} با کد ${code} معادل ${percent}٪ تخفیف دریافت کنید. 🎉`,
-            `🚀 پرواز تخفیف‌ها شروع شد!\nبا کد اختصاصی ${code}، ${percent}٪ از خریدتان کم می‌شود. عجله کنید! 🏃‍♂️💨`,
-            `💎 پیشنهاد ویژه VIP!\nشما لایق بهترین‌ها هستید. با کد ${code} تا ${expiry}، ${percent}٪ تخفیف بگیرید. 🌟`
-        ];
-
-        const randomText = templates[Math.floor(Math.random() * templates.length)];
-        
-        // کد کردن متن به Base64
-        const encodedText = btoa(unescape(encodeURIComponent(randomText)));
-        
-        // انتقال به صفحه پیامک با پارامتر Base64
-        window.location.href = `sms-bulk.html?text=${encodedText}`;
-    }, 800);
-}
-
-window.saveCampaign = async function() {
+async function saveCampaign() {
     const title = $('campaignTitle').value.trim();
     const code = $('couponCode').value.trim().toUpperCase();
-    const percent = $('discountPercent').value;
+    const percent = Number($('discountPercent').value);
     const expiry = $('expiryDate').value.trim();
-    const maxUse = $('maxUsage').value || 100;
-    const status = $('statusMsg');
-    if (!title || !code || !percent) { status.innerHTML = '<span style="color:#dc2626;">لطفاً فیلدها را پر کنید.</span>'; return; }
-    const { error } = await supabase.from('discount_campaigns').insert({ user_id: currentUserId, title: title, code: code, discount_percent: parseInt(percent), expiry_date: expiry, max_usage: parseInt(maxUse), usage_count: 0, is_active: true });
-    if (error) { status.innerHTML = `<span style="color:#dc2626;">❌ خطا: ${error.message}</span>`; } 
-    else {
-        status.innerHTML = '<span style="color:#16a34a;">✅ کد ساخته شد!</span>';
-        $('campaignTitle').value = ''; $('couponCode').value = ''; $('discountPercent').value = ''; $('expiryDate').value = '';
-        loadCoupons();
+    const maxUse = $('maxUsage').value.trim()
+        ? Number($('maxUsage').value)
+        : 100;
+
+    if (!title || !/^[A-Z0-9_-]{3,30}$/.test(code)) {
+        showStatus('عنوان را وارد کنید. کد تخفیف باید ۳ تا ۳۰ کاراکتر انگلیسی، عدد، خط تیره یا زیرخط باشد.');
+        return;
+    }
+
+    if (!Number.isInteger(percent) || percent < 1 || percent > 100) {
+        showStatus('درصد تخفیف باید عددی بین ۱ تا ۱۰۰ باشد.');
+        return;
+    }
+
+    if (!/^\d{4}\/\d{2}\/\d{2}$/.test(expiry)) {
+        showStatus('تاریخ انقضا را به شکل 1405/08/15 وارد کنید.');
+        return;
+    }
+
+    if (!Number.isSafeInteger(maxUse) || maxUse < 1) {
+        showStatus('حداکثر تعداد استفاده معتبر نیست.');
+        return;
+    }
+
+    const btn = $('saveBtn');
+    btn.disabled = true;
+    showStatus('');
+
+    try {
+        const { error } = await supabase.from('discount_campaigns').insert({
+            user_id: currentUserId,
+            title,
+            code,
+            discount_percent: percent,
+            expiry_date: expiry,
+            max_usage: maxUse,
+            usage_count: 0,
+            is_active: true
+        });
+
+        if (error) throw error;
+
+        showStatus('✅ کمپین با موفقیت ساخته شد.', true);
+        $('campaignTitle').value = '';
+        $('couponCode').value = '';
+        $('discountPercent').value = '';
+        $('expiryDate').value = '';
+        await loadCoupons();
+
+    } catch (error) {
+        showStatus('❌ خطا در ساخت کمپین: ' + error.message);
+    } finally {
+        btn.disabled = false;
     }
 }
 
-window.toggleStatus = async function(id, currentStatus) {
-    await supabase.from('discount_campaigns').update({ is_active: !currentStatus }).eq('id', id);
-    loadCoupons();
-}
-
-window.sendToBulkSms = function(code, percent, expiry) {
-    const text = `🎁 مشتری عزیز، با کد تخفیف ${code} می‌توانید ${percent}٪ تخفیف بگیرید. اعتبار تا: ${expiry}`;
-    const encodedText = btoa(unescape(encodeURIComponent(text)));
-    window.location.href = `sms-bulk.html?text=${encodedText}`;
-}
-
-window.shareCoupon = function(code, platform) {
-    const coupon = couponsData.find(c => c.code === code);
-    if(!coupon) return;
-    const text = `🎁 مشتری عزیز، با کد تخفیف ${code} می‌توانید ${coupon.discount_percent}٪ تخفیف بگیرید.\n⏳ اعتبار تا: ${coupon.expiry_date}`;
-    if (platform === 'whatsapp') window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-    else if (platform === 'telegram') window.open(`https://t.me/share/url?url=${encodeURIComponent(window.location.origin)}&text=${encodeURIComponent(text)}`, '_blank');
-    else if (platform === 'eitaa') window.open(`https://eitaa.com/share/url?url=${encodeURIComponent(window.location.origin)}&text=${encodeURIComponent(text)}`, '_blank');
-    else if (platform === 'rubika') window.open(`https://rubika.ir/share/url?url=${encodeURIComponent(window.location.origin)}&text=${encodeURIComponent(text)}`, '_blank');
-    else if (platform === 'copy') navigator.clipboard.writeText(text).then(() => alert('✅ متن کپی شد.'));
-}
 init();
 </script>
 </body>
