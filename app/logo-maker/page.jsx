@@ -1,192 +1,248 @@
-"use client";
+'use client';
+
 import React, { useState } from 'react';
+import { Download, Sparkles, AlertCircle, RefreshCw, CheckCircle2 } from 'lucide-react';
 
-export default function RealLogoGenerator() {
-  const [businessName, setBusinessName] = useState('کافه ماهان');
-  const [industry, setIndustry] = useState('کافه');
-  const [shape, setShape] = useState('دایره');
-  const [color, setColor] = useState('طلایی');
-  
-  const [logos, setLogos] = useState([]);
+export default function LogoMakerPage() {
+  const [formData, setFormData] = useState({
+    businessName: '',
+    industry: '',
+    shape: 'square',
+    color: 'طلا و مشکی',
+    style: 'minimal',
+  });
+
   const [loading, setLoading] = useState(false);
+  const [logoUrl, setLogoUrl] = useState(null);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  // پالت رنگی حرفه‌ای
-  const colors = {
-    'قرمز': '#E63946',
-    'آبی': '#1D3557',
-    'سبز': '#2A9D8F',
-    'مشکی': '#111111',
-    'طلایی': '#D4AF37',
-    'نقره‌ای': '#6B7280'
+  // پرامپت‌ساز حرفه‌ای بر اساس ورودی‌های کاربر
+  const generateProfessionalPrompt = () => {
+    const { businessName, industry, shape, color, style } = formData;
+
+    const shapeDescriptions = {
+      square: 'square frame, balanced proportions',
+      circle: 'circular emblem, round composition',
+      rectangle: 'horizontal rectangular layout',
+      abstract: 'organic abstract shape',
+    };
+
+    const styleDescriptions = {
+      minimal: 'flat design, minimalist vector logo, clean typography, luxury branding',
+      modern: 'modern tech style, sharp geometric lines, premium corporate identity',
+      classic: 'vintage elegant seal, classic luxury mark, detailed crafting',
+      3d: '3D glossy metallic icon, modern isometric, high-end reflection',
+    };
+
+    return `Professional flat vector logo icon for a business named "${businessName}" in the field of "${industry}". ${styleDescriptions[style]}, ${shapeDescriptions[shape]}, primary colors: ${color}. White background, high resolution, no clutter, photorealistic vector art, centered design, highly detailed, centered emblem.`;
   };
 
-  // تابع تولید لوگوی SVG
-  const createSVG = (name, type, shapeType, colorHex, variant) => {
-    // ۱. انتخاب آیکون بر اساس صنف
-    let icon = '';
-    
-    if (type === 'کافه' || type === 'رستوران') {
-      // آیکون فنجان یا برگ
-      icon = variant === 0 
-        ? `<path d="M30,40 Q50,10 70,40 Q70,70 50,80 Q30,70 30,40 Z" fill="${colorHex}"/><circle cx="50" cy="45" r="10" fill="#fff"/>`
-        : `<circle cx="50" cy="45" r="25" fill="none" stroke="${colorHex}" stroke-width="6"/><path d="M40,45 L60,45" stroke="${colorHex}" stroke-width="4"/>`;
-    } else if (type === 'فناوری' || type === 'املاک') {
-      // آیکون هندسی و تیز
-      icon = variant === 0
-        ? `<polygon points="50,15 85,40 85,70 50,85 15,70 15,40" fill="${colorHex}"/><polygon points="50,30 70,45 70,65 50,75 30,65 30,45" fill="#fff"/>`
-        : `<rect x="20" y="20" width="60" height="60" rx="10" fill="${colorHex}"/><rect x="35" y="35" width="30" height="30" fill="#fff"/>`;
-    } else {
-      // آیکون عمومی (پوشاک، آرایشی و...)
-      icon = variant === 0
-        ? `<path d="M50,15 L85,50 L50,85 L15,50 Z" fill="${colorHex}"/><circle cx="50" cy="50" r="12" fill="#fff"/>`
-        : `<circle cx="35" cy="50" r="20" fill="${colorHex}" opacity="0.8"/><circle cx="65" cy="50" r="20" fill="${colorHex}"/>`;
+  const handleGenerateLogo = async (e) => {
+    e.preventDefault();
+    if (!formData.businessName || !formData.industry) {
+      setErrorMessage('لطفاً نام کسب‌وکار و حوزه فعالیت را وارد کنید.');
+      return;
     }
 
-    // ۲. ساخت قالب اصلی لوگو
-    return `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 200" width="100%" height="100%">
-      <rect width="300" height="200" fill="#ffffff" />
-      
-      <!-- آیکون -->
-      <g transform="translate(100, 10)">${icon}</g>
-      
-      <!-- نام برند -->
-      <text x="150" y="150" font-family="Tahoma, Arial, sans-serif" font-size="24" font-weight="bold" fill="#111" text-anchor="middle">
-        ${name}
-      </text>
-      
-      <!-- خط جداکننده و نوع صنف -->
-      <line x1="100" y1="160" x2="200" y2="160" stroke="${colorHex}" stroke-width="2"/>
-      <text x="150" y="180" font-family="Tahoma, Arial, sans-serif" font-size="12" fill="#666" text-anchor="middle" letter-spacing="2">
-        ${type.toUpperCase()}
-      </text>
-    </svg>
-    `;
-  };
-
-  // تابع تولید ۴ طرح مختلف
-  const handleGenerate = () => {
     setLoading(true);
-    setTimeout(() => {
-      const hex = colors[color] || '#1D3557';
-      
-      // تولید ۴ طرح با هندسه و چیدمان متفاوت
-      const newLogos = [
-        createSVG(businessName, industry, shape, hex, 0),
-        createSVG(businessName, industry, shape, hex, 1),
-        createSVG(businessName, industry, shape, hex, 0),
-        createSVG(businessName, industry, shape, hex, 1)
-      ];
-      
-      setLogos(newLogos);
+    setErrorMessage('');
+    setLogoUrl(null);
+
+    const prompt = generateProfessionalPrompt();
+
+    try {
+      // استفاده از سرویس Pollinations AI (رایگان، بدون نیاز به API Key و بسیار باکیفیت)
+      const encodedPrompt = encodeURIComponent(prompt);
+      const seed = Math.floor(Math.random() * 1000000);
+      const generatedImageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&seed=${seed}&nologo=true&model=flux`;
+
+      // پیش‌بارگذاری تصویر جهت اطمینان از ساخت کامل
+      const img = new Image();
+      img.src = generatedImageUrl;
+      img.onload = () => {
+        setLogoUrl(generatedImageUrl);
+        setLoading(false);
+      };
+      img.onerror = () => {
+        throw new Error('خطا در دریافت تصویر از سرور. لطفاً دوباره تلاش کنید.');
+      };
+    } catch (err) {
+      console.error('Logo generation error:', err);
+      setErrorMessage(err.message || 'خطا در ساخت لوگو. لطفاً مجدداً تلاش کنید.');
       setLoading(false);
-    }, 500); // یک تاخیر کوتاه برای حس واقعی بودن
+    }
   };
 
-  // تابع دانلود فایل SVG
-  const downloadSVG = (svgCode, index) => {
-    const blob = new Blob([svgCode], { type: "image/svg+xml" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `logo-${businessName}-${index + 1}.svg`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+  // تابع دانلود تصویر لوگو
+  const handleDownload = async () => {
+    if (!logoUrl) return;
+
+    try {
+      const response = await fetch(logoUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `logo-${formData.businessName || 'moshtriyar'}.png`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      alert('خطا در دانلود فایل. می‌توانید روی تصویر راست کلیک کرده و Save Image را بزنید.');
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8 flex justify-center" dir="rtl">
-      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl p-6 md:p-8">
+    <div className="min-h-screen bg-slate-50 dir-rtl p-4 md:p-8 flex items-center justify-center font-sans">
+      <div className="max-w-2xl w-full bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
         
-        <h1 className="text-2xl font-bold text-center mb-6 text-gray-800">دستیار طراحی لوگو</h1>
-        
-        {/* فرم ورودی */}
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">نام کسب و کار</label>
-            <input 
-              type="text" 
-              value={businessName} 
-              onChange={(e) => setBusinessName(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" 
-              placeholder="مثلا: کافه ماهان" 
-            />
+        {/* هدر */}
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 text-white text-center">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Sparkles className="w-6 h-6 text-yellow-300 animate-pulse" />
+            <h1 className="text-2xl font-bold">دستیار هوشمند طراحی لوگو</h1>
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">حوزه فعالیت</label>
-            <select 
-              value={industry} 
-              onChange={(e) => setIndustry(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-            >
-              <option value="کافه">کافه / رستوران</option>
-              <option value="فناوری">فناوری / استارتاپ</option>
-              <option value="پوشاک">پوشاک / فروشگاه</option>
-              <option value="املاک">املاک / مشاوره</option>
-            </select>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">رنگ اصلی</label>
-              <select 
-                value={color} 
-                onChange={(e) => setColor(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-              >
-                {Object.keys(colors).map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">شکل هندسی</label>
-              <select 
-                value={shape} 
-                onChange={(e) => setShape(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-              >
-                <option value="دایره">دایره / منحنی</option>
-                <option value="مستطیل">مستطیل / گوشه‌دار</option>
-              </select>
-            </div>
-          </div>
-
-          <button 
-            onClick={handleGenerate}
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-3 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all mt-4"
-          >
-            {loading ? 'در حال طراحی...' : '🚀 شروع ساخت لوگو'}
-          </button>
+          <p className="text-blue-100 text-sm">ویژه مشترکین VIP مشتری یار</p>
         </div>
 
-        {/* نمایش نتایج */}
-        {logos.length > 0 && (
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <h2 className="text-lg font-bold text-green-600 mb-4 text-center">چهار طرح آماده شد!</h2>
-            
-            <div className="grid grid-cols-2 gap-4">
-              {logos.map((svg, index) => (
-                <div key={index} className="border border-gray-200 rounded-xl p-2 bg-gray-50 flex flex-col items-center">
-                  {/* نمایش SVG */}
-                  <div 
-                    className="w-full aspect-square mb-2 bg-white rounded-lg overflow-hidden"
-                    dangerouslySetInnerHTML={{ __html: svg }} 
-                  />
-                  {/* دکمه دانلود */}
-                  <button 
-                    onClick={() => downloadSVG(svg, index)}
-                    className="w-full bg-gray-900 text-white text-sm py-2 rounded-md hover:bg-black transition-colors"
-                  >
-                    دانلود SVG
-                  </button>
-                </div>
-              ))}
+        <div className="p-6 md:p-8">
+          {/* نمایش پیام خطا */}
+          {errorMessage && (
+            <div className="mb-6 bg-red-50 border border-red-200 text-red-600 rounded-2xl p-4 flex items-center gap-3 text-sm">
+              <AlertCircle className="w-5 h-5 flex-shrink-0" />
+              <span>{errorMessage}</span>
             </div>
-          </div>
-        )}
+          )}
 
+          {/* فرم دریافت اطلاعات */}
+          <form onSubmit={handleGenerateLogo} className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">
+                نام کسب‌وکار یا برند *
+              </label>
+              <input
+                type="text"
+                placeholder="مثلاً: طلا راد"
+                value={formData.businessName}
+                onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-slate-800"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">
+                حوزه فعالیت / شغل *
+              </label>
+              <input
+                type="text"
+                placeholder="مثلاً: طلافروشی، کافه، املاک، پوشاک"
+                value={formData.industry}
+                onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-slate-800"
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">شکل لوگو</label>
+                <select
+                  value={formData.shape}
+                  onChange={(e) => setFormData({ ...formData, shape: e.target.value })}
+                  className="w-full px-3 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-800"
+                >
+                  <option value="square">مربع (Square)</option>
+                  <option value="circle">دایره (Circle)</option>
+                  <option value="rectangle">مستطیل (Rectangle)</option>
+                  <option value="abstract">انتزاعی (Abstract)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">سبک طراحی</label>
+                <select
+                  value={formData.style}
+                  onChange={(e) => setFormData({ ...formData, style: e.target.value })}
+                  className="w-full px-3 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-800"
+                >
+                  <option value="minimal">مینیمال و مدرن</option>
+                  <option value="modern">شرکتی و هندسی</option>
+                  <option value="classic">کلاسیک و لوکس</option>
+                  <option value="3d">سه‌بعدی و براق</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">رنگ‌های اصلی</label>
+                <input
+                  type="text"
+                  placeholder="مثلاً: طلایی و قرمز"
+                  value={formData.color}
+                  onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                  className="w-full px-3 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {loading ? (
+                <>
+                  <RefreshCw className="w-5 h-5 animate-spin" />
+                  <span>هوش مصنوعی در حال طراحی لوگو است... (لطفاً ۱۰ تا ۲۰ ثانیه صبر کنید)</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-5 h-5" />
+                  <span>شروع ساخت لوگو حرفه‌ای</span>
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* بخش نمایش خروجی و دانلود */}
+          {logoUrl && (
+            <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col items-center animate-fade-in">
+              <div className="flex items-center gap-2 text-emerald-600 font-semibold mb-4">
+                <CheckCircle2 className="w-5 h-5" />
+                <span>لوگوی اختصاصی شما آماده شد!</span>
+              </div>
+
+              <div className="relative group w-64 h-64 rounded-2xl overflow-hidden shadow-2xl border-4 border-slate-100 bg-white mb-6">
+                <img
+                  src={logoUrl}
+                  alt="تولید شده توسط هوش مصنوعی مشتری یار"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+
+              <div className="flex gap-4 w-full max-w-md">
+                <button
+                  onClick={handleDownload}
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
+                >
+                  <Download className="w-5 h-5" />
+                  <span>دانلود لوگو با کیفیت بالا</span>
+                </button>
+
+                <button
+                  onClick={handleGenerateLogo}
+                  disabled={loading}
+                  className="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition-all flex items-center justify-center"
+                  title="تولید طرح جدید"
+                >
+                  <RefreshCw className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          )}
+
+        </div>
       </div>
     </div>
   );
