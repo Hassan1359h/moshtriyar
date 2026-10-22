@@ -3,8 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 
 /*
  * Moshtriyar Logo Studio
- * Free, rule-based vector logo generator.
- * Output: four SVG strings compatible with dashboard.html
+ * Free rule-based SVG logo generator
+ * Four different designs compatible with dashboard.html
  */
 
 const COLORS = {
@@ -150,6 +150,9 @@ function getPalette(input, category) {
     return selected.slice(0, 3);
 }
 
+/*
+ * Original symbols used by designs 1 and 2.
+ */
 function symbolFor(category, primary, secondary, accent) {
     const line = `fill="none" stroke="${primary}"
         stroke-width="10" stroke-linecap="round"
@@ -342,52 +345,296 @@ function textElement({
             fill="${color}">${escapeXml(value)}</text>`;
 }
 
-// A refined, larger outline used only by the new third design.
-function modernFrame(shape, primary, accent) {
-    if (shape === 'abstract') {
-        return `
-            <path d="M-144 -56 Q-135 -142 -48 -151
-                M48 -151 Q135 -142 144 -56
-                M144 56 Q135 142 48 151
-                M-48 151 Q-135 142 -144 56"
-                fill="none" stroke="${primary}"
-                stroke-width="5" stroke-linecap="round"/>
-            <circle cx="-144" cy="0" r="5" fill="${accent}"/>
-            <circle cx="144" cy="0" r="5" fill="${accent}"/>`;
-    }
+/*
+ * New independent geometric symbol for design 3.
+ */
+function geometricSymbol(category, primary, secondary, accent) {
+    const outline = `fill="none" stroke="${primary}"
+        stroke-width="9" stroke-linecap="round"
+        stroke-linejoin="round"`;
 
-    if (shape === 'square') {
-        return `
-            <rect x="-151" y="-151" width="302" height="302"
-                rx="48" fill="none" stroke="${primary}"
-                stroke-width="5"/>
-            <path d="M-117 -125 H-78 M78 125 H117"
-                stroke="${accent}" stroke-width="6"
-                stroke-linecap="round"/>`;
-    }
+    switch (category) {
+        case 'jewelry':
+            return `
+                <path d="M-106 -26 L-61 -82 H61 L106 -26
+                    L0 94Z" ${outline}/>
+                <path d="M-106 -26 H106
+                    M-61 -82 L-30 -26 L0 94
+                    M61 -82 L30 -26 L0 94"
+                    fill="none" stroke="${primary}"
+                    stroke-width="7" stroke-linejoin="round"/>
+                <path d="M-30 -26 H30 L0 94Z"
+                    fill="${secondary}"/>
+                <path d="M-61 -82 H61 L30 -26 H-30Z"
+                    fill="${accent}"/>
+                <path d="M0 -116 V-99 M-9 -108 H9"
+                    stroke="${accent}" stroke-width="5"
+                    stroke-linecap="round"/>`;
 
-    if (shape === 'rectangle') {
-        return `
-            <rect x="-177" y="-137" width="354" height="274"
-                rx="49" fill="none" stroke="${primary}"
-                stroke-width="5"/>
-            <path d="M-140 -112 H-100 M100 112 H140"
-                stroke="${accent}" stroke-width="6"
-                stroke-linecap="round"/>`;
-    }
+        case 'beauty':
+            return `
+                <path d="M0 91 C-86 34 -84 -31 -26 -37
+                    C-15 -73 -3 -91 0 -98
+                    C3 -91 15 -73 26 -37
+                    C84 -31 86 34 0 91Z" ${outline}/>
+                <path d="M0 78 Q-39 1 0 -75
+                    Q39 1 0 78Z" fill="${secondary}"/>
+                <path d="M-67 5 Q-33 8 -12 43
+                    M67 5 Q33 8 12 43"
+                    fill="none" stroke="${accent}"
+                    stroke-width="6" stroke-linecap="round"/>`;
 
-    return `
-        <circle r="151" fill="none"
-            stroke="${primary}" stroke-width="5"/>
-        <path d="M-35 -158 H35 M-35 158 H35"
-            stroke="${accent}" stroke-width="6"
-            stroke-linecap="round"/>`;
+        case 'food':
+            return `
+                <path d="M0 -96 C-17 -53 -71 -24 -71 27
+                    A71 71 0 0 0 71 27
+                    C71 -24 17 -53 0 -96Z" ${outline}/>
+                <path d="M-38 22 Q0 -28 38 22
+                    Q0 78 -38 22Z" fill="${secondary}"/>
+                <path d="M0 -4 Q-18 24 0 52"
+                    fill="none" stroke="${accent}"
+                    stroke-width="7" stroke-linecap="round"/>`;
+
+        case 'fashion':
+            return `
+                <path d="M-65 -65 L-26 -91
+                    Q0 -45 26 -91 L65 -65
+                    L94 -4 L57 14 L42 -14
+                    V91 H-42 V-14 L-57 14
+                    L-94 -4Z" ${outline}/>
+                <path d="M-26 -91 Q0 -20 26 -91"
+                    fill="none" stroke="${accent}"
+                    stroke-width="7"/>
+                <path d="M-42 46 H42 V91 H-42Z"
+                    fill="${secondary}"/>`;
+
+        case 'technology':
+            return `
+                <path d="M-77 -66 H31 L77 -20
+                    V66 H-31 L-77 20Z" ${outline}/>
+                <path d="M-77 -20 H-18 V-66
+                    M18 66 V20 H77" ${outline}/>
+                <circle cx="-18" cy="-20" r="13"
+                    fill="${secondary}"/>
+                <circle cx="18" cy="20" r="13"
+                    fill="${accent}"/>
+                <path d="M-5 -7 L5 7"
+                    stroke="${primary}" stroke-width="9"/>`;
+
+        case 'property':
+            return `
+                <path d="M-96 -7 L0 -87 L96 -7
+                    M-70 -26 V84 H70 V-26" ${outline}/>
+                <path d="M-15 84 V12 H22 V84"
+                    fill="${secondary}"/>
+                <path d="M-45 5 H-26 V27 H-45
+                    M35 5 H54 V27 H35"
+                    fill="${accent}"/>`;
+
+        case 'medical':
+            return `
+                <path d="M-27 -88 H27 V-27 H88
+                    V27 H27 V88 H-27 V27
+                    H-88 V-27 H-27Z" ${outline}/>
+                <path d="M-67 4 H-33 L-15 -22
+                    L4 32 L24 -11 L38 4 H67"
+                    fill="none" stroke="${secondary}"
+                    stroke-width="8" stroke-linejoin="round"
+                    stroke-linecap="round"/>
+                <circle cx="4" cy="32" r="5"
+                    fill="${accent}"/>`;
+
+        case 'education':
+            return `
+                <path d="M-91 -30 L0 -77 L91 -30
+                    L0 17Z" ${outline}/>
+                <path d="M-57 0 V46 Q0 82 57 46 V0"
+                    fill="none" stroke="${secondary}"
+                    stroke-width="9" stroke-linecap="round"/>
+                <path d="M91 -30 V43"
+                    stroke="${accent}" stroke-width="7"/>
+                <circle cx="91" cy="49" r="8"
+                    fill="${accent}"/>`;
+
+        case 'fitness':
+            return `
+                <path d="M-102 -38 V38
+                    M-75 -58 V58 M-46 0 H46
+                    M75 -58 V58 M102 -38 V38"
+                    fill="none" stroke="${primary}"
+                    stroke-width="17" stroke-linecap="round"/>
+                <path d="M-46 0 H46"
+                    stroke="${secondary}" stroke-width="11"/>
+                <circle r="8" fill="${accent}"/>`;
+
+        case 'automotive':
+            return `
+                <path d="M-102 32 L-69 -28
+                    Q0 -68 69 -28 L102 32
+                    V56 H-102Z" ${outline}/>
+                <path d="M-64 -24 Q0 -47 64 -24
+                    L79 12 H-79Z" fill="${secondary}"/>
+                <circle cx="-62" cy="51" r="12"
+                    fill="${accent}"/>
+                <circle cx="62" cy="51" r="12"
+                    fill="${accent}"/>`;
+
+        case 'legal':
+            return `
+                <path d="M0 -95 V83 M-78 -48 H78" ${outline}/>
+                <path d="M-78 -48 L-105 22 H-51Z
+                    M78 -48 L51 22 H105Z"
+                    fill="none" stroke="${secondary}"
+                    stroke-width="8" stroke-linejoin="round"/>
+                <path d="M-46 83 H46 M-61 96 H61" ${outline}/>
+                <circle cy="-95" r="9" fill="${accent}"/>`;
+
+        default:
+            return `
+                <path d="M0 -104 L28 -28 L104 0
+                    L28 28 L0 104 L-28 28
+                    L-104 0 L-28 -28Z" ${outline}/>
+                <path d="M0 -54 L15 -15 L54 0
+                    L15 15 L0 54 L-15 15
+                    L-54 0 L-15 -15Z"
+                    fill="${secondary}"/>
+                <circle r="11" fill="${accent}"/>`;
+    }
+}
+
+/*
+ * Small occupation-specific ornaments for design 4.
+ * The business name remains the main part of the wordmark.
+ */
+function wordmarkAccent(category, primary, accent) {
+    switch (category) {
+        case 'jewelry':
+            return `
+                <path d="M-39 -7 L-20 -30 H20 L39 -7
+                    L0 33Z"
+                    fill="none" stroke="${primary}"
+                    stroke-width="5" stroke-linejoin="round"/>
+                <path d="M-39 -7 H39 M-20 -30 L-10 -7
+                    L0 33 L10 -7 L20 -30"
+                    fill="none" stroke="${accent}"
+                    stroke-width="3"/>`;
+
+        case 'beauty':
+            return `
+                <path d="M0 30 Q-42 5 -24 -21
+                    Q-8 -35 0 -10
+                    Q8 -35 24 -21 Q42 5 0 30Z"
+                    fill="none" stroke="${primary}"
+                    stroke-width="5"/>
+                <path d="M0 26 V-25"
+                    stroke="${accent}" stroke-width="4"/>`;
+
+        case 'food':
+            return `
+                <path d="M0 -32 C-9 -12 -29 -2 -29 13
+                    A29 29 0 0 0 29 13
+                    C29 -2 9 -12 0 -32Z"
+                    fill="none" stroke="${primary}"
+                    stroke-width="5"/>
+                <path d="M-11 13 Q0 -3 11 13
+                    Q0 27 -11 13Z"
+                    fill="${accent}"/>`;
+
+        case 'fashion':
+            return `
+                <path d="M-29 -19 L-10 -32
+                    Q0 -12 10 -32 L29 -19
+                    L37 4 L20 11 L15 2
+                    V30 H-15 V2 L-20 11
+                    L-37 4Z"
+                    fill="none" stroke="${primary}"
+                    stroke-width="5" stroke-linejoin="round"/>`;
+
+        case 'technology':
+            return `
+                <path d="M0 -32 L28 -16 V16
+                    L0 32 L-28 16 V-16Z"
+                    fill="none" stroke="${primary}"
+                    stroke-width="5"/>
+                <circle cx="-11" cy="-7" r="5"
+                    fill="${accent}"/>
+                <circle cx="11" cy="8" r="5"
+                    fill="${accent}"/>
+                <path d="M-7 -3 L7 4"
+                    stroke="${primary}" stroke-width="4"/>`;
+
+        case 'property':
+            return `
+                <path d="M-34 0 L0 -29 L34 0
+                    M-25 -7 V29 H25 V-7
+                    M-7 29 V7 H8 V29"
+                    fill="none" stroke="${primary}"
+                    stroke-width="5" stroke-linejoin="round"/>`;
+
+        case 'medical':
+            return `
+                <path d="M-10 -30 H10 V-10 H30
+                    V10 H10 V30 H-10 V10
+                    H-30 V-10 H-10Z"
+                    fill="${primary}"/>
+                <path d="M-22 1 H-9 L-2 -8
+                    L6 11 L12 1 H22"
+                    fill="none" stroke="${accent}"
+                    stroke-width="3"/>`;
+
+        case 'education':
+            return `
+                <path d="M-34 -9 L0 -27 L34 -9
+                    L0 9Z"
+                    fill="none" stroke="${primary}"
+                    stroke-width="5"/>
+                <path d="M-20 2 V17 Q0 31 20 17 V2"
+                    fill="none" stroke="${accent}"
+                    stroke-width="5"/>`;
+
+        case 'fitness':
+            return `
+                <path d="M-34 -15 V15 M-23 -23 V23
+                    M-16 0 H16 M23 -23 V23
+                    M34 -15 V15"
+                    fill="none" stroke="${primary}"
+                    stroke-width="7" stroke-linecap="round"/>`;
+
+        case 'automotive':
+            return `
+                <path d="M-34 9 L-23 -13
+                    Q0 -28 23 -13 L34 9
+                    V22 H-34Z"
+                    fill="none" stroke="${primary}"
+                    stroke-width="5" stroke-linejoin="round"/>
+                <circle cx="-20" cy="20" r="5"
+                    fill="${accent}"/>
+                <circle cx="20" cy="20" r="5"
+                    fill="${accent}"/>`;
+
+        case 'legal':
+            return `
+                <path d="M0 -32 V29 M-27 -17 H27
+                    M-27 -17 L-36 9 H-18Z
+                    M27 -17 L18 9 H36Z
+                    M-17 29 H17"
+                    fill="none" stroke="${primary}"
+                    stroke-width="5" stroke-linejoin="round"/>`;
+
+        default:
+            return `
+                <path d="M0 -34 L10 -10 L34 0
+                    L10 10 L0 34 L-10 10
+                    L-34 0 L-10 -10Z"
+                    fill="${primary}"/>
+                <circle r="7" fill="${accent}"/>`;
+    }
 }
 
 function createLogo(name, type, shape, palette, variant) {
     const [primary, secondary, accent] = palette;
-
     const category = categoryOf(type + ' ' + name);
+
     const symbol = symbolFor(
         category,
         primary,
@@ -416,7 +663,7 @@ function createLogo(name, type, shape, palette, variant) {
     let artwork = '';
 
     if (variant === 0) {
-        // Style 1: signature — unchanged.
+        // DESIGN 1: Original signature.
         artwork = `
             <g transform="translate(384 270)">
                 ${frameFor(shape, primary)}
@@ -442,8 +689,9 @@ function createLogo(name, type, shape, palette, variant) {
                 color: primary,
                 weight: 500
             })}`;
+
     } else if (variant === 1) {
-        // Style 2: luxury seal — unchanged.
+        // DESIGN 2: Original luxury seal.
         artwork = `
             <circle cx="384" cy="292" r="172"
                 fill="none"
@@ -478,107 +726,107 @@ function createLogo(name, type, shape, palette, variant) {
             <path d="M384 105 L392 120
                 L384 135 L376 120Z"
                 fill="${accent}"/>`;
+
     } else if (variant === 2) {
-        // Style 3: modern minimal emblem.
-        // No horizontal advertising card or side-by-side layout.
+        // DESIGN 3: Independent minimal geometric symbol.
+        const geometric = geometricSymbol(
+            category,
+            primary,
+            secondary,
+            accent
+        );
+
         artwork = `
-            <g transform="translate(384 274)">
-                ${modernFrame(shape, primary, accent)}
-                <g transform="scale(1.04)">
-                    ${symbol}
-                </g>
+            <g transform="translate(384 272) scale(1.42)">
+                ${geometric}
             </g>
 
-            <path d="M315 461 H453"
-                fill="none" stroke="${accent}"
-                stroke-width="4" stroke-linecap="round"/>
+            <path d="M359 449 H409"
+                fill="none"
+                stroke="${accent}"
+                stroke-width="5"
+                stroke-linecap="round"/>
 
             ${textElement({
-                y: 531,
+                y: 532,
                 value: name,
-                size: Math.min(nameSize, 49),
+                size: Math.min(nameSize, 53),
                 color: secondary,
                 weight: 800
             })}
 
             ${textElement({
-                y: 578,
+                y: 583,
                 value: type,
                 size: typeSize,
                 color: primary,
                 weight: 500
-            })}
+            })}`;
 
-            <circle cx="294" cy="568" r="3.5"
-                fill="${accent}"/>
-            <circle cx="474" cy="568" r="3.5"
-                fill="${accent}"/>`;
     } else {
-        // Style 4: premium heritage mark.
-        // Full occupation symbol instead of a single initial.
+        // DESIGN 4: Luxury Persian typography.
+        const ornament = wordmarkAccent(
+            category,
+            primary,
+            accent
+        );
+
+        const wordmarkSize =
+            letters.length > 36 ? 32 :
+            letters.length > 28 ? 39 :
+            letters.length > 20 ? 47 :
+            letters.length > 13 ? 59 : 76;
+
+        const smallTypeSize =
+            [...type].length > 34 ? 18 :
+            [...type].length > 22 ? 21 : 25;
+
         artwork = `
-            <defs>
-                <linearGradient id="premiumMark" x1="0" y1="0"
-                    x2="1" y2="1">
-                    <stop offset="0%" stop-color="${primary}"/>
-                    <stop offset="100%" stop-color="${accent}"/>
-                </linearGradient>
-            </defs>
-
-            <circle cx="384" cy="274" r="169"
-                fill="none"
-                stroke="url(#premiumMark)"
-                stroke-width="3"/>
-
-            <circle cx="384" cy="274" r="155"
-                fill="none"
-                stroke="${primary}"
-                stroke-width="1"
-                opacity="0.55"/>
-
-            <path d="M384 91 L391 105 L384 119
-                L377 105Z"
-                fill="${accent}"/>
-
-            <path d="M384 429 L391 443 L384 457
-                L377 443Z"
-                fill="${accent}"/>
-
-            <circle cx="215" cy="274" r="4"
-                fill="${primary}"/>
-            <circle cx="553" cy="274" r="4"
-                fill="${primary}"/>
-
-            <g transform="translate(384 274) scale(1.13)">
-                ${symbol}
+            <g transform="translate(384 236) scale(1.18)">
+                ${ornament}
             </g>
 
-            <path d="M260 485 H335 M433 485 H508"
-                fill="none" stroke="${primary}"
-                stroke-width="2.5"/>
+            <path d="M286 306 H344
+                M424 306 H482"
+                fill="none"
+                stroke="${primary}"
+                stroke-width="2.5"
+                stroke-linecap="round"/>
 
-            <path d="M384 476 L393 485 L384 494
-                L375 485Z"
+            <path d="M384 299 L391 306
+                L384 313 L377 306Z"
                 fill="${accent}"/>
 
             ${textElement({
-                y: 559,
+                y: 419,
                 value: name,
-                size: Math.min(nameSize, 49),
-                color: textColor,
-                weight: 800
+                size: wordmarkSize,
+                color: '#FFFFFF',
+                weight: 900
             })}
+
+            <path d="M229 458 H539"
+                fill="none"
+                stroke="${primary}"
+                stroke-width="2.5"
+                stroke-linecap="round"/>
+
+            <path d="M369 458 H399"
+                stroke="${accent}"
+                stroke-width="6"
+                stroke-linecap="round"/>
 
             ${textElement({
-                y: 611,
+                y: 515,
                 value: type,
-                size: typeSize,
+                size: smallTypeSize,
                 color: primary,
-                weight: 500
+                weight: 600
             })}
 
-            <path d="M322 638 H446"
-                fill="none" stroke="${accent}"
+            <path d="M331 558 H437"
+                fill="none"
+                stroke="${accent}"
                 stroke-width="2"
                 stroke-linecap="round"/>`;
     }
@@ -595,6 +843,9 @@ function createLogo(name, type, shape, palette, variant) {
     </svg>`;
 }
 
+/*
+ * Existing authentication, subscription and quota rules.
+ */
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
         res.setHeader('Allow', 'POST');
@@ -673,7 +924,6 @@ export default async function handler(req, res) {
                 profile.subscription_end_date
             ).getTime() > Date.now();
 
-        // Keep the existing subscription rules.
         if (!isAdmin) {
             if (
                 !active ||
@@ -742,7 +992,6 @@ export default async function handler(req, res) {
             )
         );
 
-        // Keep the original Pro quota update.
         if (!isAdmin && plan === 'pro') {
             const {
                 data: updated,
