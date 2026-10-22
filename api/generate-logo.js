@@ -106,8 +106,6 @@ function categoryOf(value) {
 function getPalette(input, category) {
     const value = String(input || '');
     const selected = [];
-
-    // Preserve the order in which the user mentions colors.
     const matches = [];
 
     for (const [pattern, key] of COLOR_WORDS) {
@@ -344,6 +342,48 @@ function textElement({
             fill="${color}">${escapeXml(value)}</text>`;
 }
 
+// A refined, larger outline used only by the new third design.
+function modernFrame(shape, primary, accent) {
+    if (shape === 'abstract') {
+        return `
+            <path d="M-144 -56 Q-135 -142 -48 -151
+                M48 -151 Q135 -142 144 -56
+                M144 56 Q135 142 48 151
+                M-48 151 Q-135 142 -144 56"
+                fill="none" stroke="${primary}"
+                stroke-width="5" stroke-linecap="round"/>
+            <circle cx="-144" cy="0" r="5" fill="${accent}"/>
+            <circle cx="144" cy="0" r="5" fill="${accent}"/>`;
+    }
+
+    if (shape === 'square') {
+        return `
+            <rect x="-151" y="-151" width="302" height="302"
+                rx="48" fill="none" stroke="${primary}"
+                stroke-width="5"/>
+            <path d="M-117 -125 H-78 M78 125 H117"
+                stroke="${accent}" stroke-width="6"
+                stroke-linecap="round"/>`;
+    }
+
+    if (shape === 'rectangle') {
+        return `
+            <rect x="-177" y="-137" width="354" height="274"
+                rx="49" fill="none" stroke="${primary}"
+                stroke-width="5"/>
+            <path d="M-140 -112 H-100 M100 112 H140"
+                stroke="${accent}" stroke-width="6"
+                stroke-linecap="round"/>`;
+    }
+
+    return `
+        <circle r="151" fill="none"
+            stroke="${primary}" stroke-width="5"/>
+        <path d="M-35 -158 H35 M-35 158 H35"
+            stroke="${accent}" stroke-width="6"
+            stroke-linecap="round"/>`;
+}
+
 function createLogo(name, type, shape, palette, variant) {
     const [primary, secondary, accent] = palette;
 
@@ -356,7 +396,6 @@ function createLogo(name, type, shape, palette, variant) {
     );
 
     const letters = [...name.trim()];
-    const initial = letters[0] || 'M';
 
     const nameSize = letters.length > 30 ? 27 :
         letters.length > 22 ? 33 :
@@ -377,7 +416,7 @@ function createLogo(name, type, shape, palette, variant) {
     let artwork = '';
 
     if (variant === 0) {
-        // Style 1: signature
+        // Style 1: signature — unchanged.
         artwork = `
             <g transform="translate(384 270)">
                 ${frameFor(shape, primary)}
@@ -404,7 +443,7 @@ function createLogo(name, type, shape, palette, variant) {
                 weight: 500
             })}`;
     } else if (variant === 1) {
-        // Style 2: luxury seal
+        // Style 2: luxury seal — unchanged.
         artwork = `
             <circle cx="384" cy="292" r="172"
                 fill="none"
@@ -440,81 +479,108 @@ function createLogo(name, type, shape, palette, variant) {
                 L384 135 L376 120Z"
                 fill="${accent}"/>`;
     } else if (variant === 2) {
-        // Style 3: horizontal brand identity
+        // Style 3: modern minimal emblem.
+        // No horizontal advertising card or side-by-side layout.
         artwork = `
-            <rect x="64" y="200"
-                width="640" height="350"
-                rx="34"
-                fill="${primary}"
-                opacity="0.07"/>
-
-            <g transform="translate(235 370) scale(1.03)">
-                ${symbol}
+            <g transform="translate(384 274)">
+                ${modernFrame(shape, primary, accent)}
+                <g transform="scale(1.04)">
+                    ${symbol}
+                </g>
             </g>
 
-            <path d="M365 260 V481"
-                stroke="${primary}"
-                stroke-width="3"/>
-
-            ${textElement({
-                x: 650,
-                y: 358,
-                value: name,
-                size: Math.min(nameSize, 39),
-                color: secondary,
-                weight: 800,
-                anchor: 'end'
-            })}
-
-            ${textElement({
-                x: 650,
-                y: 411,
-                value: type,
-                size: 20,
-                color: primary,
-                weight: 500,
-                anchor: 'end'
-            })}
-
-            <path d="M422 449 H650"
-                stroke="${accent}"
-                stroke-width="5"/>`;
-    } else {
-        // Style 4: premium monogram
-        artwork = `
-            <path d="M384 113 L528 196 V362
-                L384 445 L240 362 V196Z"
-                fill="${primary}"/>
-
-            <path d="M384 128 L513 203 V355
-                L384 430 L255 355 V203Z"
-                fill="none"
-                stroke="${accent}"
-                stroke-width="3"/>
-
-            ${textElement({
-                y: 321,
-                value: initial,
-                size: 105,
-                color: '#FFFFFF',
-                weight: 900
-            })}
+            <path d="M315 461 H453"
+                fill="none" stroke="${accent}"
+                stroke-width="4" stroke-linecap="round"/>
 
             ${textElement({
                 y: 531,
                 value: name,
-                size: nameSize,
+                size: Math.min(nameSize, 49),
+                color: secondary,
+                weight: 800
+            })}
+
+            ${textElement({
+                y: 578,
+                value: type,
+                size: typeSize,
+                color: primary,
+                weight: 500
+            })}
+
+            <circle cx="294" cy="568" r="3.5"
+                fill="${accent}"/>
+            <circle cx="474" cy="568" r="3.5"
+                fill="${accent}"/>`;
+    } else {
+        // Style 4: premium heritage mark.
+        // Full occupation symbol instead of a single initial.
+        artwork = `
+            <defs>
+                <linearGradient id="premiumMark" x1="0" y1="0"
+                    x2="1" y2="1">
+                    <stop offset="0%" stop-color="${primary}"/>
+                    <stop offset="100%" stop-color="${accent}"/>
+                </linearGradient>
+            </defs>
+
+            <circle cx="384" cy="274" r="169"
+                fill="none"
+                stroke="url(#premiumMark)"
+                stroke-width="3"/>
+
+            <circle cx="384" cy="274" r="155"
+                fill="none"
+                stroke="${primary}"
+                stroke-width="1"
+                opacity="0.55"/>
+
+            <path d="M384 91 L391 105 L384 119
+                L377 105Z"
+                fill="${accent}"/>
+
+            <path d="M384 429 L391 443 L384 457
+                L377 443Z"
+                fill="${accent}"/>
+
+            <circle cx="215" cy="274" r="4"
+                fill="${primary}"/>
+            <circle cx="553" cy="274" r="4"
+                fill="${primary}"/>
+
+            <g transform="translate(384 274) scale(1.13)">
+                ${symbol}
+            </g>
+
+            <path d="M260 485 H335 M433 485 H508"
+                fill="none" stroke="${primary}"
+                stroke-width="2.5"/>
+
+            <path d="M384 476 L393 485 L384 494
+                L375 485Z"
+                fill="${accent}"/>
+
+            ${textElement({
+                y: 559,
+                value: name,
+                size: Math.min(nameSize, 49),
                 color: textColor,
                 weight: 800
             })}
 
             ${textElement({
-                y: 583,
+                y: 611,
                 value: type,
                 size: typeSize,
-                color: accent,
+                color: primary,
                 weight: 500
-            })}`;
+            })}
+
+            <path d="M322 638 H446"
+                fill="none" stroke="${accent}"
+                stroke-width="2"
+                stroke-linecap="round"/>`;
     }
 
     return `<svg xmlns="http://www.w3.org/2000/svg"
