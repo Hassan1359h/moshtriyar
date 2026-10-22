@@ -269,11 +269,35 @@ window.sendBulkSms = async function() {
     if (mobiles.length === 0) return alert('گیرنده‌ای انتخاب نشده است.');
     if (!message) return alert('متن پیامک خالی است.');
 
-    if (!isAdmin && mobiles.length > (userSmsLimit - userSmsUsed)) {
-        return alert('اعتبار پیامک شما کافی نیست.');
-    }
+    
+if (!isAdmin && mobiles.length > (userSmsLimit - userSmsUsed)) {
+    return alert('اعتبار پیامک شما کافی نیست.');
+}
 
-    const btn = $('sendBtn'); btn.innerHTML = 'در حال ارسال...'; btn.disabled = true;
+// تأیید نهایی پیش از ارسال واقعی
+const recipientLabel =
+    $('recipientType').value === 'all'
+        ? 'همه مشتریان'
+        : $('recipientType').value === 'debtors'
+            ? 'مشتریان بدهکار'
+            : 'مشتریان انتخاب‌شده';
+
+const estimatedParts = Math.ceil(message.length / 70);
+const estimatedTotal = mobiles.length * estimatedParts;
+
+const confirmed = window.confirm(
+    `آیا ارسال این پیامک را تأیید می‌کنید؟\n\n` +
+    `گروه گیرندگان: ${recipientLabel}\n` +
+    `تعداد شماره‌ها: ${mobiles.length}\n` +
+    `تعداد تقریبی بخش‌های هر پیام: ${estimatedParts}\n` +
+    `مجموع تقریبی بخش‌های پیامک: ${estimatedTotal}\n\n` +
+    `متن پیام:\n${message}\n\n` +
+    `توجه: با تأیید، درخواست ارسال واقعی ثبت می‌شود.`
+);
+
+if (!confirmed) return;
+
+const btn = $('sendBtn');
 
     try {
         const { data, error } = await supabase.functions.invoke('send-sms', {
