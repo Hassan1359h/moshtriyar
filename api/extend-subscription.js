@@ -55,6 +55,11 @@ function createDynamicPriceToken(productId, price, nonce) {
 }
 
 export default async function handler(req, res) {
+    console.log('[Bazaar diagnostic] API reached', {
+  method: req.method,
+  mode: req.query?.mode || null,
+  time: new Date().toISOString()
+});
     if (req.method !== 'POST') {
         return res.status(405).json({
             success: false,
