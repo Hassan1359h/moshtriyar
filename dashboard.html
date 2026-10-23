@@ -78,7 +78,19 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;li
         <h1>سلام <span id="userName">👋</span></h1>
         <div class="store-info">
             <span>مدیر فروشگاه: <strong id="managerName">در حال بارگذاری...</strong></span>
-            <span>نام فروشگاه: <strong id="storeNameDisplay">در حال بارگذاری...</strong></span>
+            
+     <span>
+       نام فروشگاه:
+      <strong id="storeNameDisplay">در حال بارگذاری...</strong>
+      <button
+         type="button"
+         id="editStoreNameBtn"
+         style="margin-right:8px;padding:4px 10px;border:1px solid #bfdbfe;border-radius:8px;background:#eff6ff;color:#2563eb;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;"
+     >
+         ✏️ ویرایش
+     </button>
+  </span>
+            
         </div>
     </div>
     <div class="card" id="todosCard">
@@ -277,10 +289,12 @@ async function loadProfile() {
 
     // نام فروشگاه را از اطلاعات ثبت‌شده کاربر پیدا می‌کنیم.
     const possibleNames = [
-        profile?.store_name,
-        profile?.business_name,
-        metadata.store_name,
-        metadata.business_name
+        const possibleNames = [
+    metadata.store_name,
+    profile?.store_name,
+    profile?.business_name,
+    metadata.business_name
+];
     ];
 
     const storeName = possibleNames.find(
@@ -298,6 +312,64 @@ async function loadProfile() {
         );
     }
 }
+
+$('editStoreNameBtn').addEventListener('click', async () => {
+    if (!me) {
+        alert('لطفاً ابتدا وارد حساب کاربری شوید.');
+        return;
+    }
+
+    const currentName = $('storeNameDisplay').textContent.trim();
+    const initialValue =
+        currentName === 'نام فروشگاه ثبت نشده' ? '' : currentName;
+
+    const enteredName = window.prompt(
+        'نام فروشگاه یا کسب‌وکار خود را وارد کنید:',
+        initialValue
+    );
+
+    if (enteredName === null) return;
+
+    const newName = enteredName.trim();
+
+    if (!newName || newName.length > 100) {
+        alert('نام فروشگاه باید بین ۱ تا ۱۰۰ کاراکتر باشد.');
+        return;
+    }
+
+    const btn = $('editStoreNameBtn');
+    btn.disabled = true;
+    btn.textContent = 'در حال ذخیره...';
+
+    try {
+        // ذخیره در اطلاعات کاربری Supabase
+        const { error } = await supabase.auth.updateUser({
+            data: {
+                store_name: newName
+            }
+        });
+
+        if (error) throw error;
+
+        // هماهنگ‌سازی اطلاعات کاربر در همین صفحه
+        me.user_metadata = {
+            ...(me.user_metadata || {}),
+            store_name: newName
+        };
+
+        $('storeNameDisplay').textContent = newName;
+
+        alert('✅ نام فروشگاه با موفقیت ذخیره شد.');
+
+    } catch (error) {
+        console.error('Store name update error:', error);
+        alert('❌ ذخیره نام فروشگاه ناموفق بود: ' + error.message);
+
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '✏️ ویرایش';
+    }
+});
 
 
 async function loadCustomers() {
