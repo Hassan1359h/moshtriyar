@@ -16,6 +16,7 @@ h1{font-size:21px;margin:0 0 8px}
 p{color:#64748b;font-size:13px}
 label{display:block;font-weight:700;font-size:13px;margin:15px 0 5px}
 input,textarea{width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:10px;font:inherit;background:#fff}
+input[type=file]{font-size:13px}
 textarea{min-height:90px;resize:vertical}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 button{border:0;border-radius:11px;padding:12px;font:inherit;font-weight:800;cursor:pointer}
@@ -27,6 +28,7 @@ button:disabled{opacity:.5;cursor:wait}
 #status{margin-top:14px;font-size:13px;font-weight:700}
 #preview{display:none;width:100%;max-height:190px;object-fit:cover;border-radius:12px;margin-top:10px}
 .back{display:inline-block;margin-bottom:15px;text-decoration:none;color:#2563eb;font-weight:700}
+.hint{margin:5px 0;color:#64748b;font-size:12px}
 @media(max-width:430px){.grid{grid-template-columns:1fr}.card{padding:16px}}
 </style>
 </head>
@@ -59,8 +61,18 @@ button:disabled{opacity:.5;cursor:wait}
 <label for="websiteUrl">آدرس وب‌سایت</label>
 <input id="websiteUrl" type="url" placeholder="https://example.com">
 
-<label for="imageUrl">آدرس مستقیم تصویر کسب‌وکار</label>
+<!-- قابلیت جدید: انتخاب تصویر از گالری -->
+<label for="businessImage">تصویر کسب‌وکار یا عکس صفحه اصلی سایت</label>
+<input
+    id="businessImage"
+    type="file"
+    accept="image/jpeg,image/png,image/webp"
+>
+<p class="hint">عکس را از گالری انتخاب کن. فرمت JPG، PNG یا WebP و حداکثر حجم ۲ مگابایت.</p>
+
+<label for="imageUrl">یا آدرس مستقیم تصویر کسب‌وکار (اختیاری)</label>
 <input id="imageUrl" type="url" placeholder="https://example.com/photo.jpg">
+
 <img id="preview" alt="پیش‌نمایش تصویر کسب‌وکار">
 
 <label for="description">توضیح کوتاه</label>
@@ -83,6 +95,7 @@ const $ = id => document.getElementById(id);
 let user = null;
 let business = null;
 let busy = false;
+let previewObjectUrl = null;
 
 function message(text, error = false) {
     $('status').textContent = text;
@@ -93,6 +106,26 @@ function setBusy(value) {
     busy = value;
     $('saveBtn').disabled = value;
     $('publishBtn').disabled = value;
+    $('businessImage').disabled = value;
+}
+
+function clearTemporaryPreview() {
+    if (previewObjectUrl) {
+        URL.revokeObjectURL(previewObjectUrl);
+        previewObjectUrl = null;
+    }
+}
+
+function displayImage(url) {
+    clearTemporaryPreview();
+
+    if (url) {
+        $('preview').src = url;
+        $('preview').style.display = 'block';
+    } else {
+        $('preview').removeAttribute('src');
+        $('preview').style.display = 'none';
+    }
 }
 
 function readForm() {
@@ -107,6 +140,7 @@ function readForm() {
     for (const url of [website, image]) {
         if (url) {
             const parsed = new URL(url);
+
             if (!['https:', 'http:'].includes(parsed.protocol)) {
                 throw new Error('آدرس سایت و تصویر باید با http یا https شروع شوند.');
             }
@@ -125,6 +159,56 @@ function readForm() {
     };
 }
 
+/* قابلیت جدید: آپلود امن تصویر در پوشه اختصاصی کاربر */
+async function uploadBusinessImage() {
+    const file = $('businessImage').files[0];
+
+    if (!file) return null;
+
+    if (!user) {
+        throw new Error('ابتدا وارد حساب کاربری شوید.');
+    }
+
+    const allowedTypes = {
+        'image/jpeg': 'jpg',
+        'image/png': 'png',
+        'image/webp': 'webp'
+    };
+
+    const extension = allowedTypes[file.type];
+
+    if (!extension) {
+        throw new Error('فرمت عکس باید JPG، PNG یا WebP باشد.');
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+        throw new Error('حجم عکس نباید بیشتر از ۲ مگابایت باشد.');
+    }
+
+    const fileName = `${user.id}/${crypto.randomUUID()}.${extension}`;
+
+    message('در حال آپلود تصویر کسب‌وکار...');
+
+    const { error } = await supabase.storage
+        .from('business-images')
+        .upload(fileName, file, {
+            contentType: file.type,
+            upsert: false
+        });
+
+    if (error) throw error;
+
+    const { data } = supabase.storage
+        .from('business-images')
+        .getPublicUrl(fileName);
+
+    if (!data?.publicUrl) {
+        throw new Error('دریافت آدرس تصویر ناموفق بود.');
+    }
+
+    return data.publicUrl;
+}
+
 function showBusiness(data) {
     business = data;
 
@@ -135,6 +219,8 @@ function showBusiness(data) {
     $('websiteUrl').value = data.website_url || '';
     $('imageUrl').value = data.image_url || '';
     $('description').value = data.description || '';
+
+    displayImage(data.image_url);
 
     $('publishBtn').textContent = data.is_published
         ? '🔒 لغو انتشار'
@@ -157,6 +243,14 @@ async function saveBusiness(publishValue = null) {
     try {
         const values = readForm();
 
+        // اگر عکس جدیدی انتخاب شده باشد، ابتدا آپلود می‌شود.
+        // اگر عکس جدیدی انتخاب نشده باشد، مقدار فعلی فرم حفظ می‌شود.
+        const uploadedImageUrl = await uploadBusinessImage();
+
+        if (uploadedImageUrl) {
+            values.image_url = uploadedImageUrl;
+        }
+
         if (business) {
             if (publishValue !== null) {
                 values.is_published = publishValue;
@@ -171,6 +265,9 @@ async function saveBusiness(publishValue = null) {
                 .single();
 
             if (error) throw error;
+
+            // فقط بعد از ذخیره موفق، فایل انتخاب‌شده پاک می‌شود.
+            $('businessImage').value = '';
             showBusiness(data);
 
         } else {
@@ -185,6 +282,8 @@ async function saveBusiness(publishValue = null) {
                 .single();
 
             if (error) throw error;
+
+            $('businessImage').value = '';
             showBusiness(data);
         }
 
@@ -215,11 +314,40 @@ $('publishBtn').addEventListener('click', async () => {
     await saveBusiness(publishing);
 });
 
+/* پیش‌نمایش عکس انتخاب‌شده از گالری */
+$('businessImage').addEventListener('change', () => {
+    const file = $('businessImage').files[0];
+
+    if (!file) return;
+
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+        message('❌ فرمت عکس باید JPG، PNG یا WebP باشد.', true);
+        $('businessImage').value = '';
+        return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+        message('❌ حجم عکس نباید بیشتر از ۲ مگابایت باشد.', true);
+        $('businessImage').value = '';
+        return;
+    }
+
+    clearTemporaryPreview();
+
+    previewObjectUrl = URL.createObjectURL(file);
+    $('preview').src = previewObjectUrl;
+    $('preview').style.display = 'block';
+
+    message('عکس انتخاب شد. برای ثبت آن، دکمه ذخیره اطلاعات را بزن.');
+});
+
+/* پیش‌نمایش آدرس مستقیم تصویر، مانند نسخه قبلی */
 $('imageUrl').addEventListener('change', () => {
+    // وقتی فایل جدید از گالری انتخاب شده، اولویت با همان فایل است.
+    if ($('businessImage').files.length) return;
+
     const url = $('imageUrl').value.trim();
-    $('preview').style.display = url ? 'block' : 'none';
-    if (url) $('preview').src = url;
-    else $('preview').removeAttribute('src');
+    displayImage(url);
 });
 
 async function init() {
@@ -248,11 +376,6 @@ async function init() {
 
         if (data) {
             showBusiness(data);
-
-            if (data.image_url) {
-                $('preview').src = data.image_url;
-                $('preview').style.display = 'block';
-            }
         } else {
             message('هنوز کارتی ثبت نکرده‌اید. اطلاعات را تکمیل و ذخیره کنید.');
         }
