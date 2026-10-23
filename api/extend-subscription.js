@@ -377,10 +377,6 @@ export default async function handler(req, res) {
                 p_expires_at: expiresAt
             };
 
-            if (discountIntentId) {
-                rpcArgs.p_discount_intent_id = discountIntentId;
-            }
-
             const { data: result, error: rpcError } =
                 await supabaseAdmin.rpc(
                     'verify_bazaar_purchase',
