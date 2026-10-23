@@ -381,19 +381,30 @@ export default async function handler(req, res) {
                 await supabaseAdmin.rpc(
                     'verify_bazaar_purchase',
                     rpcArgs
-                );
+                );    
 
-            if (rpcError) {
-                console.error(
-                    'Bazaar activation error:',
-                    rpcError.message
-                );
+    if (rpcError) {
+        console.error('Bazaar activation error:', {
+          code: rpcError.code,
+          message: rpcError.message,
+          details: rpcError.details,
+          hint: rpcError.hint
+     });
 
-                return res.status(500).json({
-                    success: false,
-                    error: 'Purchase verified but activation failed'
-                });
-            }
+    return res.status(500).json({
+        success: false,
+        error: 'Purchase verified but activation failed'
+    });
+}
+
+if (!result || result.success !== true) {
+    console.error('Bazaar activation returned unexpected result:', result);
+
+    return res.status(500).json({
+        success: false,
+        error: 'Purchase activation was not confirmed'
+    });
+}
 
             return res.status(200).json({
                 success: true,
