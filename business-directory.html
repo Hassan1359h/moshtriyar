@@ -1,0 +1,225 @@
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#2563eb">
+<title>معرفی کسب‌وکارها | مشتری‌یار</title>
+<link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f8fafc;color:#0f172a;font-family:Vazirmatn,Tahoma,sans-serif}
+header{background:#fff;border-bottom:1px solid #e2e8f0;padding:16px}
+.header-inner{max-width:1100px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:12px}
+a{text-decoration:none;color:#2563eb;font-weight:700}
+h1{font-size:22px;margin:0}
+main{max-width:1100px;margin:25px auto;padding:0 15px}
+.intro{color:#64748b;font-size:14px}
+.filters{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin:20px 0}
+input{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:11px;font:inherit;background:white}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(245px,1fr));gap:15px}
+.card{background:white;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;box-shadow:0 3px 12px #00000008}
+.cover{height:135px;background:linear-gradient(135deg,#dbeafe,#f1f5f9);display:flex;align-items:center;justify-content:center;font-size:42px;overflow:hidden}
+.cover img{width:100%;height:100%;object-fit:cover}
+.content{padding:14px}
+.name{font-size:16px;font-weight:900;margin:0 0 5px;overflow-wrap:anywhere}
+.meta{font-size:12px;color:#64748b;margin-bottom:10px}
+.description{font-size:12px;color:#475569;min-height:37px;line-height:1.8;overflow-wrap:anywhere}
+.rating{display:flex;align-items:center;gap:7px;margin:12px 0}
+.stars{font-size:21px;color:#f59e0b;letter-spacing:1px;direction:ltr}
+.score{font-size:12px;color:#64748b}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.vote{font:inherit;font-size:12px;font-weight:800;padding:9px 5px;border-radius:9px;border:1px solid #e2e8f0;background:#f8fafc;color:#64748b}
+.vote:disabled{cursor:not-allowed;opacity:.8}
+.website{display:inline-block;font-size:12px;margin-top:8px;overflow-wrap:anywhere}
+#status{text-align:center;color:#64748b;margin:25px 0}
+#more{display:none;margin:20px auto;background:#2563eb;color:white;border:0;border-radius:10px;padding:11px 25px;font:inherit;font-weight:800;cursor:pointer}
+@media(max-width:600px){.filters{grid-template-columns:1fr 1fr}.filters input:first-child{grid-column:1/-1}.cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.cover{height:100px}.content{padding:10px}.name{font-size:13px}.actions{gap:4px}.vote{font-size:10px;padding:8px 2px}.stars{font-size:17px}}
+</style>
+</head>
+<body>
+
+<header>
+<div class="header-inner">
+<h1>🏪 کسب‌وکارهای مشتری‌یار</h1>
+<a href="index.html">صفحه اصلی ←</a>
+</div>
+</header>
+
+<main>
+<p class="intro">کسب‌وکارها و وب‌سایت‌های عضو مشتری‌یار را بشناسید و امتیاز مشتریان را ببینید.</p>
+
+<div class="filters">
+<input id="search" placeholder="🔍 جست‌وجوی نام کسب‌وکار">
+<input id="category" placeholder="نوع فعالیت">
+<input id="city" placeholder="شهر یا استان">
+</div>
+
+<div id="cards" class="cards"></div>
+<div id="status">در حال دریافت کسب‌وکارها...</div>
+<button id="more" type="button">نمایش موارد بیشتر</button>
+</main>
+
+<script type="module">
+import { supabase } from './js/supabase.js';
+
+const $ = id => document.getElementById(id);
+const PAGE_SIZE = 20;
+
+let offset = 0;
+let loading = false;
+let requestVersion = 0;
+
+function escapeHTML(value) {
+    return String(value ?? '').replace(/[&<>"']/g, char => ({
+        '&':'&amp;',
+        '<':'&lt;',
+        '>':'&gt;',
+        '"':'&quot;',
+        "'":'&#39;'
+    })[char]);
+}
+
+function safeURL(value) {
+    try {
+        const url = new URL(value);
+        return ['https:', 'http:'].includes(url.protocol) ? url.href : '';
+    } catch {
+        return '';
+    }
+}
+
+function stars(score) {
+    const rounded = Math.max(0, Math.min(5, Math.round(score)));
+    return '★'.repeat(rounded) + '☆'.repeat(5 - rounded);
+}
+
+function renderCard(b, rating) {
+    const image = safeURL(b.image_url);
+    const website = safeURL(b.website_url);
+    const score = Number(rating?.rating || 0);
+    const count = Number(rating?.total_votes || 0);
+
+    const cover = image
+        ? `<img src="${escapeHTML(image)}" alt="${escapeHTML(b.business_name)}" loading="lazy" onerror="this.style.display='none'">`
+        : '🏪';
+
+    const location = [b.province, b.city].filter(Boolean).join('، ');
+
+    return `
+    <article class="card">
+        <div class="cover">${cover}</div>
+        <div class="content">
+            <h2 class="name">${escapeHTML(b.business_name)}</h2>
+            <div class="meta">
+                ${escapeHTML(b.category || 'سایر فعالیت‌ها')}
+                ${location ? ' | ' + escapeHTML(location) : ''}
+            </div>
+            <div class="description">${escapeHTML(b.description || 'معرفی کسب‌وکار عضو مشتری‌یار')}</div>
+            ${website ? `<a class="website" href="${escapeHTML(website)}" target="_blank" rel="noopener noreferrer">🌐 مشاهده وب‌سایت</a>` : ''}
+            <div class="rating">
+                <span class="stars" aria-label="امتیاز ${score} از ۵">${stars(score)}</span>
+                <span class="score">${score.toFixed(1)} از ۵ (${count} رأی)</span>
+            </div>
+            <div class="actions">
+                <button class="vote" disabled title="به‌زودی فعال می‌شود">👍 راضی هستم</button>
+                <button class="vote" disabled title="به‌زودی فعال می‌شود">👎 ناراضی هستم</button>
+            </div>
+        </div>
+    </article>`;
+}
+
+async function loadBusinesses(reset = false) {
+    if (loading && !reset) return;
+
+    const version = ++requestVersion;
+    loading = true;
+
+    if (reset) {
+        offset = 0;
+        $('cards').innerHTML = '';
+    }
+
+    $('more').style.display = 'none';
+    $('status').textContent = 'در حال دریافت کسب‌وکارها...';
+
+    try {
+        let query = supabase
+            .from('business_directory')
+            .select('id,business_name,category,province,city,website_url,image_url,description,created_at')
+            .eq('is_published', true)
+            .order('created_at', { ascending: false })
+            .order('id', { ascending: false })
+            .range(offset, offset + PAGE_SIZE - 1);
+
+        const search = $('search').value.trim();
+        const category = $('category').value.trim();
+        const city = $('city').value.trim();
+
+        if (search) query = query.ilike('business_name', '%' + search.replace(/[%_]/g, '') + '%');
+        if (category) query = query.ilike('category', '%' + category.replace(/[%_]/g, '') + '%');
+        if (city) {
+            const value = '%' + city.replace(/[%_,()]/g, '') + '%';
+            query = query.or(`city.ilike.${value},province.ilike.${value}`);
+        }
+
+        const { data: businesses, error } = await query;
+        if (error) throw error;
+        if (version !== requestVersion) return;
+
+        const ids = (businesses || []).map(b => b.id);
+        let ratingMap = {};
+
+        if (ids.length) {
+            const result = await supabase
+                .from('business_ratings')
+                .select('business_id,total_votes,rating')
+                .in('business_id', ids);
+
+            if (result.error) throw result.error;
+            if (version !== requestVersion) return;
+
+            ratingMap = Object.fromEntries(
+                (result.data || []).map(r => [r.business_id, r])
+            );
+        }
+
+        $('cards').insertAdjacentHTML(
+            'beforeend',
+            (businesses || []).map(b => renderCard(b, ratingMap[b.id])).join('')
+        );
+
+        offset += (businesses || []).length;
+
+        $('status').textContent = offset
+            ? `${offset} کسب‌وکار نمایش داده شد.`
+            : 'هنوز کسب‌وکار منتشرشده‌ای با این مشخصات پیدا نشد.';
+
+        $('more').style.display =
+            businesses?.length === PAGE_SIZE ? 'block' : 'none';
+
+    } catch (err) {
+        console.error(err);
+        if (version === requestVersion) {
+            $('status').textContent = '❌ دریافت اطلاعات ناموفق بود: ' + err.message;
+        }
+    } finally {
+        if (version === requestVersion) loading = false;
+    }
+}
+
+let debounce;
+['search', 'category', 'city'].forEach(id => {
+    $(id).addEventListener('input', () => {
+        clearTimeout(debounce);
+        debounce = setTimeout(() => loadBusinesses(true), 350);
+    });
+});
+
+$('more').addEventListener('click', () => loadBusinesses());
+
+loadBusinesses(true);
+</script>
+</body>
+</html>
