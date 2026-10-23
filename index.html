@@ -705,63 +705,12 @@ if (isAndroidApp) {
         return;
     }
 
-    const discountCode = await getBazaarDiscountCode();
-if (discountCode === null) return;
-    
-    let purchaseOptions = {
-        type: 'buyBazaarSubscription',
-        productId,
-        planKey
-    };
-
-    if (discountCode) {
-        try {
-            const { data: { session }, error } =
-                await supabase.auth.getSession();
-
-            if (error) throw error;
-
-            if (!session) {
-                alert('ابتدا وارد حساب کاربری شوید.');
-                return;
-            }
-
-            const response = await fetch('/api/generate-discount-token', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: 'Bearer ' + session.access_token
-                },
-                body: JSON.stringify({
-                    productId,
-                    code: discountCode
-                })
-            });
-
-            const discount = await response.json();
-
-            if (
-                !response.ok ||
-                !discount.success ||
-                !discount.dynamicPriceToken ||
-                !discount.intentId
-            ) {
-                throw new Error(
-                    discount.error || 'کد تخفیف معتبر نیست.'
-                );
-            }
-
-            purchaseOptions.dynamicPriceToken =
-                discount.dynamicPriceToken;
-
-            purchaseOptions.discountIntentId =
-                discount.intentId;
-
-        } catch (err) {
-            alert('خطای کد تخفیف: ' + err.message);
-            return;
-        }
-    }
+    // خرید عادی کافه‌بازار، بدون کد تخفیف
+const purchaseOptions = {
+    type: 'buyBazaarSubscription',
+    productId,
+    planKey
+};
 
     window.ReactNativeWebView.postMessage(
         JSON.stringify(purchaseOptions)
