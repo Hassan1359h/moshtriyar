@@ -207,10 +207,20 @@
         </div>
 
         <form id="authForm">
-            <div class="field" id="nameField" style="display:none;">
-                <label>نام و نام خانوادگی</label>
-                <input type="text" id="fullName" placeholder="مثلاً: حسن نادریان">
-            </div>
+            
+<div class="field" id="nameField" style="display:none;">
+    <label>نام و نام خانوادگی</label>
+    <input type="text" id="fullName" placeholder="مثلاً: حسن نادریان">
+
+    <label style="margin-top:14px;">نام فروشگاه یا کسب‌وکار</label>
+    <input
+        type="text"
+        id="storeName"
+        placeholder="مثلاً: فروشگاه بهار"
+        maxlength="100"
+    >
+</div>
+            
             <div class="field">
                 <label>ایمیل</label>
                 <input type="email" id="email" required placeholder="example@email.com">
@@ -346,6 +356,7 @@ if (window.turnstile) {
             const email = emailInput.value.trim();
             const password = passwordInput.value;
             const fullName = fullNameInput.value.trim();
+            const storeName = document.getElementById('storeName').value.trim();
 
             submitBtn.disabled = true;
             showMessage('در حال پردازش...', 'info');
@@ -376,7 +387,10 @@ if (window.turnstile) {
                         email,
                         password,
                         options: {
-                            data: { full_name: fullName },
+                            data: {
+                            full_name: fullName,
+                             store_name: storeName
+                  },
                             captchaToken: captchaToken 
                         }
                     });
