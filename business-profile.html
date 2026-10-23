@@ -1,0 +1,269 @@
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#2563eb">
+<title>کارت کسب‌وکار من | مشتری‌یار</title>
+<link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f8fafc;color:#0f172a;font-family:Vazirmatn,Tahoma,sans-serif;line-height:1.8}
+main{max-width:650px;margin:25px auto;padding:16px}
+.card{background:white;padding:22px;border-radius:18px;box-shadow:0 4px 20px #0000000a}
+h1{font-size:21px;margin:0 0 8px}
+p{color:#64748b;font-size:13px}
+label{display:block;font-weight:700;font-size:13px;margin:15px 0 5px}
+input,textarea{width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:10px;font:inherit;background:#fff}
+textarea{min-height:90px;resize:vertical}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+button{border:0;border-radius:11px;padding:12px;font:inherit;font-weight:800;cursor:pointer}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:22px}
+.save{background:#2563eb;color:white}
+.publish{background:#16a34a;color:white}
+.unpublish{background:#f59e0b;color:white}
+button:disabled{opacity:.5;cursor:wait}
+#status{margin-top:14px;font-size:13px;font-weight:700}
+#preview{display:none;width:100%;max-height:190px;object-fit:cover;border-radius:12px;margin-top:10px}
+.back{display:inline-block;margin-bottom:15px;text-decoration:none;color:#2563eb;font-weight:700}
+@media(max-width:430px){.grid{grid-template-columns:1fr}.card{padding:16px}}
+</style>
+</head>
+<body>
+<main>
+<a class="back" href="dashboard.html">← بازگشت به داشبورد</a>
+
+<div class="card">
+<h1>🏪 کارت کسب‌وکار من</h1>
+<p>اطلاعات کسب‌وکارت را تکمیل کن. تا زمانی که «انتشار» را نزنی، کارتت در فهرست عمومی نمایش داده نمی‌شود.</p>
+
+<form id="businessForm">
+<label for="businessName">نام کسب‌وکار *</label>
+<input id="businessName" maxlength="120" required placeholder="مثلاً فروشگاه بهار">
+
+<label for="category">نوع فعالیت</label>
+<input id="category" maxlength="80" placeholder="مثلاً پوشاک، پزشکی، خدمات، فروشگاه اینترنتی">
+
+<div class="grid">
+<div>
+<label for="province">استان</label>
+<input id="province" maxlength="80">
+</div>
+<div>
+<label for="city">شهر</label>
+<input id="city" maxlength="80">
+</div>
+</div>
+
+<label for="websiteUrl">آدرس وب‌سایت</label>
+<input id="websiteUrl" type="url" placeholder="https://example.com">
+
+<label for="imageUrl">آدرس مستقیم تصویر کسب‌وکار</label>
+<input id="imageUrl" type="url" placeholder="https://example.com/photo.jpg">
+<img id="preview" alt="پیش‌نمایش تصویر کسب‌وکار">
+
+<label for="description">توضیح کوتاه</label>
+<textarea id="description" maxlength="500" placeholder="کسب‌وکارت را در چند جمله معرفی کن"></textarea>
+
+<div class="actions">
+<button class="save" id="saveBtn" type="submit">💾 ذخیره اطلاعات</button>
+<button class="publish" id="publishBtn" type="button">🌐 انتشار کارت</button>
+</div>
+</form>
+
+<div id="status" role="status">در حال بررسی اطلاعات...</div>
+</div>
+</main>
+
+<script type="module">
+import { supabase } from './js/supabase.js';
+
+const $ = id => document.getElementById(id);
+let user = null;
+let business = null;
+let busy = false;
+
+function message(text, error = false) {
+    $('status').textContent = text;
+    $('status').style.color = error ? '#dc2626' : '#2563eb';
+}
+
+function setBusy(value) {
+    busy = value;
+    $('saveBtn').disabled = value;
+    $('publishBtn').disabled = value;
+}
+
+function readForm() {
+    const name = $('businessName').value.trim();
+    const website = $('websiteUrl').value.trim();
+    const image = $('imageUrl').value.trim();
+
+    if (name.length < 2) {
+        throw new Error('نام کسب‌وکار باید حداقل دو کاراکتر باشد.');
+    }
+
+    for (const url of [website, image]) {
+        if (url) {
+            const parsed = new URL(url);
+            if (!['https:', 'http:'].includes(parsed.protocol)) {
+                throw new Error('آدرس سایت و تصویر باید با http یا https شروع شوند.');
+            }
+        }
+    }
+
+    return {
+        business_name: name,
+        category: $('category').value.trim() || null,
+        province: $('province').value.trim() || null,
+        city: $('city').value.trim() || null,
+        website_url: website || null,
+        image_url: image || null,
+        description: $('description').value.trim() || null,
+        updated_at: new Date().toISOString()
+    };
+}
+
+function showBusiness(data) {
+    business = data;
+
+    $('businessName').value = data.business_name || '';
+    $('category').value = data.category || '';
+    $('province').value = data.province || '';
+    $('city').value = data.city || '';
+    $('websiteUrl').value = data.website_url || '';
+    $('imageUrl').value = data.image_url || '';
+    $('description').value = data.description || '';
+
+    $('publishBtn').textContent = data.is_published
+        ? '🔒 لغو انتشار'
+        : '🌐 انتشار کارت';
+
+    $('publishBtn').className = data.is_published
+        ? 'unpublish'
+        : 'publish';
+
+    message(data.is_published
+        ? '✅ کارت کسب‌وکار شما منتشر شده است.'
+        : 'کارت شما هنوز عمومی نشده است.');
+}
+
+async function saveBusiness(publishValue = null) {
+    if (busy || !user) return;
+
+    setBusy(true);
+
+    try {
+        const values = readForm();
+
+        if (business) {
+            if (publishValue !== null) {
+                values.is_published = publishValue;
+            }
+
+            const { data, error } = await supabase
+                .from('business_directory')
+                .update(values)
+                .eq('id', business.id)
+                .eq('owner_id', user.id)
+                .select()
+                .single();
+
+            if (error) throw error;
+            showBusiness(data);
+
+        } else {
+            const { data, error } = await supabase
+                .from('business_directory')
+                .insert({
+                    ...values,
+                    owner_id: user.id,
+                    is_published: publishValue === true
+                })
+                .select()
+                .single();
+
+            if (error) throw error;
+            showBusiness(data);
+        }
+
+    } catch (err) {
+        console.error('Business profile error:', err);
+        message('❌ ' + (err.message || 'خطا در ذخیره اطلاعات'), true);
+    } finally {
+        setBusy(false);
+    }
+}
+
+$('businessForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    await saveBusiness();
+});
+
+$('publishBtn').addEventListener('click', async () => {
+    if (busy) return;
+
+    const publishing = !business?.is_published;
+
+    const confirmed = confirm(publishing
+        ? 'آیا اطلاعات کسب‌وکار برای نمایش عمومی منتشر شود؟'
+        : 'آیا می‌خواهید کارت کسب‌وکار از فهرست عمومی مخفی شود؟');
+
+    if (!confirmed) return;
+
+    await saveBusiness(publishing);
+});
+
+$('imageUrl').addEventListener('change', () => {
+    const url = $('imageUrl').value.trim();
+    $('preview').style.display = url ? 'block' : 'none';
+    if (url) $('preview').src = url;
+    else $('preview').removeAttribute('src');
+});
+
+async function init() {
+    try {
+        const { data: { session }, error: sessionError } =
+            await supabase.auth.getSession();
+
+        if (sessionError) throw sessionError;
+
+        if (!session) {
+            location.href = 'login.html';
+            return;
+        }
+
+        user = session.user;
+
+        const { data, error } = await supabase
+            .from('business_directory')
+            .select('*')
+            .eq('owner_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        if (error) throw error;
+
+        if (data) {
+            showBusiness(data);
+
+            if (data.image_url) {
+                $('preview').src = data.image_url;
+                $('preview').style.display = 'block';
+            }
+        } else {
+            message('هنوز کارتی ثبت نکرده‌اید. اطلاعات را تکمیل و ذخیره کنید.');
+        }
+
+    } catch (err) {
+        console.error(err);
+        message('❌ بارگذاری اطلاعات ناموفق بود: ' + err.message, true);
+    }
+}
+
+init();
+</script>
+</body>
+</html>
