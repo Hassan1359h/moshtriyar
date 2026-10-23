@@ -249,14 +249,56 @@ async function init() {
     $('main').classList.remove('hidden');
 }
 
+
 async function loadProfile() {
-    const { data: profile } = await supabase.from('profiles').select('*').eq('id', me.id).maybeSingle();
-    const name = profile?.full_name || me.user_metadata?.full_name || me.email?.split('@')[0] || 'کاربر';
+    const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', me.id)
+        .maybeSingle();
+
+    if (error) {
+        console.error('Dashboard profile error:', error);
+    }
+
+    const metadata = me.user_metadata || {};
+
+    const name =
+        profile?.full_name?.trim() ||
+        metadata.full_name?.trim() ||
+        me.email?.split('@')[0] ||
+        'کاربر';
+
     $('userName').textContent = name;
-    if ($('managerName')) $('managerName').textContent = name;
-    const storeName = profile?.store_name || profile?.business_name || 'فروشگاه من';
-    if ($('storeNameDisplay')) $('storeNameDisplay').textContent = storeName;
+
+    if ($('managerName')) {
+        $('managerName').textContent = name;
+    }
+
+    // نام فروشگاه را از اطلاعات ثبت‌شده کاربر پیدا می‌کنیم.
+    const possibleNames = [
+        profile?.store_name,
+        profile?.business_name,
+        metadata.store_name,
+        metadata.business_name
+    ];
+
+    const storeName = possibleNames.find(
+        value => typeof value === 'string' && value.trim()
+    )?.trim();
+
+    if ($('storeNameDisplay')) {
+        $('storeNameDisplay').textContent =
+            storeName || 'نام فروشگاه ثبت نشده';
+    }
+
+    if (!storeName) {
+        console.warn(
+            'Store name not found in profile or user metadata.'
+        );
+    }
 }
+
 
 async function loadCustomers() {
     const { data, error } = await supabase.from('customers').select('*').eq('user_id', me.id);
