@@ -337,8 +337,7 @@ const saveFileFromWebView = async (fileData, filename, mimeType) => {
             const trialInfo = await CafeBazaarBilling.checkTrialSubscription();
             if (!trialInfo.isAvailable) {
               Alert.alert("توجه", "شما قبلاً از تست رایگان استفاده کرده‌اید.");
-              // قطع اتصال و خروج از تابع
-              try { await CafeBazaarBilling.disconnect(); } catch (_) {}
+  
               return; 
             }
           } catch (err) {
