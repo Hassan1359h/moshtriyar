@@ -23,6 +23,7 @@ const ZIP_MIME = 'application/zip';
 
 export default function App() {
   const webViewRef = useRef(null);
+  const bazaarBillingBusyRef = useRef(false);
 
   const [canGoBack, setCanGoBack] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -247,7 +248,11 @@ const saveFileFromWebView = async (fileData, filename, mimeType) => {
     const data = JSON.parse(rawData);
     
 
-    if (data.type === 'recoverBazaarSubscriptions') {
+    if (data.type === 
+        'recoverBazaarSubscriptions') {
+      if (bazaarBillingBusyRef.current) 
+        return;
+       bazaarBillingBusyRef.current = true;
       const allowedProducts = [
         'moshtriyar_vip_yearly',
         'moshtriyar_business_30',
@@ -378,15 +383,18 @@ const saveFileFromWebView = async (fileData, filename, mimeType) => {
             }) +
             "}));true;"
         );
-      } finally {
+      
+          } finally {
         try {
           await CafeBazaarBilling.disconnect();
         } catch (_) {}
-      }
+
+        bazaarBillingBusyRef.current = 
+          false;
+      }  
 
       return;
     }
-
     // بقیه کدها (saveFile, downloadAPK, downloadFile, openUrl)
     if (data.type === 'saveFile') {
       await saveFileFromWebView(data.data, data.filename, data.mimeType);
