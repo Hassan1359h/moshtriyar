@@ -1101,12 +1101,24 @@ async function recoverPendingBazaarPurchase() {
 async function initializeBazaarPurchaseRecovery() {
     const pending = getPendingBazaarPurchase();
 
-    if (!pending) return;
+    if (pending) {
+        showBazaarRecoveryButton();
 
-    showBazaarRecoveryButton();
+        if (navigator.onLine) {
+            await recoverPendingBazaarPurchase();
+        }
+    }
 
-    if (navigator.onLine) {
-        await recoverPendingBazaarPurchase();
+    // درخواست بازیابی خریدها از خود کافه‌بازار در اپ اندروید
+    if (
+        window.ReactNativeWebView &&
+        typeof window.ReactNativeWebView.postMessage === 'function'
+    ) {
+        window.ReactNativeWebView.postMessage(
+            JSON.stringify({
+                type: 'recoverBazaarSubscriptions'
+            })
+        );
     }
 }
 
