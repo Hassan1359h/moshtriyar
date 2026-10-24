@@ -740,7 +740,8 @@ if (planKey === 'vip_yearly') {
 
     window.selectedPlan = planKey;
 };
-
+88888888
+        
 window.addEventListener('moshtriyarBazaarPurchaseResult', async function (event) {
     const result = event.detail || {};
 
@@ -824,67 +825,396 @@ window.addEventListener('moshtriyarBazaarPurchaseResult', async function (event)
         // نتیجه تابع verify_bazaar_purchase
         const activation = verification.result;
 
+
+     
+/* ===== Bazaar purchase verification and recovery ===== */
+
+const BAZAAR_PENDING_KEY = 'pendingBazaarPurchase';
+const BAZAAR_VERIFY_TIMEOUT = 20000;
+
+let bazaarVerificationRunning = false;
+
+function getPendingBazaarPurchase() {
+    try {
+        const raw = localStorage.getItem(BAZAAR_PENDING_KEY);
+        if (!raw) return null;
+
+        const purchase = JSON.parse(raw);
+
+        if (
+            !purchase ||
+            !purchase.productId ||
+            !purchase.purchaseToken ||
+            !purchase.userId
+        ) {
+            return null;
+        }
+
+        return purchase;
+    } catch (err) {
+        console.error('Cannot read pending Bazaar purchase:', err);
+        return null;
+    }
+}
+
+function savePendingBazaarPurchase(purchase) {
+    try {
+        localStorage.setItem(
+            BAZAAR_PENDING_KEY,
+            JSON.stringify(purchase)
+        );
+
+        return true;
+    } catch (err) {
+        console.error('Cannot save pending Bazaar purchase:', err);
+        return false;
+    }
+}
+
+function clearPendingBazaarPurchase() {
+    try {
+        localStorage.removeItem(BAZAAR_PENDING_KEY);
+    } catch (err) {
+        console.error('Cannot clear pending Bazaar purchase:', err);
+    }
+}
+
+// دکمه بازیابی خرید بدون شروع پرداخت جدید
+function showBazaarRecoveryButton() {
+    let button = document.getElementById('bazaar-recovery-button');
+
+    if (button) {
+        button.style.display = 'block';
+        return;
+    }
+
+    button = document.createElement('button');
+    button.id = 'bazaar-recovery-button';
+    button.type = 'button';
+    button.textContent = '🔄 تلاش مجدد برای فعال‌سازی خرید بازار';
+
+    button.style.cssText = `
+        position:fixed;
+        bottom:20px;
+        left:15px;
+        right:15px;
+        z-index:99999;
+        max-width:430px;
+        margin:auto;
+        padding:14px;
+        background:#2563eb;
+        color:white;
+        border:none;
+        border-radius:12px;
+        font-size:14px;
+        font-weight:bold;
+        cursor:pointer;
+        box-shadow:0 5px 20px rgba(0,0,0,.2);
+    `;
+
+    button.addEventListener('click', function () {
+        recoverPendingBazaarPurchase();
+    });
+
+    document.body.appendChild(button);
+}
+
+function hideBazaarRecoveryButton() {
+    const button = document.getElementById('bazaar-recovery-button');
+
+    if (button) {
+        button.remove();
+    }
+}
+
+async function verifyBazaarPurchase(purchase) {
+    if (bazaarVerificationRunning) return;
+
+    bazaarVerificationRunning = true;
+
+    let timeoutId = null;
+
+    try {
+        const {
+            data: { session },
+            error: sessionError
+        } = await supabase.auth.getSession();
+
+        if (sessionError) throw sessionError;
+
+        if (!session) {
+            alert(
+                'برای بازیابی خرید، ابتدا وارد همان حسابی شوید ' +
+                'که خرید را با آن انجام داده‌اید.'
+            );
+            showBazaarRecoveryButton();
+            return;
+        }
+
+        // جلوگیری از فعال شدن خرید روی حساب کاربری دیگر
+        if (session.user.id !== purchase.userId) {
+            alert(
+                'این خرید متعلق به حساب کاربری دیگری است. ' +
+                'لطفاً با حسابی که هنگام خرید وارد آن بودید وارد شوید.'
+            );
+            showBazaarRecoveryButton();
+            return;
+        }
+
+        const controller = new AbortController();
+
+        timeoutId = setTimeout(function () {
+            controller.abort();
+        }, BAZAAR_VERIFY_TIMEOUT);
+
+        const response = await fetch(
+            '/api/extend-subscription?mode=bazaar',
+            {
+                method: 'POST',
+                signal: controller.signal,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + session.access_token
+                },
+                body: JSON.stringify({
+                    productId: purchase.productId,
+                    purchaseToken: purchase.purchaseToken,
+                    orderId: purchase.orderId || null,
+                    ...(purchase.discountIntentId
+                        ? { discountIntentId: purchase.discountIntentId }
+                        : {})
+                })
+            }
+        );
+
+        clearTimeout(timeoutId);
+        timeoutId = null;
+
+        let verification;
+
+        try {
+            verification = await response.json();
+        } catch (_) {
+            const error = new Error(
+                'پاسخ قابل‌خواندن از سرور دریافت نشد.'
+            );
+
+            error.status = response.status;
+            throw error;
+        }
+
+        if (!response.ok || verification?.success !== true) {
+            const error = new Error(
+                verification?.error || 'تأیید خرید ناموفق بود.'
+            );
+
+            error.status = response.status;
+            throw error;
+        }
+
+        const activation = verification.result;
+
         if (!activation || activation.success !== true) {
             throw new Error(
-                'سرور هنوز فعال‌سازی اشتراک را تأیید نکرده است.'
+                'فعال‌سازی اشتراک هنوز توسط سرور تأیید نشده است.'
             );
         }
 
-        // خرید قبلاً با همین توکن ثبت شده است؛ پرداخت مجدد لازم نیست
+        // تنها بعد از پاسخ موفق سرور، خرید معلق پاک می‌شود
+        clearPendingBazaarPurchase();
+        hideBazaarRecoveryButton();
+
         if (
             verification.alreadyVerified === true ||
             activation.alreadyVerified === true
         ) {
             alert(
-                'این خرید قبلاً در سرور ثبت شده است. ' +
-                'اطلاعات اشتراک شما دوباره بارگذاری می‌شود. ' +
-                'لطفاً پرداخت جدید انجام ندهید.'
+                '✅ خرید قبلی شما در سرور ثبت شده است. ' +
+                'اطلاعات اشتراک دوباره بارگذاری می‌شود.'
             );
-
-            window.location.reload();
-            return;
+        } else {
+            alert('✅ خرید تأیید شد و اشتراک شما فعال گردید.');
         }
-
-        // فقط بعد از تأیید موفق سرور
-        alert('✅ خرید تأیید شد و اشتراک شما فعال گردید.');
 
         window.location.reload();
 
     } catch (err) {
-        console.error('Subscription activation error:', err);
-
-        const isNetworkError =
-            err?.name === 'AbortError' ||
-            err instanceof TypeError ||
-            !navigator.onLine;
+        console.error('Bazaar verification failed:', {
+            name: err?.name,
+            status: err?.status,
+            message: err?.message
+        });
 
         let message;
 
-        if (isNetworkError) {
+        if (err?.name === 'AbortError') {
             message =
-                'ارتباط با سرور برقرار نشد و وضعیت فعال‌سازی هنوز مشخص نیست. ' +
-                'لطفاً دوباره پرداخت نکنید. پس از اتصال اینترنت، خرید را بازیابی کنید.';
+                'زمان انتظار پاسخ سرور تمام شد. ' +
+                'وضعیت خرید هنوز مشخص نیست. دوباره پرداخت نکنید.';
+
+        } else if (
+            !navigator.onLine ||
+            err instanceof TypeError
+        ) {
+            message =
+                'ارتباط با سرور برقرار نشد. ' +
+                'خرید شما برای تلاش مجدد ذخیره شده است. ' +
+                'لطفاً دوباره پرداخت نکنید.';
 
         } else if (err?.status === 401) {
             message =
                 'نشست حساب کاربری معتبر نیست. ' +
-                'لطفاً دوباره وارد حساب شوید و وضعیت خرید را بررسی کنید.';
-
-        } else if (err?.status === 403) {
-            message =
-                'سرور درخواست فعال‌سازی را رد کرده است. ' +
-                'لطفاً دوباره پرداخت نکنید و برای بررسی خرید با پشتیبانی تماس بگیرید.';
+                'لطفاً دوباره وارد حساب خود شوید.';
 
         } else {
             message =
                 'فعال‌سازی اشتراک هنوز تأیید نشده است. ' +
-                'لطفاً دوباره پرداخت نکنید و برای بررسی یا بازیابی خرید با پشتیبانی تماس بگیرید.';
+                'خرید معلق حفظ شده؛ لطفاً دوباره پرداخت نکنید.';
         }
 
-        alert('❌ ' + message);
+        alert('⚠️ ' + message);
+
+        // توکن حذف نمی‌شود تا بتوان همان خرید را دوباره بررسی کرد
+        showBazaarRecoveryButton();
+
+    } finally {
+        if (timeoutId !== null) {
+            clearTimeout(timeoutId);
+        }
+
+        bazaarVerificationRunning = false;
+    }
+}
+
+// دریافت نتیجه خرید جدید از اپلیکیشن اندروید
+window.addEventListener(
+    'moshtriyarBazaarPurchaseResult',
+    async function (event) {
+        const result = event.detail || {};
+
+        if (!result.success) {
+            alert(
+                'خطای پرداخت بازار: ' +
+                (result.error || 'خرید تکمیل نشد.')
+            );
+            return;
+        }
+
+        if (!result.productId || !result.purchaseToken) {
+            alert(
+                'اطلاعات خرید کامل دریافت نشد. ' +
+                'لطفاً دوباره پرداخت نکنید و با پشتیبانی تماس بگیرید.'
+            );
+            return;
+        }
+
+        try {
+            const {
+                data: { session },
+                error
+            } = await supabase.auth.getSession();
+
+            if (error) throw error;
+
+            if (!session) {
+                alert(
+                    'برای فعال‌سازی خرید ابتدا وارد حساب شوید. ' +
+                    'لطفاً پرداخت جدید انجام ندهید.'
+                );
+                return;
+            }
+
+            const existing = getPendingBazaarPurchase();
+
+            // جلوگیری از جایگزینی تصادفی خرید معلق قبلی
+            if (
+                existing &&
+                existing.purchaseToken !== result.purchaseToken
+            ) {
+                alert(
+                    'یک خرید قبلی هنوز در انتظار تأیید است. ' +
+                    'ابتدا همان خرید را بازیابی کنید و دوباره پرداخت نکنید.'
+                );
+
+                showBazaarRecoveryButton();
+                return;
+            }
+
+            const purchase = {
+                productId: result.productId,
+                purchaseToken: result.purchaseToken,
+                orderId: result.orderId || null,
+                discountIntentId: result.discountIntentId || null,
+                userId: session.user.id,
+                createdAt: existing?.createdAt || Date.now()
+            };
+
+            // ذخیره قبل از ارسال درخواست به سرور
+            if (!savePendingBazaarPurchase(purchase)) {
+                alert(
+                    'امکان ذخیره امن اطلاعات بازیابی خرید وجود ندارد. ' +
+                    'لطفاً دوباره پرداخت نکنید و با پشتیبانی تماس بگیرید.'
+                );
+                return;
+            }
+
+            await verifyBazaarPurchase(purchase);
+
+        } catch (err) {
+            console.error('Bazaar purchase preparation failed:', err);
+
+            alert(
+                'آماده‌سازی تأیید خرید انجام نشد. ' +
+                'لطفاً دوباره پرداخت نکنید و با پشتیبانی تماس بگیرید.'
+            );
+        }
+    }
+);
+
+// بازیابی خرید قبلی بدون باز کردن پنجره پرداخت بازار
+async function recoverPendingBazaarPurchase() {
+    const purchase = getPendingBazaarPurchase();
+
+    if (!purchase) {
+        alert('خرید معلقی در حافظه این صفحه پیدا نشد.');
+        return;
+    }
+
+    await verifyBazaarPurchase(purchase);
+}
+
+// بررسی خرید معلق هنگام باز شدن صفحه
+async function initializeBazaarPurchaseRecovery() {
+    const pending = getPendingBazaarPurchase();
+
+    if (!pending) return;
+
+    showBazaarRecoveryButton();
+
+    if (navigator.onLine) {
+        await recoverPendingBazaarPurchase();
+    }
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener(
+        'DOMContentLoaded',
+        initializeBazaarPurchaseRecovery,
+        { once: true }
+    );
+} else {
+    initializeBazaarPurchaseRecovery();
+}
+
+// در صورت بازگشت اینترنت، دکمه بازیابی در دسترس باشد
+window.addEventListener('online', function () {
+    if (getPendingBazaarPurchase()) {
+        showBazaarRecoveryButton();
     }
 });
-     
+
+/* ===== End Bazaar purchase recovery ===== */
+   
 window.closePayment = function() {
     document.getElementById('payment-modal').style.display = 'none';
     document.body.style.overflow = '';
