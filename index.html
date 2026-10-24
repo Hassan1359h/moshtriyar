@@ -744,16 +744,44 @@ if (planKey === 'vip_yearly') {
 window.addEventListener('moshtriyarBazaarPurchaseResult', async function (event) {
     const result = event.detail || {};
 
+    // خطایی که قبل از ارسال خرید به سرور رخ داده است
     if (!result.success) {
-        alert('خطای پرداخت بازار: ' + (result.error || 'خطای نامشخص'));
+        alert(
+            'خطای پرداخت بازار: ' +
+            (result.error || 'خرید تکمیل نشد.')
+        );
+        return;
+    }
+
+    // اطلاعات لازم برای اعتبارسنجی خرید
+    if (!result.productId || !result.purchaseToken) {
+        console.error('Bazaar purchase data is incomplete', {
+            productId: result.productId || null,
+            hasPurchaseToken: Boolean(result.purchaseToken)
+        });
+
+        alert(
+            'اطلاعات خرید از بازار به‌طور کامل دریافت نشد. ' +
+            'لطفاً دوباره پرداخت نکنید و با پشتیبانی تماس بگیرید.'
+        );
         return;
     }
 
     try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const {
+            data: { session },
+            error: sessionError
+        } = await supabase.auth.getSession();
 
-        if (error) throw error;
-        if (!session) throw new Error('برای فعال‌سازی اشتراک، ابتدا وارد حساب شوید.');
+        if (sessionError) throw sessionError;
+
+        if (!session) {
+            alert(
+                'برای تکمیل فعال‌سازی، ابتدا وارد حساب خود شوید. ' +
+                'اگر پرداخت انجام شده است، دوباره خرید نکنید.'
+            );
+            return;
+        }
 
         const response = await fetch('/api/extend-subscription?mode=bazaar', {
             method: 'POST',
@@ -761,40 +789,102 @@ window.addEventListener('moshtriyarBazaarPurchaseResult', async function (event)
                 'Content-Type': 'application/json',
                 'Authorization': 'Bearer ' + session.access_token
             },
-       body: JSON.stringify({
-        productId: result.productId,
-         purchaseToken: result.purchaseToken,
-        orderId: result.orderId,
-       ...(result.discountIntentId
-         ? { discountIntentId: result.discountIntentId }
-        : {})
-})
+            body: JSON.stringify({
+                productId: result.productId,
+                purchaseToken: result.purchaseToken,
+                orderId: result.orderId || null,
+                ...(result.discountIntentId
+                    ? { discountIntentId: result.discountIntentId }
+                    : {})
+            })
         });
 
-        const verification = await response.json();
+        // پاسخ‌های غیر JSON هم باید به‌درستی مدیریت شوند
+        let verification;
 
-
-        if (!response.ok || !verification.success) {
-            throw new Error(verification.error || 'تأیید پرداخت ناموفق بود.');
+        try {
+            verification = await response.json();
+        } catch (_) {
+            const parseError = new Error(
+                'پاسخ قابل‌خواندن از سرور دریافت نشد.'
+            );
+            parseError.status = response.status;
+            throw parseError;
         }
 
-        if (verification.alreadyVerified || verification.result?.alreadyVerified) {
-    alert('⚠️ این توکن خرید قبلاً ثبت شده است. خرید جدید هنوز تأیید نشده؛ لطفاً دوباره پرداخت نکنید و با پشتیبانی تماس بگیرید.');
-    return;
-}
+        if (!response.ok || verification?.success !== true) {
+            const serverError = new Error(
+                verification?.error || 'تأیید پرداخت ناموفق بود.'
+            );
 
-if (verification.result?.success !== true) {
-    throw new Error('فعال‌سازی اشتراک توسط سرور تأیید نشد.');
-}
+            serverError.status = response.status;
+            throw serverError;
+        }
 
-alert('✅ خرید جدید تأیید شد و اشتراک شما فعال گردید.');
-window.location.reload();
+        // نتیجه تابع verify_bazaar_purchase
+        const activation = verification.result;
+
+        if (!activation || activation.success !== true) {
+            throw new Error(
+                'سرور هنوز فعال‌سازی اشتراک را تأیید نکرده است.'
+            );
+        }
+
+        // خرید قبلاً با همین توکن ثبت شده است؛ پرداخت مجدد لازم نیست
+        if (
+            verification.alreadyVerified === true ||
+            activation.alreadyVerified === true
+        ) {
+            alert(
+                'این خرید قبلاً در سرور ثبت شده است. ' +
+                'اطلاعات اشتراک شما دوباره بارگذاری می‌شود. ' +
+                'لطفاً پرداخت جدید انجام ندهید.'
+            );
+
+            window.location.reload();
+            return;
+        }
+
+        // فقط بعد از تأیید موفق سرور
+        alert('✅ خرید تأیید شد و اشتراک شما فعال گردید.');
+
+        window.location.reload();
 
     } catch (err) {
-        alert('❌ خطا در فعال‌سازی اشتراک: ' + err.message);
+        console.error('Subscription activation error:', err);
+
+        const isNetworkError =
+            err?.name === 'AbortError' ||
+            err instanceof TypeError ||
+            !navigator.onLine;
+
+        let message;
+
+        if (isNetworkError) {
+            message =
+                'ارتباط با سرور برقرار نشد و وضعیت فعال‌سازی هنوز مشخص نیست. ' +
+                'لطفاً دوباره پرداخت نکنید. پس از اتصال اینترنت، خرید را بازیابی کنید.';
+
+        } else if (err?.status === 401) {
+            message =
+                'نشست حساب کاربری معتبر نیست. ' +
+                'لطفاً دوباره وارد حساب شوید و وضعیت خرید را بررسی کنید.';
+
+        } else if (err?.status === 403) {
+            message =
+                'سرور درخواست فعال‌سازی را رد کرده است. ' +
+                'لطفاً دوباره پرداخت نکنید و برای بررسی خرید با پشتیبانی تماس بگیرید.';
+
+        } else {
+            message =
+                'فعال‌سازی اشتراک هنوز تأیید نشده است. ' +
+                'لطفاً دوباره پرداخت نکنید و برای بررسی یا بازیابی خرید با پشتیبانی تماس بگیرید.';
+        }
+
+        alert('❌ ' + message);
     }
 });
-        
+     
 window.closePayment = function() {
     document.getElementById('payment-modal').style.display = 'none';
     document.body.style.overflow = '';
