@@ -260,12 +260,15 @@ export default async function handler(req, res) {
                     existing.data.product_id === productId &&
                     existing.data.status === 'verified'
                 ) {
-                    return res.status(200).json({
-                        success: true,
-                        alreadyVerified: true
-                    });
-                }
-
+                   return res.status(200).json({
+          success: true,
+          alreadyVerified: true,
+        result: {
+          success: true,
+          alreadyVerified: true
+      }
+  }); 
+                
                 return res.status(409).json({
                     success: false,
                     error: 'Purchase token already registered'
