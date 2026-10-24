@@ -245,6 +245,60 @@ const saveFileFromWebView = async (fileData, filename, mimeType) => {
   try {
     const rawData = event?.nativeEvent?.data;
     const data = JSON.parse(rawData);
+    
+
+    if (data.type === 'recoverBazaarSubscriptions') {
+      const allowedProducts = [
+        'moshtriyar_vip_yearly',
+        'moshtriyar_business_30',
+        'moshtriyar_pro_30'
+      ];
+
+      try {
+        await CafeBazaarBilling.connect({
+          rsaPublicKey: "MIHNMA0GCSqGSIb3DQEBAQUAA4G7ADCBtwKBrwCgzISx4+sHzIMA0DxRq7cUAMFTeekhYJEeQGEiQ49npxyyHwyWVNIoxP1kntq01qtF+wPr/OuIni5bAbIWPcFmB2xCW98MhNFtoLi1qdkxHu9ARELpFDxn41Wn9begMC6Z6NK6/6Ci1saSBrcf5wYnEvM7/Z3rzx6e1u5QTVYnBY1x+hC+DkHdMGxpqqyOgIek0q6T90ozofI5BIKx5mMpbjE/MLlscZJj+XKRgrECAwEAAQ==",
+        });
+
+        const purchases = await CafeBazaarBilling.getSubscribedProducts();
+
+        const subscriptions = (Array.isArray(purchases) ? purchases : [])
+          .filter(item =>
+            allowedProducts.includes(item.productId) &&
+            typeof item.purchaseToken === 'string' &&
+            item.purchaseToken.length > 0
+          )
+          .map(item => ({
+            productId: item.productId,
+            purchaseToken: item.purchaseToken,
+            orderId: item.orderId || null
+          }));
+
+        webViewRef.current?.injectJavaScript(
+          "window.dispatchEvent(new CustomEvent('moshtriyarBazaarRecoveryResult',{detail:" +
+          JSON.stringify({ success: true, subscriptions }) +
+          "}));true;"
+        );
+
+      } catch (err) {
+        console.error('Bazaar recovery error:', err);
+
+        webViewRef.current?.injectJavaScript(
+          "window.dispatchEvent(new CustomEvent('moshtriyarBazaarRecoveryResult',{detail:" +
+          JSON.stringify({
+            success: false,
+            error: 'بازیابی خریدها از بازار انجام نشد.'
+          }) +
+          "}));true;"
+        );
+
+      } finally {
+        try {
+          await CafeBazaarBilling.disconnect();
+        } catch (_) {}
+      }
+
+      return;
+    }
 
     if (data.type === 'buyBazaarSubscription') {
       // لیست محصولات مجاز (تغییر یافته به trial_subscription)
