@@ -1084,7 +1084,98 @@ window.addEventListener(
         }
     }
 );
+// دریافت اشتراک‌های بازیابی‌شده از خود کافه‌بازار
+window.addEventListener(
+    'moshtriyarBazaarRecoveryResult',
+    async function (event) {
+        const result = event.detail || {};
 
+        if (!result.success) {
+            console.error(
+                'Native Bazaar recovery failed:',
+                result.error
+            );
+            return;
+        }
+
+        const subscriptions = Array.isArray(result.subscriptions)
+            ? result.subscriptions
+            : [];
+
+        if (subscriptions.length === 0) return;
+
+        // خرید معلق قبلی نباید با خرید دیگری جایگزین شود
+        if (getPendingBazaarPurchase()) {
+            showBazaarRecoveryButton();
+            return;
+        }
+
+        try {
+            const {
+                data: { session },
+                error
+            } = await supabase.auth.getSession();
+
+            if (error) throw error;
+
+            if (!session) {
+                alert(
+                    'اشتراک قبلی در کافه‌بازار پیدا شد. ' +
+                    'برای بازیابی، ابتدا وارد همان حساب مشتری‌یار شوید. ' +
+                    'لطفاً پرداخت جدید انجام ندهید.'
+                );
+                return;
+            }
+
+            const allowedProducts = [
+                'moshtriyar_vip_yearly',
+                'moshtriyar_business_30',
+                'moshtriyar_pro_30'
+            ];
+
+            for (const item of subscriptions) {
+                if (
+                    !allowedProducts.includes(item.productId) ||
+                    typeof item.purchaseToken !== 'string' ||
+                    !item.purchaseToken
+                ) {
+                    continue;
+                }
+
+                const purchase = {
+                    productId: item.productId,
+                    purchaseToken: item.purchaseToken,
+                    orderId: item.orderId || null,
+                    userId: session.user.id,
+                    createdAt: Date.now()
+                };
+
+                if (!savePendingBazaarPurchase(purchase)) {
+                    alert(
+                        'اطلاعات بازیابی ذخیره نشد. ' +
+                        'لطفاً دوباره پرداخت نکنید.'
+                    );
+                    return;
+                }
+
+                // تأیید مالکیت توکن و فعال‌سازی فقط توسط سرور
+                await verifyBazaarPurchase(purchase);
+
+                // در صورت باقی‌ماندن خرید معلق، سراغ خرید بعدی نرو
+                if (getPendingBazaarPurchase()) return;
+
+                // تابع تأیید در صورت موفقیت، صفحه را بارگذاری مجدد می‌کند
+                return;
+            }
+        } catch (err) {
+            console.error('Bazaar recovery preparation failed:', err);
+            alert(
+                'بازیابی اشتراک کامل نشد. ' +
+                'لطفاً پرداخت جدید انجام ندهید.'
+            );
+        }
+    }
+);
 // بازیابی خرید قبلی بدون باز کردن پنجره پرداخت بازار
 async function recoverPendingBazaarPurchase() {
     const purchase = getPendingBazaarPurchase();
