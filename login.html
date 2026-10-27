@@ -261,13 +261,32 @@
 
         // بررسی پارامتر پلن در URL
         const urlParams = new URLSearchParams(window.location.search);
-        const selectedPlan = urlParams.get('plan');
-        if (selectedPlan) {
-            const planName = selectedPlan === 'pro' ? 'پلن حرفه‌ای' : 
-                            selectedPlan === 'business' ? 'پلن کسب‌وکار' : selectedPlan;
-            planBadge.textContent = '🎯 پلن انتخابی شما: ' + planName;
-            planBadge.classList.add('show');
-        }
+        
+const allowedPlans = {
+    pro: 'پلن حرفه‌ای',
+    business: 'پلن کسب‌وکار',
+    vip_yearly: 'اشتراک ویژه یک‌ساله'
+};
+
+const selectedPlan = urlParams.get('plan');
+const validSelectedPlan = Object.prototype.hasOwnProperty.call(
+    allowedPlans,
+    selectedPlan
+) ? selectedPlan : null;
+
+if (validSelectedPlan) {
+    planBadge.textContent =
+        '🎯 پلن انتخابی شما: ' + allowedPlans[validSelectedPlan];
+    planBadge.classList.add('show');
+}
+
+// حفظ پلن هنگام انتقال از ورود به صفحه اصلی
+function getAfterLoginUrl() {
+    return validSelectedPlan
+        ? 'index.html?plan=' + encodeURIComponent(validSelectedPlan)
+        : 'dashboard.html';
+}
+
 
         let mode = 'login';
 
@@ -298,7 +317,7 @@
             supabase.auth.getSession(),
             new Promise((_, reject) => setTimeout(() => reject(new Error('Session timeout')), 5000))
         ]).then(({ data }) => {
-            if (data?.session) window.location.href = 'dashboard.html';
+            if (data?.session) window.location.href = getAfterLoginUrl();
         }).catch((error) => {
             console.warn('Session check skipped:', error);
         });
@@ -381,7 +400,9 @@ if (window.turnstile) {
                     });
                     if (error) throw error;
                     showMessage('ورود موفق! در حال انتقال...', 'success');
-                    setTimeout(() => { window.location.href = 'dashboard.html'; }, 800);
+                    setTimeout(() => {
+                    window.location.href = getAfterLoginUrl();
+                     }, 800);
                 } else {
                     if (!fullName) {
                         throw new Error('لطفاً نام و نام خانوادگی را وارد کنید.');
