@@ -271,12 +271,30 @@ async function init() {
         if (adminNav) adminNav.style.display = 'none';
     }
     
-    await Promise.allSettled([ loadCustomers(), loadFinancialStats(), loadSubscription() ]);
+    // وضعیت اشتراک پیش از نمایش داشبورد بارگذاری شود
+    await loadSubscription();
+
+    // نمایش داشبورد پس از بررسی دسترسی کاربر
     $('loading').classList.add('hidden');
     $('main').classList.remove('hidden');
+
+    // اطلاعات جانبی بدون مسدودکردن نمایش صفحه بارگذاری شوند
+    Promise.allSettled([
+        loadCustomers(),
+        loadFinancialStats()
+    ]).then(results => {
+        results.forEach((result, index) => {
+            if (result.status === 'rejected') {
+                console.error(
+                    index === 0
+                        ? 'Dashboard customers loading failed:'
+                        : 'Dashboard financial stats loading failed:',
+                    result.reason
+                );
+            }
+        });
+    });
 }
-
-
 async function loadProfile() {
     const { data: profile, error } = await supabase
         .from('profiles')
