@@ -1361,17 +1361,39 @@ document.getElementById('payment-modal')?.addEventListener('click', (e) => {
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') window.closePayment();
 });
-    // 🎯 اگه از locked.html با ?plan=pro اومدی، خودکار مودال باز کن
-(function autoOpenModal() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const plan = urlParams.get('plan');
-    if (plan && ['pro', 'business'].includes(plan)) {
-        // کمی صبر کن تا صفحه لود بشه
-        setTimeout(() => {
-            window.openPayment(plan);
+
+    // نمایش پلن انتخاب‌شده پس از ورود، بدون شروع خودکار پرداخت
+    (function showSelectedPlanAfterLogin() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const planKey = urlParams.get('plan');
+
+        const validPlans = ['pro', 'business', 'vip_yearly'];
+
+        if (!validPlans.includes(planKey)) return;
+
+        const plan = PLANS[planKey];
+        if (!plan) return;
+
+        // حذف پارامتر پلن برای جلوگیری از اجرای مجدد
+        urlParams.delete('plan');
+
+        const remainingQuery = urlParams.toString();
+        const cleanUrl =
+            window.location.pathname +
+            (remainingQuery ? '?' + remainingQuery : '') +
+            window.location.hash;
+
+        window.history.replaceState({}, '', cleanUrl);
+
+        // فقط اطلاع‌رسانی؛ خرید با کلیک مجدد کاربر انجام می‌شود
+        setTimeout(function () {
+            alert(
+                'پلن انتخابی شما: ' + plan.name +
+                '\n\nبرای ادامه خرید، دکمه همان پلن را دوباره انتخاب کنید.'
+            );
         }, 500);
-    }
-})();    
+    })();
+        
      </script>
 
     <!-- مشتری‌یار | AI Website Assistant -->
