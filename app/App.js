@@ -25,8 +25,8 @@ export default function App() {
   const webViewRef = useRef(null);
   const bazaarBillingBusyRef = useRef(false);
   const loadingTimerRef = useRef(null);
-  const [webViewKey, setWebViewKey] = useState(0);
-
+const initialLoadFinishedRef = useRef(false);
+const [webViewKey, setWebViewKey] = useState(0);
   const [canGoBack, setCanGoBack] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -56,19 +56,31 @@ export default function App() {
   useEffect(() => () => clearLoadingTimer(), []);
 
   const handleLoadStart = () => {
-    clearLoadingTimer();
-    setLoading(true);
-    loadingTimerRef.current = setTimeout(() => {
-      loadingTimerRef.current = null;
-      setLoading(false);
-      setError(true);
-    }, 20000);
-  };
+  // پس از بارگذاری اولیه، برای جابه‌جایی بین صفحات
+  // دیگر لایه سفید تمام‌صفحه نمایش داده نشود.
+  if (initialLoadFinishedRef.current) {
+    return;
+  }
 
-  const handleLoadEnd = () => {
-    clearLoadingTimer();
+  clearLoadingTimer();
+  setLoading(true);
+
+  loadingTimerRef.current = setTimeout(() => {
+    loadingTimerRef.current = null;
     setLoading(false);
-  };
+    setError(true);
+  }, 20000);
+};
+
+const handleLoadEnd = () => {
+  if (initialLoadFinishedRef.current) {
+    return;
+  }
+
+  initialLoadFinishedRef.current = true;
+  clearLoadingTimer();
+  setLoading(false);
+};
 
   const handleError = () => {
     clearLoadingTimer();
@@ -77,11 +89,12 @@ export default function App() {
   };
 
   const handleRetry = () => {
-    clearLoadingTimer();
-    setError(false);
-    setLoading(true);
-    setWebViewKey(value => value + 1);
-  };
+  clearLoadingTimer();
+  initialLoadFinishedRef.current = false;
+  setError(false);
+  setLoading(true);
+  setWebViewKey(value => value + 1);
+};
 
   const getFileName = (url, fallback = 'moshtriyar-ai-agent.zip') => {
     try {
