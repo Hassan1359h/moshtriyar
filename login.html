@@ -419,7 +419,15 @@ if (window.turnstile) {
                             captchaToken: captchaToken 
                         }
                     });
-                    if (error) throw error;
+                    if (error) {
+    if (error.message === 'Email not confirmed' || error.code === 'email_not_confirmed') {
+        throw new Error(
+            'ایمیل شما هنوز تأیید نشده است. لطفاً ایمیل خود را بررسی کنید و روی لینک تأیید حساب کاربری کلیک کنید. پوشه Spam را نیز بررسی کنید.'
+        );
+    }
+
+    throw error;
+        }
 
                     // 📧 ارسال ایمیل خوش‌آمد
                     try {
