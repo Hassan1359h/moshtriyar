@@ -408,14 +408,22 @@ $('cards').addEventListener('click', async (event) => {
                 alert('شما قبلاً همین رأی را ثبت کرده‌اید.');
                 return;
             }
+const { data: updatedVotes, error: updateError } = await supabase
+    .from('business_votes')
+    .update({ satisfied })
+    .eq('id', previousVote.id)
+    .eq('voter_id', voterId)
+    .select('id,satisfied');
 
-            const { error: updateError } = await supabase
-                .from('business_votes')
-                .update({ satisfied })
-                .eq('id', previousVote.id)
-                .eq('voter_id', voterId);
+if (updateError) throw updateError;
 
-            if (updateError) throw updateError;
+if (!updatedVotes || updatedVotes.length !== 1) {
+    throw new Error('رأی قبلی پیدا شد، اما اجازه تغییر آن وجود نداشت یا هیچ ردیفی تغییر نکرد.');
+}
+
+if (updatedVotes[0].satisfied !== satisfied) {
+    throw new Error('مقدار رأی پس از ذخیره با مقدار درخواستی مطابقت ندارد.');
+}
 
         } else {
             // ثبت اولین رأی
