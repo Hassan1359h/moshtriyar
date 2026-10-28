@@ -256,10 +256,23 @@ function renderCard(b, rating) {
                 <span class="stars" aria-label="امتیاز ${score} از ۵">${stars(score)}</span>
                 <span class="score">${score.toFixed(1)} از ۵ (${count} رأی)</span>
             </div>
-            <div class="actions">
-                <button class="vote" disabled title="به‌زودی فعال می‌شود">👍 راضی هستم</button>
-                <button class="vote" disabled title="به‌زودی فعال می‌شود">👎 ناراضی هستم</button>
-            </div>
+          <div class="actions">
+    <button
+        type="button"
+        class="vote"
+        data-business-id="${escapeHTML(b.id)}"
+        data-satisfied="true">
+        👍 راضی هستم
+    </button>
+
+    <button
+        type="button"
+        class="vote"
+        data-business-id="${escapeHTML(b.id)}"
+        data-satisfied="false">
+        👎 ناراضی هستم
+    </button>
+</div>  
         </div>
     </article>`;
 }
@@ -352,6 +365,98 @@ let debounce;
 });
 
 $('more').addEventListener('click', () => loadBusinesses());
+
+// مدیریت رأی‌گیری کسب‌وکارها
+$('cards').addEventListener('click', async (event) => {
+    const button = event.target.closest('button[data-business-id]');
+    if (!button || button.disabled) return;
+
+    const businessId = button.dataset.businessId;
+    const satisfied = button.dataset.satisfied === 'true';
+
+    const card = button.closest('.card');
+    const buttons = card.querySelectorAll('.vote');
+
+    // بررسی ورود کاربر
+    const { data: { session }, error: sessionError } =
+        await supabase.auth.getSession();
+
+    if (sessionError || !session?.user) {
+        alert('برای ثبت رأی ابتدا وارد حساب کاربری خود شوید.');
+        window.location.href = 'login.html';
+        return;
+    }
+
+    const voterId = session.user.id;
+
+    buttons.forEach(btn => btn.disabled = true);
+
+    try {
+        // بررسی رأی قبلی کاربر
+        const { data: previousVote, error: readError } = await supabase
+            .from('business_votes')
+            .select('id,satisfied')
+            .eq('business_id', businessId)
+            .eq('voter_id', voterId)
+            .maybeSingle();
+
+        if (readError) throw readError;
+
+        if (previousVote) {
+            // اگر کاربر قبلاً رأی داده، رأی او تغییر می‌کند.
+            if (previousVote.satisfied === satisfied) {
+                alert('شما قبلاً همین رأی را ثبت کرده‌اید.');
+                return;
+            }
+
+            const { error: updateError } = await supabase
+                .from('business_votes')
+                .update({ satisfied })
+                .eq('id', previousVote.id)
+                .eq('voter_id', voterId);
+
+            if (updateError) throw updateError;
+
+        } else {
+            // ثبت اولین رأی
+            const { error: insertError } = await supabase
+                .from('business_votes')
+                .insert({
+                    business_id: businessId,
+                    voter_id: voterId,
+                    satisfied
+                });
+
+            if (insertError) throw insertError;
+        }
+
+        alert('✅ رأی شما با موفقیت ثبت شد.');
+
+        // دریافت امتیاز جدید از View
+        const { data: updatedRating, error: ratingError } = await supabase
+            .from('business_ratings')
+            .select('rating,total_votes')
+            .eq('business_id', businessId)
+            .maybeSingle();
+
+        if (ratingError) throw ratingError;
+
+        if (updatedRating) {
+            const score = Number(updatedRating.rating || 0);
+            const count = Number(updatedRating.total_votes || 0);
+
+            card.querySelector('.stars').textContent = stars(score);
+            card.querySelector('.score').textContent =
+                `${score.toFixed(1)} از ۵ (${count} رأی)`;
+        }
+
+    } catch (err) {
+        console.error('Business voting error:', err);
+        alert('ثبت رأی انجام نشد: ' + (err.message || 'خطای نامشخص'));
+    } finally {
+        buttons.forEach(btn => btn.disabled = false);
+    }
+});
 
 loadBusinesses(true);
 </script>
