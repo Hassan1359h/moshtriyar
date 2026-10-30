@@ -1,0 +1,434 @@
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>پرونده ۳۶۰ درجه | مشتری‌یار</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Tahoma, sans-serif;
+      background: #f5f7fb;
+      color: #172033;
+      line-height: 1.9;
+    }
+    .container { max-width: 1100px; margin: auto; padding: 20px; }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    h1 { font-size: 23px; margin: 0; }
+    h2 { font-size: 17px; margin: 0 0 15px; }
+    .muted { color: #64748b; font-size: 13px; }
+    .card {
+      background: white;
+      border: 1px solid #e5eaf2;
+      border-radius: 15px;
+      padding: 19px;
+      margin-bottom: 16px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
+    }
+    .item {
+      border-bottom: 1px solid #edf0f5;
+      padding: 11px 0;
+      overflow-wrap: anywhere;
+    }
+    .item:last-child { border-bottom: none; }
+    .title { font-weight: bold; }
+    .empty { color: #64748b; font-size: 14px; }
+    .error { color: #b91c1c; }
+    .tag {
+      display: inline-block;
+      padding: 2px 9px;
+      background: #eef2ff;
+      color: #3730a3;
+      border-radius: 20px;
+      font-size: 12px;
+      margin: 3px;
+    }
+    a {
+      color: #2563eb;
+      text-decoration: none;
+    }
+    .back {
+      background: white;
+      border: 1px solid #dbe2ed;
+      padding: 6px 13px;
+      border-radius: 9px;
+    }
+    .event {
+      padding: 12px 16px;
+      border-right: 3px solid #6366f1;
+      margin: 12px 0;
+      background: #f8faff;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <header>
+      <div>
+        <h1 id="pageTitle">پرونده ۳۶۰ درجه</h1>
+        <div class="muted">نمای یکپارچه سوابق و ارتباطات</div>
+      </div>
+      <a class="back" href="customers.html">بازگشت به مشتریان</a>
+    </header>
+
+    <div id="message" class="card muted">در حال دریافت اطلاعات...</div>
+
+    <div id="content" hidden>
+      <section class="card">
+        <h2 id="profileTitle">مشخصات مشتری</h2>
+        <div id="profile"></div>
+      </section>
+
+      <div class="grid">
+        <section class="card">
+          <h2 id="financialTitle">سوابق مالی</h2>
+          <div id="invoices"></div>
+        </section>
+
+        <section class="card">
+          <h2 id="casesTitle">خدمات و سوابق</h2>
+          <div id="cases"></div>
+        </section>
+
+        <section class="card">
+          <h2>پیگیری‌ها</h2>
+          <div id="followups"></div>
+        </section>
+
+        <section class="card">
+          <h2>رضایت‌سنجی</h2>
+          <div id="feedback"></div>
+        </section>
+      </div>
+
+      <section class="card">
+        <h2>تاریخچه یکپارچه</h2>
+        <div id="timeline"></div>
+      </section>
+    </div>
+  </main>
+
+  <script type="module">
+    import { supabase } from './js/supabase.js';
+    import { checkPlanGuard } from './js/check-plan.js';
+    import { getLabels, BUSINESS_FIELDS } from './js/labels.js';
+    import { loadBusinessType } from './js/helpers.js';
+
+    const $ = id => document.getElementById(id);
+
+    const params = new URLSearchParams(location.search);
+    const customerId = params.get('id');
+
+    const validUUID = value =>
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value || '');
+
+    const dateText = value =>
+      value ? new Date(value).toLocaleString('fa-IR') : 'ثبت نشده';
+
+    const safeText = value =>
+      value === null || value === undefined || value === ''
+        ? 'ثبت نشده'
+        : String(value);
+
+    function element(tag, text, className = '') {
+      const node = document.createElement(tag);
+      node.textContent = safeText(text);
+      if (className) node.className = className;
+      return node;
+    }
+
+    function empty(container, text = 'موردی ثبت نشده است.') {
+      container.replaceChildren(element('p', text, 'empty'));
+    }
+
+    function addLine(parent, label, value) {
+      const row = document.createElement('div');
+      row.className = 'item';
+
+      const strong = element('strong', label + ': ');
+      const span = element('span', value);
+
+      row.append(strong, span);
+      parent.append(row);
+    }
+
+    function showError(text) {
+      $('message').textContent = text;
+      $('message').className = 'card error';
+      $('message').hidden = false;
+      $('content').hidden = true;
+    }
+
+    function renderItems(target, records, render) {
+      const container = $(target);
+      container.replaceChildren();
+
+      if (!records.length) {
+        empty(container);
+        return;
+      }
+
+      records.forEach(record => {
+        const item = document.createElement('div');
+        item.className = 'item';
+        render(item, record);
+        container.append(item);
+      });
+    }
+
+    const caseNames = {
+      service: 'خدمت',
+      visit: 'مراجعه',
+      order: 'سفارش',
+      warranty: 'گارانتی',
+      complaint: 'شکایت',
+      other: 'سایر'
+    };
+
+    const statusNames = {
+      open: 'باز',
+      in_progress: 'در حال انجام',
+      waiting: 'در انتظار',
+      resolved: 'رسیدگی‌شده',
+      closed: 'بسته‌شده',
+      cancelled: 'لغوشده',
+      pending: 'در انتظار',
+      done: 'انجام‌شده'
+    };
+
+    async function init() {
+      try {
+        if (!validUUID(customerId)) {
+          showError('شناسه مشتری در آدرس صفحه معتبر نیست.');
+          return;
+        }
+
+        const { data: { session }, error: sessionError } =
+          await supabase.auth.getSession();
+
+        if (sessionError) throw sessionError;
+
+        if (!session) {
+          location.href = 'login.html';
+          return;
+        }
+
+        if (!(await checkPlanGuard())) return;
+
+        const userId = session.user.id;
+        const businessType = await loadBusinessType(supabase, userId);
+        const labels = getLabels(businessType);
+        const specializedFields = BUSINESS_FIELDS[businessType] || [];
+
+        $('pageTitle').textContent = `پرونده ۳۶۰ درجه ${labels.customer}`;
+        $('profileTitle').textContent = `مشخصات ${labels.customer}`;
+        $('financialTitle').textContent = `سوابق مالی و ${labels.invoices}`;
+        $('casesTitle').textContent = `سوابق ${labels.service} و ${labels.appointments}`;
+
+        // مشتری باید متعلق به همین کاربر باشد.
+        const { data: customer, error: customerError } = await supabase
+          .from('customers')
+          .select('*')
+          .eq('id', customerId)
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        if (customerError) throw customerError;
+
+        if (!customer) {
+          showError('این مشتری پیدا نشد یا اجازه مشاهده آن را ندارید.');
+          return;
+        }
+
+        $('profile').replaceChildren();
+        addLine($('profile'), 'نام', customer.name);
+        addLine($('profile'), 'تلفن', customer.phone);
+        addLine($('profile'), 'ایمیل', customer.email);
+        addLine($('profile'), 'وضعیت', customer.status);
+        addLine($('profile'), 'یادداشت', customer.notes);
+        addLine($('profile'), 'تاریخ ثبت', dateText(customer.created_at));
+
+        // هر درخواست با شناسه کاربر و مشتری محدود شده است.
+        const [
+          casesResult,
+          invoicesResult,
+          timelineResult
+        ] = await Promise.all([
+          supabase
+            .from('customer_cases')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('customer_id', customerId)
+            .order('created_at', { ascending: false }),
+
+          supabase
+            .from('invoices')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('customer_id', customerId)
+            .order('created_at', { ascending: false }),
+
+          supabase
+            .from('customer_timeline')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('customer_id', customerId)
+            .order('event_at', { ascending: false })
+        ]);
+
+        if (casesResult.error) throw casesResult.error;
+        if (invoicesResult.error) throw invoicesResult.error;
+        if (timelineResult.error) throw timelineResult.error;
+
+        const cases = casesResult.data || [];
+        const invoices = invoicesResult.data || [];
+        const timeline = timelineResult.data || [];
+
+        renderItems('invoices', invoices, (item, invoice) => {
+          item.append(element('div',
+            invoice.customer_name || customer.name, 'title'
+          ));
+
+          addLine(item, 'شماره فاکتور',
+            invoice.invoice_number ?? invoice.number ?? invoice.id
+          );
+
+          // فقط ستون‌هایی که واقعاً در داده موجودند نمایش داده می‌شوند.
+          if ('total_amount' in invoice)
+            addLine(item, 'مبلغ کل', invoice.total_amount);
+
+          if ('total' in invoice)
+            addLine(item, 'مبلغ', invoice.total);
+
+          if ('status' in invoice)
+            addLine(item, 'وضعیت', invoice.status);
+
+          addLine(item, 'تاریخ', dateText(invoice.created_at));
+        });
+
+        renderItems('cases', cases, (item, record) => {
+          item.append(element('div', record.title, 'title'));
+
+          const tag = element('span',
+            caseNames[record.case_type] || record.case_type, 'tag'
+          );
+          item.append(tag);
+
+          addLine(item, 'وضعیت',
+            statusNames[record.status] || record.status
+          );
+
+          if (record.description)
+            addLine(item, 'توضیحات', record.description);
+
+          // نمایش فیلدهای اختصاصی صنف، در صورت ثبت شدن.
+          const details = record.details || {};
+
+          specializedFields.forEach(field => {
+            if (Object.prototype.hasOwnProperty.call(details, field.key)) {
+              addLine(item, field.label, details[field.key]);
+            }
+          });
+
+          if (record.warranty_expires_at)
+            addLine(item, 'پایان گارانتی',
+              dateText(record.warranty_expires_at)
+            );
+
+          addLine(item, 'تاریخ ثبت', dateText(record.created_at));
+        });
+
+        // پیگیری‌ها و بازخوردها از طریق پرونده‌های همین مشتری دریافت می‌شوند.
+        const caseIds = cases.map(record => record.id);
+
+        let followups = [];
+        let feedback = [];
+
+        if (caseIds.length) {
+          const [followupsResult, feedbackResult] = await Promise.all([
+            supabase
+              .from('customer_followups')
+              .select('*')
+              .eq('user_id', userId)
+              .in('case_id', caseIds)
+              .order('created_at', { ascending: false }),
+
+            supabase
+              .from('customer_feedback')
+              .select('*')
+              .eq('user_id', userId)
+              .in('case_id', caseIds)
+              .order('created_at', { ascending: false })
+          ]);
+
+          if (followupsResult.error) throw followupsResult.error;
+          if (feedbackResult.error) throw feedbackResult.error;
+
+          followups = followupsResult.data || [];
+          feedback = feedbackResult.data || [];
+        }
+
+        renderItems('followups', followups, (item, record) => {
+          item.append(element('div', record.title, 'title'));
+          addLine(item, 'وضعیت',
+            statusNames[record.status] || record.status
+          );
+          addLine(item, 'مسئول', record.assigned_to);
+          addLine(item, 'موعد', dateText(record.due_at));
+          if (record.outcome)
+            addLine(item, 'نتیجه', record.outcome);
+        });
+
+        renderItems('feedback', feedback, (item, record) => {
+          addLine(item, 'امتیاز',
+            record.rating == null ? 'ثبت نشده' : `${record.rating} از ۵`
+          );
+          addLine(item, 'رضایت',
+            record.is_satisfied === null
+              ? 'ثبت نشده'
+              : record.is_satisfied ? 'راضی' : 'ناراضی'
+          );
+          addLine(item, 'نظر', record.comment);
+          addLine(item, 'تاریخ', dateText(record.created_at));
+        });
+
+        renderItems('timeline', timeline, (item, event) => {
+          item.className = 'event';
+          item.append(element('div', event.event_title, 'title'));
+
+          if (event.event_description)
+            item.append(element('div', event.event_description));
+
+          item.append(element('div',
+            dateText(event.event_at), 'muted'
+          ));
+        });
+
+        $('message').hidden = true;
+        $('content').hidden = false;
+
+      } catch (error) {
+        console.error('Customer 360 error:', error);
+        showError('بارگذاری پرونده با خطا مواجه شد: ' +
+          (error.message || 'خطای نامشخص'));
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
