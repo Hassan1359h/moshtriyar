@@ -1,4 +1,4 @@
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
+نهconst RESEND_API_KEY = process.env.RESEND_API_KEY;
 import { checkRateLimit, getClientIP } from "../lib/rate-limit.js";
 
 const EMAIL_TEMPLATES = {
@@ -356,8 +356,121 @@ export default async function handler(req, res) {
   // ⚙️ POST با action=settings → ذخیره تنظیمات
   // ==========================================================
   const postAction = req.query?.action;
+// ==========================================================
+// 🔐 دعوت مشتری: مرحله اول، احراز هویت و بررسی مالکیت
+// فعلاً هیچ دعوت‌نامه‌ای ارسال نمی‌شود.
+// ==========================================================
+if (postAction === "invite_customer") {
+  const authHeader = req.headers.authorization || "";
+  const token = authHeader.startsWith("Bearer ")
+    ? authHeader.slice(7)
+    : "";
 
-  if (postAction === "settings") {
+  if (!token) {
+    return res.status(401).json({
+      ok: false,
+      error: "Authentication required"
+    });
+  }
+
+  const { customerId } = req.body || {};
+
+  if (
+    typeof customerId !== "string" ||
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(customerId)
+  ) {
+    return res.status(400).json({
+      ok: false,
+      error: "Invalid customer ID"
+    });
+  }
+
+  try {
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !serviceKey) {
+      return res.status(500).json({
+        ok: false,
+        error: "Server configuration missing"
+      });
+    }
+
+    const userRes = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      headers: {
+        apikey: serviceKey,
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    if (!userRes.ok) {
+      return res.status(401).json({
+        ok: false,
+        error: "Invalid session"
+      });
+    }
+
+    const manager = await userRes.json();
+
+    if (!manager?.id) {
+      return res.status(401).json({
+        ok: false,
+        error: "Invalid user"
+      });
+    }
+
+    const customerRes = await fetch(
+      `${supabaseUrl}/rest/v1/customers?id=eq.${customerId}&user_id=eq.${manager.id}&select=id,name,email&limit=1`,
+      {
+        headers: {
+          apikey: serviceKey,
+          Authorization: `Bearer ${serviceKey}`
+        }
+      }
+    );
+
+    if (!customerRes.ok) {
+      return res.status(500).json({
+        ok: false,
+        error: "Customer lookup failed"
+      });
+    }
+
+    const customers = await customerRes.json();
+    const customer = customers?.[0];
+
+    if (!customer) {
+      return res.status(404).json({
+        ok: false,
+        error: "Customer not found"
+      });
+    }
+
+    if (!customer.email?.trim()) {
+      return res.status(400).json({
+        ok: false,
+        error: "Customer email is required"
+      });
+    }
+
+    // فقط مرحله بررسی؛ هیچ دعوت یا دسترسی‌ای ساخته نمی‌شود.
+    return res.status(200).json({
+      ok: true,
+      eligible: true,
+      message: "Customer ownership verified. Invitation not sent."
+    });
+
+  } catch (error) {
+    console.error("Customer invitation precheck failed:", error);
+    return res.status(500).json({
+      ok: false,
+      error: "Invitation precheck failed"
+    });
+  }
+}
+
+if (postAction === "settings") {
+
     const token = req.headers.authorization?.replace("Bearer ", "");
     if (!token) return res.status(401).json({ ok: false, error: "No token" });
 
