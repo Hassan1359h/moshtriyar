@@ -176,7 +176,8 @@
           window.location.pathname
         );
 
-        form.hidden = false;
+        // تا زمان تکمیل اتصال امن دعوت‌نامه، فرم تعیین رمز نمایش داده نشود.
+form.hidden = true;
 
         showMessage(
           'دعوت‌نامه تأیید شد. لطفاً رمز عبور خود را تعیین کنید.'
