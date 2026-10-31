@@ -136,18 +136,20 @@
 
         const tokenHash = params.get('token_hash');
         const linkType = params.get('type');
-
+        const inviteCode = params.get('invite_code');
         if (
-          linkType !== 'invite' ||
-          !tokenHash
-        ) {
+  !['invite', 'magiclink'].includes(linkType) ||
+  !tokenHash ||
+  !inviteCode ||
+  !/^[0-9a-f]{64}$/i.test(inviteCode)
+) {
           throw new Error('Invalid invitation link');
         }
 
         const { data, error } =
           await inviteAuth.auth.verifyOtp({
             token_hash: tokenHash,
-            type: 'invite'
+            type: linkType
           });
 
         if (error || !data.session || !data.user) {
@@ -166,22 +168,45 @@
           throw new Error('User verification failed');
         }
 
+               // تبدیل کد دعوت به SHA-256
+        const encodedCode = new TextEncoder().encode(inviteCode);
+        const digest = await crypto.subtle.digest('SHA-256', encodedCode);
+        const inviteHash = Array.from(new Uint8Array(digest))
+          .map(b => b.toString(16).padStart(2, '0'))
+          .join('');
+
+        // اتصال حساب تأییدشده به پرونده مشتری
+        const { data: accepted, error: acceptError } =
+          await inviteAuth.rpc('accept_customer_portal_invitation', {
+            p_token_hash: inviteHash
+          });
+
+        if (acceptError || accepted !== true) {
+          throw new Error('پذیرش دعوت انجام نشد یا لینک منقضی شده است.');
+        }
+
         invitedUserId = verified.user.id;
         inviteSessionReady = true;
 
-        // توکن دعوت از نوار آدرس حذف می‌شود.
+        // حذف اطلاعات حساس از نوار آدرس
         window.history.replaceState(
           {},
           '',
           window.location.pathname
         );
 
-        // تا زمان تکمیل اتصال امن دعوت‌نامه، فرم تعیین رمز نمایش داده نشود.
-form.hidden = true;
+        if (linkType === 'invite') {
+          form.hidden = false;
+          showMessage('دعوت تأیید شد. اکنون رمز عبور دلخواه خود را تعیین کنید.');
+        } else {
+          form.hidden = true;
+          inviteSessionReady = false;
+          invitedUserId = null;
 
-        showMessage(
-  'هویت حساب تأیید شد. فعال‌سازی پنل مشتری هنوز در حال تکمیل است؛ فعلاً نیازی به تعیین یا تغییر رمز عبور نیست.'
-);
+          await inviteAuth.auth.signOut({ scope: 'local' });
+
+          showMessage('پنل مشتری با موفقیت فعال شد. اکنون می‌توانید با حساب قبلی خود وارد شوید.', 'success');
+        } 
 
       } catch (error) {
         inviteSessionReady = false;
@@ -244,7 +269,7 @@ form.hidden = true;
         });
 
         showMessage(
-          'رمز عبور ثبت شد، اما هنوز دسترسی به پرونده مشتری فعال نشده است. لطفاً تا تکمیل فرایند دعوت منتظر بمانید.',
+          'رمز عبور با موفقیت ثبت شد و پنل مشتری شما فعال است. اکنون می‌توانید وارد شوید.'
           'success'
         );
 
