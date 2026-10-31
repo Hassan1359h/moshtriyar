@@ -519,7 +519,7 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           type: "invite",
           email: customerEmail,
-          options: { redirectTo }
+          redirect_to: redirectTo
         })
       }
     );
@@ -558,7 +558,7 @@ export default async function handler(req, res) {
           body: JSON.stringify({
             type: "magiclink",
             email: customerEmail,
-            options: { redirectTo }
+            redirect_to: redirectTo
           })
         }
       );
