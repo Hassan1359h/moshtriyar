@@ -99,9 +99,17 @@
           <div id="invoices"></div>
         </section>
 
+        
         <section class="card">
           <h2 id="casesTitle">خدمات و سوابق</h2>
           <div id="cases"></div>
+        </section>
+
+        <section class="card">
+          <h2>شکایات و نتیجه رسیدگی</h2>
+          <div id="complaints">
+            <p class="empty">در حال دریافت شکایات...</p>
+          </div>
         </section>
 
         <section class="card">
@@ -114,6 +122,7 @@
           <div id="feedback"></div>
         </section>
       </div>
+      
 
       <section class="card">
         <h2>تاریخچه یکپارچه</h2>
@@ -320,22 +329,32 @@
           addLine(item, 'تاریخ', dateText(invoice.created_at));
         });
 
-        renderItems('cases', cases, (item, record) => {
+        
+        // خدمات و سوابق، به‌جز شکایات
+        const normalCases = cases.filter(
+          record => record.case_type !== 'complaint'
+        );
+
+        renderItems('cases', normalCases, (item, record) => {
           item.append(element('div', record.title, 'title'));
 
-          const tag = element('span',
-            caseNames[record.case_type] || record.case_type, 'tag'
+          const tag = element(
+            'span',
+            caseNames[record.case_type] || record.case_type,
+            'tag'
           );
           item.append(tag);
 
-          addLine(item, 'وضعیت',
+          addLine(
+            item,
+            'وضعیت',
             statusNames[record.status] || record.status
           );
 
-          if (record.description)
+          if (record.description) {
             addLine(item, 'توضیحات', record.description);
+          }
 
-          // نمایش فیلدهای اختصاصی صنف، در صورت ثبت شدن.
           const details = record.details || {};
 
           specializedFields.forEach(field => {
@@ -344,12 +363,48 @@
             }
           });
 
-          if (record.warranty_expires_at)
-            addLine(item, 'پایان گارانتی',
+          if (record.warranty_expires_at) {
+            addLine(
+              item,
+              'پایان گارانتی',
               dateText(record.warranty_expires_at)
             );
+          }
 
           addLine(item, 'تاریخ ثبت', dateText(record.created_at));
+        });
+
+        // بخش مستقل شکایات و نتیجه رسیدگی
+        const complaints = cases.filter(
+          record => record.case_type === 'complaint'
+        );
+
+        renderItems('complaints', complaints, (item, record) => {
+          item.append(element('div', record.title, 'title'));
+
+          addLine(
+            item,
+            'وضعیت رسیدگی',
+            statusNames[record.status] || record.status
+          );
+
+          if (record.description) {
+            addLine(item, 'شرح شکایت', record.description);
+          }
+
+          const details = record.details || {};
+
+          if (details.resolution) {
+            addLine(item, 'نتیجه رسیدگی', details.resolution);
+          } else {
+            addLine(item, 'نتیجه رسیدگی', 'هنوز ثبت نشده');
+          }
+
+          if (record.resolved_at) {
+            addLine(item, 'تاریخ رسیدگی', dateText(record.resolved_at));
+          }
+
+          addLine(item, 'تاریخ ثبت شکایت', dateText(record.created_at));
         });
 
         // پیگیری‌ها و بازخوردها از طریق پرونده‌های همین مشتری دریافت می‌شوند.
