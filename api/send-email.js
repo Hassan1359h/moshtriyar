@@ -374,7 +374,22 @@ if (postAction === "invite_customer") {
   }
 
   const { customerId } = req.body || {};
+// محدودیت درخواست دعوت بر اساس IP
+const inviteIP = getClientIP(req);
+const inviteLimit = await checkRateLimit(
+  inviteIP,
+  "customer-invite",
+  3,
+  3600
+);
 
+if (!inviteLimit.allowed) {
+  return res.status(429).json({
+    ok: false,
+    error: "تعداد درخواست‌های دعوت بیش از حد مجاز است.",
+    retryAfter: inviteLimit.retryAfter
+  });
+}
   if (
     typeof customerId !== "string" ||
     !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(customerId)
