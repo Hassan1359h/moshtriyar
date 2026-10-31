@@ -364,43 +364,39 @@ export default async function handler(req, res) {
 // 🔐 دعوت مشتری: مرحله اول، احراز هویت و بررسی مالکیت
 // فعلاً هیچ دعوت‌نامه‌ای ارسال نمی‌شود.
 // ==========================================================
-if (postAction === "invite_customer") {
+
+  if (postAction === "invite_customer") {
   const authHeader = req.headers.authorization || "";
   const token = authHeader.startsWith("Bearer ")
     ? authHeader.slice(7)
     : "";
 
   if (!token) {
-    return res.status(401).json({
-      ok: false,
-      error: "Authentication required"
-    });
+    return res.status(401).json({ ok: false, error: "Authentication required" });
   }
 
   const { customerId } = req.body || {};
-// محدودیت درخواست دعوت بر اساس IP
-const inviteIP = getClientIP(req);
-const inviteLimit = await checkRateLimit(
-  inviteIP,
-  "customer-invite",
-  3,
-  3600
-);
 
-if (!inviteLimit.allowed) {
-  return res.status(429).json({
-    ok: false,
-    error: "تعداد درخواست‌های دعوت بیش از حد مجاز است.",
-    retryAfter: inviteLimit.retryAfter
-  });
-}
   if (
     typeof customerId !== "string" ||
     !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(customerId)
   ) {
-    return res.status(400).json({
+    return res.status(400).json({ ok: false, error: "Invalid customer ID" });
+  }
+
+  const inviteIP = getClientIP(req);
+  const inviteLimit = await checkRateLimit(
+    inviteIP,
+    "customer-invite",
+    3,
+    3600
+  );
+
+  if (!inviteLimit.allowed) {
+    return res.status(429).json({
       ok: false,
-      error: "Invalid customer ID"
+      error: "تعداد درخواست‌های دعوت بیش از حد مجاز است.",
+      retryAfter: inviteLimit.retryAfter
     });
   }
 
@@ -408,13 +404,14 @@ if (!inviteLimit.allowed) {
     const supabaseUrl = process.env.SUPABASE_URL;
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    if (!supabaseUrl || !serviceKey) {
+    if (!supabaseUrl || !serviceKey || !RESEND_API_KEY) {
       return res.status(500).json({
         ok: false,
         error: "Server configuration missing"
       });
     }
 
+    // احراز هویت مدیر
     const userRes = await fetch(`${supabaseUrl}/auth/v1/user`, {
       headers: {
         apikey: serviceKey,
@@ -423,29 +420,40 @@ if (!inviteLimit.allowed) {
     });
 
     if (!userRes.ok) {
-      return res.status(401).json({
-        ok: false,
-        error: "Invalid session"
-      });
+      return res.status(401).json({ ok: false, error: "Invalid session" });
     }
 
     const manager = await userRes.json();
 
     if (!manager?.id) {
-      return res.status(401).json({
+      return res.status(401).json({ ok: false, error: "Invalid user" });
+    }
+
+    const managerLimit = await checkRateLimit(
+      manager.id,
+      "customer-invite-manager",
+      5,
+      3600
+    );
+
+    if (!managerLimit.allowed) {
+      return res.status(429).json({
         ok: false,
-        error: "Invalid user"
+        error: "تعداد دعوت‌های شما بیش از حد مجاز است.",
+        retryAfter: managerLimit.retryAfter
       });
     }
 
+    const dbHeaders = {
+      apikey: serviceKey,
+      Authorization: `Bearer ${serviceKey}`,
+      "Content-Type": "application/json"
+    };
+
+    // فقط مشتری متعلق به همین مدیر
     const customerRes = await fetch(
       `${supabaseUrl}/rest/v1/customers?id=eq.${customerId}&user_id=eq.${manager.id}&select=id,name,email&limit=1`,
-      {
-        headers: {
-          apikey: serviceKey,
-          Authorization: `Bearer ${serviceKey}`
-        }
-      }
+      { headers: dbHeaders }
     );
 
     if (!customerRes.ok) {
@@ -466,35 +474,278 @@ if (!inviteLimit.allowed) {
     }
 
     const customerEmail = String(customer.email || "")
-  .trim()
-  .toLowerCase();
+      .trim()
+      .toLowerCase();
 
-if (
-  customerEmail.length > 254 ||
-  !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)
-) {
-  return res.status(400).json({
-    ok: false,
-    error: "Valid customer email is required"
-  });
-}
+    if (
+      customerEmail.length > 254 ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)
+    ) {
+      return res.status(400).json({
+        ok: false,
+        error: "Valid customer email is required"
+      });
+    }
 
-    // فقط مرحله بررسی؛ هیچ دعوت یا دسترسی‌ای ساخته نمی‌شود.
+    // بررسی دسترسی قبلی
+    const accessRes = await fetch(
+      `${supabaseUrl}/rest/v1/customer_portal_access?customer_id=eq.${customerId}&user_id=eq.${manager.id}&select=id,is_active,auth_user_id&limit=1`,
+      { headers: dbHeaders }
+    );
+
+    if (!accessRes.ok) {
+      return res.status(500).json({
+        ok: false,
+        error: "Portal access lookup failed"
+      });
+    }
+
+    const accessRows = await accessRes.json();
+    const existingAccess = accessRows?.[0] || null;
+
+    if (existingAccess?.is_active && existingAccess?.auth_user_id) {
+      return res.status(409).json({
+        ok: false,
+        error: "این مشتری قبلاً پنل فعال دارد."
+      });
+    }
+
+    // ساخت لینک مخصوص صفحه پذیرش دعوت
+    const redirectTo = "https://moshtriyar.ir/customer-accept-invite.html";
+
+    let linkType = "invite";
+
+    let linkRes = await fetch(
+      `${supabaseUrl}/auth/v1/admin/generate_link`,
+      {
+        method: "POST",
+        headers: dbHeaders,
+        body: JSON.stringify({
+          type: "invite",
+          email: customerEmail,
+          options: { redirectTo }
+        })
+      }
+    );
+
+    let linkData = await linkRes.json().catch(() => ({}));
+
+    // اگر حساب قبلاً وجود داشته باشد، لینک ورود می‌سازیم؛
+    // رمز قبلی مشتری تغییر نمی‌کند.
+    if (!linkRes.ok) {
+      const errorText = [
+        linkData?.message,
+        linkData?.msg,
+        linkData?.error,
+        linkData?.code
+      ].filter(Boolean).join(" ");
+
+      const existingUserError =
+        /already.*(registered|exists)|user.*(already|exists)|email_exists|user_already_exists/i
+          .test(errorText);
+
+      if (!existingUserError) {
+        console.error("Supabase invite link error:", linkData);
+        return res.status(502).json({
+          ok: false,
+          error: "ساخت لینک دعوت ناموفق بود."
+        });
+      }
+
+      linkType = "magiclink";
+
+      linkRes = await fetch(
+        `${supabaseUrl}/auth/v1/admin/generate_link`,
+        {
+          method: "POST",
+          headers: dbHeaders,
+          body: JSON.stringify({
+            type: "magiclink",
+            email: customerEmail,
+            options: { redirectTo }
+          })
+        }
+      );
+
+      linkData = await linkRes.json().catch(() => ({}));
+
+      if (!linkRes.ok) {
+        console.error("Supabase magic link error:", linkData);
+        return res.status(502).json({
+          ok: false,
+          error: "ساخت لینک ورود مشتری ناموفق بود."
+        });
+      }
+    }
+
+    const supabaseTokenHash =
+      linkData?.hashed_token ||
+      linkData?.properties?.hashed_token;
+
+    if (
+      typeof supabaseTokenHash !== "string" ||
+      !supabaseTokenHash
+    ) {
+      console.error("Supabase link response missing hashed_token");
+      return res.status(502).json({
+        ok: false,
+        error: "لینک احراز هویت معتبر از Supabase دریافت نشد."
+      });
+    }
+
+    // کد تصادفی دعوت؛ فقط هش آن در دیتابیس ذخیره می‌شود
+    const inviteCode = randomBytes(32).toString("hex");
+    const inviteHash = createHash("sha256")
+      .update(inviteCode)
+      .digest("hex");
+
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+
+    const accessPayload = {
+      user_id: manager.id,
+      customer_id: customerId,
+      invitation_token_hash: inviteHash,
+      invitation_expires_at: expiresAt,
+      invitation_email: customerEmail,
+      is_active: false
+    };
+
+    let saveRes;
+
+    if (existingAccess?.id) {
+      saveRes = await fetch(
+        `${supabaseUrl}/rest/v1/customer_portal_access?id=eq.${existingAccess.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            ...dbHeaders,
+            Prefer: "return=representation"
+          },
+          body: JSON.stringify(accessPayload)
+        }
+      );
+    } else {
+      saveRes = await fetch(
+        `${supabaseUrl}/rest/v1/customer_portal_access`,
+        {
+          method: "POST",
+          headers: {
+            ...dbHeaders,
+            Prefer: "return=representation"
+          },
+          body: JSON.stringify(accessPayload)
+        }
+      );
+    }
+
+    if (!saveRes.ok) {
+      const saveError = await saveRes.text();
+      console.error("Portal invitation save failed:", saveError);
+      return res.status(500).json({
+        ok: false,
+        error: "ذخیره دعوت‌نامه در پایگاه داده ناموفق بود."
+      });
+    }
+
+    const savedRows = await saveRes.json().catch(() => []);
+
+    if (!Array.isArray(savedRows) || savedRows.length === 0) {
+      return res.status(500).json({
+        ok: false,
+        error: "دعوت‌نامه ذخیره نشد."
+      });
+    }
+
+    // لینک نهایی؛ شامل کد دعوت و توکن یک‌بارمصرف Supabase
+    const inviteUrl = new URL(redirectTo);
+    inviteUrl.searchParams.set("invite_code", inviteCode);
+    inviteUrl.searchParams.set("token_hash", supabaseTokenHash);
+    inviteUrl.searchParams.set("type", linkType);
+
+    const safeName = String(customer.name || "مشتری")
+      .replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      })[char]);
+
+    // ارسال ایمیل دعوت از طریق Resend
+    const emailRes = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${RESEND_API_KEY}`
+      },
+      body: JSON.stringify({
+        from: "مشتری‌یار <noreply@moshtriyar.ir>",
+        to: [customerEmail],
+        subject: "دعوت به پنل مشتری مشتری‌یار",
+        html: `
+          <div style="font-family:Tahoma,sans-serif;direction:rtl;text-align:right;padding:30px;background:#f8fafc;max-width:600px;margin:auto;border-radius:16px;">
+            <h1 style="color:#2563eb;text-align:center;">مشتری‌یار</h1>
+            <h2 style="color:#1e293b;">سلام ${safeName} عزیز</h2>
+            <p style="color:#475569;line-height:2;">
+              برای مشاهده سوابق و ارتباط با کسب‌وکار، شما به پنل مشتری دعوت شده‌اید.
+            </p>
+            <div style="text-align:center;margin:30px 0;">
+              <a href="${inviteUrl.toString()}" style="display:inline-block;background:#2563eb;color:#fff;padding:14px 30px;border-radius:12px;text-decoration:none;font-weight:bold;">
+                پذیرش دعوت و ورود به پنل
+              </a>
+            </div>
+            <p style="color:#64748b;font-size:13px;line-height:1.8;">
+              این لینک تا یک ساعت اعتبار دارد و فقط یک‌بار قابل استفاده است.
+            </p>
+            <p style="color:#94a3b8;font-size:12px;text-align:center;">© ۱۴۰۵ مشتری‌یار</p>
+          </div>
+        `
+      })
+    });
+
+    const emailResult = await emailRes.json().catch(() => ({}));
+
+    if (!emailRes.ok) {
+      // در صورت شکست ارسال، کد دعوت ذخیره‌شده باطل شود
+      await fetch(
+        `${supabaseUrl}/rest/v1/customer_portal_access?customer_id=eq.${customerId}&user_id=eq.${manager.id}&invitation_token_hash=eq.${inviteHash}`,
+        {
+          method: "PATCH",
+          headers: {
+            ...dbHeaders,
+            Prefer: "return=minimal"
+          },
+          body: JSON.stringify({
+            invitation_token_hash: null,
+            invitation_expires_at: null,
+            invitation_email: null
+          })
+        }
+      );
+
+      console.error("Resend invitation error:", emailResult);
+      return res.status(502).json({
+        ok: false,
+        error: "ارسال ایمیل دعوت ناموفق بود."
+      });
+    }
+
     return res.status(200).json({
       ok: true,
-      eligible: true,
-      message: "Customer ownership verified. Invitation not sent."
+      message: "دعوت‌نامه با موفقیت برای مشتری ارسال شد.",
+      email: customerEmail,
+      accountType: linkType === "invite" ? "new" : "existing"
     });
 
   } catch (error) {
-    console.error("Customer invitation precheck failed:", error);
+    console.error("Customer invitation failed:", error);
     return res.status(500).json({
       ok: false,
-      error: "Invitation precheck failed"
+      error: "خطای داخلی هنگام ارسال دعوت‌نامه."
     });
   }
-}
-
+}        
+    
 if (postAction === "settings") {
 
     const token = req.headers.authorization?.replace("Bearer ", "");
