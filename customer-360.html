@@ -89,6 +89,22 @@
 
     <div id="content" hidden>
       <section class="card">
+  <h2>پنل مشتری</h2>
+  <p class="muted">
+    برای مشتری دعوت‌نامه دسترسی به پنل اختصاصی ارسال کنید.
+  </p>
+
+  <button
+    id="inviteCustomerBtn"
+    type="button"
+    style="background:#2563eb;color:white;border:0;border-radius:9px;padding:11px 20px;font-family:Tahoma;cursor:pointer;"
+  >
+    دعوت به پنل مشتری
+  </button>
+
+  <p id="inviteMessage" class="muted" hidden></p>
+      </section>
+      <section class="card">
         <h2 id="profileTitle">مشخصات مشتری</h2>
         <div id="profile"></div>
       </section>
@@ -262,7 +278,51 @@
           showError('این مشتری پیدا نشد یا اجازه مشاهده آن را ندارید.');
           return;
         }
+        
+const inviteButton = $('inviteCustomerBtn');
+const inviteMessage = $('inviteMessage');
 
+inviteButton.addEventListener('click', async () => {
+  inviteButton.disabled = true;
+  inviteMessage.hidden = false;
+  inviteMessage.className = 'muted';
+  inviteMessage.textContent = 'در حال ارسال دعوت‌نامه...';
+
+  try {
+    const { data: { session }, error: sessionError } =
+      await supabase.auth.getSession();
+
+    if (sessionError) throw sessionError;
+    if (!session?.access_token) {
+      throw new Error('نشست مدیر معتبر نیست.');
+    }
+
+    const response = await fetch('/api/send-email?action=invite_customer', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`
+      },
+      body: JSON.stringify({ customerId })
+    });
+
+    const result = await response.json().catch(() => ({}));
+
+    if (!response.ok || !result.ok) {
+      throw new Error(result.error || 'ارسال دعوت‌نامه ناموفق بود.');
+    }
+
+    inviteMessage.textContent =
+      `دعوت‌نامه برای ${result.email} ارسال شد.`;
+
+  } catch (error) {
+    inviteMessage.className = 'error';
+    inviteMessage.textContent =
+      error.message || 'خطا در ارسال دعوت‌نامه.';
+  } finally {
+    inviteButton.disabled = false;
+  }
+});
         $('profile').replaceChildren();
         addLine($('profile'), 'نام', customer.name);
         addLine($('profile'), 'تلفن', customer.phone);
