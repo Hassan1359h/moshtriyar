@@ -1,0 +1,252 @@
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>پذیرش دعوت‌نامه | مشتری‌یار</title>
+  <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      font-family: Vazirmatn, Tahoma, sans-serif;
+      background: #f1f5f9;
+      color: #1e293b;
+    }
+    .box {
+      width: 100%;
+      max-width: 420px;
+      padding: 30px;
+      background: white;
+      border-radius: 18px;
+      box-shadow: 0 12px 35px #00000010;
+    }
+    h1 { font-size: 21px; margin-top: 0; }
+    p { font-size: 14px; line-height: 2; }
+    input, button {
+      width: 100%;
+      padding: 13px;
+      border-radius: 10px;
+      font: inherit;
+      margin-top: 12px;
+    }
+    input {
+      border: 1px solid #cbd5e1;
+      direction: ltr;
+    }
+    button {
+      border: 0;
+      background: #2563eb;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+    }
+    #message { margin-top: 16px; }
+    .error { color: #b91c1c; }
+    .success { color: #15803d; }
+  </style>
+</head>
+<body>
+  <main class="box">
+    <h1>فعال‌سازی پنل مشتری</h1>
+
+    <p id="message">در حال بررسی اعتبار دعوت‌نامه...</p>
+
+    <form id="inviteForm" hidden>
+      <label for="password">
+        رمز عبور دلخواه (حداقل ۸ کاراکتر)
+      </label>
+
+      <input
+        id="password"
+        type="password"
+        minlength="8"
+        autocomplete="new-password"
+        required
+      >
+
+      <button id="submitBtn" type="submit">
+        تعیین رمز عبور
+      </button>
+    </form>
+  </main>
+
+  <script type="module">
+    import { createClient } from
+      'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    // کلید عمومی پروژه؛ هرگز service_role را اینجا قرار ندهید.
+    const SUPABASE_URL =
+      'https://ocxlarkkpowlztgtcuyf.supabase.co';
+
+    const SUPABASE_ANON_KEY =
+      'sb_publishable_2UrLE2rdsB-GIrK6u_Pa0g_qeURaDDm';
+
+    // نشست مستقل و موقت، بدون استفاده از نشست مدیر.
+    const inviteAuth = createClient(
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY,
+      {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+          detectSessionInUrl: false
+        }
+      }
+    );
+
+    const form = document.getElementById('inviteForm');
+    const message = document.getElementById('message');
+    const passwordInput = document.getElementById('password');
+    const submitBtn = document.getElementById('submitBtn');
+
+    let inviteSessionReady = false;
+    let invitedUserId = null;
+
+    function showMessage(text, type = '') {
+      message.textContent = text;
+      message.className = type;
+    }
+
+    async function initialize() {
+      try {
+        const params = new URLSearchParams(
+          window.location.search
+        );
+
+        const tokenHash = params.get('token_hash');
+        const linkType = params.get('type');
+
+        if (
+          linkType !== 'invite' ||
+          !tokenHash
+        ) {
+          throw new Error('Invalid invitation link');
+        }
+
+        const { data, error } =
+          await inviteAuth.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: 'invite'
+          });
+
+        if (error || !data.session || !data.user) {
+          throw new Error('Invitation verification failed');
+        }
+
+        const { data: verified, error: userError } =
+          await inviteAuth.auth.getUser();
+
+        if (
+          userError ||
+          !verified.user ||
+          verified.user.id !== data.user.id ||
+          !verified.user.email_confirmed_at
+        ) {
+          throw new Error('User verification failed');
+        }
+
+        invitedUserId = verified.user.id;
+        inviteSessionReady = true;
+
+        // توکن دعوت از نوار آدرس حذف می‌شود.
+        window.history.replaceState(
+          {},
+          '',
+          window.location.pathname
+        );
+
+        form.hidden = false;
+
+        showMessage(
+          'دعوت‌نامه تأیید شد. لطفاً رمز عبور خود را تعیین کنید.'
+        );
+
+      } catch (error) {
+        inviteSessionReady = false;
+        invitedUserId = null;
+        form.hidden = true;
+
+        showMessage(
+          'لینک دعوت‌نامه نامعتبر یا منقضی شده است. لطفاً از کسب‌وکار درخواست دعوت‌نامه جدید کنید.',
+          'error'
+        );
+      }
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      if (!inviteSessionReady || !invitedUserId) {
+        return;
+      }
+
+      const password = passwordInput.value;
+
+      if (password.length < 8) {
+        showMessage(
+          'رمز عبور باید حداقل ۸ کاراکتر باشد.',
+          'error'
+        );
+        return;
+      }
+
+      submitBtn.disabled = true;
+      showMessage('در حال ثبت رمز عبور...');
+
+      try {
+        const { data: current, error: currentError } =
+          await inviteAuth.auth.getUser();
+
+        if (
+          currentError ||
+          current.user?.id !== invitedUserId
+        ) {
+          throw new Error('نشست دعوت‌نامه معتبر نیست.');
+        }
+
+        const { error } =
+          await inviteAuth.auth.updateUser({
+            password
+          });
+
+        if (error) throw error;
+
+        inviteSessionReady = false;
+        invitedUserId = null;
+
+        form.hidden = true;
+        passwordInput.value = '';
+
+        await inviteAuth.auth.signOut({
+          scope: 'local'
+        });
+
+        showMessage(
+          'رمز عبور با موفقیت ثبت شد. فعال‌سازی دسترسی به پرونده مشتری هنوز در حال پیاده‌سازی است.',
+          'success'
+        );
+
+      } catch (error) {
+        showMessage(
+          'ثبت رمز انجام نشد: ' + error.message,
+          'error'
+        );
+        submitBtn.disabled = false;
+      }
+    });
+
+    initialize();
+  </script>
+</body>
+</html>
