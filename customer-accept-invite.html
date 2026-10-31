@@ -267,11 +267,12 @@
         await inviteAuth.auth.signOut({
           scope: 'local'
         });
-
-        showMessage(
-          'رمز عبور با موفقیت ثبت شد و پنل مشتری شما فعال است. اکنون می‌توانید وارد شوید.'
-          'success'
-        );
+          
+       showMessage(
+  'رمز عبور با موفقیت ثبت شد و پنل مشتری شما فعال است. اکنون می‌توانید وارد شوید.',
+  'success'
+); 
+      
 
       } catch (error) {
         showMessage(
