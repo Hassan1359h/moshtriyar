@@ -231,7 +231,7 @@ function render() {
 
     const filtered = q
         ? customers.filter(c =>
-            c.name.toLowerCase().includes(q) ||
+            (c.name || '').toLowerCase().includes(q) ||
             (c.phone && c.phone.includes(q)))
         : customers;
 
@@ -241,32 +241,72 @@ function render() {
     }
 
     list.innerHTML = '';
-filtered.forEach(c => {
-    const risk = getRiskLevel(c);
-    const channelIcon = {
-        'call': '📞',
-        'whatsapp': '💬',
-        'sms': '📱',
-        'instagram': '📷',
-        'inperson': '👤'
-    }[c.preferred_channel || 'call'] || '📞';
 
-    const dndBadge = c.do_not_disturb ? ' <span style="background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:10px;font-size:10px;font-weight:800;">🔕 مزاحم نشو</span>' : '';
+    filtered.forEach(c => {
+        const risk = getRiskLevel(c);
 
-    const div = document.createElement('div');
-    div.className = 'customer ' + risk;
-    div.innerHTML = `
-        <div class="c-info">
-            <div class="c-name">${c.name}${dndBadge}</div>
-            ${c.phone ? `<div class="c-phone">📱 ${c.phone}</div>` : ''}
-            <div class="c-meta">${channelIcon} ${daysAgo(c.last_contact_at)} • ${statusLabel(c.status)}</div>
-        </div>
-        <div style="font-size:20px;">${statusIcon(c.status)}</div>
-    `;
-    div.onclick = () => openEdit(c);
-    list.appendChild(div);
-});
+        const channelIcon = {
+            call: '📞',
+            whatsapp: '💬',
+            sms: '📱',
+            instagram: '📷',
+            inperson: '👤'
+        }[c.preferred_channel || 'call'] || '📞';
+
+        const dndBadge = c.do_not_disturb
+            ? ' <span style="background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:10px;font-size:10px;font-weight:800;">🔕 مزاحم نشو</span>'
+            : '';
+
+        const div = document.createElement('div');
+        div.className = 'customer ' + risk;
+
+        div.innerHTML = `
+            <div class="c-info">
+                <div class="c-name">${escapeHtml(c.name || '')}${dndBadge}</div>
+                ${c.phone ? `<div class="c-phone">📱 ${escapeHtml(c.phone)}</div>` : ''}
+                <div class="c-meta">
+                    ${channelIcon}
+                    ${daysAgo(c.last_contact_at)}
+                    • ${escapeHtml(statusLabel(c.status) || '')}
+                </div>
+            </div>
+            <div style="font-size:20px;">${statusIcon(c.status)}</div>
+        `;
+
+        // کلیک روی کارت همچنان فرم ویرایش مشتری را باز می‌کند.
+        div.onclick = () => openEdit(c);
+
+        // دکمه مستقل پرونده ۳۶۰ درجه
+        const profileBtn = document.createElement('button');
+        profileBtn.type = 'button';
+        profileBtn.textContent = '📋 پرونده ۳۶۰ درجه';
+
+        profileBtn.style.cssText = `
+            border: 1px solid #c7d2fe;
+            background: #eef2ff;
+            color: #3730a3;
+            padding: 7px 11px;
+            border-radius: 9px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: bold;
+            flex-shrink: 0;
+        `;
+
+        profileBtn.onclick = event => {
+            // نگذار کلیک روی دکمه، فرم ویرایش کارت را باز کند.
+            event.stopPropagation();
+
+            window.location.href =
+                'customer-360.html?id=' + encodeURIComponent(c.id);
+        };
+
+        div.appendChild(profileBtn);
+        list.appendChild(div);
+    });
 }
+
 function statusLabel(s) {
     return { 
         new: 'مشتری جدید', 
