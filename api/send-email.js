@@ -461,12 +461,19 @@ if (!inviteLimit.allowed) {
       });
     }
 
-    if (!customer.email?.trim()) {
-      return res.status(400).json({
-        ok: false,
-        error: "Customer email is required"
-      });
-    }
+    const customerEmail = String(customer.email || "")
+  .trim()
+  .toLowerCase();
+
+if (
+  customerEmail.length > 254 ||
+  !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)
+) {
+  return res.status(400).json({
+    ok: false,
+    error: "Valid customer email is required"
+  });
+}
 
     // فقط مرحله بررسی؛ هیچ دعوت یا دسترسی‌ای ساخته نمی‌شود.
     return res.status(200).json({
