@@ -122,6 +122,7 @@
 
     let inviteSessionReady = false;
     let invitedUserId = null;
+    let pendingInviteHash = null;
 
     function showMessage(text, type = '') {
       message.textContent = text;
@@ -130,6 +131,9 @@
 
     async function initialize() {
       try {
+        if (window.location.protocol !== 'https:') {
+  throw new Error('HTTPS is required');
+        }
         const params = new URLSearchParams(
           window.location.search
         );
@@ -175,15 +179,22 @@
           .map(b => b.toString(16).padStart(2, '0'))
           .join('');
 
-        // اتصال حساب تأییدشده به پرونده مشتری
-        const { data: accepted, error: acceptError } =
-          await inviteAuth.rpc('accept_customer_portal_invitation', {
-            p_token_hash: inviteHash
-          });
+        pendingInviteHash = inviteHash;
 
-        if (acceptError || accepted !== true) {
-          throw new Error('پذیرش دعوت انجام نشد یا لینک منقضی شده است.');
-        }
+// برای حساب قبلی، دسترسی همین‌جا فعال می‌شود.
+// برای حساب جدید، فعال‌سازی بعد از تعیین رمز انجام خواهد شد.
+if (linkType === 'magiclink') {
+  const { data: accepted, error: acceptError } =
+    await inviteAuth.rpc('accept_customer_portal_invitation', {
+      p_token_hash: pendingInviteHash
+    });
+
+  if (acceptError || accepted !== true) {
+    throw new Error('پذیرش دعوت انجام نشد یا لینک منقضی شده است.');
+  }
+
+  pendingInviteHash = null;
+}
 
         invitedUserId = verified.user.id;
         inviteSessionReady = true;
@@ -256,7 +267,22 @@
             password
           });
 
+    
         if (error) throw error;
+
+// فعال‌سازی دسترسی پس از تعیین رمز عبور
+if (pendingInviteHash) {
+  const { data: accepted, error: acceptError } =
+    await inviteAuth.rpc('accept_customer_portal_invitation', {
+      p_token_hash: pendingInviteHash
+    });
+
+  if (acceptError || accepted !== true) {
+    throw new Error('رمز ثبت شد، اما فعال‌سازی پنل انجام نشد. لطفاً دوباره تلاش کنید.');
+  }
+
+  pendingInviteHash = null;
+}
 
         inviteSessionReady = false;
         invitedUserId = null;
