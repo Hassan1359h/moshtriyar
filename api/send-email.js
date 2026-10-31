@@ -1,5 +1,9 @@
+import { checkRateLimit, getClientIP }
+  from "../lib/rate-limit.js";
+import { randomBytes, createHash } from 
+  "node:crypto";
+
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-import { checkRateLimit, getClientIP } from "../lib/rate-limit.js";
 
 const EMAIL_TEMPLATES = {
 
