@@ -360,10 +360,6 @@ export default async function handler(req, res) {
   // ⚙️ POST با action=settings → ذخیره تنظیمات
   // ==========================================================
   const postAction = req.query?.action;
-// ==========================================================
-// 🔐 دعوت مشتری: مرحله اول، احراز هویت و بررسی مالکیت
-// فعلاً هیچ دعوت‌نامه‌ای ارسال نمی‌شود.
-// ==========================================================
 
   if (postAction === "invite_customer") {
   const authHeader = req.headers.authorization || "";
