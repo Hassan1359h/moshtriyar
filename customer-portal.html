@@ -202,6 +202,38 @@
   <div id="cases">
     <div class="loading">در حال دریافت سوابق...</div>
   </div>
+  <h2 class="section-title">ثبت درخواست جدید</h2>
+
+<div class="card">
+  <form id="requestForm">
+    <div class="form-group">
+      <label for="requestType">نوع درخواست</label>
+      <select id="requestType" required>
+        <option value="service">درخواست پشتیبانی</option>
+        <option value="complaint">ثبت شکایت</option>
+        <option value="feedback">ارسال پیشنهاد یا بازخورد</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="requestTitle">عنوان</label>
+      <input id="requestTitle" type="text" minlength="3" maxlength="150"
+        placeholder="موضوع درخواست را بنویسید" required>
+    </div>
+
+    <div class="form-group">
+      <label for="requestDescription">شرح درخواست</label>
+      <textarea id="requestDescription" minlength="5" maxlength="5000"
+        rows="5" placeholder="توضیحات خود را بنویسید..." required></textarea>
+    </div>
+
+    <button type="submit" class="submit-request" id="submitRequestBtn">
+      ثبت درخواست
+    </button>
+
+    <div id="requestMessage" role="status" aria-live="polite"></div>
+  </form>
+</div>
 </main>
 
 <footer>مشتری‌یار | پنل اختصاصی مشتریان</footer>
