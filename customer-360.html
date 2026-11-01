@@ -309,7 +309,7 @@ inviteButton.addEventListener('click', async () => {
     const result = await response.json().catch(() => ({}));
 
     if (!response.ok || !result.ok) {
-      throw new Error(result.error || 'ارسال دعوت‌نامه ناموفق بود.');
+     throw new Error(result.error || `خطای سرور (${response.status}): ${JSON.stringify(result)}`); 
     }
 
     inviteMessage.textContent =
