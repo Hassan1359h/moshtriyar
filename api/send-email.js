@@ -424,6 +424,11 @@ export default async function handler(req, res) {
     if (!manager?.id) {
       return res.status(401).json({ ok: false, error: "Invalid user" });
     }
+        const dbHeaders = {
+      apikey: serviceKey,
+      Authorization: `Bearer ${serviceKey}`,
+      "Content-Type": "application/json"
+    };
 // دریافت نام کسب‌وکار مدیر
 const businessRes = await fetch(
   `${supabaseUrl}/rest/v1/websites?user_id=eq.${manager.id}&active=eq.true&select=brand_name&limit=1`,
@@ -460,12 +465,6 @@ if (!businessName) {
         retryAfter: managerLimit.retryAfter
       });
     }
-
-    const dbHeaders = {
-      apikey: serviceKey,
-      Authorization: `Bearer ${serviceKey}`,
-      "Content-Type": "application/json"
-    };
 
     // فقط مشتری متعلق به همین مدیر
     const customerRes = await fetch(
