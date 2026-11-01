@@ -6,9 +6,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#2563eb">
   <title>ورود مشتری | مشتری‌یار</title>
+
   <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
+
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
   <style>
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       min-height: 100vh;
@@ -20,6 +25,7 @@
       background: linear-gradient(135deg,#eff6ff,#f5f3ff);
       color: #0f172a;
     }
+
     .box {
       width: 100%;
       max-width: 420px;
@@ -28,9 +34,26 @@
       border-radius: 22px;
       box-shadow: 0 20px 60px rgba(59,130,246,.15);
     }
-    h1 { text-align: center; font-size: 25px; margin: 0 0 8px; }
-    .subtitle { text-align: center; color: #64748b; margin-bottom: 28px; }
-    label { display: block; margin: 16px 0 7px; font-size: 14px; font-weight: 600; }
+
+    h1 {
+      text-align: center;
+      font-size: 25px;
+      margin: 0 0 8px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #64748b;
+      margin-bottom: 28px;
+    }
+
+    label {
+      display: block;
+      margin: 16px 0 7px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
     input {
       width: 100%;
       padding: 13px;
@@ -40,7 +63,18 @@
       direction: ltr;
       text-align: left;
     }
-    input:focus { outline: none; border-color: #3b82f6; }
+
+    input:focus {
+      outline: none;
+      border-color: #3b82f6;
+    }
+
+    .captcha-container {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
     button {
       width: 100%;
       margin-top: 22px;
@@ -53,14 +87,35 @@
       font-weight: 800;
       cursor: pointer;
     }
-    button:disabled { opacity: .6; cursor: wait; }
-    #message { text-align: center; min-height: 24px; margin-top: 16px; font-size: 14px; }
+
+    button:disabled {
+      opacity: .6;
+      cursor: wait;
+    }
+
+    #message {
+      text-align: center;
+      min-height: 24px;
+      margin-top: 16px;
+      font-size: 14px;
+    }
+
     .error { color: #dc2626; }
     .success { color: #16a34a; }
-    .links { text-align: center; margin-top: 22px; font-size: 13px; }
-    a { color: #2563eb; text-decoration: none; }
+
+    .links {
+      text-align: center;
+      margin-top: 22px;
+      font-size: 13px;
+    }
+
+    a {
+      color: #2563eb;
+      text-decoration: none;
+    }
   </style>
 </head>
+
 <body>
   <main class="box">
     <h1>ورود مشتری</h1>
@@ -68,14 +123,37 @@
 
     <form id="loginForm">
       <label for="email">ایمیل</label>
-      <input id="email" type="email" autocomplete="username"
-             placeholder="example@email.com" required>
+      <input
+        id="email"
+        type="email"
+        autocomplete="username"
+        placeholder="example@email.com"
+        required
+      >
 
       <label for="password">رمز عبور</label>
-      <input id="password" type="password"
-             autocomplete="current-password" required>
+      <input
+        id="password"
+        type="password"
+        autocomplete="current-password"
+        required
+      >
 
-      <button id="submitBtn" type="submit">ورود به پنل مشتری</button>
+      <div class="captcha-container">
+        <div
+          class="cf-turnstile"
+          data-sitekey="0x4AAAAAAFFcLOx_YxUy2aw8"
+          data-theme="light"
+          data-callback="onCustomerCaptchaSuccess"
+          data-expired-callback="onCustomerCaptchaExpired"
+          data-error-callback="onCustomerCaptchaError"
+        ></div>
+      </div>
+
+      <button id="submitBtn" type="submit" disabled>
+        ورود به پنل مشتری
+      </button>
+
       <p id="message" role="status" aria-live="polite"></p>
     </form>
 
@@ -83,6 +161,27 @@
       <a href="index.html">بازگشت به صفحه اصلی</a>
     </div>
   </main>
+
+  <script>
+    window.customerCaptchaToken = '';
+
+    window.onCustomerCaptchaSuccess = function(token) {
+      window.customerCaptchaToken = token;
+      document.getElementById('submitBtn').disabled = false;
+    };
+
+    window.onCustomerCaptchaExpired = function() {
+      window.customerCaptchaToken = '';
+      document.getElementById('submitBtn').disabled = true;
+    };
+
+    window.onCustomerCaptchaError = function() {
+      window.customerCaptchaToken = '';
+      document.getElementById('submitBtn').disabled = true;
+      document.getElementById('message').textContent =
+        'خطا در تأیید کپچا؛ لطفاً دوباره تلاش کنید.';
+    };
+  </script>
 
   <script type="module">
     import { supabase } from './js/supabase.js';
@@ -103,15 +202,23 @@
 
       const email = emailInput.value.trim().toLowerCase();
       const password = passwordInput.value;
+      const captchaToken = window.customerCaptchaToken;
+
+      if (!captchaToken) {
+        showMessage('لطفاً ابتدا کپچا را تأیید کنید.', 'error');
+        return;
+      }
 
       submitBtn.disabled = true;
       showMessage('در حال بررسی اطلاعات ورود...');
 
       try {
-        // ورود با ایمیل و رمز مشتری
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
-          password
+          password,
+          options: {
+            captchaToken
+          }
         });
 
         if (error) throw error;
@@ -120,7 +227,6 @@
           throw new Error('ورود انجام نشد. دوباره تلاش کنید.');
         }
 
-        // بررسی دسترسی فعال مشتری
         const { data: hasAccess, error: accessError } =
           await supabase.rpc('has_customer_portal_access');
 
@@ -135,9 +241,7 @@
 
         showMessage('ورود موفق! در حال انتقال...', 'success');
 
-        setTimeout(() => {
-          window.location.href = 'customer-portal.html';
-        }, 700);
+        window.location.replace('customer-portal.html');
 
       } catch (error) {
         console.error('Customer login error:', error);
@@ -148,13 +252,23 @@
           errorMessage = 'ایمیل یا رمز عبور اشتباه است.';
         } else if (errorMessage.includes('Email not confirmed')) {
           errorMessage = 'ابتدا ایمیل خود را تأیید کنید.';
-        } else if (errorMessage.includes('has_customer_portal_access')) {
-          errorMessage = 'بررسی دسترسی انجام نشد. لطفاً دوباره تلاش کنید.';
+        } else if (
+          errorMessage.toLowerCase().includes('captcha')
+        ) {
+          errorMessage = 'تأیید کپچا ناموفق بود. دوباره تلاش کنید.';
         }
 
         showMessage(errorMessage, 'error');
+
+        // توکن مصرف‌شده نباید دوباره استفاده شود.
+        window.customerCaptchaToken = '';
+
+        if (window.turnstile) {
+          window.turnstile.reset();
+        }
+
       } finally {
-        submitBtn.disabled = false;
+        submitBtn.disabled = true;
       }
     });
   </script>
