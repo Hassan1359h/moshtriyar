@@ -305,7 +305,49 @@
   const logoutBtn = document.getElementById('logoutBtn');
 
   const loginPage = './customer-login.html';
+  const requestForm = document.getElementById('requestForm');
+  const requestType = document.getElementById('requestType');
+  const requestTitle = document.getElementById('requestTitle');
+  const requestDescription = document.getElementById('requestDescription');
+  const submitRequestBtn = document.getElementById('submitRequestBtn');
+  const requestMessage = document.getElementById('requestMessage');
 
+  requestForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    submitRequestBtn.disabled = true;
+    submitRequestBtn.textContent = 'در حال ثبت...';
+    requestMessage.textContent = '';
+    requestMessage.style.color = '#64748b';
+
+    try {
+      const { data, error } = await supabase.rpc('submit_customer_request', {
+        p_title: requestTitle.value.trim(),
+        p_description: requestDescription.value.trim(),
+        p_case_type: requestType.value
+      });
+
+      if (error) throw error;
+
+      requestMessage.textContent = 'درخواست شما با موفقیت ثبت شد.';
+      requestMessage.style.color = '#15803d';
+
+      requestForm.reset();
+
+      await loadPortal();
+
+    } catch (error) {
+      console.error('Submit customer request error:', error);
+
+      requestMessage.textContent =
+        error.message || 'ثبت درخواست با خطا مواجه شد. دوباره تلاش کنید.';
+      requestMessage.style.color = '#dc2626';
+
+    } finally {
+      submitRequestBtn.disabled = false;
+      submitRequestBtn.textContent = 'ثبت درخواست';
+    }
+  });
   function formatDate(value) {
     if (!value) return 'ثبت نشده';
 
