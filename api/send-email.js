@@ -688,35 +688,37 @@ if (!businessName) {
       })[char]);
 
     // ارسال ایمیل دعوت از طریق Resend
-    const emailRes = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${RESEND_API_KEY}`
-      },
-      from: `${businessName} از مشتری‌یار <noreply@moshtriyar.ir>`,
-     to: [customerEmail],
-     subject: `دعوت به پنل مشتری ${businessName}`,
-          <div style="font-family:Tahoma,sans-serif;direction:rtl;text-align:right;padding:30px;background:#f8fafc;max-width:600px;margin:auto;border-radius:16px;">
-            <h1 style="color:#2563eb;text-align:center;">${businessName}</h1>
-            <h2 style="color:#1e293b;">سلام ${safeName} عزیز</h2>
-            <p style="color:#475569;line-height:2;">
-              برای مشاهده سوابق و ارتباط با ${businessName}، شما به پنل اختصاصی مشتریان این کسب‌وکار دعوت شده‌اید.
-            </p>
-            <div style="text-align:center;margin:30px 0;">
-              <a href="${inviteUrl.toString()}" style="display:inline-block;background:#2563eb;color:#fff;padding:14px 30px;border-radius:12px;text-decoration:none;font-weight:bold;">
-                پذیرش دعوت و ورود به پنل
-              </a>
-            </div>
-            <p style="color:#64748b;font-size:13px;line-height:1.8;">
-              این لینک تا یک ساعت اعتبار دارد و فقط یک‌بار قابل استفاده است.
-            </p>
-            <p style="color:#94a3b8;font-size:12px;text-align:center;">© ۱۴۰۵ مشتری‌یار</p>
-          </div>
-        `
-      })
-    });
 
+const emailRes = await fetch("https://api.resend.com/emails", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${RESEND_API_KEY}`
+  },
+  body: JSON.stringify({
+    from: `${businessName} از مشتری‌یار <noreply@moshtriyar.ir>`,
+    to: [customerEmail],
+    subject: `دعوت به پنل مشتری ${businessName}`,
+    html: `
+      <div style="font-family:Tahoma,sans-serif;direction:rtl;text-align:right;padding:30px;background:#f8fafc;max-width:600px;margin:auto;border-radius:16px;">
+        <h1 style="color:#2563eb;text-align:center;">${businessName}</h1>
+        <h2 style="color:#1e293b;">سلام ${safeName} عزیز</h2>
+        <p style="color:#475569;line-height:2;">
+          برای مشاهده سوابق و ارتباط با ${businessName}، شما به پنل اختصاصی مشتریان این کسب‌وکار دعوت شده‌اید.
+        </p>
+        <div style="text-align:center;margin:30px 0;">
+          <a href="${inviteUrl.toString()}" style="display:inline-block;background:#2563eb;color:#fff;padding:14px 30px;border-radius:12px;text-decoration:none;font-weight:bold;">
+            پذیرش دعوت و ورود به پنل
+          </a>
+        </div>
+        <p style="color:#64748b;font-size:13px;line-height:1.8;">
+          این لینک تا یک ساعت اعتبار دارد و فقط یک‌بار قابل استفاده است.
+        </p>
+        <p style="color:#94a3b8;font-size:12px;text-align:center;">© ۱۴۰۵ مشتری‌یار</p>
+      </div>
+    `
+  })
+});
     const emailResult = await emailRes.json().catch(() => ({}));
 
     if (!emailRes.ok) {
