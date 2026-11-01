@@ -433,39 +433,142 @@ inviteButton.addEventListener('click', async () => {
 
           addLine(item, 'تاریخ ثبت', dateText(record.created_at));
         });
+         
+        // بخش شکایات و امکان ثبت نتیجه رسیدگی
+const complaints = cases.filter(
+  record => record.case_type === 'complaint'
+);
 
-        // بخش مستقل شکایات و نتیجه رسیدگی
-        const complaints = cases.filter(
-          record => record.case_type === 'complaint'
-        );
+renderItems('complaints', complaints, (item, record) => {
+  item.append(element('div', record.title, 'title'));
 
-        renderItems('complaints', complaints, (item, record) => {
-          item.append(element('div', record.title, 'title'));
+  const statusLine = element(
+    'div',
+    '',
+    'case-meta'
+  );
 
-          addLine(
-            item,
-            'وضعیت رسیدگی',
-            statusNames[record.status] || record.status
-          );
+  const statusText = element(
+    'span',
+    'وضعیت رسیدگی: ' +
+      (statusNames[record.status] || record.status),
+    ''
+  );
 
-          if (record.description) {
-            addLine(item, 'شرح شکایت', record.description);
-          }
+  statusLine.append(statusText);
+  item.append(statusLine);
 
-          const details = record.details || {};
+  if (record.description) {
+    addLine(item, 'شرح شکایت', record.description);
+  }
 
-          if (details.resolution) {
-            addLine(item, 'نتیجه رسیدگی', details.resolution);
-          } else {
-            addLine(item, 'نتیجه رسیدگی', 'هنوز ثبت نشده');
-          }
+  const details =
+    record.details && typeof record.details === 'object'
+      ? record.details
+      : {};
 
-          if (record.resolved_at) {
-            addLine(item, 'تاریخ رسیدگی', dateText(record.resolved_at));
-          }
+  addLine(
+    item,
+    'نتیجه رسیدگی',
+    details.resolution || 'هنوز ثبت نشده'
+  );
 
-          addLine(item, 'تاریخ ثبت شکایت', dateText(record.created_at));
-        });
+  if (record.resolved_at) {
+    addLine(item, 'تاریخ رسیدگی', dateText(record.resolved_at));
+  }
+
+  addLine(item, 'تاریخ ثبت شکایت', dateText(record.created_at));
+
+  const separator = document.createElement('hr');
+  item.append(separator);
+
+  const heading = element('div', 'ثبت نتیجه رسیدگی', 'title');
+  item.append(heading);
+
+  const statusSelect = document.createElement('select');
+  statusSelect.style.cssText =
+    'width:100%;padding:10px;margin:8px 0;border:1px solid #ddd;border-radius:8px;font-family:inherit;';
+
+  Object.entries(statusNames).forEach(([value, label]) => {
+    const option = document.createElement('option');
+    option.value = value;
+    option.textContent = label;
+    option.selected = value === record.status;
+    statusSelect.appendChild(option);
+  });
+
+  const resolutionInput = document.createElement('textarea');
+  resolutionInput.value = details.resolution || '';
+  resolutionInput.placeholder = 'نتیجه بررسی و اقدام انجام‌شده را بنویسید...';
+  resolutionInput.rows = 4;
+  resolutionInput.style.cssText =
+    'width:100%;padding:10px;margin:8px 0;border:1px solid #ddd;border-radius:8px;font-family:inherit;resize:vertical;';
+
+  const saveButton = document.createElement('button');
+  saveButton.type = 'button';
+  saveButton.textContent = 'ذخیره نتیجه رسیدگی';
+  saveButton.style.cssText =
+    'padding:10px 18px;background:#2563eb;color:white;border:0;border-radius:8px;font-family:inherit;cursor:pointer;';
+
+  const message = document.createElement('div');
+  message.style.cssText = 'font-size:13px;margin-top:10px;';
+
+  saveButton.addEventListener('click', async () => {
+    const resolution = resolutionInput.value.trim();
+    const newStatus = statusSelect.value;
+
+    if (!resolution) {
+      message.textContent = 'لطفاً نتیجه رسیدگی را وارد کنید.';
+      message.style.color = '#dc2626';
+      return;
+    }
+
+    saveButton.disabled = true;
+    saveButton.textContent = 'در حال ذخیره...';
+    message.textContent = '';
+
+    try {
+      const { data, error } = await supabase
+        .from('customer_cases')
+        .update({
+          status: newStatus,
+          details: {
+            ...details,
+            resolution
+          },
+          resolved_at:
+            ['resolved', 'closed'].includes(newStatus)
+              ? new Date().toISOString()
+              : null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', record.id)
+        .eq('user_id', userId)
+        .eq('customer_id', customerId)
+        .select('id')
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!data) throw new Error('پرونده برای ذخیره پیدا نشد.');
+
+      message.textContent = 'نتیجه رسیدگی با موفقیت ذخیره شد.';
+      message.style.color = '#15803d';
+
+      await init();
+
+    } catch (error) {
+      console.error('Complaint update error:', error);
+      message.textContent =
+        error.message || 'ذخیره نتیجه با خطا مواجه شد.';
+      message.style.color = '#dc2626';
+
+      saveButton.disabled = false;
+      saveButton.textContent = 'ذخیره نتیجه رسیدگی';
+    }
+  });
+
+  item.append(statusSelect, resolutionInput, saveButton, message);
+});
 
         // پیگیری‌ها و بازخوردها از طریق پرونده‌های همین مشتری دریافت می‌شوند.
         const caseIds = cases.map(record => record.id);
