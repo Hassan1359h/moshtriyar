@@ -424,7 +424,28 @@ export default async function handler(req, res) {
     if (!manager?.id) {
       return res.status(401).json({ ok: false, error: "Invalid user" });
     }
+// دریافت نام کسب‌وکار مدیر
+const businessRes = await fetch(
+  `${supabaseUrl}/rest/v1/websites?user_id=eq.${manager.id}&active=eq.true&select=brand_name&limit=1`,
+  { headers: dbHeaders }
+);
 
+if (!businessRes.ok) {
+  return res.status(500).json({
+    ok: false,
+    error: "دریافت نام کسب‌وکار ناموفق بود."
+  });
+}
+
+const businessRows = await businessRes.json();
+const businessName = String(businessRows?.[0]?.brand_name || "").trim();
+
+if (!businessName) {
+  return res.status(400).json({
+    ok: false,
+    error: "ابتدا نام کسب‌وکار را در تنظیمات سایت ثبت کنید."
+  });
+}
     const managerLimit = await checkRateLimit(
       manager.id,
       "customer-invite-manager",
