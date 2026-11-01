@@ -1,0 +1,162 @@
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#2563eb">
+  <title>ورود مشتری | مشتری‌یار</title>
+  <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      font-family: Vazirmatn, Tahoma, sans-serif;
+      background: linear-gradient(135deg,#eff6ff,#f5f3ff);
+      color: #0f172a;
+    }
+    .box {
+      width: 100%;
+      max-width: 420px;
+      background: white;
+      padding: 36px 28px;
+      border-radius: 22px;
+      box-shadow: 0 20px 60px rgba(59,130,246,.15);
+    }
+    h1 { text-align: center; font-size: 25px; margin: 0 0 8px; }
+    .subtitle { text-align: center; color: #64748b; margin-bottom: 28px; }
+    label { display: block; margin: 16px 0 7px; font-size: 14px; font-weight: 600; }
+    input {
+      width: 100%;
+      padding: 13px;
+      border: 2px solid #e2e8f0;
+      border-radius: 11px;
+      font: inherit;
+      direction: ltr;
+      text-align: left;
+    }
+    input:focus { outline: none; border-color: #3b82f6; }
+    button {
+      width: 100%;
+      margin-top: 22px;
+      padding: 14px;
+      border: 0;
+      border-radius: 11px;
+      color: white;
+      background: linear-gradient(135deg,#3b82f6,#8b5cf6);
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    button:disabled { opacity: .6; cursor: wait; }
+    #message { text-align: center; min-height: 24px; margin-top: 16px; font-size: 14px; }
+    .error { color: #dc2626; }
+    .success { color: #16a34a; }
+    .links { text-align: center; margin-top: 22px; font-size: 13px; }
+    a { color: #2563eb; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <main class="box">
+    <h1>ورود مشتری</h1>
+    <p class="subtitle">به پنل اختصاصی مشتریان خوش آمدید</p>
+
+    <form id="loginForm">
+      <label for="email">ایمیل</label>
+      <input id="email" type="email" autocomplete="username"
+             placeholder="example@email.com" required>
+
+      <label for="password">رمز عبور</label>
+      <input id="password" type="password"
+             autocomplete="current-password" required>
+
+      <button id="submitBtn" type="submit">ورود به پنل مشتری</button>
+      <p id="message" role="status" aria-live="polite"></p>
+    </form>
+
+    <div class="links">
+      <a href="index.html">بازگشت به صفحه اصلی</a>
+    </div>
+  </main>
+
+  <script type="module">
+    import { supabase } from './js/supabase.js';
+
+    const form = document.getElementById('loginForm');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const submitBtn = document.getElementById('submitBtn');
+    const message = document.getElementById('message');
+
+    function showMessage(text, type = '') {
+      message.textContent = text;
+      message.className = type;
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const email = emailInput.value.trim().toLowerCase();
+      const password = passwordInput.value;
+
+      submitBtn.disabled = true;
+      showMessage('در حال بررسی اطلاعات ورود...');
+
+      try {
+        // ورود با ایمیل و رمز مشتری
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+
+        if (error) throw error;
+
+        if (!data.session) {
+          throw new Error('ورود انجام نشد. دوباره تلاش کنید.');
+        }
+
+        // بررسی دسترسی فعال مشتری
+        const { data: hasAccess, error: accessError } =
+          await supabase.rpc('has_customer_portal_access');
+
+        if (accessError) throw accessError;
+
+        if (hasAccess !== true) {
+          await supabase.auth.signOut();
+          throw new Error(
+            'برای این حساب دسترسی فعال به پنل مشتری ثبت نشده است.'
+          );
+        }
+
+        showMessage('ورود موفق! در حال انتقال...', 'success');
+
+        setTimeout(() => {
+          window.location.href = 'customer-portal.html';
+        }, 700);
+
+      } catch (error) {
+        console.error('Customer login error:', error);
+
+        let errorMessage = error.message || 'خطای ورود';
+
+        if (errorMessage.includes('Invalid login credentials')) {
+          errorMessage = 'ایمیل یا رمز عبور اشتباه است.';
+        } else if (errorMessage.includes('Email not confirmed')) {
+          errorMessage = 'ابتدا ایمیل خود را تأیید کنید.';
+        } else if (errorMessage.includes('has_customer_portal_access')) {
+          errorMessage = 'بررسی دسترسی انجام نشد. لطفاً دوباره تلاش کنید.';
+        }
+
+        showMessage(errorMessage, 'error');
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
