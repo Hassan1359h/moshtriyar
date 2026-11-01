@@ -695,16 +695,14 @@ if (!businessName) {
         "Content-Type": "application/json",
         Authorization: `Bearer ${RESEND_API_KEY}`
       },
-      body: JSON.stringify({
-        from: "مشتری‌یار <noreply@moshtriyar.ir>",
-        to: [customerEmail],
-        subject: "دعوت به پنل مشتری مشتری‌یار",
-        html: `
+      from: `${businessName} از مشتری‌یار <noreply@moshtriyar.ir>`,
+     to: [customerEmail],
+     subject: `دعوت به پنل مشتری ${businessName}`,
           <div style="font-family:Tahoma,sans-serif;direction:rtl;text-align:right;padding:30px;background:#f8fafc;max-width:600px;margin:auto;border-radius:16px;">
-            <h1 style="color:#2563eb;text-align:center;">مشتری‌یار</h1>
+            <h1 style="color:#2563eb;text-align:center;">${businessName}</h1>
             <h2 style="color:#1e293b;">سلام ${safeName} عزیز</h2>
             <p style="color:#475569;line-height:2;">
-              برای مشاهده سوابق و ارتباط با کسب‌وکار، شما به پنل مشتری دعوت شده‌اید.
+              برای مشاهده سوابق و ارتباط با ${businessName}، شما به پنل اختصاصی مشتریان این کسب‌وکار دعوت شده‌اید.
             </p>
             <div style="text-align:center;margin:30px 0;">
               <a href="${inviteUrl.toString()}" style="display:inline-block;background:#2563eb;color:#fff;padding:14px 30px;border-radius:12px;text-decoration:none;font-weight:bold;">
