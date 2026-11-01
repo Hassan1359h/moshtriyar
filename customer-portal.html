@@ -1,0 +1,400 @@
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f8fafc">
+  <title>پنل مشتری | مشتری‌یار</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #f4f6fa;
+      color: #172033;
+      font-family: Vazirmatn, sans-serif;
+    }
+
+    header {
+      background: #fff;
+      border-bottom: 1px solid #e8edf4;
+      padding: 16px 20px;
+    }
+
+    .header-inner {
+      max-width: 950px;
+      margin: auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand {
+      font-size: 20px;
+      font-weight: 800;
+      color: #2563eb;
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .logout {
+      border: 1px solid #fecaca;
+      color: #dc2626;
+      background: #fff;
+      border-radius: 9px;
+      padding: 9px 16px;
+      font-size: 13px;
+    }
+
+    main {
+      max-width: 950px;
+      margin: 28px auto;
+      padding: 0 16px 40px;
+    }
+
+    .welcome {
+      margin-bottom: 22px;
+    }
+
+    .welcome h1 {
+      font-size: 23px;
+      margin: 0 0 7px;
+    }
+
+    .welcome p {
+      color: #64748b;
+      font-size: 14px;
+      margin: 0;
+    }
+
+    .section-title {
+      font-size: 17px;
+      font-weight: 700;
+      margin: 25px 0 13px;
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid #e8edf4;
+      border-radius: 14px;
+      padding: 19px;
+      margin-bottom: 14px;
+      box-shadow: 0 3px 12px rgba(15, 23, 42, .03);
+    }
+
+    .profile-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 17px;
+    }
+
+    .field-label {
+      color: #94a3b8;
+      font-size: 12px;
+      margin-bottom: 5px;
+    }
+
+    .field-value {
+      font-size: 14px;
+      font-weight: 600;
+      overflow-wrap: anywhere;
+    }
+
+    .case-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .case-description {
+      color: #64748b;
+      font-size: 13px;
+      line-height: 1.9;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .case-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      align-items: center;
+      margin-top: 14px;
+      color: #64748b;
+      font-size: 12px;
+    }
+
+    .status {
+      display: inline-block;
+      border-radius: 20px;
+      padding: 4px 11px;
+      background: #eff6ff;
+      color: #2563eb;
+      font-size: 12px;
+    }
+
+    .empty, .loading, .error {
+      text-align: center;
+      padding: 35px 15px;
+      color: #64748b;
+      background: #fff;
+      border: 1px solid #e8edf4;
+      border-radius: 14px;
+      font-size: 14px;
+    }
+
+    .error {
+      color: #dc2626;
+    }
+
+    footer {
+      text-align: center;
+      color: #94a3b8;
+      font-size: 12px;
+      padding: 20px;
+    }
+
+    @media (max-width: 500px) {
+      .welcome h1 {
+        font-size: 20px;
+      }
+
+      .card {
+        padding: 15px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="brand">مشتری‌یار</div>
+    <button class="logout" id="logoutBtn">خروج از پنل</button>
+  </div>
+</header>
+
+<main>
+  <section class="welcome">
+    <h1>پنل مشتری</h1>
+    <p>به پنل اختصاصی خود خوش آمدید. اطلاعات و سوابق شما در این قسمت نمایش داده می‌شود.</p>
+  </section>
+
+  <h2 class="section-title">اطلاعات شما</h2>
+  <div id="profiles">
+    <div class="loading">در حال دریافت اطلاعات...</div>
+  </div>
+
+  <h2 class="section-title">سوابق و پرونده‌ها</h2>
+  <div id="cases">
+    <div class="loading">در حال دریافت سوابق...</div>
+  </div>
+</main>
+
+<footer>مشتری‌یار | پنل اختصاصی مشتریان</footer>
+
+<script type="module">
+  import { supabase } from './js/supabase.js';
+
+  const profilesEl = document.getElementById('profiles');
+  const casesEl = document.getElementById('cases');
+  const logoutBtn = document.getElementById('logoutBtn');
+
+  const loginPage = './customer-login.html';
+
+  function formatDate(value) {
+    if (!value) return 'ثبت نشده';
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) return 'ثبت نشده';
+
+    return new Intl.DateTimeFormat('fa-IR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    }).format(date);
+  }
+
+  function addField(container, label, value) {
+    const wrapper = document.createElement('div');
+
+    const labelEl = document.createElement('div');
+    labelEl.className = 'field-label';
+    labelEl.textContent = label;
+
+    const valueEl = document.createElement('div');
+    valueEl.className = 'field-value';
+    valueEl.textContent = value || 'ثبت نشده';
+
+    wrapper.append(labelEl, valueEl);
+    container.appendChild(wrapper);
+  }
+
+  function showProfiles(customers) {
+    profilesEl.replaceChildren();
+
+    if (!customers.length) {
+      profilesEl.innerHTML = '<div class="empty">هنوز پرونده‌ای برای حساب شما متصل نشده است.</div>';
+      return;
+    }
+
+    customers.forEach(customer => {
+      const card = document.createElement('div');
+      card.className = 'card';
+
+      const grid = document.createElement('div');
+      grid.className = 'profile-grid';
+
+      addField(grid, 'نام و نام خانوادگی', customer.name);
+      addField(grid, 'ایمیل', customer.email);
+      addField(grid, 'شماره تماس', customer.phone);
+
+      card.appendChild(grid);
+      profilesEl.appendChild(card);
+    });
+  }
+
+  function showCases(items) {
+    casesEl.replaceChildren();
+
+    if (!items.length) {
+      casesEl.innerHTML = '<div class="empty">هنوز سابقه یا پرونده‌ای برای نمایش ثبت نشده است.</div>';
+      return;
+    }
+
+    items.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'card';
+
+      const title = document.createElement('div');
+      title.className = 'case-title';
+      title.textContent = item.title || 'بدون عنوان';
+
+      const description = document.createElement('div');
+      description.className = 'case-description';
+      description.textContent = item.description || 'توضیحی ثبت نشده است.';
+
+      const meta = document.createElement('div');
+      meta.className = 'case-meta';
+
+      const type = document.createElement('span');
+      type.textContent = 'نوع: ' + (item.case_type || 'ثبت نشده');
+
+      const status = document.createElement('span');
+      status.className = 'status';
+      status.textContent = item.status || 'در حال بررسی';
+
+      const date = document.createElement('span');
+      date.textContent = 'تاریخ ثبت: ' + formatDate(item.created_at);
+
+      meta.append(type, status, date);
+      card.append(title, description, meta);
+
+      casesEl.appendChild(card);
+    });
+  }
+
+  async function loadPortal() {
+    try {
+      const { data: sessionData, error: sessionError } =
+        await supabase.auth.getSession();
+
+      if (sessionError) throw sessionError;
+
+      if (!sessionData.session) {
+        location.replace(loginPage);
+        return;
+      }
+
+      const { data: access, error: accessError } =
+        await supabase.rpc('has_customer_portal_access');
+
+      if (accessError) throw accessError;
+
+      if (access !== true) {
+        await supabase.auth.signOut();
+        location.replace(loginPage);
+        return;
+      }
+
+      const { data: customerIds, error: idsError } =
+        await supabase.rpc('get_my_customer_portal_ids');
+
+      if (idsError) throw idsError;
+
+      if (!Array.isArray(customerIds) || customerIds.length === 0) {
+        showProfiles([]);
+        showCases([]);
+        return;
+      }
+
+      const { data: customers, error: customersError } =
+        await supabase
+          .from('customers')
+          .select('id, name, email, phone')
+          .in('id', customerIds);
+
+      if (customersError) throw customersError;
+
+      showProfiles(customers || []);
+
+      const { data: cases, error: casesError } =
+        await supabase
+          .from('customer_cases')
+          .select(
+            'id, customer_id, case_type, title, description, status, created_at'
+          )
+          .in('customer_id', customerIds)
+          .order('created_at', { ascending: false })
+          .limit(50);
+
+      if (casesError) throw casesError;
+
+      showCases(cases || []);
+
+    } catch (error) {
+      console.error('Customer portal error:', error);
+
+      profilesEl.innerHTML =
+        '<div class="error">دریافت اطلاعات با خطا مواجه شد. لطفاً صفحه را دوباره بارگذاری کنید.</div>';
+
+      casesEl.replaceChildren();
+    }
+  }
+
+  logoutBtn.addEventListener('click', async () => {
+    logoutBtn.disabled = true;
+    logoutBtn.textContent = 'در حال خروج...';
+
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      console.error(error);
+      logoutBtn.disabled = false;
+      logoutBtn.textContent = 'خروج از پنل';
+      alert('خروج با خطا مواجه شد. دوباره تلاش کنید.');
+      return;
+    }
+
+    location.replace(loginPage);
+  });
+
+  loadPortal();
+</script>
+
+</body>
+</html>
