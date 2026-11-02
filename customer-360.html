@@ -7,6 +7,7 @@
   <title>پرونده ۳۶۰ درجه | مشتری‌یار</title>
   <style>
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       font-family: Tahoma, sans-serif;
@@ -14,7 +15,13 @@
       color: #172033;
       line-height: 1.9;
     }
-    .container { max-width: 1100px; margin: auto; padding: 20px; }
+
+    .container {
+      max-width: 1100px;
+      margin: auto;
+      padding: 20px;
+    }
+
     header {
       display: flex;
       justify-content: space-between;
@@ -23,9 +30,12 @@
       flex-wrap: wrap;
       margin-bottom: 20px;
     }
+
     h1 { font-size: 23px; margin: 0; }
     h2 { font-size: 17px; margin: 0 0 15px; }
+
     .muted { color: #64748b; font-size: 13px; }
+
     .card {
       background: white;
       border: 1px solid #e5eaf2;
@@ -33,20 +43,24 @@
       padding: 19px;
       margin-bottom: 16px;
     }
+
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 16px;
     }
+
     .item {
       border-bottom: 1px solid #edf0f5;
       padding: 11px 0;
       overflow-wrap: anywhere;
     }
+
     .item:last-child { border-bottom: none; }
     .title { font-weight: bold; }
     .empty { color: #64748b; font-size: 14px; }
     .error { color: #b91c1c; }
+
     .tag {
       display: inline-block;
       padding: 2px 9px;
@@ -56,16 +70,19 @@
       font-size: 12px;
       margin: 3px;
     }
+
     a {
       color: #2563eb;
       text-decoration: none;
     }
+
     .back {
       background: white;
       border: 1px solid #dbe2ed;
       padding: 6px 13px;
       border-radius: 9px;
     }
+
     .event {
       padding: 12px 16px;
       border-right: 3px solid #6366f1;
@@ -73,8 +90,90 @@
       background: #f8faff;
       border-radius: 8px;
     }
+
+    /* گفتگوی پیام‌های پرونده */
+    .conversation {
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid #e5eaf2;
+    }
+
+    .conversation-title {
+      font-weight: bold;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+
+    .message-item {
+      background: #f8fafc;
+      border: 1px solid #e5eaf2;
+      border-radius: 10px;
+      padding: 10px 13px;
+      margin-bottom: 9px;
+    }
+
+    .message-item.manager-message {
+      background: #eff6ff;
+      border-color: #dbeafe;
+    }
+
+    .message-header {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 5px 12px;
+      font-size: 11px;
+      color: #64748b;
+      margin-bottom: 6px;
+    }
+
+    .message-sender {
+      font-weight: bold;
+      color: #2563eb;
+    }
+
+    .message-text {
+      font-size: 13px;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .message-form { margin-top: 12px; }
+
+    .message-input {
+      width: 100%;
+      min-height: 75px;
+      padding: 10px;
+      border: 1px solid #dbe2ed;
+      border-radius: 9px;
+      font-family: Tahoma, sans-serif;
+      font-size: 13px;
+      resize: vertical;
+    }
+
+    .send-message-btn {
+      margin-top: 8px;
+      padding: 9px 18px;
+      background: #2563eb;
+      color: white;
+      border: 0;
+      border-radius: 8px;
+      font-family: Tahoma, sans-serif;
+      cursor: pointer;
+    }
+
+    .send-message-btn:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+
+    .message-feedback {
+      font-size: 12px;
+      margin-top: 7px;
+    }
   </style>
 </head>
+
 <body>
   <main class="container">
     <header>
@@ -85,25 +184,28 @@
       <a class="back" href="customers.html">بازگشت به مشتریان</a>
     </header>
 
-    <div id="message" class="card muted">در حال دریافت اطلاعات...</div>
+    <div id="message" class="card muted">
+      در حال دریافت اطلاعات...
+    </div>
 
     <div id="content" hidden>
       <section class="card">
-  <h2>پنل مشتری</h2>
-  <p class="muted">
-    برای مشتری دعوت‌نامه دسترسی به پنل اختصاصی ارسال کنید.
-  </p>
+        <h2>پنل مشتری</h2>
+        <p class="muted">
+          برای مشتری دعوت‌نامه دسترسی به پنل اختصاصی ارسال کنید.
+        </p>
 
-  <button
-    id="inviteCustomerBtn"
-    type="button"
-    style="background:#2563eb;color:white;border:0;border-radius:9px;padding:11px 20px;font-family:Tahoma;cursor:pointer;"
-  >
-    دعوت به پنل مشتری
-  </button>
+        <button
+          id="inviteCustomerBtn"
+          type="button"
+          style="background:#2563eb;color:white;border:0;border-radius:9px;padding:11px 20px;font-family:Tahoma;cursor:pointer;"
+        >
+          دعوت به پنل مشتری
+        </button>
 
-  <p id="inviteMessage" class="muted" hidden></p>
+        <p id="inviteMessage" class="muted" hidden></p>
       </section>
+
       <section class="card">
         <h2 id="profileTitle">مشخصات مشتری</h2>
         <div id="profile"></div>
@@ -115,7 +217,6 @@
           <div id="invoices"></div>
         </section>
 
-        
         <section class="card">
           <h2 id="casesTitle">خدمات و سوابق</h2>
           <div id="cases"></div>
@@ -138,7 +239,6 @@
           <div id="feedback"></div>
         </section>
       </div>
-      
 
       <section class="card">
         <h2>تاریخچه یکپارچه</h2>
@@ -234,88 +334,132 @@
       pending: 'در انتظار',
       done: 'انجام‌شده'
     };
-     
-    /* گفتگوی پیام‌های پرونده */
-    .conversation {
-      margin-top: 16px;
-      padding-top: 14px;
-      border-top: 1px solid #e5eaf2;
-    }
 
-    .conversation-title {
-      font-weight: bold;
-      font-size: 14px;
-      margin-bottom: 12px;
-    }
+    // نمایش پیام‌ها و امکان پاسخ مدیر
+    function renderConversation(parent, record, messages) {
+      const section = document.createElement('div');
+      section.className = 'conversation';
 
-    .message-item {
-      background: #f8fafc;
-      border: 1px solid #e5eaf2;
-      border-radius: 10px;
-      padding: 10px 13px;
-      margin-bottom: 9px;
-    }
+      section.append(
+        element('div', 'گفتگو با مشتری', 'conversation-title')
+      );
 
-    .message-item.manager-message {
-      background: #eff6ff;
-      border-color: #dbeafe;
-    }
+      const messagesBox = document.createElement('div');
+      section.append(messagesBox);
 
-    .message-header {
-      display: flex;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 5px 12px;
-      font-size: 11px;
-      color: #64748b;
-      margin-bottom: 6px;
-    }
+      function displayMessages(list) {
+        messagesBox.replaceChildren();
 
-    .message-sender {
-      font-weight: bold;
-      color: #2563eb;
-    }
+        if (!list.length) {
+          messagesBox.append(
+            element('p', 'هنوز پیامی ثبت نشده است.', 'empty')
+          );
+          return;
+        }
 
-    .message-text {
-      font-size: 13px;
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
-    }
+        list.forEach(message => {
+          const bubble = document.createElement('div');
 
-    .message-form {
-      margin-top: 12px;
-    }
+          bubble.className =
+            'message-item' +
+            (message.sender_role === 'manager'
+              ? ' manager-message'
+              : '');
 
-    .message-input {
-      width: 100%;
-      min-height: 75px;
-      padding: 10px;
-      border: 1px solid #dbe2ed;
-      border-radius: 9px;
-      font-family: Tahoma, sans-serif;
-      font-size: 13px;
-      resize: vertical;
-    }
+          const header = document.createElement('div');
+          header.className = 'message-header';
 
-    .send-message-btn {
-      margin-top: 8px;
-      padding: 9px 18px;
-      background: #2563eb;
-      color: white;
-      border: 0;
-      border-radius: 8px;
-      font-family: Tahoma, sans-serif;
-      cursor: pointer;
-    }
+          header.append(
+            element(
+              'span',
+              message.sender_role === 'manager'
+                ? 'شما (مدیر)'
+                : 'مشتری',
+              'message-sender'
+            ),
+            element('span', dateText(message.created_at))
+          );
 
-    .send-message-btn:disabled {
-      opacity: .6;
-      cursor: not-allowed;
-    }
+          bubble.append(
+            header,
+            element('div', message.message, 'message-text')
+          );
 
-    .message-feedback {
-      font-size: 12px;
-      margin-top: 7px;
+          messagesBox.append(bubble);
+        });
+      }
+
+      displayMessages(messages);
+
+      const form = document.createElement('form');
+      form.className = 'message-form';
+
+      const textarea = document.createElement('textarea');
+      textarea.className = 'message-input';
+      textarea.maxLength = 5000;
+      textarea.required = true;
+      textarea.placeholder = 'پاسخ خود را برای مشتری بنویسید...';
+
+      const button = document.createElement('button');
+      button.type = 'submit';
+      button.className = 'send-message-btn';
+      button.textContent = 'ارسال پاسخ';
+
+      const feedback = element('div', '', 'message-feedback');
+
+      form.append(textarea, button, feedback);
+      section.append(form);
+      parent.append(section);
+
+      form.addEventListener('submit', async event => {
+        event.preventDefault();
+
+        const messageText = textarea.value.trim();
+
+        if (!messageText) return;
+
+        button.disabled = true;
+        button.textContent = 'در حال ارسال...';
+        feedback.textContent = '';
+
+        try {
+          const { error } = await supabase.rpc(
+            'send_customer_case_message',
+            {
+              p_case_id: record.id,
+              p_message: messageText
+            }
+          );
+
+          if (error) throw error;
+
+          const { data, error: loadError } = await supabase
+            .from('customer_case_messages')
+            .select('id, case_id, sender_role, message, created_at')
+            .eq('case_id', record.id)
+            .order('created_at', { ascending: true });
+
+          if (loadError) throw loadError;
+
+          displayMessages(data || []);
+          textarea.value = '';
+
+          feedback.textContent = 'پاسخ با موفقیت ارسال شد.';
+          feedback.style.color = '#15803d';
+
+        } catch (error) {
+          console.error('Send message error:', error);
+
+          feedback.textContent =
+            error.message || 'ارسال پیام انجام نشد.';
+
+          feedback.style.color = '#dc2626';
+
+        } finally {
+          button.disabled = false;
+          button.textContent = 'ارسال پاسخ';
+        }
+      });
     }
 
     async function init() {
@@ -325,8 +469,10 @@
           return;
         }
 
-        const { data: { session }, error: sessionError } =
-          await supabase.auth.getSession();
+        const {
+          data: { session },
+          error: sessionError
+        } = await supabase.auth.getSession();
 
         if (sessionError) throw sessionError;
 
@@ -338,83 +484,117 @@
         if (!(await checkPlanGuard())) return;
 
         const userId = session.user.id;
-        const businessType = await loadBusinessType(supabase, userId);
+
+        const businessType =
+          await loadBusinessType(supabase, userId);
+
         const labels = getLabels(businessType);
-        const specializedFields = BUSINESS_FIELDS[businessType] || [];
+        const specializedFields =
+          BUSINESS_FIELDS[businessType] || [];
 
-        $('pageTitle').textContent = `پرونده ۳۶۰ درجه ${labels.customer}`;
-        $('profileTitle').textContent = `مشخصات ${labels.customer}`;
-        $('financialTitle').textContent = `سوابق مالی و ${labels.invoices}`;
-        $('casesTitle').textContent = `سوابق ${labels.service} و ${labels.appointments}`;
+        $('pageTitle').textContent =
+          `پرونده ۳۶۰ درجه ${labels.customer}`;
 
-        // مشتری باید متعلق به همین کاربر باشد.
-        const { data: customer, error: customerError } = await supabase
-          .from('customers')
-          .select('*')
-          .eq('id', customerId)
-          .eq('user_id', userId)
-          .maybeSingle();
+        $('profileTitle').textContent =
+          `مشخصات ${labels.customer}`;
+
+        $('financialTitle').textContent =
+          `سوابق مالی و ${labels.invoices}`;
+
+        $('casesTitle').textContent =
+          `سوابق ${labels.service} و ${labels.appointments}`;
+
+        // دریافت مشتری فقط از اطلاعات متعلق به مدیر واردشده
+        const { data: customer, error: customerError } =
+          await supabase
+            .from('customers')
+            .select('*')
+            .eq('id', customerId)
+            .eq('user_id', userId)
+            .maybeSingle();
 
         if (customerError) throw customerError;
 
         if (!customer) {
-          showError('این مشتری پیدا نشد یا اجازه مشاهده آن را ندارید.');
+          showError(
+            'این مشتری پیدا نشد یا اجازه مشاهده آن را ندارید.'
+          );
           return;
         }
-        
-const inviteButton = $('inviteCustomerBtn');
-const inviteMessage = $('inviteMessage');
 
-inviteButton.addEventListener('click', async () => {
-  inviteButton.disabled = true;
-  inviteMessage.hidden = false;
-  inviteMessage.className = 'muted';
-  inviteMessage.textContent = 'در حال ارسال دعوت‌نامه...';
+        // دعوت مشتری به پنل اختصاصی
+        const inviteButton = $('inviteCustomerBtn');
+        const inviteMessage = $('inviteMessage');
 
-  try {
-    const { data: { session }, error: sessionError } =
-      await supabase.auth.getSession();
+        inviteButton.onclick = async () => {
+          inviteButton.disabled = true;
+          inviteMessage.hidden = false;
+          inviteMessage.className = 'muted';
+          inviteMessage.textContent =
+            'در حال ارسال دعوت‌نامه...';
 
-    if (sessionError) throw sessionError;
-    if (!session?.access_token) {
-      throw new Error('نشست مدیر معتبر نیست.');
-    }
+          try {
+            const {
+              data: { session },
+              error: sessionError
+            } = await supabase.auth.getSession();
 
-    const response = await fetch('/api/send-email?action=invite_customer', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${session.access_token}`
-      },
-      body: JSON.stringify({ customerId })
-    });
+            if (sessionError) throw sessionError;
 
-    const result = await response.json().catch(() => ({}));
+            if (!session?.access_token) {
+              throw new Error('نشست مدیر معتبر نیست.');
+            }
 
-    if (!response.ok || !result.ok) {
-     throw new Error(result.error || `خطای سرور (${response.status}): ${JSON.stringify(result)}`); 
-    }
+            const response = await fetch(
+              '/api/send-email?action=invite_customer',
+              {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify({ customerId })
+              }
+            );
 
-    inviteMessage.textContent =
-      `دعوت‌نامه برای ${result.email} ارسال شد.`;
+            const result =
+              await response.json().catch(() => ({}));
 
-  } catch (error) {
-    inviteMessage.className = 'error';
-    inviteMessage.textContent =
-      error.message || 'خطا در ارسال دعوت‌نامه.';
-  } finally {
-    inviteButton.disabled = false;
-  }
-});
+            if (!response.ok || !result.ok) {
+              throw new Error(
+                result.error ||
+                `خطای سرور (${response.status}): ${JSON.stringify(result)}`
+              );
+            }
+
+            inviteMessage.textContent =
+              `دعوت‌نامه برای ${result.email} ارسال شد.`;
+
+          } catch (error) {
+            inviteMessage.className = 'error';
+            inviteMessage.textContent =
+              error.message || 'خطا در ارسال دعوت‌نامه.';
+
+          } finally {
+            inviteButton.disabled = false;
+          }
+        };
+
+        // مشخصات مشتری
         $('profile').replaceChildren();
+
         addLine($('profile'), 'نام', customer.name);
         addLine($('profile'), 'تلفن', customer.phone);
         addLine($('profile'), 'ایمیل', customer.email);
         addLine($('profile'), 'وضعیت', customer.status);
         addLine($('profile'), 'یادداشت', customer.notes);
-        addLine($('profile'), 'تاریخ ثبت', dateText(customer.created_at));
+        addLine(
+          $('profile'),
+          'تاریخ ثبت',
+          dateText(customer.created_at)
+        );
 
-        // هر درخواست با شناسه کاربر و مشتری محدود شده است.
+        // دریافت سوابق با محدودیت مالکیت
         const [
           casesResult,
           invoicesResult,
@@ -447,57 +627,80 @@ inviteButton.addEventListener('click', async () => {
         if (timelineResult.error) throw timelineResult.error;
 
         const cases = casesResult.data || [];
-        let messages = [];
-
-if (cases.length) {
-  const { data: messageData, error: messagesError } = await supabase
-    .from('customer_case_messages')
-    .select('id, case_id, sender_role, message, created_at')
-    .in('case_id', cases.map(c => c.id))
-    .order('created_at', { ascending: true });
-
-  if (messagesError) {
-  console.error('Messages loading error:', messagesError);
-  }
-  messages = messageData || [];
-}
-
-const messagesByCase = {};
-
-messages.forEach(message => {
-  if (!messagesByCase[message.case_id]) {
-    messagesByCase[message.case_id] = [];
-  }
-
-  messagesByCase[message.case_id].push(message);
-});
         const invoices = invoicesResult.data || [];
         const timeline = timelineResult.data || [];
 
-        renderItems('invoices', invoices, (item, invoice) => {
-          item.append(element('div',
-            invoice.customer_name || customer.name, 'title'
-          ));
+        // دریافت پیام‌های پرونده‌ها
+        let messages = [];
 
-          addLine(item, 'شماره فاکتور',
-            invoice.invoice_number ?? invoice.number ?? invoice.id
-          );
+        if (cases.length) {
+          const { data: messageData, error: messagesError } =
+            await supabase
+              .from('customer_case_messages')
+              .select(
+                'id, case_id, sender_role, message, created_at'
+              )
+              .in('case_id', cases.map(c => c.id))
+              .order('created_at', { ascending: true });
 
-          // فقط ستون‌هایی که واقعاً در داده موجودند نمایش داده می‌شوند.
-          if ('total_amount' in invoice)
-            addLine(item, 'مبلغ کل', invoice.total_amount);
+          if (messagesError) {
+            console.error(
+              'Messages loading error:',
+              messagesError
+            );
+          } else {
+            messages = messageData || [];
+          }
+        }
 
-          if ('total' in invoice)
-            addLine(item, 'مبلغ', invoice.total);
+        const messagesByCase = {};
 
-          if ('status' in invoice)
-            addLine(item, 'وضعیت', invoice.status);
+        messages.forEach(message => {
+          if (!messagesByCase[message.case_id]) {
+            messagesByCase[message.case_id] = [];
+          }
 
-          addLine(item, 'تاریخ', dateText(invoice.created_at));
+          messagesByCase[message.case_id].push(message);
         });
 
-        
-        // خدمات و سوابق، به‌جز شکایات
+        // سوابق مالی
+        renderItems('invoices', invoices, (item, invoice) => {
+          item.append(
+            element(
+              'div',
+              invoice.customer_name || customer.name,
+              'title'
+            )
+          );
+
+          addLine(
+            item,
+            'شماره فاکتور',
+            invoice.invoice_number ??
+              invoice.number ??
+              invoice.id
+          );
+
+          if ('total_amount' in invoice) {
+            addLine(item, 'مبلغ کل', invoice.total_amount);
+          }
+
+          if ('total' in invoice) {
+            addLine(item, 'مبلغ', invoice.total);
+          }
+
+          if ('status' in invoice) {
+            addLine(item, 'وضعیت', invoice.status);
+          }
+
+          addLine(
+            item,
+            'تاریخ',
+            dateText(invoice.created_at)
+          );
+        });
+
+        // خدمات و سوابق به‌جز شکایات
         const normalCases = cases.filter(
           record => record.case_type !== 'complaint'
         );
@@ -505,12 +708,14 @@ messages.forEach(message => {
         renderItems('cases', normalCases, (item, record) => {
           item.append(element('div', record.title, 'title'));
 
-          const tag = element(
-            'span',
-            caseNames[record.case_type] || record.case_type,
-            'tag'
+          item.append(
+            element(
+              'span',
+              caseNames[record.case_type] ||
+                record.case_type,
+              'tag'
+            )
           );
-          item.append(tag);
 
           addLine(
             item,
@@ -525,8 +730,17 @@ messages.forEach(message => {
           const details = record.details || {};
 
           specializedFields.forEach(field => {
-            if (Object.prototype.hasOwnProperty.call(details, field.key)) {
-              addLine(item, field.label, details[field.key]);
+            if (
+              Object.prototype.hasOwnProperty.call(
+                details,
+                field.key
+              )
+            ) {
+              addLine(
+                item,
+                field.label,
+                details[field.key]
+              );
             }
           });
 
@@ -538,155 +752,226 @@ messages.forEach(message => {
             );
           }
 
-         addLine(item, 'تاریخ ثبت', dateText(record.created_at));
+          addLine(
+            item,
+            'تاریخ ثبت',
+            dateText(record.created_at)
+          );
 
-      renderConversation(item, record, messagesByCase[record.id] || []);
-      });
-        // بخش شکایات و امکان ثبت نتیجه رسیدگی
-const complaints = cases.filter(
-  record => record.case_type === 'complaint'
-);
+          renderConversation(
+            item,
+            record,
+            messagesByCase[record.id] || []
+          );
+        });
 
-renderItems('complaints', complaints, (item, record) => {
-  item.append(element('div', record.title, 'title'));
+        // شکایات و نتیجه رسیدگی
+        const complaints = cases.filter(
+          record => record.case_type === 'complaint'
+        );
 
-  const statusLine = element(
-    'div',
-    '',
-    'case-meta'
-  );
+        renderItems('complaints', complaints, (item, record) => {
+          item.append(element('div', record.title, 'title'));
 
-  const statusText = element(
-    'span',
-    'وضعیت رسیدگی: ' +
-      (statusNames[record.status] || record.status),
-    ''
-  );
+          const statusLine = element(
+            'div',
+            '',
+            'case-meta'
+          );
 
-  statusLine.append(statusText);
-  item.append(statusLine);
+          statusLine.append(
+            element(
+              'span',
+              'وضعیت رسیدگی: ' +
+                (statusNames[record.status] || record.status)
+            )
+          );
 
-  if (record.description) {
-    addLine(item, 'شرح شکایت', record.description);
-  }
+          item.append(statusLine);
 
-  const details =
-    record.details && typeof record.details === 'object'
-      ? record.details
-      : {};
+          if (record.description) {
+            addLine(
+              item,
+              'شرح شکایت',
+              record.description
+            );
+          }
 
-  addLine(
-    item,
-    'نتیجه رسیدگی',
-    details.resolution || 'هنوز ثبت نشده'
-  );
+          const details =
+            record.details &&
+            typeof record.details === 'object'
+              ? record.details
+              : {};
 
-  if (record.resolved_at) {
-    addLine(item, 'تاریخ رسیدگی', dateText(record.resolved_at));
-  }
+          addLine(
+            item,
+            'نتیجه رسیدگی',
+            details.resolution || 'هنوز ثبت نشده'
+          );
 
-  addLine(item, 'تاریخ ثبت شکایت', dateText(record.created_at));
-  
-renderConversation(item, record, messagesByCase[record.id] || []);
-  const separator = document.createElement('hr');
-  item.append(separator);
+          if (record.resolved_at) {
+            addLine(
+              item,
+              'تاریخ رسیدگی',
+              dateText(record.resolved_at)
+            );
+          }
 
-  const heading = element('div', 'ثبت نتیجه رسیدگی', 'title');
-  item.append(heading);
+          addLine(
+            item,
+            'تاریخ ثبت شکایت',
+            dateText(record.created_at)
+          );
 
-  const statusSelect = document.createElement('select');
-  statusSelect.style.cssText =
-    'width:100%;padding:10px;margin:8px 0;border:1px solid #ddd;border-radius:8px;font-family:inherit;';
+          renderConversation(
+            item,
+            record,
+            messagesByCase[record.id] || []
+          );
 
-  Object.entries(statusNames).forEach(([value, label]) => {
-    const option = document.createElement('option');
-    option.value = value;
-    option.textContent = label;
-    option.selected = value === record.status;
-    statusSelect.appendChild(option);
-  });
+          const separator = document.createElement('hr');
+          item.append(separator);
 
-  const resolutionInput = document.createElement('textarea');
-  resolutionInput.value = details.resolution || '';
-  resolutionInput.placeholder = 'نتیجه بررسی و اقدام انجام‌شده را بنویسید...';
-  resolutionInput.rows = 4;
-  resolutionInput.style.cssText =
-    'width:100%;padding:10px;margin:8px 0;border:1px solid #ddd;border-radius:8px;font-family:inherit;resize:vertical;';
+          item.append(
+            element('div', 'ثبت نتیجه رسیدگی', 'title')
+          );
 
-  const saveButton = document.createElement('button');
-  saveButton.type = 'button';
-  saveButton.textContent = 'ذخیره نتیجه رسیدگی';
-  saveButton.style.cssText =
-    'padding:10px 18px;background:#2563eb;color:white;border:0;border-radius:8px;font-family:inherit;cursor:pointer;';
+          const statusSelect =
+            document.createElement('select');
 
-  const message = document.createElement('div');
-  message.style.cssText = 'font-size:13px;margin-top:10px;';
+          statusSelect.style.cssText =
+            'width:100%;padding:10px;margin:8px 0;border:1px solid #ddd;border-radius:8px;font-family:inherit;';
 
-  saveButton.addEventListener('click', async () => {
-    const resolution = resolutionInput.value.trim();
-    const newStatus = statusSelect.value;
+          Object.entries(statusNames).forEach(
+            ([value, label]) => {
+              const option =
+                document.createElement('option');
 
-    if (!resolution) {
-      message.textContent = 'لطفاً نتیجه رسیدگی را وارد کنید.';
-      message.style.color = '#dc2626';
-      return;
-    }
+              option.value = value;
+              option.textContent = label;
+              option.selected = value === record.status;
 
-    saveButton.disabled = true;
-    saveButton.textContent = 'در حال ذخیره...';
-    message.textContent = '';
+              statusSelect.append(option);
+            }
+          );
 
-    try {
-      const { data, error } = await supabase
-        .from('customer_cases')
-        .update({
-          status: newStatus,
-          details: {
-            ...details,
-            resolution
-          },
-          resolved_at:
-            ['resolved', 'closed'].includes(newStatus)
-              ? new Date().toISOString()
-              : null,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', record.id)
-        .eq('user_id', userId)
-        .eq('customer_id', customerId)
-        .select('id')
-        .maybeSingle();
+          const resolutionInput =
+            document.createElement('textarea');
 
-      if (error) throw error;
-      if (!data) throw new Error('پرونده برای ذخیره پیدا نشد.');
+          resolutionInput.value = details.resolution || '';
+          resolutionInput.placeholder =
+            'نتیجه بررسی و اقدام انجام‌شده را بنویسید...';
+          resolutionInput.rows = 4;
 
-      message.textContent = 'نتیجه رسیدگی با موفقیت ذخیره شد.';
-      message.style.color = '#15803d';
+          resolutionInput.style.cssText =
+            'width:100%;padding:10px;margin:8px 0;border:1px solid #ddd;border-radius:8px;font-family:inherit;resize:vertical;';
 
-      await init();
+          const saveButton =
+            document.createElement('button');
 
-    } catch (error) {
-      console.error('Complaint update error:', error);
-      message.textContent =
-        error.message || 'ذخیره نتیجه با خطا مواجه شد.';
-      message.style.color = '#dc2626';
+          saveButton.type = 'button';
+          saveButton.textContent = 'ذخیره نتیجه رسیدگی';
 
-      saveButton.disabled = false;
-      saveButton.textContent = 'ذخیره نتیجه رسیدگی';
-    }
-  });
+          saveButton.style.cssText =
+            'padding:10px 18px;background:#2563eb;color:white;border:0;border-radius:8px;font-family:inherit;cursor:pointer;';
 
-  item.append(statusSelect, resolutionInput, saveButton, message);
-});
+          const saveMessage = document.createElement('div');
 
-        // پیگیری‌ها و بازخوردها از طریق پرونده‌های همین مشتری دریافت می‌شوند.
+          saveMessage.style.cssText =
+            'font-size:13px;margin-top:10px;';
+
+          saveButton.addEventListener('click', async () => {
+            const resolution =
+              resolutionInput.value.trim();
+
+            const newStatus = statusSelect.value;
+
+            if (!resolution) {
+              saveMessage.textContent =
+                'لطفاً نتیجه رسیدگی را وارد کنید.';
+
+              saveMessage.style.color = '#dc2626';
+              return;
+            }
+
+            saveButton.disabled = true;
+            saveButton.textContent = 'در حال ذخیره...';
+            saveMessage.textContent = '';
+
+            try {
+              const { data, error } = await supabase
+                .from('customer_cases')
+                .update({
+                  status: newStatus,
+                  details: {
+                    ...details,
+                    resolution
+                  },
+                  resolved_at:
+                    ['resolved', 'closed'].includes(newStatus)
+                      ? new Date().toISOString()
+                      : null,
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', record.id)
+                .eq('user_id', userId)
+                .eq('customer_id', customerId)
+                .select('id')
+                .maybeSingle();
+
+              if (error) throw error;
+
+              if (!data) {
+                throw new Error(
+                  'پرونده برای ذخیره پیدا نشد.'
+                );
+              }
+
+              saveMessage.textContent =
+                'نتیجه رسیدگی با موفقیت ذخیره شد.';
+
+              saveMessage.style.color = '#15803d';
+
+              // بارگذاری دوباره اطلاعات پرونده
+              await init();
+
+            } catch (error) {
+              console.error(
+                'Complaint update error:',
+                error
+              );
+
+              saveMessage.textContent =
+                error.message ||
+                'ذخیره نتیجه با خطا مواجه شد.';
+
+              saveMessage.style.color = '#dc2626';
+
+              saveButton.disabled = false;
+              saveButton.textContent =
+                'ذخیره نتیجه رسیدگی';
+            }
+          });
+
+          item.append(
+            statusSelect,
+            resolutionInput,
+            saveButton,
+            saveMessage
+          );
+        });
+
+        // پیگیری‌ها و رضایت‌سنجی
         const caseIds = cases.map(record => record.id);
 
         let followups = [];
         let feedback = [];
 
         if (caseIds.length) {
-          const [followupsResult, feedbackResult] = await Promise.all([
+          const [
+            followupsResult,
+            feedbackResult
+          ] = await Promise.all([
             supabase
               .from('customer_followups')
               .select('*')
@@ -702,8 +987,13 @@ renderConversation(item, record, messagesByCase[record.id] || []);
               .order('created_at', { ascending: false })
           ]);
 
-          if (followupsResult.error) throw followupsResult.error;
-          if (feedbackResult.error) throw feedbackResult.error;
+          if (followupsResult.error) {
+            throw followupsResult.error;
+          }
+
+          if (feedbackResult.error) {
+            throw feedbackResult.error;
+          }
 
           followups = followupsResult.data || [];
           feedback = feedbackResult.data || [];
@@ -711,38 +1001,70 @@ renderConversation(item, record, messagesByCase[record.id] || []);
 
         renderItems('followups', followups, (item, record) => {
           item.append(element('div', record.title, 'title'));
-          addLine(item, 'وضعیت',
+
+          addLine(
+            item,
+            'وضعیت',
             statusNames[record.status] || record.status
           );
+
           addLine(item, 'مسئول', record.assigned_to);
           addLine(item, 'موعد', dateText(record.due_at));
-          if (record.outcome)
+
+          if (record.outcome) {
             addLine(item, 'نتیجه', record.outcome);
+          }
         });
 
         renderItems('feedback', feedback, (item, record) => {
-          addLine(item, 'امتیاز',
-            record.rating == null ? 'ثبت نشده' : `${record.rating} از ۵`
+          addLine(
+            item,
+            'امتیاز',
+            record.rating == null
+              ? 'ثبت نشده'
+              : `${record.rating} از ۵`
           );
-          addLine(item, 'رضایت',
+
+          addLine(
+            item,
+            'رضایت',
             record.is_satisfied === null
               ? 'ثبت نشده'
-              : record.is_satisfied ? 'راضی' : 'ناراضی'
+              : record.is_satisfied
+                ? 'راضی'
+                : 'ناراضی'
           );
+
           addLine(item, 'نظر', record.comment);
-          addLine(item, 'تاریخ', dateText(record.created_at));
+
+          addLine(
+            item,
+            'تاریخ',
+            dateText(record.created_at)
+          );
         });
 
+        // تاریخچه یکپارچه
         renderItems('timeline', timeline, (item, event) => {
           item.className = 'event';
-          item.append(element('div', event.event_title, 'title'));
 
-          if (event.event_description)
-            item.append(element('div', event.event_description));
+          item.append(
+            element('div', event.event_title, 'title')
+          );
 
-          item.append(element('div',
-            dateText(event.event_at), 'muted'
-          ));
+          if (event.event_description) {
+            item.append(
+              element('div', event.event_description)
+            );
+          }
+
+          item.append(
+            element(
+              'div',
+              dateText(event.event_at),
+              'muted'
+            )
+          );
         });
 
         $('message').hidden = true;
@@ -750,8 +1072,11 @@ renderConversation(item, record, messagesByCase[record.id] || []);
 
       } catch (error) {
         console.error('Customer 360 error:', error);
-        showError('بارگذاری پرونده با خطا مواجه شد: ' +
-          (error.message || 'خطای نامشخص'));
+
+        showError(
+          'بارگذاری پرونده با خطا مواجه شد: ' +
+          (error.message || 'خطای نامشخص')
+        );
       }
     }
 
