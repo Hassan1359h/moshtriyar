@@ -456,8 +456,9 @@ if (cases.length) {
     .in('case_id', cases.map(c => c.id))
     .order('created_at', { ascending: true });
 
-  if (messagesError) throw messagesError;
-
+  if (messagesError) {
+  console.error('Messages loading error:', messagesError);
+  }
   messages = messageData || [];
 }
 
