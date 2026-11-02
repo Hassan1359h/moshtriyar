@@ -126,6 +126,24 @@
       overflow-wrap: anywhere;
     }
 
+    .case-response {
+      margin-top: 14px;
+      padding: 12px;
+      background: #f0fdf4;
+      border: 1px solid #dcfce7;
+      border-radius: 10px;
+      color: #166534;
+      font-size: 13px;
+      line-height: 1.9;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .case-response-title {
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
     .case-meta {
       display: flex;
       flex-wrap: wrap;
@@ -145,7 +163,9 @@
       font-size: 12px;
     }
 
-    .empty, .loading, .error {
+    .empty,
+    .loading,
+    .error {
       text-align: center;
       padding: 35px 15px;
       color: #64748b;
@@ -166,26 +186,6 @@
       padding: 20px;
     }
 
-    @media (max-width: 500px) {
-      .welcome h1 {
-        font-size: 20px;
-      }
-
-      .card {
-        padding: 15px;
-      }
-    }
-        @media (max-width: 500px) {
-      .welcome h1 {
-        font-size: 20px;
-      }
-
-      .card {
-        padding: 15px;
-      }
-    }
-
-    /* استایل فرم درخواست مشتری */
     .form-group {
       margin-bottom: 16px;
     }
@@ -234,6 +234,16 @@
       margin-top: 12px;
       font-size: 13px;
     }
+
+    @media (max-width: 500px) {
+      .welcome h1 {
+        font-size: 20px;
+      }
+
+      .card {
+        padding: 15px;
+      }
+    }
   </style>
 </head>
 
@@ -249,50 +259,74 @@
 <main>
   <section class="welcome">
     <h1>پنل مشتری</h1>
-    <p>به پنل اختصاصی خود خوش آمدید. اطلاعات و سوابق شما در این قسمت نمایش داده می‌شود.</p>
+    <p>
+      به پنل اختصاصی خود خوش آمدید.
+      اطلاعات و سوابق شما در این قسمت نمایش داده می‌شود.
+    </p>
   </section>
 
   <h2 class="section-title">اطلاعات شما</h2>
+
   <div id="profiles">
     <div class="loading">در حال دریافت اطلاعات...</div>
   </div>
 
   <h2 class="section-title">سوابق و پرونده‌ها</h2>
+
   <div id="cases">
     <div class="loading">در حال دریافت سوابق...</div>
   </div>
+
   <h2 class="section-title">ثبت درخواست جدید</h2>
 
-<div class="card">
-  <form id="requestForm">
-    <div class="form-group">
-      <label for="requestType">نوع درخواست</label>
-      <select id="requestType" required>
-        <option value="service">درخواست پشتیبانی</option>
-        <option value="complaint">ثبت شکایت</option>
-        <option value="feedback">ارسال پیشنهاد یا بازخورد</option>
-      </select>
-    </div>
+  <div class="card">
+    <form id="requestForm">
 
-    <div class="form-group">
-      <label for="requestTitle">عنوان</label>
-      <input id="requestTitle" type="text" minlength="3" maxlength="150"
-        placeholder="موضوع درخواست را بنویسید" required>
-    </div>
+      <div class="form-group">
+        <label for="requestType">نوع درخواست</label>
+        <select id="requestType" required>
+          <option value="service">درخواست پشتیبانی</option>
+          <option value="complaint">ثبت شکایت</option>
+          <option value="feedback">ارسال پیشنهاد یا بازخورد</option>
+        </select>
+      </div>
 
-    <div class="form-group">
-      <label for="requestDescription">شرح درخواست</label>
-      <textarea id="requestDescription" minlength="5" maxlength="5000"
-        rows="5" placeholder="توضیحات خود را بنویسید..." required></textarea>
-    </div>
+      <div class="form-group">
+        <label for="requestTitle">عنوان</label>
+        <input
+          id="requestTitle"
+          type="text"
+          minlength="3"
+          maxlength="150"
+          placeholder="موضوع درخواست را بنویسید"
+          required
+        >
+      </div>
 
-    <button type="submit" class="submit-request" id="submitRequestBtn">
-      ثبت درخواست
-    </button>
+      <div class="form-group">
+        <label for="requestDescription">شرح درخواست</label>
+        <textarea
+          id="requestDescription"
+          minlength="5"
+          maxlength="5000"
+          rows="5"
+          placeholder="توضیحات خود را بنویسید..."
+          required
+        ></textarea>
+      </div>
 
-    <div id="requestMessage" role="status" aria-live="polite"></div>
-  </form>
-</div>
+      <button
+        type="submit"
+        class="submit-request"
+        id="submitRequestBtn"
+      >
+        ثبت درخواست
+      </button>
+
+      <div id="requestMessage" role="status" aria-live="polite"></div>
+
+    </form>
+  </div>
 </main>
 
 <footer>مشتری‌یار | پنل اختصاصی مشتریان</footer>
@@ -305,6 +339,7 @@
   const logoutBtn = document.getElementById('logoutBtn');
 
   const loginPage = './customer-login.html';
+
   const requestForm = document.getElementById('requestForm');
   const requestType = document.getElementById('requestType');
   const requestTitle = document.getElementById('requestTitle');
@@ -312,16 +347,35 @@
   const submitRequestBtn = document.getElementById('submitRequestBtn');
   const requestMessage = document.getElementById('requestMessage');
 
+  const statusNames = {
+    open: 'باز',
+    in_progress: 'در حال انجام',
+    waiting: 'در انتظار',
+    resolved: 'رسیدگی‌شده',
+    closed: 'بسته‌شده',
+    cancelled: 'لغوشده',
+    pending: 'در انتظار',
+    done: 'انجام‌شده'
+  };
+
+  const caseNames = {
+    service: 'درخواست پشتیبانی',
+    complaint: 'شکایت',
+    feedback: 'بازخورد'
+  };
+
+  // ثبت درخواست جدید مشتری
   requestForm.addEventListener('submit', async (event) => {
     event.preventDefault();
 
     submitRequestBtn.disabled = true;
     submitRequestBtn.textContent = 'در حال ثبت...';
+
     requestMessage.textContent = '';
     requestMessage.style.color = '#64748b';
 
     try {
-      const { data, error } = await supabase.rpc('submit_customer_request', {
+      const { error } = await supabase.rpc('submit_customer_request', {
         p_title: requestTitle.value.trim(),
         p_description: requestDescription.value.trim(),
         p_case_type: requestType.value
@@ -329,7 +383,9 @@
 
       if (error) throw error;
 
-      requestMessage.textContent = 'درخواست شما با موفقیت ثبت شد.';
+      requestMessage.textContent =
+        'درخواست شما با موفقیت ثبت شد.';
+
       requestMessage.style.color = '#15803d';
 
       requestForm.reset();
@@ -340,7 +396,9 @@
       console.error('Submit customer request error:', error);
 
       requestMessage.textContent =
-        error.message || 'ثبت درخواست با خطا مواجه شد. دوباره تلاش کنید.';
+        error.message ||
+        'ثبت درخواست با خطا مواجه شد. دوباره تلاش کنید.';
+
       requestMessage.style.color = '#dc2626';
 
     } finally {
@@ -348,12 +406,16 @@
       submitRequestBtn.textContent = 'ثبت درخواست';
     }
   });
+
+  // تبدیل تاریخ
   function formatDate(value) {
     if (!value) return 'ثبت نشده';
 
     const date = new Date(value);
 
-    if (Number.isNaN(date.getTime())) return 'ثبت نشده';
+    if (Number.isNaN(date.getTime())) {
+      return 'ثبت نشده';
+    }
 
     return new Intl.DateTimeFormat('fa-IR', {
       year: 'numeric',
@@ -362,6 +424,7 @@
     }).format(date);
   }
 
+  // نمایش اطلاعات مشتری
   function addField(container, label, value) {
     const wrapper = document.createElement('div');
 
@@ -381,7 +444,8 @@
     profilesEl.replaceChildren();
 
     if (!customers.length) {
-      profilesEl.innerHTML = '<div class="empty">هنوز پرونده‌ای برای حساب شما متصل نشده است.</div>';
+      profilesEl.innerHTML =
+        '<div class="empty">هنوز پرونده‌ای برای حساب شما متصل نشده است.</div>';
       return;
     }
 
@@ -401,11 +465,13 @@
     });
   }
 
+  // نمایش سوابق و پرونده‌ها به همراه پاسخ مدیر
   function showCases(items) {
     casesEl.replaceChildren();
 
     if (!items.length) {
-      casesEl.innerHTML = '<div class="empty">هنوز سابقه یا پرونده‌ای برای نمایش ثبت نشده است.</div>';
+      casesEl.innerHTML =
+        '<div class="empty">هنوز سابقه یا پرونده‌ای برای نمایش ثبت نشده است.</div>';
       return;
     }
 
@@ -419,28 +485,57 @@
 
       const description = document.createElement('div');
       description.className = 'case-description';
-      description.textContent = item.description || 'توضیحی ثبت نشده است.';
+      description.textContent =
+        item.description || 'توضیحی ثبت نشده است.';
 
       const meta = document.createElement('div');
       meta.className = 'case-meta';
 
       const type = document.createElement('span');
-      type.textContent = 'نوع: ' + (item.case_type || 'ثبت نشده');
+      type.textContent =
+        'نوع: ' +
+        (caseNames[item.case_type] || item.case_type || 'ثبت نشده');
 
       const status = document.createElement('span');
       status.className = 'status';
-      status.textContent = item.status || 'در حال بررسی';
+      status.textContent =
+        statusNames[item.status] || item.status || 'در حال بررسی';
 
       const date = document.createElement('span');
-      date.textContent = 'تاریخ ثبت: ' + formatDate(item.created_at);
+      date.textContent =
+        'تاریخ ثبت: ' + formatDate(item.created_at);
 
       meta.append(type, status, date);
+
       card.append(title, description, meta);
+
+      // نمایش نتیجه رسیدگی ثبت‌شده توسط مدیر
+      const resolution = item.details?.resolution;
+
+      if (
+        item.case_type === 'complaint' &&
+        typeof resolution === 'string' &&
+        resolution.trim()
+      ) {
+        const response = document.createElement('div');
+        response.className = 'case-response';
+
+        const responseTitle = document.createElement('div');
+        responseTitle.className = 'case-response-title';
+        responseTitle.textContent = 'نتیجه رسیدگی مدیر';
+
+        const responseText = document.createElement('div');
+        responseText.textContent = resolution;
+
+        response.append(responseTitle, responseText);
+        card.appendChild(response);
+      }
 
       casesEl.appendChild(card);
     });
   }
 
+  // دریافت اطلاعات پنل مشتری
   async function loadPortal() {
     try {
       const { data: sessionData, error: sessionError } =
@@ -453,6 +548,7 @@
         return;
       }
 
+      // بررسی دسترسی فعال مشتری
       const { data: access, error: accessError } =
         await supabase.rpc('has_customer_portal_access');
 
@@ -464,6 +560,7 @@
         return;
       }
 
+      // دریافت شناسه پرونده‌های مجاز مشتری
       const { data: customerIds, error: idsError } =
         await supabase.rpc('get_my_customer_portal_ids');
 
@@ -475,6 +572,7 @@
         return;
       }
 
+      // دریافت اطلاعات پروفایل مشتری
       const { data: customers, error: customersError } =
         await supabase
           .from('customers')
@@ -485,11 +583,12 @@
 
       showProfiles(customers || []);
 
+      // دریافت پرونده‌ها و نتیجه رسیدگی مدیر
       const { data: cases, error: casesError } =
         await supabase
           .from('customer_cases')
           .select(
-            'id, customer_id, case_type, title, description, status, created_at'
+            'id, customer_id, case_type, title, description, status, details, created_at'
           )
           .in('customer_id', customerIds)
           .order('created_at', { ascending: false })
@@ -509,6 +608,7 @@
     }
   }
 
+  // خروج از پنل
   logoutBtn.addEventListener('click', async () => {
     logoutBtn.disabled = true;
     logoutBtn.textContent = 'در حال خروج...';
@@ -517,8 +617,10 @@
 
     if (error) {
       console.error(error);
+
       logoutBtn.disabled = false;
       logoutBtn.textContent = 'خروج از پنل';
+
       alert('خروج با خطا مواجه شد. دوباره تلاش کنید.');
       return;
     }
