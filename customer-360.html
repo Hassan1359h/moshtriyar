@@ -447,6 +447,29 @@ inviteButton.addEventListener('click', async () => {
         if (timelineResult.error) throw timelineResult.error;
 
         const cases = casesResult.data || [];
+        let messages = [];
+
+if (cases.length) {
+  const { data: messageData, error: messagesError } = await supabase
+    .from('customer_case_messages')
+    .select('id, case_id, sender_role, message, created_at')
+    .in('case_id', cases.map(c => c.id))
+    .order('created_at', { ascending: true });
+
+  if (messagesError) throw messagesError;
+
+  messages = messageData || [];
+}
+
+const messagesByCase = {};
+
+messages.forEach(message => {
+  if (!messagesByCase[message.case_id]) {
+    messagesByCase[message.case_id] = [];
+  }
+
+  messagesByCase[message.case_id].push(message);
+});
         const invoices = invoicesResult.data || [];
         const timeline = timelineResult.data || [];
 
@@ -561,7 +584,8 @@ renderItems('complaints', complaints, (item, record) => {
   }
 
   addLine(item, 'تاریخ ثبت شکایت', dateText(record.created_at));
-
+  
+renderConversation(item, record, messagesByCase[record.id] || []);
   const separator = document.createElement('hr');
   item.append(separator);
 
