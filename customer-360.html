@@ -537,9 +537,10 @@ messages.forEach(message => {
             );
           }
 
-          addLine(item, 'تاریخ ثبت', dateText(record.created_at));
-        });
-         
+         addLine(item, 'تاریخ ثبت', dateText(record.created_at));
+
+      renderConversation(item, record, messagesByCase[record.id] || []);
+      });
         // بخش شکایات و امکان ثبت نتیجه رسیدگی
 const complaints = cases.filter(
   record => record.case_type === 'complaint'
