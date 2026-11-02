@@ -234,6 +234,89 @@
       pending: 'در انتظار',
       done: 'انجام‌شده'
     };
+     
+    /* گفتگوی پیام‌های پرونده */
+    .conversation {
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid #e5eaf2;
+    }
+
+    .conversation-title {
+      font-weight: bold;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+
+    .message-item {
+      background: #f8fafc;
+      border: 1px solid #e5eaf2;
+      border-radius: 10px;
+      padding: 10px 13px;
+      margin-bottom: 9px;
+    }
+
+    .message-item.manager-message {
+      background: #eff6ff;
+      border-color: #dbeafe;
+    }
+
+    .message-header {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 5px 12px;
+      font-size: 11px;
+      color: #64748b;
+      margin-bottom: 6px;
+    }
+
+    .message-sender {
+      font-weight: bold;
+      color: #2563eb;
+    }
+
+    .message-text {
+      font-size: 13px;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .message-form {
+      margin-top: 12px;
+    }
+
+    .message-input {
+      width: 100%;
+      min-height: 75px;
+      padding: 10px;
+      border: 1px solid #dbe2ed;
+      border-radius: 9px;
+      font-family: Tahoma, sans-serif;
+      font-size: 13px;
+      resize: vertical;
+    }
+
+    .send-message-btn {
+      margin-top: 8px;
+      padding: 9px 18px;
+      background: #2563eb;
+      color: white;
+      border: 0;
+      border-radius: 8px;
+      font-family: Tahoma, sans-serif;
+      cursor: pointer;
+    }
+
+    .send-message-btn:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+
+    .message-feedback {
+      font-size: 12px;
+      margin-top: 7px;
+    }
 
     async function init() {
       try {
