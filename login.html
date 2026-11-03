@@ -8,7 +8,18 @@
     <link rel="canonical" href="https://moshtriyar.ir/login.html" />
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <link rel="icon" href="icon-192.png">
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback" async defer></script>
+    <script>
+window.onTurnstileLoaded = function () {
+    if (window.renderLoginCaptcha) {
+        window.renderLoginCaptcha();
+    }
+};
+</script>
+<script
+  src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileLoaded"
+  async
+  defer>
+</script>
 <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -331,22 +342,37 @@ function getAfterLoginUrl() {
         function getCaptchaToken() {
             return document.querySelector('[name="cf-turnstile-response"]')?.value || '';
         }
-        // 🎯 رندر صریح کپچا (برای حل مشکل عدم نمایش در بار اول)
-window.onloadTurnstileCallback = function () {
-    if (document.getElementById('turnstile-widget')) {
-        window.turnstile.render('#turnstile-widget', {
-            sitekey: '0x4AAAAAAFFcLOx_YxUy2aw8',
-            callback: function (token) {
-                console.log('✅ Captcha verified');
-            },
-        });
-    }
-};
+        // Cloudflare Turnstile - Explicit Render
+let loginCaptchaWidgetId = null;
 
-// اگر اسکریپت Turnstile قبلاً لود شده باشد
-if (window.turnstile) {
-    window.onloadTurnstileCallback();
-}
+window.renderLoginCaptcha = function () {
+    if (!window.turnstile || loginCaptchaWidgetId !== null) return;
+
+    const container = document.getElementById('turnstile-widget');
+    if (!container) return;
+
+    loginCaptchaWidgetId = window.turnstile.render(container, {
+        sitekey: '0x4AAAAAAFFcLOx_YxUy2aw8',
+
+        callback: function (token) {
+            console.log('Login captcha verified');
+            submitBtn.disabled = false;
+        },
+
+        'expired-callback': function () {
+            submitBtn.disabled = true;
+        },
+
+        'error-callback': function () {
+            showMessage(
+                'بارگذاری کپچا با مشکل مواجه شد. صفحه را دوباره بارگذاری کنید.',
+                'error'
+            );
+            submitBtn.disabled = true;
+            return true;
+        }
+    });
+};
         document.getElementById('forgotLink').addEventListener('click', async (e) => {
     e.preventDefault();
     const email = prompt('ایمیل خود را وارد کنید تا لینک بازیابی ارسال شود:');
@@ -384,6 +410,7 @@ if (window.turnstile) {
             submitBtn.disabled = true;
             showMessage('در حال پردازش...', 'info');
 
+            
             try {
                 // 🎯 دریافت توکن کپچا قبل از ارسال به Supabase
                 const captchaToken = getCaptchaToken();
@@ -495,25 +522,10 @@ if (window.turnstile) {
         }, 3000);
     }
     
-            } finally {
-                // 🎯 غیرفعال کردن دکمه تا زمانی که کپچا دوباره سبز شود
-                submitBtn.disabled = true;
-                
-                const checkCaptcha = setInterval(() => {
-                    if (getCaptchaToken()) {
-                        submitBtn.disabled = false;
-                        clearInterval(checkCaptcha);
-                    }
-                }, 500);
-                
-                // 🎯 اگر بعد از ۱۰ ثانیه کپچا سبز نشد، دکمه را فعال کن (برای اطمینان)
-                setTimeout(() => {
-                    if (!getCaptchaToken()) {
-                        submitBtn.disabled = false;
-                        clearInterval(checkCaptcha);
-                    }
-                }, 10000);
-            }
+    } finally {
+    submitBtn.disabled = !getCaptchaToken();
+}        
+        
         });
     </script>
 </body>
