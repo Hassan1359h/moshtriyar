@@ -182,6 +182,13 @@
         <div class="muted">نمای یکپارچه سوابق و ارتباطات</div>
       </div>
       <a class="back" href="customers.html">بازگشت به مشتریان</a>
+      <button
+  id="enableSoundBtn"
+  type="button"
+  style="background:#15803d;color:white;border:0;border-radius:9px;padding:9px 14px;font-family:Tahoma;cursor:pointer;"
+>
+  فعال‌سازی صدای اعلان
+</button>
     </header>
 
     <div id="message" class="card muted">
@@ -254,6 +261,117 @@
     import { loadBusinessType } from './js/helpers.js';
 
     const $ = id => document.getElementById(id);
+    // صدای اعلان پیام جدید مشتری
+let notificationAudioContext = null;
+let messagePollTimer = null;
+const seenCustomerMessageIds = new Set();
+
+$('enableSoundBtn').addEventListener('click', async () => {
+  try {
+    const AudioContextClass =
+      window.AudioContext || window.webkitAudioContext;
+
+    if (!AudioContextClass) {
+      throw new Error('مرورگر از پخش صدای اعلان پشتیبانی نمی‌کند.');
+    }
+
+    if (!notificationAudioContext) {
+      notificationAudioContext = new AudioContextClass();
+    }
+
+    if (notificationAudioContext.state === 'suspended') {
+      await notificationAudioContext.resume();
+    }
+
+    $('enableSoundBtn').textContent = 'صدای اعلان فعال است';
+    $('enableSoundBtn').disabled = true;
+    $('enableSoundBtn').style.background = '#64748b';
+
+  } catch (error) {
+    alert(error.message || 'فعال‌سازی صدا انجام نشد.');
+  }
+});
+
+function playNewMessageSound() {
+  if (
+    !notificationAudioContext ||
+    notificationAudioContext.state !== 'running'
+  ) return;
+
+  const oscillator = notificationAudioContext.createOscillator();
+  const gain = notificationAudioContext.createGain();
+
+  oscillator.type = 'sine';
+  oscillator.frequency.setValueAtTime(
+    880,
+    notificationAudioContext.currentTime
+  );
+
+  gain.gain.setValueAtTime(
+    0.0001,
+    notificationAudioContext.currentTime
+  );
+
+  gain.gain.exponentialRampToValueAtTime(
+    0.15,
+    notificationAudioContext.currentTime + 0.03
+  );
+
+  gain.gain.exponentialRampToValueAtTime(
+    0.0001,
+    notificationAudioContext.currentTime + 0.25
+  );
+
+  oscillator.connect(gain);
+  gain.connect(notificationAudioContext.destination);
+
+  oscillator.start();
+  oscillator.stop(notificationAudioContext.currentTime + 0.26);
+}
+
+function startCustomerMessageNotifications(caseIds, initialMessages) {
+  if (messagePollTimer) {
+    clearInterval(messagePollTimer);
+  }
+
+  initialMessages.forEach(message => {
+    if (message.sender_role === 'customer') {
+      seenCustomerMessageIds.add(message.id);
+    }
+  });
+
+  if (!caseIds.length) return;
+
+  messagePollTimer = setInterval(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('customer_case_messages')
+        .select('id, sender_role, message, created_at')
+        .in('case_id', caseIds)
+        .eq('sender_role', 'customer')
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+
+      let hasNewMessage = false;
+
+      (data || []).forEach(message => {
+        if (!seenCustomerMessageIds.has(message.id)) {
+          seenCustomerMessageIds.add(message.id);
+          hasNewMessage = true;
+        }
+      });
+
+      if (hasNewMessage) {
+        playNewMessageSound();
+      }
+
+    } catch (error) {
+      console.error('Message notification error:', error);
+    }
+  }, 10000);
+}
 
     const params = new URLSearchParams(location.search);
     const customerId = params.get('id');
@@ -662,7 +780,11 @@
 
           messagesByCase[message.case_id].push(message);
         });
-
+        startCustomerMessageNotifications(
+  cases.map(record => record.id),
+  messages
+);
+        
         // سوابق مالی
         renderItems('invoices', invoices, (item, invoice) => {
           item.append(
