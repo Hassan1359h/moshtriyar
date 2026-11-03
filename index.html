@@ -51,6 +51,87 @@
             transition: transform 0.2s;
         }
         .btn-cta:hover { transform: translateY(-2px); }
+        /* مسیرهای ورود مدیر و مشتری */
+.login-options {
+    max-width: 900px;
+    margin: 20px auto 50px;
+    padding: 0 20px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.login-card {
+    display: block;
+    background: #fff;
+    padding: 28px 22px;
+    border-radius: 20px;
+    text-align: center;
+    text-decoration: none;
+    border: 2px solid #e2e8f0;
+    box-shadow: 0 5px 20px rgba(0,0,0,.05);
+    transition: .2s;
+}
+
+.login-card:hover {
+    transform: translateY(-4px);
+}
+
+.login-card.manager {
+    border-color: #93c5fd;
+}
+
+.login-card.customer {
+    border-color: #86efac;
+}
+
+.login-card .login-icon {
+    font-size: 42px;
+    margin-bottom: 10px;
+}
+
+.login-card h3 {
+    font-size: 19px;
+    margin-bottom: 10px;
+    color: #1e293b;
+}
+
+.login-card p {
+    font-size: 13px;
+    color: #64748b;
+    margin-bottom: 18px;
+}
+
+.login-card .login-button {
+    display: inline-block;
+    padding: 10px 25px;
+    border-radius: 10px;
+    color: white;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.manager .login-button {
+    background: #2563eb;
+}
+
+.customer .login-button {
+    background: #16a34a;
+}
+
+@media (max-width: 700px) {
+    .login-options {
+        grid-template-columns: 1fr;
+    }
+
+    .nav-links {
+        gap: 7px;
+    }
+
+    .nav-links a {
+        font-size: 11px;
+    }
+}
         .pricing-title { text-align: center; font-size: 28px; font-weight: 800; color: #1e293b; margin: 50px 0 10px; }
         .pricing-sub { text-align: center; color: #64748b; font-size: 14px; margin-bottom: 30px; }
         .pricing-grid {
@@ -401,11 +482,10 @@
                 <path d="M 46 68 L 49 71 L 54 66" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
             <span class="brand-name">مشتری‌یار</span>
-        </div>
         <div class="nav-links">
-            <a href="login.html">ورود / ثبت‌نام</a>
-            <a href="dashboard.html" class="btn-nav">داشبورد</a>
-        </div>
+    <a href="login.html">ورود صاحبان کسب‌وکار</a>
+    <a href="customer-login.html" class="btn-nav">ورود مشتریان</a>
+</div>
     </nav>
 
     <section class="hero">
@@ -413,7 +493,29 @@
         <p>با مشتری‌یار، کسب‌وکار خود را هوشمندانه مدیریت کنید و ارتباط با مشتریان را بهبود ببخشید.</p>
         <a href="login.html" class="btn-cta">شروع رایگان</a>
     </section>
+    <section class="login-options">
 
+    <a href="login.html" class="login-card manager">
+        <div class="login-icon">💼</div>
+        <h3>ورود صاحبان کسب‌وکار</h3>
+        <p>
+            برای مدیران و صاحبان کسب‌وکار؛
+            مدیریت مشتریان، پرونده‌ها و ارتباط با مشتریان.
+        </p>
+        <span class="login-button">ورود به پنل مدیریت</span>
+    </a>
+
+    <a href="customer-login.html" class="login-card customer">
+        <div class="login-icon">👥</div>
+        <h3>ورود مشتریان کسب‌وکارها</h3>
+        <p>
+            برای مشتریانی که دعوت‌نامه دریافت کرده‌اند؛
+            مشاهده پرونده‌ها، پیگیری درخواست‌ها و گفتگو با کسب‌وکار.
+        </p>
+        <span class="login-button">ورود به پنل مشتری</span>
+    </a>
+
+</section>
     <h2 class="pricing-title">پلن‌های اشتراک</h2>
     <p class="pricing-sub">اول با پلن تست رایگان امتحان کن، بعد ارتقا بده.</p>
 
