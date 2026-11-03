@@ -8,8 +8,13 @@
     <link rel="canonical" href="https://moshtriyar.ir/login.html" />
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
     <link rel="icon" href="icon-192.png">
+    
     <script>
+window.turnstileApiReady = false;
+
 window.onTurnstileLoaded = function () {
+    window.turnstileApiReady = true;
+
     if (window.renderLoginCaptcha) {
         window.renderLoginCaptcha();
     }
