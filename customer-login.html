@@ -9,8 +9,6 @@
 
   <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
 
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-
   <style>
     * { box-sizing: border-box; }
 
@@ -73,6 +71,7 @@
       display: flex;
       justify-content: center;
       margin-top: 20px;
+      min-height: 65px;
     }
 
     button {
@@ -140,14 +139,7 @@
       >
 
       <div class="captcha-container">
-        <div
-          class="cf-turnstile"
-          data-sitekey="0x4AAAAAAFFcLOx_YxUy2aw8"
-          data-theme="light"
-          data-callback="onCustomerCaptchaSuccess"
-          data-expired-callback="onCustomerCaptchaExpired"
-          data-error-callback="onCustomerCaptchaError"
-        ></div>
+        <div id="turnstileWidget"></div>
       </div>
 
       <button id="submitBtn" type="submit" disabled>
@@ -162,12 +154,18 @@
     </div>
   </main>
 
+  <!-- ابتدا callbackها تعریف می‌شوند -->
   <script>
     window.customerCaptchaToken = '';
+    window.customerTurnstileWidgetId = null;
+    window.customerLoginSubmitting = false;
 
     window.onCustomerCaptchaSuccess = function(token) {
       window.customerCaptchaToken = token;
-      document.getElementById('submitBtn').disabled = false;
+
+      if (!window.customerLoginSubmitting) {
+        document.getElementById('submitBtn').disabled = false;
+      }
     };
 
     window.onCustomerCaptchaExpired = function() {
@@ -178,10 +176,69 @@
     window.onCustomerCaptchaError = function() {
       window.customerCaptchaToken = '';
       document.getElementById('submitBtn').disabled = true;
+
       document.getElementById('message').textContent =
         'خطا در تأیید کپچا؛ لطفاً دوباره تلاش کنید.';
+
+      document.getElementById('message').className = 'error';
+    };
+
+    window.onCustomerCaptchaLoadError = function() {
+      document.getElementById('message').textContent =
+        'بارگذاری کپچا ناموفق بود. اتصال اینترنت را بررسی و صفحه را دوباره بارگذاری کنید.';
+
+      document.getElementById('message').className = 'error';
+    };
+
+    // ساخت دستی ویجت پس از آماده شدن کتابخانه
+    window.onTurnstileLoaded = function() {
+      const container = document.getElementById('turnstileWidget');
+
+      if (!window.turnstile || !container) {
+        window.onCustomerCaptchaLoadError();
+        return;
+      }
+
+      try {
+        window.customerTurnstileWidgetId =
+          window.turnstile.render(container, {
+            sitekey: '0x4AAAAAAFFcLOx_YxUy2aw8',
+            theme: 'light',
+
+            callback: window.onCustomerCaptchaSuccess,
+            'expired-callback': window.onCustomerCaptchaExpired,
+            'error-callback': window.onCustomerCaptchaError
+          });
+      } catch (error) {
+        console.error('Turnstile initialization error:', error);
+        window.onCustomerCaptchaLoadError();
+      }
+    };
+
+    window.resetCustomerCaptcha = function() {
+      window.customerCaptchaToken = '';
+      document.getElementById('submitBtn').disabled = true;
+
+      if (
+        window.turnstile &&
+        window.customerTurnstileWidgetId !== null
+      ) {
+        try {
+          window.turnstile.reset(window.customerTurnstileWidgetId);
+        } catch (error) {
+          console.error('Turnstile reset error:', error);
+        }
+      }
     };
   </script>
+
+  <!-- بارگذاری کپچا به روش Explicit -->
+  <script
+    src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileLoaded"
+    async
+    defer
+    onerror="onCustomerCaptchaLoadError()"
+  ></script>
 
   <script type="module">
     import { supabase } from './js/supabase.js';
@@ -200,6 +257,8 @@
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
 
+      if (window.customerLoginSubmitting) return;
+
       const email = emailInput.value.trim().toLowerCase();
       const password = passwordInput.value;
       const captchaToken = window.customerCaptchaToken;
@@ -209,8 +268,12 @@
         return;
       }
 
+      window.customerLoginSubmitting = true;
       submitBtn.disabled = true;
+
       showMessage('در حال بررسی اطلاعات ورود...');
+
+      let authenticated = false;
 
       try {
         const { data, error } = await supabase.auth.signInWithPassword({
@@ -227,13 +290,14 @@
           throw new Error('ورود انجام نشد. دوباره تلاش کنید.');
         }
 
+        authenticated = true;
+
         const { data: hasAccess, error: accessError } =
           await supabase.rpc('has_customer_portal_access');
 
         if (accessError) throw accessError;
 
         if (hasAccess !== true) {
-          await supabase.auth.signOut();
           throw new Error(
             'برای این حساب دسترسی فعال به پنل مشتری ثبت نشده است.'
           );
@@ -242,9 +306,20 @@
         showMessage('ورود موفق! در حال انتقال...', 'success');
 
         window.location.replace('customer-portal.html');
+        return;
 
       } catch (error) {
         console.error('Customer login error:', error);
+
+        // اگر ورود انجام شده ولی بررسی دسترسی شکست خورده،
+        // نشست کاربر باز باقی نماند.
+        if (authenticated) {
+          try {
+            await supabase.auth.signOut();
+          } catch (signOutError) {
+            console.error('Sign out error:', signOutError);
+          }
+        }
 
         let errorMessage = error.message || 'خطای ورود';
 
@@ -260,15 +335,11 @@
 
         showMessage(errorMessage, 'error');
 
-        // توکن مصرف‌شده نباید دوباره استفاده شود.
-        window.customerCaptchaToken = '';
-
-        if (window.turnstile) {
-          window.turnstile.reset();
-        }
+        // توکن قبلی قابل استفاده مجدد نیست.
+        window.resetCustomerCaptcha();
 
       } finally {
-        submitBtn.disabled = true;
+        window.customerLoginSubmitting = false;
       }
     });
   </script>
