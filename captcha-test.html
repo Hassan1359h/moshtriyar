@@ -1,0 +1,83 @@
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>آزمایش سرعت کپچا</title>
+
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 35px 15px;
+      background: #f5f5f5;
+      color: #222;
+    }
+
+    .box {
+      max-width: 420px;
+      margin: auto;
+      padding: 25px;
+      background: white;
+      border-radius: 12px;
+    }
+
+    #result {
+      margin-top: 25px;
+      font-size: 18px;
+      line-height: 2;
+      overflow-wrap: anywhere;
+    }
+  </style>
+
+  <script>
+    const pageStart = performance.now();
+
+    function onTurnstileReady() {
+      document.getElementById("status").textContent =
+        "کپچا بارگذاری شد؛ در انتظار تأیید...";
+      
+      const readyTime = performance.now();
+
+      turnstile.render("#turnstile-widget", {
+        sitekey: "0x4AAAAAAFykayAvuTsseGEA",
+
+        callback: function () {
+          const elapsed = ((performance.now() - pageStart) / 1000).toFixed(2);
+          const afterReady = ((performance.now() - readyTime) / 1000).toFixed(2);
+
+          document.getElementById("status").textContent =
+            "تأیید کپچا موفق بود.";
+
+          document.getElementById("result").textContent =
+            "زمان از شروع صفحه تا تأیید: " + elapsed +
+            " ثانیه | زمان از آماده‌شدن ویجت تا تأیید: " +
+            afterReady + " ثانیه";
+        },
+
+        "error-callback": function (errorCode) {
+          document.getElementById("status").textContent =
+            "خطای کپچا: " + errorCode;
+        }
+      });
+    }
+  </script>
+
+  <script
+    src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileReady"
+    async defer>
+  </script>
+</head>
+
+<body>
+  <div class="box">
+    <h2>آزمایش سرعت کپچا</h2>
+    <p id="status">در حال بارگذاری کپچا...</p>
+
+    <div id="turnstile-widget"></div>
+
+    <div id="result"></div>
+  </div>
+</body>
+</html>
