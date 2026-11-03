@@ -6,27 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#2563eb">
     <title>ورود / ثبت‌نام | مشتری‌یار</title>
-    <link rel="canonical" href="https://moshtriyar.ir/login.html" />
-    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+    <link rel="canonical" href="https://moshtriyar.ir/login.html">
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
     <link rel="icon" href="icon-192.png">
-    
-    <script>
-window.turnstileApiReady = false;
 
-window.onTurnstileLoaded = function () {
-    window.turnstileApiReady = true;
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback" async defer></script>
 
-    if (window.renderLoginCaptcha) {
-        window.renderLoginCaptcha();
-    }
-};
-</script>
-<script
-  src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileLoaded"
-  async
-  defer>
-</script>
-<style>
+    <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: Vazirmatn, Tahoma, sans-serif;
@@ -53,10 +39,7 @@ window.onTurnstileLoaded = function () {
             justify-content: center;
             margin-bottom: 20px;
         }
-        .logo-wrap svg {
-            width: 64px;
-            height: 64px;
-        }
+        .logo-wrap svg { width: 64px; height: 64px; }
         h1 {
             font-size: 24px;
             font-weight: 800;
@@ -96,9 +79,7 @@ window.onTurnstileLoaded = function () {
             color: #2563eb;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
-        .field {
-            margin-bottom: 16px;
-        }
+        .field { margin-bottom: 16px; }
         .field label {
             display: block;
             font-size: 13px;
@@ -138,9 +119,7 @@ window.onTurnstileLoaded = function () {
             box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
             transition: transform 0.2s;
         }
-        .btn-main:hover {
-            transform: translateY(-1px);
-        }
+        .btn-main:hover { transform: translateY(-1px); }
         .btn-main:disabled {
             opacity: 0.6;
             cursor: not-allowed;
@@ -164,9 +143,7 @@ window.onTurnstileLoaded = function () {
             text-decoration: none;
             font-size: 13px;
         }
-        .back-link:hover {
-            color: #2563eb;
-        }
+        .back-link:hover { color: #2563eb; }
         .plan-badge {
             display: none;
             background: #dbeafe;
@@ -178,10 +155,7 @@ window.onTurnstileLoaded = function () {
             margin-bottom: 16px;
             font-weight: 600;
         }
-        .plan-badge.show {
-            display: block;
-        }
-        /* 🎯 استایل برای وسط چین کردن کپچا */
+        .plan-badge.show { display: block; }
         .captcha-container {
             display: flex;
             justify-content: center;
@@ -224,36 +198,32 @@ window.onTurnstileLoaded = function () {
         </div>
 
         <form id="authForm">
-            
-<div class="field" id="nameField" style="display:none;">
-    <label>نام و نام خانوادگی</label>
-    <input type="text" id="fullName" placeholder="مثلاً: حسن نادریان">
 
-    <label style="margin-top:14px;">نام فروشگاه یا کسب‌وکار</label>
-    <input
-        type="text"
-        id="storeName"
-        placeholder="مثلاً: فروشگاه بهار"
-        maxlength="100"
-    >
-</div>
-            
+            <div class="field" id="nameField" style="display:none;">
+                <label>نام و نام خانوادگی</label>
+                <input type="text" id="fullName" placeholder="مثلاً: حسن نادریان">
+
+                <label style="margin-top:14px;">نام فروشگاه یا کسب‌وکار</label>
+                <input type="text" id="storeName" placeholder="مثلاً: فروشگاه بهار" maxlength="100">
+            </div>
+
             <div class="field">
                 <label>ایمیل</label>
                 <input type="email" id="email" required placeholder="example@email.com">
             </div>
+
             <div class="field">
                 <label>رمز عبور</label>
                 <input type="password" id="password" required placeholder="حداقل ۶ کاراکتر" minlength="6">
             </div>
-            
-            <!-- 🎯 ویجت کپچا Cloudflare Turnstile -->
-<div class="captcha-container">
-    <div id="turnstile-widget"></div>
-</div>
+
+            <div class="captcha-container">
+                <div id="turnstile-widget"></div>
+            </div>
 
             <button type="submit" class="btn-main" id="submitBtn">ورود</button>
             <p class="message" id="message"></p>
+
             <p style="text-align:left; margin-top:-8px; margin-bottom:16px;">
                 <a href="#" id="forgotLink" style="color:#2563eb; font-size:13px; font-weight:600;">فراموشی رمز؟</a>
             </p>
@@ -276,39 +246,37 @@ window.onTurnstileLoaded = function () {
         const authForm = document.getElementById('authForm');
         const planBadge = document.getElementById('planBadge');
 
-        // بررسی پارامتر پلن در URL
         const urlParams = new URLSearchParams(window.location.search);
-        
-const allowedPlans = {
-    pro: 'پلن حرفه‌ای',
-    business: 'پلن کسب‌وکار',
-    vip_yearly: 'اشتراک ویژه یک‌ساله'
-};
 
-const selectedPlan = urlParams.get('plan');
-const validSelectedPlan = Object.prototype.hasOwnProperty.call(
-    allowedPlans,
-    selectedPlan
-) ? selectedPlan : null;
+        const allowedPlans = {
+            pro: 'پلن حرفه‌ای',
+            business: 'پلن کسب‌وکار',
+            vip_yearly: 'اشتراک ویژه یک‌ساله'
+        };
 
-if (validSelectedPlan) {
-    planBadge.textContent =
-        '🎯 پلن انتخابی شما: ' + allowedPlans[validSelectedPlan];
-    planBadge.classList.add('show');
-}
+        const selectedPlan = urlParams.get('plan');
+        const validSelectedPlan = Object.prototype.hasOwnProperty.call(
+            allowedPlans,
+            selectedPlan
+        ) ? selectedPlan : null;
 
-// حفظ پلن هنگام انتقال از ورود به صفحه اصلی
-function getAfterLoginUrl() {
-    return validSelectedPlan
-        ? 'index.html?plan=' + encodeURIComponent(validSelectedPlan)
-        : 'dashboard.html';
-}
+        if (validSelectedPlan) {
+            planBadge.textContent =
+                '🎯 پلن انتخابی شما: ' + allowedPlans[validSelectedPlan];
+            planBadge.classList.add('show');
+        }
 
+        function getAfterLoginUrl() {
+            return validSelectedPlan
+                ? 'index.html?plan=' + encodeURIComponent(validSelectedPlan)
+                : 'dashboard.html';
+        }
 
         let mode = 'login';
 
         function setMode(newMode) {
             mode = newMode;
+
             if (mode === 'login') {
                 tabLogin.classList.add('active');
                 tabSignup.classList.remove('active');
@@ -322,6 +290,7 @@ function getAfterLoginUrl() {
                 submitBtn.textContent = 'ثبت‌نام';
                 document.title = 'ثبت‌نام | مشتری‌یار';
             }
+
             message.textContent = '';
             message.className = 'message';
         }
@@ -329,12 +298,15 @@ function getAfterLoginUrl() {
         tabLogin.addEventListener('click', () => setMode('login'));
         tabSignup.addEventListener('click', () => setMode('signup'));
 
-        // ابتدا دکمه‌ها فعال می‌شوند؛ بررسی نشست نباید رابط کاربری را متوقف کند.
         Promise.race([
             supabase.auth.getSession(),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Session timeout')), 5000))
+            new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Session timeout')), 5000)
+            )
         ]).then(({ data }) => {
-            if (data?.session) window.location.href = getAfterLoginUrl();
+            if (data?.session) {
+                window.location.href = getAfterLoginUrl();
+            }
         }).catch((error) => {
             console.warn('Session check skipped:', error);
         });
@@ -344,77 +316,71 @@ function getAfterLoginUrl() {
             message.className = 'message ' + type;
         }
 
-        // 🎯 تابع کمکی برای گرفتن توکن کپچا
         function getCaptchaToken() {
             return document.querySelector('[name="cf-turnstile-response"]')?.value || '';
         }
-        // Cloudflare Turnstile - Explicit Render
-let loginCaptchaWidgetId = null;
 
-window.renderLoginCaptcha = function () {
-    if (!window.turnstile || loginCaptchaWidgetId !== null) return;
+        // بارگذاری کپچا با روش callback خودکار نسخه قدیمی
+        let loginCaptchaWidgetId = null;
 
-    const container = document.getElementById('turnstile-widget');
-    if (!container) return;
+        window.onloadTurnstileCallback = function () {
+            if (!window.turnstile || loginCaptchaWidgetId !== null) return;
 
-    loginCaptchaWidgetId = window.turnstile.render(container, {
-        sitekey: '0x4AAAAAAFFcLOx_YxUy2aw8',
+            const container = document.getElementById('turnstile-widget');
+            if (!container) return;
 
-        callback: function (token) {
-            console.log('Login captcha verified');
-            submitBtn.disabled = false;
-        },
+            loginCaptchaWidgetId = window.turnstile.render(container, {
+                sitekey: '0x4AAAAAAFFcLOx_YxUy2aw8',
 
-        'expired-callback': function () {
-            submitBtn.disabled = true;
-        },
+                callback: function (token) {
+                    console.log('Captcha verified');
+                    submitBtn.disabled = false;
+                },
 
-        'error-callback': function () {
-            showMessage(
-                'بارگذاری کپچا با مشکل مواجه شد. صفحه را دوباره بارگذاری کنید.',
-                'error'
-            );
-            submitBtn.disabled = true;
-            return true;
-        }
-        
+                'expired-callback': function () {
+                    submitBtn.disabled = true;
+                }
             });
-};
+        };
 
-if (window.turnstileApiReady &&
-    window.turnstile) {
-    window.renderLoginCaptcha();
-}
-
-document.getElementById('forgotLink').addEventListener('click', async (e) => {    
-    e.preventDefault();
-    const email = prompt('ایمیل خود را وارد کنید تا لینک بازیابی ارسال شود:');
-    if (!email) return;
-    
-    const captchaToken = getCaptchaToken();
-    if (!captchaToken) {
-        alert('❌ لطفاً ابتدا کپچا را تایید کنید.');
-        return;
-    }
-
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + window.location.pathname.replace('login.html', 'reset-password.html'),
-        captchaToken: captchaToken
-    });
-    
-    if (error) {
-        alert('❌ خطا: ' + error.message);
-        // 🎯 اضافه کردن این خط برای ریست کردن کپچا بعد از خطا
+        // اگر اسکریپت قبل از اجرای ماژول بارگذاری شده باشد
         if (window.turnstile) {
-            window.turnstile.reset();
+            window.onloadTurnstileCallback();
         }
-    } else {
-        alert('✅ لینک بازیابی به ایمیل شما ارسال شد.');
-    }
-}); 
+
+        document.getElementById('forgotLink').addEventListener('click', async (e) => {
+            e.preventDefault();
+
+            const email = prompt('ایمیل خود را وارد کنید تا لینک بازیابی ارسال شود:');
+            if (!email) return;
+
+            const captchaToken = getCaptchaToken();
+
+            if (!captchaToken) {
+                alert('❌ لطفاً ابتدا کپچا را تایید کنید.');
+                return;
+            }
+
+            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: window.location.origin +
+                    window.location.pathname.replace('login.html', 'reset-password.html'),
+                captchaToken: captchaToken
+            });
+
+            if (error) {
+                alert('❌ خطا: ' + error.message);
+
+                if (window.turnstile) {
+                    window.turnstile.reset(loginCaptchaWidgetId);
+                }
+            } else {
+                alert('✅ لینک بازیابی به ایمیل شما ارسال شد.');
+            }
+        });
 
         authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+
             const email = emailInput.value.trim();
             const password = passwordInput.value;
             const fullName = fullNameInput.value.trim();
@@ -423,53 +389,58 @@ document.getElementById('forgotLink').addEventListener('click', async (e) => {
             submitBtn.disabled = true;
             showMessage('در حال پردازش...', 'info');
 
-            
             try {
-                // 🎯 دریافت توکن کپچا قبل از ارسال به Supabase
                 const captchaToken = getCaptchaToken();
+
                 if (!captchaToken) {
                     throw new Error('لطفاً کپچا را تایید کنید.');
                 }
 
                 if (mode === 'login') {
-                    // 🎯 ارسال کپچا در ورود
-                    const { error } = await supabase.auth.signInWithPassword({ 
-                        email, 
+                    const { error } = await supabase.auth.signInWithPassword({
+                        email,
                         password,
-                        options: { captchaToken: captchaToken } 
+                        options: { captchaToken: captchaToken }
                     });
+
                     if (error) throw error;
+
                     showMessage('ورود موفق! در حال انتقال...', 'success');
+
                     setTimeout(() => {
-                    window.location.href = getAfterLoginUrl();
-                     }, 800);
+                        window.location.href = getAfterLoginUrl();
+                    }, 800);
+
                 } else {
                     if (!fullName) {
                         throw new Error('لطفاً نام و نام خانوادگی را وارد کنید.');
                     }
-                    // 🎯 ارسال کپچا در ثبت‌نام
+
                     const { error } = await supabase.auth.signUp({
                         email,
                         password,
                         options: {
                             data: {
-                            full_name: fullName,
-                             store_name: storeName
-                  },
-                            captchaToken: captchaToken 
+                                full_name: fullName,
+                                store_name: storeName
+                            },
+                            captchaToken: captchaToken
                         }
                     });
+
                     if (error) {
-    if (error.message === 'Email not confirmed' || error.code === 'email_not_confirmed') {
-        throw new Error(
-            'ایمیل شما هنوز تأیید نشده است. لطفاً ایمیل خود را بررسی کنید و روی لینک تأیید حساب کاربری کلیک کنید. پوشه Spam را نیز بررسی کنید.'
-        );
-    }
+                        if (
+                            error.message === 'Email not confirmed' ||
+                            error.code === 'email_not_confirmed'
+                        ) {
+                            throw new Error(
+                                'ایمیل شما هنوز تأیید نشده است. لطفاً ایمیل خود را بررسی کنید و روی لینک تأیید حساب کاربری کلیک کنید. پوشه Spam را نیز بررسی کنید.'
+                            );
+                        }
 
-    throw error;
-        }
+                        throw error;
+                    }
 
-                    // 📧 ارسال ایمیل خوش‌آمد
                     try {
                         await fetch('/api/send-email', {
                             method: 'POST',
@@ -480,11 +451,11 @@ document.getElementById('forgotLink').addEventListener('click', async (e) => {
                                 data: { name: fullName }
                             })
                         });
-                        console.log('✅ Welcome email sent');
+                        console.log('Welcome email sent');
                     } catch (emailErr) {
-                        console.warn('⚠️ Welcome email failed:', emailErr);
+                        console.warn('Welcome email failed:', emailErr);
                     }
-                    // 📧 ایمیل اعلان به مدیر
+
                     try {
                         await fetch('/api/send-email', {
                             method: 'POST',
@@ -499,46 +470,57 @@ document.getElementById('forgotLink').addEventListener('click', async (e) => {
                                 }
                             })
                         });
-                        console.log('✅ Admin notified about new user');
+                        console.log('Admin notified about new user');
                     } catch (adminErr) {
-                        console.warn('⚠️ Admin notification failed:', adminErr);
+                        console.warn('Admin notification failed:', adminErr);
                     }
-                    
+
                     showMessage('✅ ثبت‌نام موفق! حالا وارد شوید.', 'success');
                     setTimeout(() => setMode('login'), 1500);
                 }
-            } catch (err) {
-    let errorMsg = err.message || 'خطای نامشخص';
-    // ترجمه خطاهای رایج Supabase
-    if (errorMsg.includes('Invalid login credentials')) {
-        errorMsg = 'ایمیل یا رمز عبور اشتباه است.';
-    } else if (errorMsg.includes('User already registered')) {
-        errorMsg = 'این ایمیل قبلاً ثبت‌نام کرده است.';
-    } else if (errorMsg.includes('Password should be at least')) {
-        errorMsg = 'رمز عبور باید حداقل ۶ کاراکتر باشد.';
-    } else if (errorMsg.includes('Unable to validate email')) {
-        errorMsg = 'ایمیل وارد شده معتبر نیست.';
-    } else if (errorMsg.includes('captcha')) {
-        errorMsg = 'کپچا تایید نشد. لطفاً دوباره تلاش کنید.';
-    }
-    
-    showMessage('❌ ' + errorMsg, 'error');
 
-    // 🎯 ریست کردن کپچا با تأخیر و به صورت امن
-    if (window.turnstile) {
-        setTimeout(() => {
-            try {
-                window.turnstile.reset();
-            } catch (e) {
-                console.warn('Turnstile reset failed:', e);
+            } catch (err) {
+                let errorMsg = err.message || 'خطای نامشخص';
+
+                if (errorMsg.includes('Invalid login credentials')) {
+                    errorMsg = 'ایمیل یا رمز عبور اشتباه است.';
+                } else if (errorMsg.includes('User already registered')) {
+                    errorMsg = 'این ایمیل قبلاً ثبت‌نام کرده است.';
+                } else if (errorMsg.includes('Password should be at least')) {
+                    errorMsg = 'رمز عبور باید حداقل ۶ کاراکتر باشد.';
+                } else if (errorMsg.includes('Unable to validate email')) {
+                    errorMsg = 'ایمیل وارد شده معتبر نیست.';
+                } else if (errorMsg.toLowerCase().includes('captcha')) {
+                    errorMsg = 'کپچا تایید نشد. لطفاً دوباره تلاش کنید.';
+                }
+
+                showMessage('❌ ' + errorMsg, 'error');
+
+                if (window.turnstile && loginCaptchaWidgetId !== null) {
+                    setTimeout(() => {
+                        try {
+                            window.turnstile.reset(loginCaptchaWidgetId);
+                        } catch (resetError) {
+                            console.warn('Turnstile reset failed:', resetError);
+                        }
+                    }, 3000);
+                }
+
+            } finally {
+                submitBtn.disabled = !getCaptchaToken();
+
+                const checkCaptcha = setInterval(() => {
+                    if (getCaptchaToken()) {
+                        submitBtn.disabled = false;
+                        clearInterval(checkCaptcha);
+                    }
+                }, 500);
+
+                setTimeout(() => {
+                    clearInterval(checkCaptcha);
+                    submitBtn.disabled = !getCaptchaToken();
+                }, 10000);
             }
-        }, 3000);
-    }
-    
-    } finally {
-    submitBtn.disabled = !getCaptchaToken();
-}        
-        
         });
     </script>
 </body>
