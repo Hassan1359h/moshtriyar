@@ -298,35 +298,34 @@ function playNewMessageSound() {
     notificationAudioContext.state !== 'running'
   ) return;
 
-  const oscillator = notificationAudioContext.createOscillator();
-  const gain = notificationAudioContext.createGain();
+  const ctx = notificationAudioContext;
 
-  oscillator.type = 'sine';
-  oscillator.frequency.setValueAtTime(
-    880,
-    notificationAudioContext.currentTime
-  );
+  [0, 0.22].forEach((delay) => {
+    const oscillator = ctx.createOscillator();
+    const gain = ctx.createGain();
 
-  gain.gain.setValueAtTime(
-    0.0001,
-    notificationAudioContext.currentTime
-  );
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(
+      880,
+      ctx.currentTime + delay
+    );
 
-  gain.gain.exponentialRampToValueAtTime(
-    0.15,
-    notificationAudioContext.currentTime + 0.03
-  );
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime + delay);
+    gain.gain.exponentialRampToValueAtTime(
+      0.12,
+      ctx.currentTime + delay + 0.025
+    );
+    gain.gain.exponentialRampToValueAtTime(
+      0.0001,
+      ctx.currentTime + delay + 0.13
+    );
 
-  gain.gain.exponentialRampToValueAtTime(
-    0.0001,
-    notificationAudioContext.currentTime + 0.25
-  );
+    oscillator.connect(gain);
+    gain.connect(ctx.destination);
 
-  oscillator.connect(gain);
-  gain.connect(notificationAudioContext.destination);
-
-  oscillator.start();
-  oscillator.stop(notificationAudioContext.currentTime + 0.26);
+    oscillator.start(ctx.currentTime + delay);
+    oscillator.stop(ctx.currentTime + delay + 0.14);
+  });
 }
 
 function startCustomerMessageNotifications(caseIds, initialMessages) {
