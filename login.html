@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
@@ -376,9 +377,16 @@ window.renderLoginCaptcha = function () {
             submitBtn.disabled = true;
             return true;
         }
-    });
+        
+            });
 };
-        document.getElementById('forgotLink').addEventListener('click', async (e) => {
+
+if (window.turnstileApiReady &&
+    window.turnstile) {
+    window.renderLoginCaptcha();
+}
+
+document.getElementById('forgotLink').addEventListener('click', async (e) => {    
     e.preventDefault();
     const email = prompt('ایمیل خود را وارد کنید تا لینک بازیابی ارسال شود:');
     if (!email) return;
