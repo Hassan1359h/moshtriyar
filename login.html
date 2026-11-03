@@ -395,17 +395,26 @@
                 if (!captchaToken) {
                     throw new Error('لطفاً کپچا را تایید کنید.');
                 }
+if (mode === 'login') {
+    const supabaseStart = performance.now();
 
-                if (mode === 'login') {
-                    const { error } = await supabase.auth.signInWithPassword({
-                        email,
-                        password,
-                        options: { captchaToken: captchaToken }
-                    });
+    const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+        options: { captchaToken: captchaToken }
+    });
 
-                    if (error) throw error;
+    const supabaseTime = (
+        (performance.now() - supabaseStart) / 1000
+    ).toFixed(2);
 
-                    showMessage('ورود موفق! در حال انتقال...', 'success');
+    if (new URLSearchParams(window.location.search).get('debug') === '1') {
+        alert('زمان پاسخ درخواست ورود Supabase: ' + supabaseTime + ' ثانیه');
+    }
+
+    if (error) throw error;
+
+    showMessage('ورود موفق! در حال انتقال...', 'success');
 
                     setTimeout(() => {
                         window.location.href = getAfterLoginUrl();
