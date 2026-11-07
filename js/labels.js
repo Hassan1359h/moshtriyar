@@ -15,11 +15,18 @@ export const LABELS = {
 export function getLabels(businessType) {
     return LABELS[businessType] || LABELS.shop;
 }
-
-// 🎯 فیلدهای تخصصی هر کسب‌وکار
 export const BUSINESS_FIELDS = {
     shop: [],
+    supermarket: [],
+    food_distribution: [],
+    pharma_distribution: [],
+    representative: [],
+    wholesale: [],
+    hygiene_distribution: [],
+
     medical: [
+
+    
         { key: 'visit_type', label: 'نوع ویزیت', type: 'select', options: ['ویزیت اول', 'ویزیت مجدد', 'مشاوره'] },
         { key: 'sessions', label: 'تعداد جلسه', type: 'number' }
     ],
@@ -61,6 +68,12 @@ export const BUSINESS_FIELDS = {
 
 export const BUSINESS_TYPES = [
     { value: 'shop', label: '🛍️ فروشگاه', desc: 'فروش محصولات' },
+    { value: 'supermarket', label: '🛒 سوپرمارکت', desc: 'فروش کالاهای مصرفی روزانه' },
+    { value: 'food_distribution', label: '🚚 پخش مواد غذایی', desc: 'توزیع و پخش مواد غذایی' },
+    { value: 'pharma_distribution', label: '💊 شرکت پخش دارویی', desc: 'توزیع محصولات دارویی' },
+    { value: 'representative', label: '🏢 نمایندگی', desc: 'نمایندگی فروش و خدمات' },
+    { value: 'wholesale', label: '📦 عمده‌فروشی', desc: 'فروش عمده محصولات' },
+    { value: 'hygiene_distribution', label: '🧴 پخش لوازم بهداشتی', desc: 'توزیع محصولات بهداشتی' },
     { value: 'medical', label: '👨‍⚕️ پزشکی', desc: 'مطب و ویزیت' },
     { value: 'dental', label: '🦷 دندانپزشکی', desc: 'درمان دندان' },
     { value: 'lab', label: '🧪 آزمایشگاه', desc: 'خدمات آزمایشگاهی' },
