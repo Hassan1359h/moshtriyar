@@ -9,11 +9,11 @@
     <link rel="canonical" href="https://moshtriyar.ir/login.html">
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
     <link rel="icon" href="icon-192.png">
-
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback" async defer></script>
 
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
             font-family: Vazirmatn, Tahoma, sans-serif;
             background: linear-gradient(135deg, #eff6ff 0%, #f5f3ff 100%);
@@ -25,6 +25,7 @@
             padding: 20px;
             line-height: 1.7;
         }
+
         .box {
             background: #fff;
             border-radius: 24px;
@@ -34,12 +35,15 @@
             padding: 40px 32px;
             position: relative;
         }
+
         .logo-wrap {
             display: flex;
             justify-content: center;
             margin-bottom: 20px;
         }
+
         .logo-wrap svg { width: 64px; height: 64px; }
+
         h1 {
             font-size: 24px;
             font-weight: 800;
@@ -47,12 +51,14 @@
             margin-bottom: 6px;
             color: #1e293b;
         }
+
         .subtitle {
             text-align: center;
             color: #64748b;
             font-size: 14px;
             margin-bottom: 24px;
         }
+
         .tabs {
             display: flex;
             background: #f1f5f9;
@@ -60,6 +66,7 @@
             padding: 4px;
             margin-bottom: 24px;
         }
+
         .tab {
             flex: 1;
             text-align: center;
@@ -74,12 +81,15 @@
             background: transparent;
             font-family: inherit;
         }
+
         .tab.active {
             background: #fff;
             color: #2563eb;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
+
         .field { margin-bottom: 16px; }
+
         .field label {
             display: block;
             font-size: 13px;
@@ -87,7 +97,9 @@
             color: #475569;
             margin-bottom: 6px;
         }
-        .field input {
+
+        .field input,
+        .field select {
             width: 100%;
             padding: 12px 14px;
             border: 2px solid #e2e8f0;
@@ -96,14 +108,52 @@
             font-family: inherit;
             background: #f8fafc;
             transition: border-color 0.2s;
+        }
+
+        .field input {
             direction: ltr;
             text-align: right;
         }
-        .field input:focus {
+
+        .field select {
+            direction: rtl;
+            text-align: right;
+            color: #334155;
+        }
+
+        .field input:focus,
+        .field select:focus {
             outline: none;
             border-color: #3b82f6;
             background: #fff;
         }
+
+        .agreement-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .check-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 9px;
+            font-size: 12px;
+            color: #475569;
+            line-height: 1.9;
+            cursor: pointer;
+        }
+
+        .check-row input {
+            margin-top: 6px;
+            flex-shrink: 0;
+            width: 16px;
+            height: 16px;
+            accent-color: #2563eb;
+        }
+
         .btn-main {
             width: 100%;
             padding: 14px;
@@ -119,11 +169,14 @@
             box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
             transition: transform 0.2s;
         }
+
         .btn-main:hover { transform: translateY(-1px); }
+
         .btn-main:disabled {
             opacity: 0.6;
             cursor: not-allowed;
         }
+
         .message {
             text-align: center;
             font-size: 14px;
@@ -132,9 +185,11 @@
             min-height: 20px;
             color: #64748b;
         }
+
         .message.success { color: #16a34a; }
         .message.error { color: #dc2626; }
         .message.info { color: #2563eb; }
+
         .back-link {
             display: block;
             text-align: center;
@@ -143,7 +198,9 @@
             text-decoration: none;
             font-size: 13px;
         }
+
         .back-link:hover { color: #2563eb; }
+
         .plan-badge {
             display: none;
             background: #dbeafe;
@@ -155,20 +212,23 @@
             margin-bottom: 16px;
             font-weight: 600;
         }
+
         .plan-badge.show { display: block; }
+
         .captcha-container {
             display: flex;
             justify-content: center;
             margin-bottom: 16px;
         }
+
         @media (max-width: 480px) {
             .box { padding: 30px 22px; }
             h1 { font-size: 20px; }
         }
     </style>
 </head>
-<body>
 
+<body>
     <div class="box">
         <div class="logo-wrap">
             <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
@@ -198,22 +258,40 @@
         </div>
 
         <form id="authForm">
-
             <div class="field" id="nameField" style="display:none;">
-                <label>نام و نام خانوادگی</label>
+                <label for="fullName">نام و نام خانوادگی</label>
                 <input type="text" id="fullName" placeholder="مثلاً: حسن نادریان">
 
-                <label style="margin-top:14px;">نام فروشگاه یا کسب‌وکار</label>
+                <label for="storeName" style="margin-top:14px;">نام فروشگاه یا کسب‌وکار</label>
                 <input type="text" id="storeName" placeholder="مثلاً: فروشگاه بهار" maxlength="100">
+
+                <label for="businessType" style="margin-top:14px;">نوع کسب‌وکار</label>
+                <select id="businessType">
+                    <option value="">انتخاب نوع کسب‌وکار</option>
+                </select>
+
+                <div class="agreement-box" style="margin-top:16px;">
+                    <label class="check-row">
+                        <input type="checkbox" id="termsAccepted">
+                        <span>قوانین و مقررات عمومی استفاده از سامانه مشتری‌یار را مطالعه کرده‌ام و می‌پذیرم.</span>
+                    </label>
+                </div>
+
+                <div class="agreement-box">
+                    <label class="check-row">
+                        <input type="checkbox" id="smsTermsAccepted">
+                        <span>تعهدنامه استفاده از پنل پیامکی و مسئولیت محتوای پیامک‌های ارسالی را مطالعه کرده‌ام و می‌پذیرم.</span>
+                    </label>
+                </div>
             </div>
 
             <div class="field">
-                <label>ایمیل</label>
+                <label for="email">ایمیل</label>
                 <input type="email" id="email" required placeholder="example@email.com">
             </div>
 
             <div class="field">
-                <label>رمز عبور</label>
+                <label for="password">رمز عبور</label>
                 <input type="password" id="password" required placeholder="حداقل ۶ کاراکتر" minlength="6">
             </div>
 
@@ -234,17 +312,30 @@
 
     <script type="module">
         import { supabase } from './js/supabase.js';
+        import { BUSINESS_TYPES } from './js/labels.js';
 
         const tabLogin = document.getElementById('tabLogin');
         const tabSignup = document.getElementById('tabSignup');
         const nameField = document.getElementById('nameField');
         const fullNameInput = document.getElementById('fullName');
+        const storeNameInput = document.getElementById('storeName');
+        const businessTypeInput = document.getElementById('businessType');
+        const termsAcceptedInput = document.getElementById('termsAccepted');
+        const smsTermsAcceptedInput = document.getElementById('smsTermsAccepted');
         const emailInput = document.getElementById('email');
         const passwordInput = document.getElementById('password');
         const submitBtn = document.getElementById('submitBtn');
         const message = document.getElementById('message');
         const authForm = document.getElementById('authForm');
         const planBadge = document.getElementById('planBadge');
+
+        // ساخت فهرست انواع کسب‌وکار از فایل labels.js
+        BUSINESS_TYPES.forEach((business) => {
+            const option = document.createElement('option');
+            option.value = business.value;
+            option.textContent = business.label;
+            businessTypeInput.appendChild(option);
+        });
 
         const urlParams = new URLSearchParams(window.location.search);
 
@@ -276,20 +367,20 @@
 
         function setMode(newMode) {
             mode = newMode;
+            const isSignup = mode === 'signup';
 
-            if (mode === 'login') {
-                tabLogin.classList.add('active');
-                tabSignup.classList.remove('active');
-                nameField.style.display = 'none';
-                submitBtn.textContent = 'ورود';
-                document.title = 'ورود | مشتری‌یار';
-            } else {
-                tabSignup.classList.add('active');
-                tabLogin.classList.remove('active');
-                nameField.style.display = 'block';
-                submitBtn.textContent = 'ثبت‌نام';
-                document.title = 'ثبت‌نام | مشتری‌یار';
-            }
+            tabLogin.classList.toggle('active', !isSignup);
+            tabSignup.classList.toggle('active', isSignup);
+
+            nameField.style.display = isSignup ? 'block' : 'none';
+
+            fullNameInput.required = isSignup;
+            businessTypeInput.required = isSignup;
+            termsAcceptedInput.required = isSignup;
+            smsTermsAcceptedInput.required = isSignup;
+
+            submitBtn.textContent = isSignup ? 'ثبت‌نام' : 'ورود';
+            document.title = isSignup ? 'ثبت‌نام | مشتری‌یار' : 'ورود | مشتری‌یار';
 
             message.textContent = '';
             message.className = 'message';
@@ -297,6 +388,9 @@
 
         tabLogin.addEventListener('click', () => setMode('login'));
         tabSignup.addEventListener('click', () => setMode('signup'));
+
+        // حالت اولیه؛ فیلدهای ثبت‌نام در صفحه ورود اجباری نیستند.
+        setMode('login');
 
         Promise.race([
             supabase.auth.getSession(),
@@ -320,7 +414,7 @@
             return document.querySelector('[name="cf-turnstile-response"]')?.value || '';
         }
 
-        // بارگذاری کپچا با روش callback خودکار نسخه قدیمی
+        // بارگذاری کپچا با روش callback خودکار نسخه فعلی
         let loginCaptchaWidgetId = null;
 
         window.onloadTurnstileCallback = function () {
@@ -370,7 +464,7 @@
             if (error) {
                 alert('❌ خطا: ' + error.message);
 
-                if (window.turnstile) {
+                if (window.turnstile && loginCaptchaWidgetId !== null) {
                     window.turnstile.reset(loginCaptchaWidgetId);
                 }
             } else {
@@ -384,7 +478,8 @@
             const email = emailInput.value.trim();
             const password = passwordInput.value;
             const fullName = fullNameInput.value.trim();
-            const storeName = document.getElementById('storeName').value.trim();
+            const storeName = storeNameInput.value.trim();
+            const businessType = businessTypeInput.value;
 
             submitBtn.disabled = true;
             showMessage('در حال پردازش...', 'info');
@@ -395,26 +490,27 @@
                 if (!captchaToken) {
                     throw new Error('لطفاً کپچا را تایید کنید.');
                 }
-if (mode === 'login') {
-    const supabaseStart = performance.now();
 
-    const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-        options: { captchaToken: captchaToken }
-    });
+                if (mode === 'login') {
+                    const supabaseStart = performance.now();
 
-    const supabaseTime = (
-        (performance.now() - supabaseStart) / 1000
-    ).toFixed(2);
+                    const { error } = await supabase.auth.signInWithPassword({
+                        email,
+                        password,
+                        options: { captchaToken: captchaToken }
+                    });
 
-    if (new URLSearchParams(window.location.search).get('debug') === '1') {
-        alert('زمان پاسخ درخواست ورود Supabase: ' + supabaseTime + ' ثانیه');
-    }
+                    const supabaseTime = (
+                        (performance.now() - supabaseStart) / 1000
+                    ).toFixed(2);
 
-    if (error) throw error;
+                    if (new URLSearchParams(window.location.search).get('debug') === '1') {
+                        alert('زمان پاسخ درخواست ورود Supabase: ' + supabaseTime + ' ثانیه');
+                    }
 
-    showMessage('ورود موفق! در حال انتقال...', 'success');
+                    if (error) throw error;
+
+                    showMessage('ورود موفق! در حال انتقال...', 'success');
 
                     setTimeout(() => {
                         window.location.href = getAfterLoginUrl();
@@ -425,13 +521,29 @@ if (mode === 'login') {
                         throw new Error('لطفاً نام و نام خانوادگی را وارد کنید.');
                     }
 
+                    if (!businessType) {
+                        throw new Error('لطفاً نوع کسب‌وکار را انتخاب کنید.');
+                    }
+
+                    if (!termsAcceptedInput.checked) {
+                        throw new Error('برای ثبت‌نام باید قوانین عمومی را بپذیرید.');
+                    }
+
+                    if (!smsTermsAcceptedInput.checked) {
+                        throw new Error('برای ثبت‌نام باید تعهدنامه پنل پیامکی را بپذیرید.');
+                    }
+
                     const { error } = await supabase.auth.signUp({
                         email,
                         password,
                         options: {
                             data: {
                                 full_name: fullName,
-                                store_name: storeName
+                                store_name: storeName,
+                                business_type: businessType,
+                                terms_accepted: true,
+                                terms_version: '2026-11-07-v1',
+                                sms_terms_accepted: true
                             },
                             captchaToken: captchaToken
                         }
@@ -450,6 +562,7 @@ if (mode === 'login') {
                         throw error;
                     }
 
+                    // ارسال ایمیل خوش‌آمدگویی
                     try {
                         await fetch('/api/send-email', {
                             method: 'POST',
@@ -460,11 +573,13 @@ if (mode === 'login') {
                                 data: { name: fullName }
                             })
                         });
+
                         console.log('Welcome email sent');
                     } catch (emailErr) {
                         console.warn('Welcome email failed:', emailErr);
                     }
 
+                    // اطلاع‌رسانی ثبت‌نام به مدیر
                     try {
                         await fetch('/api/send-email', {
                             method: 'POST',
@@ -479,13 +594,15 @@ if (mode === 'login') {
                                 }
                             })
                         });
+
                         console.log('Admin notified about new user');
                     } catch (adminErr) {
                         console.warn('Admin notification failed:', adminErr);
                     }
 
-                    showMessage('✅ ثبت‌نام موفق! حالا وارد شوید.', 'success');
-                    setTimeout(() => setMode('login'), 1500);
+                    showMessage('✅ ثبت‌نام موفق! حالا ایمیل خود را بررسی و سپس وارد شوید.', 'success');
+
+                    setTimeout(() => setMode('login'), 2500);
                 }
 
             } catch (err) {
