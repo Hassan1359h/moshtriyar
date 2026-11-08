@@ -1,3 +1,4 @@
+
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -5,6 +6,47 @@ const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "")
   .split(",")
   .map(email => email.trim().toLowerCase())
   .filter(Boolean);
+
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// تمام جدول‌ها و ستون‌هایی که ممکن است به حساب کاربر وابسته باشند
+const DEPENDENCIES = [
+  ["bazaar_purchases", "user_id"],
+  ["business_directory", "owner_id"],
+  ["business_votes", "voter_id"],
+  ["calls", "user_id"],
+  ["checks", "user_id"],
+  ["customer_case_messages", "user_id"],
+  ["customer_case_messages", "sender_auth_user_id"],
+  ["customer_cases", "user_id"],
+  ["customer_feedback", "user_id"],
+  ["customer_followups", "user_id"],
+  ["customer_portal_access", "user_id"],
+  ["customer_portal_access", "auth_user_id"],
+  ["customer_timeline", "user_id"],
+  ["customers", "user_id"],
+  ["discount_campaigns", "user_id"],
+  ["discount_codes", "assigned_user_id"],
+  ["discount_intents", "user_id"],
+  ["discount_redemptions", "user_id"],
+  ["fiscal_years", "user_id"],
+  ["installment_payments", "user_id"],
+  ["installments", "user_id"],
+  ["invoices", "user_id"],
+  ["notifications", "user_id"],
+  ["payments", "user_id"],
+  ["products", "user_id"],
+  ["site_api_keys", "user_id"],
+  ["site_daily_stats", "user_id"],
+  ["site_orders", "user_id"],
+  ["site_products", "user_id"],
+  ["sms_logs", "user_id"],
+  ["subscriptions", "user_id"],
+  ["website_agent_settings", "user_id"],
+  ["websites", "user_id"],
+  ["wordpress_connections", "user_id"]
+];
 
 async function request(url, options = {}) {
   return fetch(url, {
@@ -18,12 +60,15 @@ async function request(url, options = {}) {
 }
 
 async function getUserFromToken(token) {
-  const response = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-    headers: {
-      apikey: SUPABASE_KEY,
-      Authorization: `Bearer ${token}`
+  const response = await fetch(
+    `${SUPABASE_URL}/auth/v1/user`,
+    {
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${token}`
+      }
     }
-  });
+  );
 
   if (!response.ok) return null;
   return response.json();
@@ -68,9 +113,9 @@ async function updateProfile(userId, data) {
   }
 }
 
-async function countRecords(table, userId) {
+async function countRecords(table, column, userId) {
   const response = await request(
-    `${SUPABASE_URL}/rest/v1/${table}?select=id&user_id=eq.${userId}`,
+    `${SUPABASE_URL}/rest/v1/${table}?select=${column}&${column}=eq.${encodeURIComponent(userId)}`,
     {
       headers: {
         Prefer: "count=exact",
@@ -81,18 +126,37 @@ async function countRecords(table, userId) {
 
   if (!response.ok) {
     throw new Error(
-      `بررسی جدول ${table} ناموفق بود: ${await response.text()}`
+      `بررسی ${table}.${column} ناموفق بود: ${await response.text()}`
     );
   }
 
-  const contentRange = response.headers.get("content-range") || "";
+  const contentRange =
+    response.headers.get("content-range") || "";
+
   const total = contentRange.split("/").pop();
 
   if (!total || total === "*") {
-    throw new Error(`تعداد اطلاعات جدول ${table} مشخص نشد.`);
+    throw new Error(
+      `تعداد اطلاعات ${table}.${column} مشخص نشد.`
+    );
   }
 
   return Number(total);
+}
+
+async function checkDependencies(userId) {
+  const dependencies = {};
+
+  for (const [table, column] of DEPENDENCIES) {
+    const count = await countRecords(table, column, userId);
+
+    if (count > 0) {
+      const key = `${table}.${column}`;
+      dependencies[key] = count;
+    }
+  }
+
+  return dependencies;
 }
 
 export default async function handler(req, res) {
@@ -106,7 +170,10 @@ export default async function handler(req, res) {
     });
   }
 
-  const token = req.headers.authorization?.replace(/^Bearer\s+/i, "");
+  const token = req.headers.authorization?.replace(
+    /^Bearer\s+/i,
+    ""
+  );
 
   if (!token) {
     return res.status(401).json({ error: "No token" });
@@ -114,7 +181,9 @@ export default async function handler(req, res) {
 
   try {
     const admin = await getUserFromToken(token);
-    const adminEmail = String(admin?.email || "").toLowerCase();
+
+    const adminEmail =
+      String(admin?.email || "").toLowerCase();
 
     const isAdmin =
       admin?.app_metadata?.role === "admin" ||
@@ -126,20 +195,21 @@ export default async function handler(req, res) {
 
     const { userId, action } = req.body || {};
 
-    if (
-      !userId ||
-      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)
-    ) {
-      return res.status(400).json({ error: "شناسه کاربر نامعتبر است." });
+    if (!userId || !UUID_REGEX.test(userId)) {
+      return res.status(400).json({
+        error: "شناسه کاربر نامعتبر است."
+      });
     }
 
     if (!["block", "unblock", "archive", "delete"].includes(action)) {
-      return res.status(400).json({ error: "عملیات نامعتبر است." });
+      return res.status(400).json({
+        error: "عملیات نامعتبر است."
+      });
     }
 
     if (userId === admin.id) {
       return res.status(403).json({
-        error: "امکان تغییر یا حذف حساب مدیر خودتان وجود ندارد."
+        error: "امکان تغییر یا حذف حساب مدیر فعلی وجود ندارد."
       });
     }
 
@@ -148,17 +218,22 @@ export default async function handler(req, res) {
     );
 
     if (!targetResponse.ok) {
-      return res.status(404).json({ error: "کاربر پیدا نشد." });
+      return res.status(404).json({
+        error: "حساب کاربر پیدا نشد."
+      });
     }
 
     const target = await targetResponse.json();
 
+    const targetEmail =
+      String(target.email || "").toLowerCase();
+
     if (
       target.app_metadata?.role === "admin" ||
-      ADMIN_EMAILS.includes(String(target.email || "").toLowerCase())
+      ADMIN_EMAILS.includes(targetEmail)
     ) {
       return res.status(403).json({
-        error: "حساب مدیر کل قابل تغییر یا حذف نیست."
+        error: "حذف یا مسدودسازی مدیر کل مجاز نیست."
       });
     }
 
@@ -170,7 +245,10 @@ export default async function handler(req, res) {
         blocked_at: new Date().toISOString()
       });
 
-      return res.status(200).json({ ok: true, action });
+      return res.status(200).json({
+        success: true,
+        message: "حساب کاربر مسدود شد."
+      });
     }
 
     if (action === "unblock") {
@@ -181,7 +259,10 @@ export default async function handler(req, res) {
         blocked_at: null
       });
 
-      return res.status(200).json({ ok: true, action });
+      return res.status(200).json({
+        success: true,
+        message: "مسدودیت حساب برداشته شد."
+      });
     }
 
     if (action === "archive") {
@@ -194,51 +275,48 @@ export default async function handler(req, res) {
         deleted_at: new Date().toISOString()
       });
 
-      return res.status(200).json({ ok: true, action });
+      return res.status(200).json({
+        success: true,
+        message: "حساب به آرشیو منتقل شد."
+      });
     }
 
     if (action === "delete") {
-      const tables = [
-        "payments",
-        "websites",
-        "wordpress_connections",
-        "customers"
-      ];
+      const dependencies =
+        await checkDependencies(userId);
 
-      const dependencies = {};
-
-      for (const table of tables) {
-        dependencies[table] = await countRecords(table, userId);
-      }
-
-      const hasData = Object.values(dependencies).some(count => count > 0);
-
-      if (hasData) {
+      if (Object.keys(dependencies).length > 0) {
         return res.status(409).json({
-          error: "این حساب دارای اطلاعات وابسته است و حذف دائمی مجاز نیست.",
+          success: false,
+          error: "این حساب دارای اطلاعات وابسته است و حذف دائمی آن مجاز نیست.",
           dependencies
         });
       }
 
+      // در این مرحله فقط حساب کاملاً بدون وابستگی حذف می‌شود.
       const deleteResponse = await request(
         `${SUPABASE_URL}/auth/v1/admin/users/${userId}`,
         { method: "DELETE" }
       );
 
       if (!deleteResponse.ok) {
-        throw new Error(await deleteResponse.text());
+        throw new Error(
+          `حذف حساب احراز هویت ناموفق بود: ${await deleteResponse.text()}`
+        );
       }
 
       return res.status(200).json({
-        ok: true,
-        action: "delete",
-        message: "حساب کاربر حذف شد."
+        success: true,
+        message: "حساب کاربر و پروفایل آن حذف شد."
       });
     }
 
   } catch (error) {
+    console.error("Admin user action error:", error);
+
     return res.status(500).json({
-      error: error.message || "خطای سرور"
+      error: "عملیات ناموفق بود.",
+      details: error.message
     });
   }
 }
