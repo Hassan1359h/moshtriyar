@@ -658,17 +658,28 @@
             } catch (err) {
                 let errorMsg = err.message || 'خطای نامشخص';
 
-                if (errorMsg.includes('Invalid login credentials')) {
-                    errorMsg = 'ایمیل یا رمز عبور اشتباه است.';
-                } else if (errorMsg.includes('User already registered')) {
-                    errorMsg = 'این ایمیل قبلاً ثبت‌نام کرده است.';
-                } else if (errorMsg.includes('Password should be at least')) {
-                    errorMsg = 'رمز عبور باید حداقل ۶ کاراکتر باشد.';
-                } else if (errorMsg.includes('Unable to validate email')) {
-                    errorMsg = 'ایمیل وارد شده معتبر نیست.';
-                } else if (errorMsg.toLowerCase().includes('captcha')) {
-                    errorMsg = 'کپچا تایید نشد. لطفاً دوباره تلاش کنید.';
-                }
+                if (
+    errorMsg.includes('Email not confirmed') ||
+    errorMsg.includes('email_not_confirmed')
+) {
+    errorMsg =
+        'ایمیل شما هنوز تأیید نشده است. لطفاً صندوق ورودی ایمیل خود را بررسی کنید و روی لینک تأیید حساب کاربری کلیک کنید. پوشه Spam را نیز بررسی کنید.';
+
+} else if (errorMsg.includes('Invalid login credentials')) {
+    errorMsg = 'ایمیل یا رمز عبور اشتباه است.';
+
+} else if (errorMsg.includes('User already registered')) {
+    errorMsg = 'این ایمیل قبلاً ثبت‌نام کرده است.';
+
+} else if (errorMsg.includes('Password should be at least')) {
+    errorMsg = 'رمز عبور باید حداقل ۶ کاراکتر باشد.';
+
+} else if (errorMsg.includes('Unable to validate email')) {
+    errorMsg = 'ایمیل وارد شده معتبر نیست.';
+
+} else if (errorMsg.toLowerCase().includes('captcha')) {
+    errorMsg = 'کپچا تایید نشد. لطفاً دوباره تلاش کنید.';
+}
 
                 showMessage('❌ ' + errorMsg, 'error');
 
