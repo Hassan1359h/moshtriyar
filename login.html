@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
@@ -265,6 +264,16 @@
                 <label for="storeName" style="margin-top:14px;">نام فروشگاه یا کسب‌وکار</label>
                 <input type="text" id="storeName" placeholder="مثلاً: فروشگاه بهار" maxlength="100">
 
+                <label for="phone" style="margin-top:14px;">شماره تماس همراه</label>
+                <input
+                    type="tel"
+                    id="phone"
+                    placeholder="09123456789"
+                    inputmode="numeric"
+                    maxlength="11"
+                    autocomplete="tel"
+                >
+
                 <label for="businessType" style="margin-top:14px;">نوع کسب‌وکار</label>
                 <select id="businessType">
                     <option value="">انتخاب نوع کسب‌وکار</option>
@@ -319,6 +328,7 @@
         const nameField = document.getElementById('nameField');
         const fullNameInput = document.getElementById('fullName');
         const storeNameInput = document.getElementById('storeName');
+        const phoneInput = document.getElementById('phone');
         const businessTypeInput = document.getElementById('businessType');
         const termsAcceptedInput = document.getElementById('termsAccepted');
         const smsTermsAcceptedInput = document.getElementById('smsTermsAccepted');
@@ -375,6 +385,7 @@
             nameField.style.display = isSignup ? 'block' : 'none';
 
             fullNameInput.required = isSignup;
+            phoneInput.required = isSignup;
             businessTypeInput.required = isSignup;
             termsAcceptedInput.required = isSignup;
             smsTermsAcceptedInput.required = isSignup;
@@ -410,8 +421,31 @@
             message.className = 'message ' + type;
         }
 
-        function getCaptchaToken() {
-            return document.querySelector('[name="cf-turnstile-response"]')?.value || '';
+        // تبدیل اعداد فارسی و عربی به انگلیسی
+        function normalizePhone(value) {
+            return value
+                .replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d))
+                .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
+                .replace(/[\s-]/g, '');
+        }
+
+        // اعتبارسنجی شماره موبایل ایران
+        function validatePhone(phone) {
+            if (!/^09[0-9]{9}$/.test(phone)) {
+                return false;
+            }
+
+            // رد شماره‌هایی که تمام ارقامشان یکسان است
+            if (/^([0-9])\1{10}$/.test(phone)) {
+                return false;
+            }
+
+            // رد شماره‌هایی مانند 09111111111 و 09222222222
+            if (/^09([0-9])\1{8}$/.test(phone)) {
+                return false;
+            }
+
+            return true;
         }
 
         // بارگذاری کپچا با روش callback خودکار نسخه فعلی
@@ -472,6 +506,10 @@
             }
         });
 
+        function getCaptchaToken() {
+            return document.querySelector('[name="cf-turnstile-response"]')?.value || '';
+        }
+
         authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -479,6 +517,7 @@
             const password = passwordInput.value;
             const fullName = fullNameInput.value.trim();
             const storeName = storeNameInput.value.trim();
+            const phone = normalizePhone(phoneInput.value.trim());
             const businessType = businessTypeInput.value;
 
             submitBtn.disabled = true;
@@ -521,6 +560,16 @@
                         throw new Error('لطفاً نام و نام خانوادگی را وارد کنید.');
                     }
 
+                    if (!phone) {
+                        throw new Error('لطفاً شماره تماس همراه را وارد کنید.');
+                    }
+
+                    if (!validatePhone(phone)) {
+                        throw new Error(
+                            'شماره تماس باید ۱۱ رقم و با 09 شروع شود. شماره‌های تکراری یا غیرمعتبر پذیرفته نیستند.'
+                        );
+                    }
+
                     if (!businessType) {
                         throw new Error('لطفاً نوع کسب‌وکار را انتخاب کنید.');
                     }
@@ -540,6 +589,7 @@
                             data: {
                                 full_name: fullName,
                                 store_name: storeName,
+                                phone: phone,
                                 business_type: businessType,
                                 terms_accepted: true,
                                 terms_version: '2026-11-07-v1',
