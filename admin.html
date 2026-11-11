@@ -201,19 +201,31 @@ tbody tr:hover{background:#f8fafc}
   </section>
   <section class="tab-pane" id="pane-payments">
     <div class="card">
-      <h2>📊 آمار پرداخت‌ها</h2>
-      <div class="stats" style="grid-template-columns:repeat(3,1fr);">
-        <div class="stat y"><b id="payPending">0</b><span>در انتظار</span></div>
-        <div class="stat g"><b id="payApproved">0</b><span>تایید شده</span></div>
-        <div class="stat r"><b id="payRejected">0</b><span>رد شده</span></div>
+    <h2>📊 آمار پرداخت‌ها</h2>
+<div class="stats" style="grid-template-columns:repeat(4,minmax(0,1fr));">
+  <div class="stat y">
+    <b id="payPending">0</b>
+    <span>در انتظار</span>
+  </div>
+  <div class="stat g">
+    <b id="payDbApproved">0</b>
+    <span>پرداخت‌های تأییدشده</span>
+  </div>
+  <div class="stat" style="background:#e0f2fe;color:#075985;">
+    <b id="payApproved">0</b>
+    <span>خرید واقعی احرازشده</span>
+  </div>
+  <div class="stat r">
+    <b id="payRejected">0</b>
+    <span>رد شده</span>
+  </div>
+</div> 
+      <div class="tabs" id="payTabs">
+  <button class="tab active" data-filter="pending">⏳ در انتظار</button>
+  <button class="tab" data-filter="approved">✅ تایید شده</button>
+  <button class="tab" data-filter="rejected">❌ رد شده</button>
+  <button class="tab" data-filter="all">📋 همه</button>
       </div>
-    </div>
-    <div class="tabs" id="payTabs">
-      <button class="tab active" data-filter="pending">⏳ در انتظار</button>
-      <button class="tab" data-filter="approved">✅ تایید شده</button>
-      <button class="tab" data-filter="rejected">❌ رد شده</button>
-      <button class="tab" data-filter="all">📋 همه</button>
-    </div>
     <div id="payList"><div class="loading">در حال بارگذاری...</div></div>
   </section>
   <section class="tab-pane" id="pane-sites">
@@ -407,13 +419,19 @@ window.closeModal = function () { document.getElementById('modalOverlay').classL
 document.getElementById('modalOverlay').addEventListener('click', (e) => { if (e.target.id === 'modalOverlay') closeModal(); });
 
 function renderPayments() {
-  // فقط خریدهای واقعی احرازشده در آمار خرید واقعی شمرده شوند
+  // پرداخت‌های در انتظار
   document.getElementById('payPending').textContent =
     faNum(allPayments.filter(p => p.status === 'pending').length);
 
+  // تمام پرداخت‌های تأییدشده، حتی پرداخت‌های آزمایشی
+  document.getElementById('payDbApproved').textContent =
+    faNum(allPayments.filter(p => p.status === 'approved').length);
+
+  // فقط خریدهای واقعی احرازشده
   document.getElementById('payApproved').textContent =
     faNum(allPayments.filter(p => verifiedPaymentIds.has(String(p.id))).length);
 
+  // پرداخت‌های ردشده
   document.getElementById('payRejected').textContent =
     faNum(allPayments.filter(p => p.status === 'rejected').length);
 
