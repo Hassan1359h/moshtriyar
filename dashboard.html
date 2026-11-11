@@ -485,7 +485,7 @@ async function loadSubscription() {
         const days = Math.ceil( (endDate - now) / 86400000 );
         $('subContent').innerHTML = `<div class="status-active"><h3>✅ اشتراک شما فعال است</h3><div class="days">${days} روز باقی‌مانده</div><p>تا تاریخ ${endDate.toLocaleDateString('fa-IR')}</p></div>`;
     } else {
-        $('subContent').innerHTML = `<div style="text-align:center;padding:10px;"><p style="color:#dc2626;font-weight:800;margin-bottom:12px;">⚠️ اشتراک شما فعال نیست</p><p style="color:#64748b;font-size:13px;margin-bottom:14px;">برای فعال‌سازی، پرداخت را ثبت کنید.</p><a href="index.html?plan=pro" class="btn-main">💳 خرید و تمدید اشتراک</a>
+        $('subContent').innerHTML = `<div style="text-align:center;padding:10px;"><p style="color:#dc2626;font-weight:800;margin-bottom:12px;">⚠️ اشتراک شما فعال نیست</p><p style="color:#64748b;font-size:13px;margin-bottom:14px;">برای فعال‌سازی، پرداخت را ثبت کنید.</p><a href="billing.html" class="btn-main">💳 ثبت پرداخت</a>
     }
 }
 
