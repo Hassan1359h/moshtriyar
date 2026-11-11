@@ -475,19 +475,56 @@ async function loadFinancialStats() {
     } catch (e) { console.error(e); }
 }
 
+  
 async function loadSubscription() {
     const role = me?.user_metadata?.role;
-    if (role === 'admin') { $('subCard').classList.add('hidden'); return; }
-    const { data: profile } = await supabase.from('profiles').select('subscription_end_date').eq('id', me.id).maybeSingle();
-    const endDate = profile?.subscription_end_date ? new Date(profile.subscription_end_date) : null;
+
+    if (role === 'admin') {
+        $('subCard').classList.add('hidden');
+        return;
+    }
+
+    const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('subscription_end_date')
+        .eq('id', me.id)
+        .maybeSingle();
+
+    if (error) {
+        console.error('خطای دریافت اشتراک:', error);
+        return;
+    }
+
+    const endDate = profile?.subscription_end_date
+        ? new Date(profile.subscription_end_date)
+        : null;
+
     const now = new Date();
+
     if (endDate && endDate > now) {
-        const days = Math.ceil( (endDate - now) / 86400000 );
-        $('subContent').innerHTML = `<div class="status-active"><h3>✅ اشتراک شما فعال است</h3><div class="days">${days} روز باقی‌مانده</div><p>تا تاریخ ${endDate.toLocaleDateString('fa-IR')}</p></div>`;
+        const days = Math.ceil((endDate - now) / 86400000);
+
+        $('subContent').innerHTML = `
+            <div class="status-active">
+                <h3>✅ اشتراک شما فعال است</h3>
+                <div class="days">${days} روز باقی‌مانده</div>
+                <p>تا تاریخ ${endDate.toLocaleDateString('fa-IR')}</p>
+            </div>`;
     } else {
-        $('subContent').innerHTML = `<div style="text-align:center;padding:10px;"><p style="color:#dc2626;font-weight:800;margin-bottom:12px;">⚠️ اشتراک شما فعال نیست</p><p style="color:#64748b;font-size:13px;margin-bottom:14px;">برای فعال‌سازی، پرداخت را ثبت کنید.</p><a href="billing.html" class="btn-main">💳 ثبت پرداخت</a>
+        $('subContent').innerHTML = `
+            <div style="text-align:center;padding:10px;">
+                <p style="color:#dc2626;font-weight:800;margin-bottom:12px;">
+                    ⚠️ اشتراک شما فعال نیست
+                </p>
+                <p style="color:#64748b;font-size:13px;margin-bottom:14px;">
+                    برای فعال‌سازی، پرداخت را ثبت کنید.
+                </p>
+                <a href="billing.html" class="btn-main">💳 ثبت پرداخت</a>
+            </div>`;
     }
 }
+  
+
 
 $('logoutBtn').onclick = async () => {
     await supabase.auth.signOut();
