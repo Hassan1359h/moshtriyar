@@ -520,15 +520,87 @@ async function rejectPayment(id, btn) {
     renderDashboard(); renderPayments();
   } catch (e) { alert('❌ ' + e.message); btn.disabled = false; btn.textContent = '❌ رد'; }
 }
+
 function renderSites() {
   const list = document.getElementById('sitesList');
-  if (!allSites.length) { list.innerHTML = '<div class="empty">📭 هیچ سایتی متصل نشده</div>'; return; }
-  list.innerHTML = allSites.map(s => {
-    const plan = s.prof?.plan || 'trial';
-    const label = plan === 'pro' ? '💎 حرفه‌ای' : plan === 'business' ? '🏢 کسب‌وکار' : '🆓 تست';
-    return '<div class="site-item"><div class="site-head"><div class="site-name">' + esc(s.brand_name || s.name || s.domain || 'بدون نام') + '</div><span class="site-plan ' + esc(plan) + '">' + label + '</span></div><div class="site-domain">👤 ' + esc(s.prof?.full_name || s.prof?.email || 'کاربر ناشناس') + '</div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;flex-wrap:wrap;gap:6px;"><span style="font-size:11px;color:var(--muted);direction:ltr;">' + esc(s.domain || '') + '</span><span style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:800;background:' + (s.active ? 'var(--success-light)' : 'var(--warning-light)') + ';color:' + (s.active ? '#166534' : '#92400e') + ';">' + (s.active ? '✅ فعال' : '⏳ غیرفعال') + '</span></div></div>';
+
+  // بررسی هدیه تبلیغاتی معتبر
+  function getValidGift(userId) {
+    return allSubscriptions.find(s =>
+      String(s.user_id) === String(userId) &&
+      String(s.gateway || '').toLowerCase() === 'promotional_gift' &&
+      String(s.status || '').toLowerCase() === 'active' &&
+      s.expires_at &&
+      new Date(s.expires_at).getTime() > Date.now()
+    ) || null;
+  }
+
+  // فقط سایت مشتریان ویژه یا صاحبان هدیه معتبر
+  const eligibleSites = allSites.filter(s => {
+    const userId = String(s.user_id || '');
+    const isRealBuyer = verifiedBuyerIds.has(userId);
+    const hasGift = !!getValidGift(userId);
+
+    return isRealBuyer || hasGift;
+  });
+
+  if (!eligibleSites.length) {
+    list.innerHTML = '<div class="empty">📭 هیچ سایت واجد شرایطی برای نمایش وجود ندارد</div>';
+    return;
+  }
+
+  list.innerHTML = eligibleSites.map(s => {
+    const userId = String(s.user_id || '');
+    const isRealBuyer = verifiedBuyerIds.has(userId);
+    const gift = getValidGift(userId);
+
+    let label = '';
+    let planClass = '';
+
+    if (isRealBuyer) {
+      const sub = currentVerifiedSubscription(userId);
+      const plan = sub?.plan || s.prof?.plan || 'trial';
+
+      label = plan === 'pro'
+        ? '💎 حرفه‌ای'
+        : plan === 'business'
+          ? '🏢 کسب‌وکار'
+          : '👑 مشتری ویژه';
+
+      planClass = plan;
+    } else if (gift) {
+      label = '🎁 رایگان – تبلیغاتی';
+      planClass = 'gift';
+    }
+
+    return '<div class="site-item">' +
+      '<div class="site-head">' +
+      '<div class="site-name">' +
+      esc(s.brand_name || s.name || s.domain || 'بدون نام') +
+      '</div>' +
+      '<span class="site-plan ' + esc(planClass) + '">' +
+      label +
+      '</span>' +
+      '</div>' +
+      '<div class="site-domain">👤 ' +
+      esc(s.prof?.full_name || s.prof?.email || 'کاربر ناشناس') +
+      '</div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;flex-wrap:wrap;gap:6px;">' +
+      '<span style="font-size:11px;color:var(--muted);direction:ltr;">' +
+      esc(s.domain || '') +
+      '</span>' +
+      '<span style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:800;background:' +
+      (s.active ? 'var(--success-light)' : 'var(--warning-light)') +
+      ';color:' +
+      (s.active ? '#166534' : '#92400e') +
+      ';">' +
+      (s.active ? '✅ ویجت فعال' : '⏳ ویجت غیرفعال') +
+      '</span>' +
+      '</div>' +
+      '</div>';
   }).join('');
 }
+
 function renderKeys() {
   const list = document.getElementById('keysList');
   if (!allKeys.length) { list.innerHTML = '<div class="empty">📭 هیچ کلیدی ثبت نشده</div>'; return; }
