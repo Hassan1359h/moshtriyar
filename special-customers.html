@@ -416,16 +416,15 @@ async function loadCustomers() {
     });
 
     const [subscriptionResult,paymentResult,bazaarResult] = await Promise.all([
-        supabase.from('subscriptions')
-            .select('id,user_id,plan,status,started_at,expires_at,gateway,payment_id,created_at')
-            .order('created_at',{ascending:false}),
-        supabase.from('payments')
-            .select('id,user_id,amount,status,created_at')
-            .order('created_at',{ascending:false}),
-        supabase.from('bazaar_purchases')
-            .select('id,user_id,product_id,payment_id,status,purchased_at,verified_at,created_at,subscription_end_date,discount_id')
-            .eq('status','verified')
-    ]);
+    supabase.from('subscriptions')
+        .select('id,user_id,plan,status,started_at,expires_at,gateway,payment_id,created_at')
+        .order('created_at',{ascending:false}),
+    supabase.from('payments')
+        .select('id,user_id,amount,status,created_at')
+        .order('created_at',{ascending:false}),
+    supabase.rpc('admin_list_bazaar_purchases')
+]);
+        
 
     if (subscriptionResult.error) throw subscriptionResult.error;
     if (paymentResult.error) throw paymentResult.error;
