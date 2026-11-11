@@ -353,7 +353,26 @@ async function loadPayments() {
   allPayments = (data || []).filter(x => map[x.user_id]).map(x => ({ ...x, prof: map[x.user_id] }));
 }
 async function loadGeminiKeys() { const { data, error } = await supabase.from('gemini_keys').select('*').order('id', { ascending: true }); if (error) return; allKeys = data || []; }
-async function loadSites() { const { data, error } = await supabase.from('websites').select('id,user_id,domain,name,active,business_type,brand_name,brand_logo_url,created_at').order('created_at', { ascending: false }); if (error) return; const map = {}; allProfiles.forEach(p => map[p.id] = p); allSites = (data || []).filter(s => map[s.user_id]).map(s => ({ ...s, prof: map[s.user_id] })); }
+async function loadSites() {
+  const { data, error } = await supabase
+    .from('websites')
+    .select('id,user_id,domain,name,active,business_type,brand_name,brand_logo_url,created_at')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('خطای بارگذاری سایت‌ها:', error);
+    throw error;
+  }
+
+  const profilesMap = new Map(
+    allProfiles.map(p => [String(p.id), p])
+  );
+
+  allSites = (data || []).map(s => ({
+    ...s,
+    prof: profilesMap.get(String(s.user_id)) || null
+  }));
+}
 async function loadCustomers() { const { data, error } = await supabase.from('customers').select('id,user_id,name,phone,email,status,total_purchase,total_paid,created_at').order('created_at', { ascending: false }).limit(1000); if (error) return; const allowedOwners = new Set(allProfiles.map(p => String(p.id))); allCustomers = (data || []).filter(c => allowedOwners.has(String(c.user_id))); }
 async function loadSettings() { const { data, error } = await supabase.from('settings').select('*'); if (error) return; settings = {}; (data || []).forEach(s => settings[s.key] = s.value); }
 function renderDashboard() {
