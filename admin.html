@@ -330,7 +330,7 @@ async function loadSubscriptions() {
   allSubscriptions = data || [];
 }
 async function loadBazaarPurchases() {
-  const { data, error } = await supabase.from('bazaar_purchases').select('id,user_id,purchase_token,order_id,package_name,status,purchased_at,verified_at,subscription_end_date,payment_id').order('created_at', { ascending: false });
+  const { data, error } = await supabase.rpc('admin_list_bazaar_purchases');
   if (error) throw error;
   allBazaarPurchases = data || [];
 }
