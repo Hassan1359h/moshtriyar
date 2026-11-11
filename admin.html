@@ -247,7 +247,7 @@ tbody tr:hover{background:#f8fafc}
 <script type="module">
 import { supabase } from './js/supabase.js';
 let me = null, allProfiles = [], allSpecialCustomers = [], allPayments = [], allSubscriptions = [], allBazaarPurchases = [], allKeys = [], allSites = [], allCustomers = [], settings = {}, paymentFilter = 'pending';
-const EXCLUDED_ACCOUNT_EMAILS = new Set(['hahass12na@gmail.com', 'naderyank2@gmail.com', 'zhilvan96@gmail.com', 'banehk2rebvar@gmail.com']);
+const EXCLUDED_ACCOUNT_EMAILS = new Set(['hahass12na@gmail.com', 'naderyank2@gmail.com', 'zhilvan96@gmail.com']);
 const REAL_PAYMENT_CUTOFF = Date.parse('2026-11-11T05:41:00.000Z');
 const isBazaarGateway = value => ['cafebazaar', 'cafe_bazaar', 'bazaar'].includes(String(value || '').toLowerCase().replace(/[\s-]/g, '_'));
 const isBazaarPayment = payment => isBazaarGateway(payment?.gateway) || isBazaarGateway(payment?.payment_method) || isBazaarGateway(payment?.method);
