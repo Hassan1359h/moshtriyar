@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مشتریان ویژه | مشتری‌یار</title>
+<link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
+<link rel="icon" href="icon-192.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f1f5f9;color:#0f172a;line-height:1.7;padding-bottom:40px}
+.header{background:#1e293b;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;gap:8px;position:sticky;top:0;z-index:100}
+.header h1{font-size:16px;font-weight:800;margin-left:auto}
+.header a{color:#fff;text-decoration:none;background:#334155;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:700;white-space:nowrap}
+.header a.blue{background:#2563eb}
+.container{max-width:1100px;margin:0 auto;padding:20px}
+.card{background:#fff;border-radius:16px;padding:20px;margin-bottom:18px;box-shadow:0 2px 10px rgba(0,0,0,.04)}
+.card h2{font-size:16px;font-weight:800;margin-bottom:14px}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px}
+.stat{background:#f8fafc;border-radius:12px;padding:14px;text-align:center}
+.stat b{font-size:24px;display:block;font-weight:900}
+.stat span{font-size:11px;color:#64748b;font-weight:700}
+.filters{display:grid;grid-template-columns:1fr 190px;gap:10px}
+.search,.filter-select{width:100%;padding:13px 14px;border:2px solid #e2e8f0;border-radius:12px;font-family:inherit;font-size:13px;outline:none;background:#f8fafc}
+.search:focus,.filter-select:focus{border-color:#2563eb;background:#fff}
+.customer{background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;border-right:5px solid #2563eb;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.customer.expired{border-right-color:#dc2626}.customer.blocked{border-right-color:#d97706}.customer.archived{border-right-color:#64748b}
+.customer-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px}
+.customer-name{font-size:15px;font-weight:900}
+.customer-email{font-size:11px;color:#64748b;direction:ltr;text-align:right;margin-top:3px;word-break:break-all}
+.badge{padding:4px 10px;border-radius:20px;font-size:10px;font-weight:800;white-space:nowrap}
+.badge.active{background:#dcfce7;color:#166534}.badge.expired{background:#fee2e2;color:#991b1b}.badge.blocked{background:#fef3c7;color:#92400e}.badge.archived{background:#e2e8f0;color:#334155}.badge.trial{background:#dbeafe;color:#1e40af}
+.info{background:#f8fafc;border-radius:10px;padding:10px}
+.info div{display:flex;justify-content:space-between;gap:10px;padding:4px 0;font-size:12px}
+.info span:first-child{color:#64748b;font-weight:600}.info span:last-child{font-weight:700;text-align:left}
+.phone{direction:ltr}.days-active{color:#16a34a;font-weight:900!important}.days-expired{color:#dc2626;font-weight:900!important}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.actions button{flex:1;min-width:100px;border:none;padding:10px;border-radius:10px;font-family:inherit;font-size:11px;font-weight:800;cursor:pointer}
+.actions button:disabled{opacity:.5;cursor:not-allowed}
+.btn-extend{background:#16a34a;color:#fff}.btn-block{background:#fef3c7;color:#92400e}.btn-unblock{background:#dcfce7;color:#166534}.btn-archive{background:#e2e8f0;color:#334155}.btn-delete{background:#fee2e2;color:#991b1b}
+.empty,.loading,.error{text-align:center;padding:40px 20px;border-radius:14px;background:#fff}
+.empty{color:#94a3b8}.loading{color:#64748b}.error{color:#dc2626}
+.notice{margin:0 0 14px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:9px 12px;font-size:11px;line-height:1.9}
+@media(max-width:700px){.stats{grid-template-columns:repeat(2,1fr)}.filters{grid-template-columns:1fr}.header{flex-wrap:wrap}.header h1{width:100%}.customer-head{flex-direction:column}}
+@media(max-width:380px){.actions button{min-width:100%}}
+</style>
+</head>
+<body>
+<header class="header">
+<h1>👑 مشتریان ویژه</h1>
+<a class="blue" href="admin.html">⚙️ مدیریت</a>
+<a href="dashboard.html">← داشبورد</a>
+</header>
+
+<div class="container">
+<div class="card">
+<h2>📊 آمار مشتریان ویژه</h2>
+<div class="stats">
+<div class="stat"><b id="totalCount">0</b><span>کل مشتریان ویژه</span></div>
+<div class="stat"><b id="activeCount">0</b><span>اشتراک پولی فعال</span></div>
+<div class="stat"><b id="expiredCount">0</b><span>اشتراک پولی منقضی</span></div>
+<div class="stat"><b id="trialCount">0</b><span>اشتراک آزمایشی فعال</span></div>
+<div class="stat"><b id="archivedCount">0</b><span>حساب آرشیوشده</span></div>
+</div>
+<p class="notice">
+مشتری ویژه حسابی است که از ۱۱ نوامبر ۲۰۲۶ ساعت ۰۹:۱۱ به وقت ایران به بعد، دست‌کم یک خرید واقعی داشته باشد: پرداخت کارت‌به‌کارتِ مثبت و تأییدشده مدیر که به اشتراک همان کاربر متصل باشد، یا خرید کافه‌بازار با وضعیت verified در سوابق سرور و اشتراک متناظر همان کاربر. سوابق پیش از این زمان آزمایشی محسوب می‌شوند. ویژه‌بودن حساب دائمی است و از وضعیت فعلی اشتراک جداست.
+</p>
+<div class="filters">
+<input id="search" class="search" type="search" placeholder="🔍 جستجو نام، ایمیل، شماره یا نوع کسب‌وکار...">
+<select id="statusFilter" class="filter-select">
+<option value="normal">حساب‌های عادی</option>
+<option value="blocked">حساب‌های مسدود</option>
+<option value="archived">حساب‌های آرشیوشده</option>
+<option value="all">همه حساب‌ها</option>
+</select>
+</div>
+</div>
+<div id="list"><div class="loading">در حال بارگذاری مشتریان ویژه...</div></div>
+</div>
+
+<script type="module">
+import { supabase } from './js/supabase.js';
+
+const REAL_PURCHASES_START_AT = '2026-11-11T05:41:00.000Z';
+const ADMIN_EMAILS = ['hahass12na@gmail.com'];
+const EXCLUDED_ACCOUNT_EMAILS = new Set([
+    'hahass12na@gmail.com',
+    'naderyank2@gmail.com',
+    'zhilvan96@gmail.com',
+    'banehk2rebvar@gmail.com'
+]);
+
+const list = document.getElementById('list');
+const search = document.getElementById('search');
+const statusFilter = document.getElementById('statusFilter');
+const totalCount = document.getElementById('totalCount');
+const activeCount = document.getElementById('activeCount');
+const expiredCount = document.getElementById('expiredCount');
+const archivedCount = document.getElementById('archivedCount');
+const trialCount = document.getElementById('trialCount');
+
+let customers = [];
+let subscriptions = [];
+let payments = [];
+let bazaarPurchases = [];
+let qualifyingUserIds = new Set();
+let verifiedPaymentIds = new Set();
+let verifiedBazaarUserIds = new Set();
+let verifiedBazaarPurchases = [];
+
+const BUSINESS_TYPES = {
+    shop:'فروشگاه', medical:'پزشکی', dental:'دندانپزشکی', lab:'آزمایشگاه',
+    salon:'سالن زیبایی', gym:'باشگاه ورزشی', school:'مدرسه', legal:'خدمات حقوقی',
+    realestate:'املاک', technical:'خدمات فنی', general:'عمومی',
+    supermarket:'سوپرمارکت', food_distribution:'پخش مواد غذایی',
+    pharma_distribution:'پخش دارویی', representative:'نمایندگی',
+    wholesale:'عمده‌فروشی', hygiene_distribution:'پخش محصولات بهداشتی'
+};
+
+const esc = value => String(value ?? '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+
+const isBazaarGateway = value =>
+    ['cafebazaar','cafe_bazaar','bazaar'].includes(String(value || '').toLowerCase().replace(/[\s-]+/g,'_'));
+
+const isAfterCutoff = value => {
+    const time = new Date(value || '').getTime();
+    return Number.isFinite(time) && time >= new Date(REAL_PURCHASES_START_AT).getTime();
+};
+
+function formatDate(value) {
+    if (!value) return '-';
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? '-' : date.toLocaleDateString('fa-IR');
+}
+
+function getSubscriptionStatus(date) {
+    if (!date) return {active:false, days:0};
+    const time = new Date(date).getTime();
+    if (!Number.isFinite(time)) return {active:false, days:0};
+    const days = Math.ceil((time - Date.now()) / 86400000);
+    return {active:days > 0, days:Math.max(days,0)};
+}
+
+function businessLabel(type) {
+    return type ? (BUSINESS_TYPES[type] || type) : 'مشخص نشده';
+}
+
+async function getSession() {
+    const {data,error} = await supabase.auth.getSession();
+    if (error) throw error;
+    return data.session;
+}
+
+async function checkAdmin() {
+    const session = await getSession();
+    if (!session) {
+        window.location.replace('login.html');
+        return false;
+    }
+
+    const user = session.user;
+    const email = String(user.email || '').toLowerCase();
+    const isAdmin = user.app_metadata?.role === 'admin' ||
+        user.user_metadata?.role === 'admin' || ADMIN_EMAILS.includes(email);
+
+    if (!isAdmin) {
+        list.innerHTML = `<div class="error">⛔ دسترسی غیرمجاز<br><small>فقط مدیر سیستم می‌تواند مشتریان ویژه را مشاهده کند.</small></div>`;
+        return false;
+    }
+    return true;
+}
+
+/*
+ * برای کارت‌به‌کارت، وجود پرداخت approved و مبلغ مثبت به‌تنهایی کافی نیست:
+ * باید پرداخت بعد از مرز زمانی باشد و payment_id آن به اشتراک همان کاربر وصل باشد.
+ *
+ * برای بازار، وضعیت verified در جدول bazaar_purchases معیار اثبات خرید است.
+ * اشتراک بازار نیز با SKU و پلن متناظر، کاربر و زمان خرید تطبیق داده می‌شود.
+ */
+function bazaarPlan(productId) {
+    const sku = String(productId || '').toLowerCase();
+    return ({
+        moshtriyar_pro_30:'pro',
+        business_30:'business',
+        vip_yearly:'vip_yearly', moshtriyar_vip_yearly:'vip_yearly'
+    })[sku] || null;
+}
+
+function bazaarPurchaseTime(purchase) {
+    return purchase?.purchased_at || purchase?.created_at || null;
+}
+
+function matchingBazaarSubscriptions(purchase) {
+    const userId = String(purchase.user_id || '');
+    const plan = String(bazaarPlan(purchase.product_id) || '').toLowerCase();
+    const purchaseTime = new Date(bazaarPurchaseTime(purchase) || '').getTime();
+
+    return subscriptions.filter(sub => {
+        if (String(sub.user_id) !== userId || !isBazaarGateway(sub.gateway)) return false;
+        if (purchase.payment_id && String(sub.payment_id || '') === String(purchase.payment_id)) return true;
+        if (purchase.id && String(sub.payment_id || '') === String(purchase.id)) return true;
+        const subTime = new Date(sub.created_at || sub.started_at || '').getTime();
+        return !!plan && String(sub.plan || '').toLowerCase() === plan &&
+            Number.isFinite(purchaseTime) && Number.isFinite(subTime) &&
+            subTime >= purchaseTime && subTime - purchaseTime <= 10 * 60 * 1000;
+    });
+}
+
+function rebuildVerifiedPurchases() {
+    verifiedPaymentIds = new Set();
+    verifiedBazaarUserIds = new Set();
+    qualifyingUserIds = new Set();
+
+    const eligibleUsers = new Set(customers.map(user => String(user.id)));
+    const linkedManualPaymentIds = new Set(subscriptions
+        .filter(sub => !isBazaarGateway(sub.gateway) && sub.payment_id)
+        .map(sub => String(sub.payment_id)));
+
+    for (const payment of payments) {
+        const userId = String(payment.user_id || '');
+        if (!eligibleUsers.has(userId) || !linkedManualPaymentIds.has(String(payment.id))) continue;
+        if (String(payment.status || '').toLowerCase() !== 'approved' ||
+            Number(payment.amount || 0) <= 0 || !isAfterCutoff(payment.created_at)) continue;
+        if (isBazaarGateway(payment.gateway || payment.payment_method || payment.method)) continue;
+        const linkedSubscription = subscriptions.some(sub =>
+            !isBazaarGateway(sub.gateway) && String(sub.user_id) === userId &&
+            String(sub.payment_id || '') === String(payment.id));
+        if (!linkedSubscription) continue;
+        verifiedPaymentIds.add(String(payment.id));
+        qualifyingUserIds.add(userId);
+    }
+
+    // خرید Bazaar فقط با رکورد verified و اشتراک متناظر همان کاربر معتبر است.
+    verifiedBazaarPurchases = bazaarPurchases.filter(purchase => {
+        const userId = String(purchase.user_id || '');
+        return eligibleUsers.has(userId) &&
+            String(purchase.status || '').toLowerCase() === 'verified' &&
+            !!purchase.product_id && isAfterCutoff(bazaarPurchaseTime(purchase)) &&
+            matchingBazaarSubscriptions(purchase).length > 0;
+    });
+
+    for (const purchase of verifiedBazaarPurchases) {
+        verifiedBazaarUserIds.add(String(purchase.user_id));
+        qualifyingUserIds.add(String(purchase.user_id));
+    }
+
+    customers = customers.filter(user => qualifyingUserIds.has(String(user.id)));
+}
+
+function verifiedSubscriptionsFor(userId) {
+    const id = String(userId);
+    return subscriptions.filter(sub => {
+        if (String(sub.user_id) !== id) return false;
+        if (!isBazaarGateway(sub.gateway)) {
+            return !!sub.payment_id && verifiedPaymentIds.has(String(sub.payment_id));
+        }
+        return verifiedBazaarPurchases.some(purchase =>
+            String(purchase.user_id) === id &&
+            matchingBazaarSubscriptions(purchase).some(match => String(match.id) === String(sub.id)));
+    }).sort((a,b) =>
+        new Date(b.created_at || b.started_at || 0) -
+        new Date(a.created_at || a.started_at || 0)
+    );
+}
+
+function paidSubscriptionStatus(userId) {
+    const rows = verifiedSubscriptionsFor(userId);
+    const now = Date.now();
+
+    const active = rows.find(sub =>
+        String(sub.status || '').toLowerCase() === 'active' &&
+        sub.expires_at &&
+        new Date(sub.expires_at).getTime() > now
+    );
+
+    const latest = active || rows[0] || null;
+    if (!latest) return {active:false, days:0, subscription:null};
+
+    const expiry = latest.expires_at ? new Date(latest.expires_at).getTime() : 0;
+    const days = expiry ? Math.ceil((expiry - now) / 86400000) : 0;
+    return {active:!!active, days:Math.max(days,0), subscription:latest};
+}
+
+function trialStatus(user) {
+    const isTrial = String(user.plan || '').toLowerCase() === 'trial';
+    return isTrial ? getSubscriptionStatus(user.subscription_end_date) : {active:false,days:0};
+}
+
+function updateStats() {
+    const visible = customers.filter(user => !user.is_deleted);
+    const active = visible.filter(user => !user.is_blocked && paidSubscriptionStatus(user.id).active);
+    const trials = visible.filter(user => !user.is_blocked && !paidSubscriptionStatus(user.id).active && trialStatus(user).active);
+    const expired = visible.filter(user =>
+        !user.is_blocked &&
+        !paidSubscriptionStatus(user.id).active &&
+        !trialStatus(user).active
+    );
+
+    totalCount.textContent = customers.length;
+    activeCount.textContent = active.length;
+    expiredCount.textContent = expired.length;
+    trialCount.textContent = trials.length;
+    archivedCount.textContent = customers.filter(user => user.is_deleted).length;
+}
+
+function getStatusBadge(user) {
+    if (user.is_deleted) return '<span class="badge archived">📦 آرشیوشده</span>';
+    if (user.is_blocked) return '<span class="badge blocked">⛔ مسدود</span>';
+
+    const paid = paidSubscriptionStatus(user.id);
+    if (paid.active) return '<span class="badge active">🟢 اشتراک پولی فعال</span>';
+
+    const trial = trialStatus(user);
+    if (trial.active) return '<span class="badge trial">🆓 اشتراک آزمایشی فعال</span>';
+
+    if (paid.subscription) return '<span class="badge expired">🔴 اشتراک پولی منقضی</span>';
+    if (String(user.plan || '').toLowerCase() === 'trial') {
+        return '<span class="badge expired">🆓 دوره آزمایشی پایان‌یافته</span>';
+    }
+    return '<span class="badge expired">🔴 اشتراک فعال ندارد</span>';
+}
+
+function render() {
+    const q = search.value.trim().toLowerCase();
+    const filter = statusFilter.value;
+
+    const filtered = customers.filter(user => {
+        const text = [
+            user.full_name, user.email, user.phone, businessLabel(user.business_type)
+        ].filter(Boolean).join(' ').toLowerCase();
+
+        if (!text.includes(q)) return false;
+        if (filter === 'normal') return !user.is_deleted && !user.is_blocked;
+        if (filter === 'blocked') return !user.is_deleted && !!user.is_blocked;
+        if (filter === 'archived') return !!user.is_deleted;
+        return true;
+    });
+
+    if (!filtered.length) {
+        list.innerHTML = '<div class="empty">📭 موردی برای نمایش پیدا نشد.</div>';
+        return;
+    }
+
+    list.innerHTML = '';
+
+    filtered.forEach(user => {
+        const paid = paidSubscriptionStatus(user.id);
+        const trial = trialStatus(user);
+        const shownSubscription = paid.subscription;
+        const expiryDate = shownSubscription?.expires_at ||
+            (trial.active || String(user.plan || '').toLowerCase() === 'trial'
+                ? user.subscription_end_date : null);
+        const shownStatus = paid.active ? paid : trial;
+        const daysText = shownStatus.active
+            ? `<span class="days-active">${trial.active && !paid.active ? 'آزمایشی: ' : ''}${shownStatus.days} روز باقی‌مانده</span>`
+            : `<span class="days-expired">${paid.subscription ? 'اشتراک پولی منقضی شده' : 'اشتراک فعال ندارد'}</span>`;
+
+        const div = document.createElement('div');
+        div.className = 'customer';
+        if (user.is_deleted) div.classList.add('archived');
+        else if (user.is_blocked) div.classList.add('blocked');
+        else if (!paid.active && !trial.active) div.classList.add('expired');
+
+        let actionButtons = '';
+        if (user.is_deleted) {
+            actionButtons = `<button class="btn-delete" data-action="delete" data-user-id="${esc(user.id)}">🗑️ حذف دائمی</button>`;
+        } else {
+            actionButtons = `
+                <button class="btn-extend" data-action="extend" data-user-id="${esc(user.id)}">➕ تمدید اشتراک</button>
+                ${user.is_blocked
+                    ? `<button class="btn-unblock" data-action="unblock" data-user-id="${esc(user.id)}">🔓 رفع مسدودی</button>`
+                    : `<button class="btn-block" data-action="block" data-user-id="${esc(user.id)}">⛔ مسدودسازی</button>`}
+                <button class="btn-archive" data-action="archive" data-user-id="${esc(user.id)}">📦 آرشیو</button>
+                <button class="btn-delete" data-action="delete" data-user-id="${esc(user.id)}">🗑️ حذف دائمی</button>`;
+        }
+
+        div.innerHTML = `
+            <div class="customer-head">
+                <div>
+                    <div class="customer-name">👑 ${esc(user.full_name || 'بدون نام')}</div>
+                    <div class="customer-email">${esc(user.email || '-')}</div>
+                </div>
+                ${getStatusBadge(user)}
+            </div>
+            <div class="info">
+                <div><span>📱 شماره تماس</span><span class="phone">${esc(user.phone || '-')}</span></div>
+                <div><span>🏢 نوع کسب‌وکار</span><span>${esc(businessLabel(user.business_type))}</span></div>
+                <div><span>📅 تاریخ ثبت‌نام</span><span>${formatDate(user.created_at)}</span></div>
+                <div><span>💳 وضعیت اشتراک</span>${user.is_deleted || user.is_blocked ? '<span>-</span>' : daysText}</div>
+                <div><span>📅 پایان اشتراک معتبر</span><span>${formatDate(expiryDate)}</span></div>
+                <div><span>🔄 آخرین بروزرسانی پروفایل</span><span>${formatDate(user.updated_at)}</span></div>
+                ${user.is_deleted ? `<div><span>📦 تاریخ آرشیو</span><span>${formatDate(user.deleted_at)}</span></div>` : ''}
+            </div>
+            <div class="actions">${actionButtons}</div>`;
+        list.appendChild(div);
+    });
+}
+
+async function loadCustomers() {
+    const allowed = await checkAdmin();
+    if (!allowed) return;
+
+    const {data,error} = await supabase
+        .from('profiles')
+        .select('id,full_name,phone,created_at,updated_at,email,role,plan,subscription_end_date,business_type,is_blocked,blocked_at,is_deleted,deleted_at')
+        .order('created_at',{ascending:false});
+
+    if (error) throw error;
+
+    customers = (data || []).filter(user => {
+        const role = String(user.role || '').toLowerCase();
+        const email = String(user.email || '').toLowerCase();
+        return role !== 'admin' && !EXCLUDED_ACCOUNT_EMAILS.has(email);
+    });
+
+    const [subscriptionResult,paymentResult,bazaarResult] = await Promise.all([
+        supabase.from('subscriptions')
+            .select('id,user_id,plan,status,started_at,expires_at,gateway,payment_id,created_at')
+            .order('created_at',{ascending:false}),
+        supabase.from('payments')
+            .select('id,user_id,amount,status,created_at')
+            .order('created_at',{ascending:false}),
+        supabase.from('bazaar_purchases')
+            .select('id,user_id,product_id,payment_id,status,purchased_at,verified_at,created_at,subscription_end_date,discount_id')
+            .eq('status','verified')
+    ]);
+
+    if (subscriptionResult.error) throw subscriptionResult.error;
+    if (paymentResult.error) throw paymentResult.error;
+    if (bazaarResult.error) {
+        throw new Error('خواندن سوابق تأییدشده کافه‌بازار ممکن نیست: ' + bazaarResult.error.message);
+    }
+
+    subscriptions = subscriptionResult.data || [];
+    payments = paymentResult.data || [];
+    bazaarPurchases = bazaarResult.data || [];
+
+    rebuildVerifiedPurchases();
+    updateStats();
+    render();
+}
+
+async function adminAction(userId, action) {
+    const session = await getSession();
+    if (!session) throw new Error('جلسه مدیر منقضی شده است.');
+
+    const response = await fetch('/api/admin/delete-user', {
+        method:'POST',
+        headers:{
+            'Content-Type':'application/json',
+            'Authorization':'Bearer ' + session.access_token
+        },
+        body:JSON.stringify({userId,action})
+    });
+
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+        if (result.dependencies) {
+            const details = Object.entries(result.dependencies)
+                .map(([key,count]) => `${key}: ${count}`).join('\n');
+            throw new Error(`${result.error || 'حذف مجاز نیست.'}\n\nاطلاعات وابسته:\n${details}`);
+        }
+        throw new Error(result.error || 'عملیات انجام نشد.');
+    }
+    return result;
+}
+
+list.addEventListener('click', async event => {
+    const button = event.target.closest('button[data-action]');
+    if (!button || button.disabled) return;
+
+    const userId = button.dataset.userId;
+    const action = button.dataset.action;
+    const user = customers.find(item => String(item.id) === String(userId));
+    if (!user) return;
+
+    if (action === 'extend') {
+        const daysInput = prompt('چند روز به اشتراک اضافه شود؟\nمثلاً: 30');
+        if (daysInput === null) return;
+        const days = Number(daysInput);
+        if (!Number.isInteger(days) || days <= 0 || days > 3650) {
+            alert('تعداد روز معتبر نیست. عددی بین 1 تا 3650 وارد کنید.');
+            return;
+        }
+
+        const session = await getSession();
+        if (!session) {
+            alert('جلسه مدیر منقضی شده است.');
+            return;
+        }
+
+        const oldText = button.textContent;
+        button.disabled = true;
+        button.textContent = '⏳ در حال تمدید...';
+
+        try {
+            const response = await fetch('/api/extend-subscription',{
+                method:'POST',
+                headers:{
+                    'Content-Type':'application/json',
+                    'Authorization':`Bearer ${session.access_token}`
+                },
+                body:JSON.stringify({userId,days})
+            });
+            const result = await response.json();
+            if (!response.ok || !result.success) throw new Error(result.error || 'تمدید اشتراک انجام نشد.');
+            alert(`✅ ${result.message}\n\nپایان جدید: ${formatDate(result.endDate)}`);
+            await loadCustomers();
+        } catch (error) {
+            alert('❌ خطا در تمدید:\n' + error.message);
+            button.disabled = false;
+            button.textContent = oldText;
+        }
+        return;
+    }
+
+    if (action === 'block' && !confirm(`حساب «${user.full_name || user.email}» مسدود شود؟`)) return;
+    if (action === 'unblock' && !confirm(`مسدودیت حساب «${user.full_name || user.email}» برداشته شود؟`)) return;
+    if (action === 'archive' && !confirm(`حساب «${user.full_name || user.email}» به آرشیو منتقل شود؟\n\nاطلاعات این حساب حذف نمی‌شود، اما ورود آن مسدود خواهد شد.`)) return;
+
+    if (action === 'delete') {
+        const email = String(user.email || '');
+        if (!confirm(`⚠️ حذف دائمی حساب «${user.full_name || email}»؟\n\nفقط حساب‌های بدون اطلاعات وابسته حذف می‌شوند.`)) return;
+        if (!confirm('تأیید نهایی:\n\nاگر حساب دارای اطلاعات مالی، مشتری، سایت یا سوابق باشد، حذف رد خواهد شد.')) return;
+        if (email) {
+            const typedEmail = prompt('برای تأیید، ایمیل حساب را دقیقاً وارد کنید:\n' + email);
+            if (typedEmail === null || typedEmail.trim().toLowerCase() !== email.toLowerCase()) {
+                alert('ایمیل واردشده مطابقت ندارد. حذف لغو شد.');
+                return;
+            }
+        }
+    }
+
+    const oldText = button.textContent;
+    button.disabled = true;
+    button.textContent = '⏳ لطفاً صبر کنید...';
+
+    try {
+        const result = await adminAction(userId,action);
+        alert('✅ ' + (result.message || 'عملیات با موفقیت انجام شد.'));
+        await loadCustomers();
+    } catch (error) {
+        console.error('Admin action error:',error);
+        alert('❌ ' + error.message);
+        button.disabled = false;
+        button.textContent = oldText;
+    }
+});
+
+search.addEventListener('input',render);
+statusFilter.addEventListener('change',render);
+
+loadCustomers().catch(error => {
+    console.error('Special customers error:',error);
+    list.innerHTML = `<div class="error">⚠️ خطا در بارگذاری اطلاعات<br><small>${esc(error.message)}</small></div>`;
+});
+</script>
+</body>
+</html>
