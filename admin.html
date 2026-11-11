@@ -405,21 +405,75 @@ function openSiteModal(siteId) {
 }
 window.closeModal = function () { document.getElementById('modalOverlay').classList.remove('open'); };
 document.getElementById('modalOverlay').addEventListener('click', (e) => { if (e.target.id === 'modalOverlay') closeModal(); });
+
 function renderPayments() {
-  document.getElementById('payPending').textContent = faNum(allPayments.filter(p => p.status === 'pending').length);
-  document.getElementById('payApproved').textContent = faNum(allPayments.filter(p => p.status === 'approved').length);
-  document.getElementById('payRejected').textContent = faNum(allPayments.filter(p => p.status === 'rejected').length);
+  // فقط خریدهای واقعی احرازشده در آمار خرید واقعی شمرده شوند
+  document.getElementById('payPending').textContent =
+    faNum(allPayments.filter(p => p.status === 'pending').length);
+
+  document.getElementById('payApproved').textContent =
+    faNum(allPayments.filter(p => verifiedPaymentIds.has(String(p.id))).length);
+
+  document.getElementById('payRejected').textContent =
+    faNum(allPayments.filter(p => p.status === 'rejected').length);
+
   const list = document.getElementById('payList');
-  const items = paymentFilter === 'all' ? allPayments : allPayments.filter(p => p.status === paymentFilter);
-  if (!items.length) { list.innerHTML = '<div class="empty">📭 پرداختی در این وضعیت نیست</div>'; return; }
+  const items = paymentFilter === 'all'
+    ? allPayments
+    : allPayments.filter(p => p.status === paymentFilter);
+
+  if (!items.length) {
+    list.innerHTML = '<div class="empty">📭 پرداختی در این وضعیت نیست</div>';
+    return;
+  }
+
   list.innerHTML = items.map(p => {
-    const b = p.status === 'pending' ? '⏳ در انتظار' : p.status === 'approved' ? '✅ تایید' : '❌ رد';
-    const actions = p.status === 'pending' ? '<div class="actions"><button class="btn btn-ok" data-approve="' + esc(p.id) + '">✅ تایید و فعال‌سازی</button><button class="btn btn-no" data-reject="' + esc(p.id) + '">❌ رد</button></div>' : '';
-    return '<div class="pay ' + esc(p.status) + '"><div class="pay-head"><div><div class="pay-user">' + esc(p.prof?.full_name || 'بدون نام') + '</div><div class="pay-email">' + esc(p.prof?.email || '—') + '</div></div><span class="badge ' + esc(p.status) + '">' + b + '</span></div><div class="pay-info"><div><span>پلن</span><span>' + esc(p.plan_name || '—') + '</span></div><div><span>مبلغ</span><span>' + faNum(p.amount) + ' تومان</span></div><div><span>مدت</span><span>' + esc(p.days || 30) + ' روز</span></div><div><span>کد پیگیری</span><span class="code">' + esc(p.tracking_code || '—') + '</span></div><div><span>تاریخ</span><span style="font-weight:400;font-size:11px;">' + faDateTime(p.created_at) + '</span></div></div>' + actions + '</div>';
+    const isVerified = verifiedPaymentIds.has(String(p.id));
+
+    let badge = '';
+    if (p.status === 'pending') {
+      badge = '⏳ در انتظار بررسی';
+    } else if (p.status === 'approved' && isVerified) {
+      badge = '✅ خرید واقعی احرازشده';
+    } else if (p.status === 'approved') {
+      badge = '⚠️ تأییدشده؛ خارج از درآمد واقعی';
+    } else if (p.status === 'rejected') {
+      badge = '❌ ردشده';
+    } else {
+      badge = esc(p.status || 'نامشخص');
+    }
+
+    const actions = p.status === 'pending'
+      ? '<div class="actions"><button class="btn btn-ok" data-approve="' +
+        esc(p.id) +
+        '">✅ تایید و فعال‌سازی</button><button class="btn btn-no" data-reject="' +
+        esc(p.id) + '">❌ رد</button></div>'
+      : '';
+
+    return '<div class="pay ' + esc(p.status) + '">' +
+      '<div class="pay-head"><div>' +
+      '<div class="pay-user">' + esc(p.prof?.full_name || 'بدون نام') + '</div>' +
+      '<div class="pay-email">' + esc(p.prof?.email || '—') + '</div>' +
+      '</div><span class="badge ' + esc(p.status) + '">' + badge + '</span></div>' +
+      '<div class="pay-info">' +
+      '<div><span>پلن</span><span>' + esc(p.plan_name || '—') + '</span></div>' +
+      '<div><span>مبلغ</span><span>' + faNum(p.amount) + ' تومان</span></div>' +
+      '<div><span>مدت</span><span>' + esc(p.days || 30) + ' روز</span></div>' +
+      '<div><span>کد پیگیری</span><span class="code">' + esc(p.tracking_code || '—') + '</span></div>' +
+      '<div><span>تاریخ</span><span style="font-weight:400;font-size:11px;">' +
+      faDateTime(p.created_at) + '</span></div>' +
+      '</div>' + actions + '</div>';
   }).join('');
-  list.querySelectorAll('[data-approve]').forEach(b => b.onclick = () => approvePayment(b.dataset.approve, b));
-  list.querySelectorAll('[data-reject]').forEach(b => b.onclick = () => rejectPayment(b.dataset.reject, b));
+
+  list.querySelectorAll('[data-approve]').forEach(b => {
+    b.onclick = () => approvePayment(b.dataset.approve, b);
+  });
+
+  list.querySelectorAll('[data-reject]').forEach(b => {
+    b.onclick = () => rejectPayment(b.dataset.reject, b);
+  });
 }
+
 async function approvePayment(id, btn) {
   if (!confirm('این پرداخت تایید و اشتراک فعال شود؟')) return;
   btn.disabled = true; btn.textContent = '⏳ در حال تایید...';
