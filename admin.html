@@ -636,7 +636,12 @@ alert(
     return '<div class="site-item">' +
       '<div class="site-head">' +
       '<div class="site-name">' +
-      esc(s.brand_name || s.name || s.domain || 'بدون نام') +
+      esc(
+  s.brand_name ||
+  (s.domain
+    ? s.domain.replace(/^https?:\/\//i, '').replace(/^www\./i, '').split('/')[0].split('.')[0]
+    : 'بدون نام')
+)
       '</div>' +
       '<span class="site-plan ' + esc(planClass) + '">' +
       label +
