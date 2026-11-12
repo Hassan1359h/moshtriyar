@@ -565,10 +565,36 @@ function renderSites() {
     return isRealBuyer || hasGift;
   });
 
-  if (!eligibleSites.length) {
-    list.innerHTML = '<div class="empty">📭 هیچ سایت واجد شرایطی برای نمایش وجود ندارد</div>';
-    return;
-  }
+ 
+if (!eligibleSites.length) {
+  const rebvarId = '4dbe41fe-c5d4-4b33-a986-9febe6554d3c';
+
+  const rebvarSite = allSites.find(
+    s => String(s.user_id) === rebvarId
+  );
+
+  const rebvarGift = allSubscriptions.find(s =>
+    String(s.user_id) === rebvarId &&
+    String(s.gateway || '').toLowerCase() === 'promotional_gift' &&
+    String(s.status || '').toLowerCase() === 'active' &&
+    s.expires_at &&
+    new Date(s.expires_at).getTime() > Date.now()
+  );
+
+  list.innerHTML = `
+    <div class="empty" style="color:#334155;text-align:right;direction:rtl;">
+      <b>گزارش تشخیصی سایت‌ها</b>
+      <p>تعداد سایت‌های دریافت‌شده: ${allSites.length}</p>
+      <p>تعداد اشتراک‌های دریافت‌شده: ${allSubscriptions.length}</p>
+      <p>سایت ریبوار: ${rebvarSite ? 'پیدا شد' : 'پیدا نشد'}</p>
+      <p>هدیه معتبر ریبوار: ${rebvarGift ? 'پیدا شد' : 'پیدا نشد'}</p>
+      <p>خریدهای واقعی احرازشده: ${verifiedBuyerIds.size}</p>
+      <p>سایت‌های واجد شرایط: ${eligibleSites.length}</p>
+    </div>
+  `;
+  return;
+}
+ 
 alert(
   'سایت‌ها: ' + allSites.length +
   '\nاشتراک‌ها: ' + allSubscriptions.length +
