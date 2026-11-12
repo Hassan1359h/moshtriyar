@@ -569,9 +569,19 @@ function renderSites() {
     list.innerHTML = '<div class="empty">📭 هیچ سایت واجد شرایطی برای نمایش وجود ندارد</div>';
     return;
   }
-  console.log('DIAGNOSTIC SITES:', allSites);
-console.log('DIAGNOSTIC SUBSCRIPTIONS:', allSubscriptions);
-console.log('ELIGIBLE SITES:', eligibleSites);
+alert(
+  'سایت‌ها: ' + allSites.length +
+  '\nاشتراک‌ها: ' + allSubscriptions.length +
+  '\nخریدهای واقعی: ' + verifiedBuyerIds.size +
+  '\nسایت‌های واجد شرایط: ' + eligibleSites.length +
+  '\n\nسایت ریبوار: ' +
+  allSites.some(s => s.user_id === '4dbe41fe-c5d4-4b33-a986-9febe6554d3c') +
+  '\nهدیه ریبوار: ' +
+  !!allSubscriptions.find(s =>
+    s.user_id === '4dbe41fe-c5d4-4b33-a986-9febe6554d3c' &&
+    s.gateway === 'promotional_gift'
+  )
+);
 
   list.innerHTML = eligibleSites.map(s => {
     const userId = String(s.user_id || '');
