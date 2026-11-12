@@ -624,33 +624,94 @@ if (!eligibleSites.length) {
       '<div class="site-name">' +
       esc(
   s.brand_name ||
-  (s.domain
-    ? s.domain.replace(/^https?:\/\//i, '').replace(/^www\./i, '').split('/')[0].split('.')[0]
-    : 'بدون نام')
-)
-      '</div>' +
-      '<span class="site-plan ' + esc(planClass) + '">' +
-      label +
-      '</span>' +
-      '</div>' +
-      '<div class="site-domain">👤 ' +
-      esc(s.prof?.full_name || s.prof?.email || 'کاربر ناشناس') +
-      '</div>' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;flex-wrap:wrap;gap:6px;">' +
-      '<span style="font-size:11px;color:var(--muted);direction:ltr;">' +
-      esc(s.domain || '') +
-      '</span>' +
-      '<span style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:800;background:' +
-      (s.active ? 'var(--success-light)' : 'var(--warning-light)') +
-      ';color:' +
-      (s.active ? '#166534' : '#92400e') +
-      ';">' +
-      (s.active ? '✅ ویجت فعال' : '⏳ ویجت غیرفعال') +
-      '</span>' +
-      '</div>' +
-      '</div>';
+
+function renderSites() {
+  const list = document.getElementById('sitesList');
+
+  function getValidGift(userId) {
+    return allSubscriptions.find(s =>
+      String(s.user_id) === String(userId) &&
+      String(s.gateway || '').toLowerCase() === 'promotional_gift' &&
+      String(s.status || '').toLowerCase() === 'active' &&
+      s.expires_at &&
+      new Date(s.expires_at).getTime() > Date.now()
+    ) || null;
+  }
+
+  const eligibleSites = allSites.filter(s => {
+    const userId = String(s.user_id || '');
+    return verifiedBuyerIds.has(userId) || !!getValidGift(userId);
+  });
+
+  if (!eligibleSites.length) {
+    list.innerHTML =
+      '<div class="empty">📭 هیچ سایت واجد شرایطی برای نمایش وجود ندارد</div>';
+    return;
+  }
+
+  list.innerHTML = eligibleSites.map(s => {
+    const userId = String(s.user_id || '');
+    const isRealBuyer = verifiedBuyerIds.has(userId);
+    const gift = getValidGift(userId);
+
+    const domain = String(s.domain || '')
+      .replace(/^https?:\/\//i, '')
+      .replace(/^www\./i, '')
+      .split('/')[0];
+
+    const siteName = s.brand_name || domain.split('.')[0] || 'بدون نام';
+    const owner = s.prof?.full_name || s.prof?.email || 'کاربر ناشناس';
+
+    let label = '';
+    let planClass = '';
+
+    if (gift && !isRealBuyer) {
+      label = '🎁 رایگان – تبلیغاتی';
+      planClass = 'gift';
+    } else if (isRealBuyer) {
+      const sub = currentVerifiedSubscription(userId);
+      const plan = sub?.plan || s.prof?.plan || 'trial';
+
+      label = plan === 'pro'
+        ? '💎 حرفه‌ای'
+        : plan === 'business'
+          ? '🏢 کسب‌وکار'
+          : '👑 مشتری ویژه';
+
+      planClass = plan;
+    }
+
+    const widgetStatus = s.active
+      ? '✅ ویجت فعال'
+      : '⏳ ویجت غیرفعال';
+
+    return `
+      <div class="site-item">
+        <div class="site-head">
+          <div class="site-name">${esc(siteName)}</div>
+          <span class="site-plan ${esc(planClass)}">
+            ${label}
+          </span>
+        </div>
+
+        <div class="site-domain">
+          👤 مالک سایت: ${esc(owner)}
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;flex-wrap:wrap;gap:6px;">
+          <span style="font-size:11px;color:var(--muted);direction:ltr;">
+            🌐 ${esc(domain)}
+          </span>
+
+          <span style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:800;background:${s.active ? 'var(--success-light)' : 'var(--warning-light)'};color:${s.active ? '#166534' : '#92400e'};">
+            ${widgetStatus}
+          </span>
+        </div>
+      </div>
+    `;
   }).join('');
 }
+
 
 function renderKeys() {
   const list = document.getElementById('keysList');
