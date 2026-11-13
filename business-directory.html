@@ -242,7 +242,7 @@ function renderCard(b, rating) {
     const location = [b.province, b.city].filter(Boolean).join('، ');
 
     return `
-    <article class="card">
+    <article class="card" id="business-${escapeHTML(b.id)}" data-business-id="${escapeHTML(b.id)}">
         <div class="cover">${cover}</div>
         <div class="content">
             <h2 class="name">${escapeHTML(b.business_name)}</h2>
