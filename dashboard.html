@@ -287,8 +287,8 @@ async function init() {
     if (!session) { window.location.href = 'login.html'; return; }
     me = session.user;
     await loadProfile();
-    // 🚀 پر کردن خودکار لینک کارت ویزیت بر اساس آیدی کاربر
-mySmartCardUrl = 'https://moshtariyar.ir/c/' + me.id.substring(0, 8); // فعلاً ۸ کاراکتر اول ID رو برمی‌داریم
+    // 🚀 پر کردن خودکار لینک کارت ویزیت با دامنه صحیح
+mySmartCardUrl = 'https://moshtriyar.ir/business-profile.html?id=' + me.id.substring(0, 8);
 const linkEl = $('smartCardLinkDisplay');
 if (linkEl) linkEl.textContent = mySmartCardUrl;
     myBusinessType = await loadBusinessType(supabase, me.id);
