@@ -75,38 +75,6 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;li
 <div class="container hidden" id="main">
     <div id="trialBanner" style="display:none;"></div>
     <div class="welcome">
-        <!-- 🚀 ویجت جدید: کارت ویزیت هوشمند (موتور جذب مشتری) -->
-<div class="card" id="smartCardWidget" style="background: linear-gradient(135deg, #1e293b, #0f172a); color: white; border: none; position: relative; overflow: hidden; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.3);">
-    <!-- افکت نور پس‌زمینه -->
-    <div style="position: absolute; top: -50px; left: -50px; width: 150px; height: 150px; background: rgba(59, 130, 246, 0.2); border-radius: 50%; filter: blur(30px);"></div>
-    
-    <div class="card-title" style="color: white; margin-bottom: 8px;">
-        <span>💳 کارت ویزیت هوشمند شما</span>
-        <span style="font-size: 10px; background: #2563eb; color: #fff; padding: 4px 8px; border-radius: 20px;">آماده ارسال</span>
-    </div>
-    
-    <p style="font-size: 13px; color: #cbd5e1; margin-bottom: 16px; line-height: 1.6;">
-        با ارسال این لینک به مشتریان، هر کسی که به کارت شما علاقه‌مند شود، به طور خودکار در لیست مشتریان شما ثبت می‌شود.
-    </p>
-
-    <!-- لینک اختصاصی -->
-    <div style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; direction: ltr;">
-        <span id="smartCardLinkDisplay" style="font-family: monospace; color: #93c5fd; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">moshtariyar.ir/c/...</span>
-        <button onclick="copySmartCardLink()" style="background: #3b82f6; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-family: inherit; font-size: 12px; font-weight: bold; cursor: pointer; flex-shrink: 0; margin-left: 8px;">کپی 🔗</button>
-    </div>
-
-    <!-- دکمه‌های اشتراک‌گذاری -->
-    <div style="display: flex; gap: 8px;">
-        <button onclick="shareToWhatsApp()" style="flex: 1; background: #25D366; color: white; border: none; padding: 12px; border-radius: 10px; font-family: inherit; font-weight: bold; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
-            <span style="font-size: 16px;">💬</span> واتساپ
-        </button>
-        
-        <a href="business-profile.html" style="flex: 1; background: rgba(255,255,255,0.1); color: white; text-decoration: none; padding: 12px; border-radius: 10px; font-family: inherit; font-weight: bold; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid rgba(255,255,255,0.2);">
-            <span style="font-size: 16px;">📱</span> مشاهده کارت (QR)
-        </a>
-    </div>
-</div>
-<!-- 🚀 پایان ویجت کارت ویزیت -->
         <h1>سلام <span id="userName">👋</span></h1>
         <div class="store-info">
             <span>مدیر فروشگاه: <strong id="managerName">در حال بارگذاری...</strong></span>
@@ -128,6 +96,40 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;li
     <div class="card" id="todosCard">
         <div class="card-title">🔴 کارهای فوری امروز <span class="badge" id="todoCount">0</span></div>
         <div id="todoList"></div>
+        <!-- 🚀 ویجت کارت ویزیت هوشمند (به عنوان یک اقدام در کارهای فوری) -->
+<div style="margin-top: 16px; padding-top: 16px; border-top: 1px dashed #cbd5e1;">
+    <div style="background: linear-gradient(135deg, #eff6ff, #f8fafc); border: 1px solid #bfdbfe; border-radius: 14px; padding: 16px; position: relative; overflow: hidden;">
+        <!-- افکت نور ملایم -->
+        <div style="position: absolute; top: -30px; left: -30px; width: 100px; height: 100px; background: rgba(59, 130, 246, 0.1); border-radius: 50%; filter: blur(20px);"></div>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-weight: 800; font-size: 14px; color: #1e293b;">💳 کارت ویزیت هوشمند شما</span>
+            <span style="font-size: 10px; background: #2563eb; color: #fff; padding: 2px 8px; border-radius: 20px;">پیشنهاد ویژه</span>
+        </div>
+        
+        <p style="font-size: 12px; color: #475569; margin-bottom: 12px; line-height: 1.6;">
+            برای جذب مشتریان جدید، لینک کارت ویزیت خود را برای آن‌ها ارسال کنید. هر بازدید منجر به ثبت مشتری جدید می‌شود.
+        </p>
+
+        <!-- لینک اختصاصی -->
+        <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; direction: ltr;">
+            <span id="smartCardLinkDisplay" style="font-family: monospace; color: #64748b; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">moshtariyar.ir/c/...</span>
+            <button onclick="copySmartCardLink()" style="background: #3b82f6; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-family: inherit; font-size: 11px; font-weight: bold; cursor: pointer; flex-shrink: 0; margin-left: 8px;">کپی 🔗</button>
+        </div>
+
+        <!-- دکمه‌های اشتراک‌گذاری -->
+        <div style="display: flex; gap: 8px;">
+            <button onclick="shareToWhatsApp()" style="flex: 1; background: #25D366; color: white; border: none; padding: 10px; border-radius: 8px; font-family: inherit; font-weight: bold; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                <span style="font-size: 14px;">💬</span> ارسال به واتساپ
+            </button>
+            
+            <a href="business-profile.html" style="flex: 1; background: #fff; color: #2563eb; text-decoration: none; padding: 10px; border-radius: 8px; font-family: inherit; font-weight: bold; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 4px; border: 1px solid #bfdbfe;">
+                <span style="font-size: 14px;">📱</span> مشاهده کارت
+            </a>
+        </div>
+    </div>
+</div>
+<!-- 🚀 پایان ویجت کارت ویزیت -->
     </div>
     <div class="card">
         <div class="card-title">📊 این ماه</div>
