@@ -75,6 +75,38 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;li
 <div class="container hidden" id="main">
     <div id="trialBanner" style="display:none;"></div>
     <div class="welcome">
+        <!-- 🚀 ویجت جدید: کارت ویزیت هوشمند (موتور جذب مشتری) -->
+<div class="card" id="smartCardWidget" style="background: linear-gradient(135deg, #1e293b, #0f172a); color: white; border: none; position: relative; overflow: hidden; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.3);">
+    <!-- افکت نور پس‌زمینه -->
+    <div style="position: absolute; top: -50px; left: -50px; width: 150px; height: 150px; background: rgba(59, 130, 246, 0.2); border-radius: 50%; filter: blur(30px);"></div>
+    
+    <div class="card-title" style="color: white; margin-bottom: 8px;">
+        <span>💳 کارت ویزیت هوشمند شما</span>
+        <span style="font-size: 10px; background: #2563eb; color: #fff; padding: 4px 8px; border-radius: 20px;">آماده ارسال</span>
+    </div>
+    
+    <p style="font-size: 13px; color: #cbd5e1; margin-bottom: 16px; line-height: 1.6;">
+        با ارسال این لینک به مشتریان، هر کسی که به کارت شما علاقه‌مند شود، به طور خودکار در لیست مشتریان شما ثبت می‌شود.
+    </p>
+
+    <!-- لینک اختصاصی -->
+    <div style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; direction: ltr;">
+        <span id="smartCardLinkDisplay" style="font-family: monospace; color: #93c5fd; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">moshtariyar.ir/c/...</span>
+        <button onclick="copySmartCardLink()" style="background: #3b82f6; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-family: inherit; font-size: 12px; font-weight: bold; cursor: pointer; flex-shrink: 0; margin-left: 8px;">کپی 🔗</button>
+    </div>
+
+    <!-- دکمه‌های اشتراک‌گذاری -->
+    <div style="display: flex; gap: 8px;">
+        <button onclick="shareToWhatsApp()" style="flex: 1; background: #25D366; color: white; border: none; padding: 12px; border-radius: 10px; font-family: inherit; font-weight: bold; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <span style="font-size: 16px;">💬</span> واتساپ
+        </button>
+        
+        <a href="business-profile.html" style="flex: 1; background: rgba(255,255,255,0.1); color: white; text-decoration: none; padding: 12px; border-radius: 10px; font-family: inherit; font-weight: bold; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid rgba(255,255,255,0.2);">
+            <span style="font-size: 16px;">📱</span> مشاهده کارت (QR)
+        </a>
+    </div>
+</div>
+<!-- 🚀 پایان ویجت کارت ویزیت -->و ع
         <h1>سلام <span id="userName">👋</span></h1>
         <div class="store-info">
             <span>مدیر فروشگاه: <strong id="managerName">در حال بارگذاری...</strong></span>
@@ -228,12 +260,35 @@ let me = null;
 let customers = [];
 let myLabels = null;
 let myBusinessType = null;    
+// 🚀 توابع کارت ویزیت هوشمند
+let mySmartCardUrl = '';
 
+window.copySmartCardLink = function() {
+    if (!mySmartCardUrl) return;
+    navigator.clipboard.writeText(mySmartCardUrl).then(() => {
+        alert('✅ لینک کارت ویزیت شما کپی شد. می‌توانید برای مشتریان بفرستید.');
+    }).catch(err => {
+        console.error('خطا در کپی: ', err);
+        alert('مرورگر شما از کپی خودکار پشتیبانی نمی‌کند.');
+    });
+};
+
+window.shareToWhatsApp = function() {
+    if (!mySmartCardUrl) return;
+    const storeName = $('storeNameDisplay').textContent || 'کسب‌وکار من';
+    const text = `سلام 👋\nمن ${storeName} هستم.\nبرای مشاهده خدمات، قیمت‌ها و ارتباط مستقیم با من، روی لینک زیر بزنید:\n${mySmartCardUrl}`;
+    const encodedText = encodeURIComponent(text);
+    window.open(`https://wa.me/?text=${encodedText}`, '_blank');
+};
 async function init() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { window.location.href = 'login.html'; return; }
     me = session.user;
     await loadProfile();
+    // 🚀 پر کردن خودکار لینک کارت ویزیت بر اساس آیدی کاربر
+mySmartCardUrl = 'https://moshtariyar.ir/c/' + me.id.substring(0, 8); // فعلاً ۸ کاراکتر اول ID رو برمی‌داریم
+const linkEl = $('smartCardLinkDisplay');
+if (linkEl) linkEl.textContent = mySmartCardUrl;
     myBusinessType = await loadBusinessType(supabase, me.id);
     myLabels = getLabels(myBusinessType);
 
