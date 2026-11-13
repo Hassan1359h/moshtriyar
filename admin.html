@@ -312,7 +312,30 @@ const faDateTime = (d) => { if (!d) return '—'; try { return new Date(d).toLoc
 const daysLeft = (end) => { if (!end) return 0; return Math.max(Math.ceil((new Date(end).getTime() - Date.now()) / 86400000), 0); };
 const isActive = (end) => end ? new Date(end).getTime() > Date.now() : false;
 const planLabel = (p) => ({ trial:'🆓 تست', pro:'💎 حرفه‌ای', business:'🏢 کسب‌وکار', special:'👑 ویژه' }[p] || '—');
-const bizLabel = (b) => ({ shop:'🛍️ فروشگاهی', service:'💼 خدماتی', restaurant:'🍽️ رستوران', cafe:'☕ کافه', educational:'📚 آموزشی', medical:'🩺 پزشکی', technical:'💻 فنی', other:'📦 سایر' }[b] || b || '—');
+const BUSINESS_TYPE_LABELS = {
+  shop: '🛍️ فروشگاه',
+  supermarket: '🛒 سوپرمارکت',
+  food_distribution: '🚚 پخش مواد غذایی',
+  pharma_distribution: '💊 شرکت پخش دارویی',
+  dealership: '🏢 نمایندگی',
+  wholesale: '📦 عمده‌فروشی',
+  hygiene_distribution: '🧴 پخش لوازم بهداشتی',
+  medical: '👨‍⚕️ پزشکی',
+  dental: '🦷 دندانپزشکی',
+  lab: '🧪 آزمایشگاه',
+  salon: '💇 سالن زیبایی',
+  gym: '🏋️ باشگاه',
+  school: '🏫 آموزشگاه',
+  legal: '⚖️ خدمات حقوقی',
+  realestate: '🏠 املاک',
+  technical: '🔧 خدمات فنی',
+  general: '➕ عمومی'
+};
+
+const bizLabel = (b) => {
+  const key = String(b || '').trim().toLowerCase();
+  return BUSINESS_TYPE_LABELS[key] || (key ? esc(key) : '—');
+};
 async function init() {
   const { data: { session }, error } = await supabase.auth.getSession();
   if (error) return showError(error.message);
