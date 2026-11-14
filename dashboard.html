@@ -61,6 +61,641 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;li
 .bottom-nav a span:first-child { font-size: 20px; }
 .bottom-nav a span:last-child { font-size: 11px; font-weight: 700; }
 @media(max-width:600px){ .stats-grid{grid-template-columns:1fr} }
+  
+/* =====================================================
+   MOSHTRIYAR — INTELLIGENCE CENTER
+   Signature Dashboard UI — v1
+   فقط بازطراحی ظاهری، بدون تغییر منطق برنامه
+===================================================== */
+
+:root {
+    --mi-bg: #f3f5fa;
+    --mi-surface: #ffffff;
+    --mi-ink: #17213b;
+    --mi-muted: #7b849b;
+    --mi-line: #e8ebf3;
+    --mi-primary: #635bdb;
+    --mi-primary-dark: #4038a8;
+    --mi-cyan: #23b8c7;
+    --mi-green: #159c78;
+    --mi-red: #e05268;
+    --mi-orange: #e59b38;
+    --mi-radius: 22px;
+    --mi-shadow: 0 12px 36px rgba(29, 39, 75, .065);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    background:
+        radial-gradient(ellipse at 90% 0%, rgba(99,91,219,.09), transparent 34%),
+        radial-gradient(ellipse at 0% 35%, rgba(35,184,199,.06), transparent 30%),
+        var(--mi-bg) !important;
+    color: var(--mi-ink);
+    font-family: 'Vazirmatn', sans-serif;
+}
+
+/* هدر هوشمند */
+
+.header {
+    background: rgba(255,255,255,.88) !important;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-bottom: 1px solid rgba(226,230,241,.8);
+    box-shadow: 0 5px 24px rgba(30,40,80,.035);
+    padding: 13px 20px !important;
+    z-index: 100;
+}
+
+.header > * {
+    position: relative;
+}
+
+.header button,
+.header a {
+    transition: .2s ease;
+}
+
+/* محدوده اصلی */
+
+.container {
+    width: min(1120px, calc(100% - 32px)) !important;
+    max-width: 1120px !important;
+    margin: 28px auto 110px !important;
+}
+
+/* معرفی کسب‌وکار */
+
+.welcome {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    background:
+        radial-gradient(circle at 85% 20%, rgba(255,255,255,.17), transparent 27%),
+        linear-gradient(125deg, #25234f 0%, #4541a2 48%, #665de0 100%) !important;
+    color: #fff !important;
+    border: 1px solid rgba(255,255,255,.16);
+    border-radius: 30px !important;
+    padding: 32px !important;
+    margin-bottom: 25px !important;
+    box-shadow: 0 22px 55px rgba(65,58,165,.20);
+}
+
+.welcome::before {
+    content: "";
+    position: absolute;
+    width: 270px;
+    height: 270px;
+    border: 1px solid rgba(255,255,255,.13);
+    border-radius: 50%;
+    left: -80px;
+    top: -150px;
+    box-shadow:
+        0 0 0 28px rgba(255,255,255,.035),
+        0 0 0 58px rgba(255,255,255,.025);
+    z-index: -1;
+}
+
+.welcome::after {
+    content: "MOSHTRIYAR  /  INTELLIGENCE";
+    position: absolute;
+    left: 24px;
+    bottom: 18px;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: rgba(255,255,255,.48);
+    direction: ltr;
+    font-weight: 800;
+}
+
+.welcome h1,
+.welcome h2,
+.welcome p,
+.welcome span {
+    color: #fff;
+}
+
+.welcome h1,
+.welcome h2 {
+    font-weight: 900;
+    letter-spacing: -.5px;
+}
+
+.welcome p {
+    opacity: .82;
+}
+
+/* پنل‌های اصلی */
+
+.card {
+    background: var(--mi-surface) !important;
+    border: 1px solid var(--mi-line) !important;
+    border-radius: var(--mi-radius) !important;
+    box-shadow: var(--mi-shadow) !important;
+    padding: 23px !important;
+    margin-bottom: 20px !important;
+    transition: border-color .25s ease, box-shadow .25s ease;
+}
+
+.card:hover {
+    border-color: #d9d8f8 !important;
+    box-shadow: 0 16px 38px rgba(29,39,75,.085) !important;
+}
+
+/* عنوانهای داخل پنل */
+
+.card h2,
+.card h3 {
+    color: var(--mi-ink);
+    font-weight: 900;
+}
+
+/* آمار کسب‌وکار */
+
+.stats-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 13px !important;
+    margin-bottom: 22px;
+}
+
+.stat {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(145deg, #fff, #f8f9ff) !important;
+    border: 1px solid var(--mi-line);
+    border-radius: 20px !important;
+    padding: 20px 16px !important;
+    min-width: 0;
+    transition: .25s ease;
+}
+
+.stat:hover {
+    transform: translateY(-4px);
+    border-color: #c9c6fa;
+    box-shadow: 0 12px 28px rgba(99,91,219,.10);
+}
+
+.stat::after {
+    content: "";
+    position: absolute;
+    width: 75px;
+    height: 75px;
+    border-radius: 50%;
+    background: rgba(99,91,219,.055);
+    left: -28px;
+    bottom: -35px;
+}
+
+.stat strong,
+.stat .value {
+    color: var(--mi-primary-dark);
+    font-weight: 900;
+    font-size: clamp(20px, 3vw, 29px);
+    font-variant-numeric: tabular-nums;
+}
+
+/* پیگیری هوشمند */
+
+#todosCard {
+    position: relative;
+    overflow: hidden;
+    border-top: 3px solid var(--mi-primary) !important;
+}
+
+#todoCount {
+    display: inline-flex;
+    min-width: 28px;
+    height: 28px;
+    align-items: center;
+    justify-content: center;
+    background: #f0efff;
+    color: var(--mi-primary-dark);
+    border-radius: 10px;
+    font-weight: 900;
+    padding: 0 8px;
+}
+
+.todo-item {
+    display: grid !important;
+    grid-template-columns: 42px minmax(0,1fr) auto !important;
+    align-items: center;
+    gap: 13px !important;
+    background: #fafbff !important;
+    border: 1px solid #edf0f7;
+    border-radius: 17px !important;
+    padding: 14px !important;
+    margin: 10px 0 !important;
+    transition: .2s ease;
+}
+
+.todo-item:hover {
+    background: #f4f5ff !important;
+    border-color: #d8d6fa;
+    transform: translateX(-2px);
+}
+
+.todo-icon {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #efefff;
+    border-radius: 14px;
+    font-size: 19px;
+}
+
+.todo-name {
+    color: var(--mi-ink);
+    font-weight: 900;
+    margin-bottom: 5px;
+}
+
+.todo-reason {
+    color: var(--mi-muted);
+    font-size: 12px;
+    line-height: 1.8;
+}
+
+.todo-item.urgent {
+    border-right: 3px solid var(--mi-red);
+}
+
+.todo-item.warn {
+    border-right: 3px solid var(--mi-orange);
+}
+
+.todo-item.good {
+    border-right: 3px solid var(--mi-green);
+}
+
+.todo-item button {
+    border-radius: 11px !important;
+    transition: .2s ease;
+}
+
+.todo-item button:hover {
+    filter: brightness(.96);
+    transform: translateY(-1px);
+}
+
+.empty-note {
+    text-align: center;
+    padding: 24px 12px;
+    color: var(--mi-muted);
+    background: #f8f9fd;
+    border-radius: 16px;
+}
+
+/* کارت ریسک مشتری */
+
+.danger-card {
+    background: linear-gradient(130deg, #fff, #fff5f6) !important;
+    border: 1px solid #f7d9df !important;
+    border-right: 5px solid var(--mi-red) !important;
+}
+
+#riskCount {
+    color: var(--mi-red);
+    font-weight: 900;
+}
+
+#riskValue {
+    font-weight: 900;
+}
+
+/* اشتراک */
+
+#subCard {
+    border-right: 4px solid var(--mi-primary) !important;
+}
+
+.status-active {
+    background: linear-gradient(120deg, #edfbf6, #f7fffc) !important;
+    border: 1px solid #ccefe2;
+    border-radius: 18px !important;
+    padding: 20px !important;
+}
+
+.status-active h3 {
+    color: #087b5c !important;
+}
+
+.status-active .days {
+    font-size: 32px;
+    color: #087b5c;
+    font-weight: 900;
+}
+
+/* ابزارها و قابلیت‌ها */
+
+.menu-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 13px !important;
+    margin: 20px 0 !important;
+}
+
+.grid-card {
+    position: relative;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 13px;
+    min-height: 90px;
+    padding: 17px !important;
+    border-radius: 19px !important;
+    background: #fff !important;
+    border: 1px solid var(--mi-line) !important;
+    box-shadow: 0 6px 20px rgba(29,39,75,.035);
+    text-align: right;
+    transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+
+.grid-card:hover {
+    transform: translateY(-4px);
+    border-color: #c9c6fa !important;
+    box-shadow: 0 14px 28px rgba(99,91,219,.11);
+}
+
+.grid-card:active {
+    transform: scale(.985);
+}
+
+.grid-card > div,
+.grid-card > span {
+    min-width: 0;
+}
+
+.grid-card .icon,
+.grid-card .grid-icon,
+.grid-card > i {
+    flex: 0 0 auto;
+    border-radius: 15px !important;
+    background: #f0efff !important;
+    color: var(--mi-primary) !important;
+}
+
+.grid-card h3,
+.grid-card strong,
+.grid-card .title {
+    color: var(--mi-ink);
+    font-weight: 900;
+    font-size: 13px;
+}
+
+.grid-card p,
+.grid-card small {
+    color: var(--mi-muted);
+    font-size: 11px;
+    line-height: 1.7;
+}
+
+/* وضعیت مالی */
+
+#financialStats {
+    border-top: 3px solid var(--mi-cyan) !important;
+}
+
+#financialStats > div {
+    border-radius: 15px;
+}
+
+/* دکمه‌ها */
+
+.btn-main {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: linear-gradient(120deg, var(--mi-primary), #8178ed) !important;
+    color: #fff !important;
+    border: 0 !important;
+    border-radius: 13px !important;
+    padding: 12px 20px !important;
+    font-weight: 900;
+    box-shadow: 0 7px 18px rgba(99,91,219,.20);
+    transition: .2s ease;
+}
+
+.btn-main:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 11px 24px rgba(99,91,219,.27);
+}
+
+/* کارت ویزیت هوشمند */
+
+.smart-card-view-link {
+    border-radius: 12px !important;
+    transition: .2s ease;
+}
+
+.smart-card-view-link:hover {
+    filter: brightness(.96);
+}
+
+/* نوار پایین موبایل */
+
+.bottom-nav {
+    background: rgba(255,255,255,.94) !important;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-top: 1px solid var(--mi-line) !important;
+    box-shadow: 0 -8px 30px rgba(30,40,80,.07);
+    padding: 9px 5px calc(9px + env(safe-area-inset-bottom)) !important;
+    z-index: 200;
+}
+
+.bottom-nav a,
+.bottom-nav button {
+    transition: .2s ease;
+}
+
+.bottom-nav a:hover,
+.bottom-nav button:hover {
+    color: var(--mi-primary) !important;
+}
+
+/* پنجره ساخت لوگو */
+
+#logo-modal {
+    backdrop-filter: blur(9px);
+    -webkit-backdrop-filter: blur(9px);
+    background: rgba(15,20,45,.72) !important;
+    padding: 15px;
+}
+
+#logo-modal > div {
+    border-radius: 25px !important;
+    box-shadow: 0 25px 80px rgba(0,0,0,.25);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+#logo-options button {
+    transition: .2s ease;
+}
+
+#logo-options button:hover {
+    transform: translateY(-3px);
+}
+
+/* بنر هشدار اشتراک */
+
+#trialBanner {
+    border-radius: 17px !important;
+    box-shadow: 0 8px 22px rgba(30,40,80,.06);
+}
+
+/* نمایشگر بارگذاری */
+
+#loading {
+    color: var(--mi-primary-dark);
+    font-weight: 800;
+}
+
+/* واکنش‌گرایی تبلت */
+
+@media (max-width: 850px) {
+    .container {
+        width: min(100% - 24px, 720px) !important;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, minmax(0,1fr)) !important;
+    }
+
+    .menu-grid {
+        grid-template-columns: repeat(2, minmax(0,1fr)) !important;
+    }
+}
+
+/* واکنش‌گرایی موبایل */
+
+@media (max-width: 560px) {
+    body {
+        padding-bottom: 95px !important;
+    }
+
+    .container {
+        width: calc(100% - 20px) !important;
+        margin-top: 16px !important;
+    }
+
+    .header {
+        padding: 11px 13px !important;
+    }
+
+    .welcome {
+        padding: 23px 19px !important;
+        border-radius: 24px !important;
+        margin-bottom: 17px !important;
+    }
+
+    .welcome::after {
+        font-size: 7px;
+        left: 14px;
+        bottom: 12px;
+    }
+
+    .card {
+        padding: 17px !important;
+        border-radius: 19px !important;
+        margin-bottom: 15px !important;
+    }
+
+    .stats-grid {
+        gap: 9px !important;
+    }
+
+    .stat {
+        padding: 15px 11px !important;
+        border-radius: 16px !important;
+    }
+
+    .stat strong,
+    .stat .value {
+        font-size: 22px;
+    }
+
+    .menu-grid {
+        gap: 9px !important;
+    }
+
+    .grid-card {
+        min-height: 78px;
+        padding: 11px !important;
+        gap: 9px;
+        border-radius: 15px !important;
+    }
+
+    .grid-card .icon,
+    .grid-card .grid-icon,
+    .grid-card > i {
+        width: 38px;
+        height: 38px;
+    }
+
+    .grid-card h3,
+    .grid-card strong,
+    .grid-card .title {
+        font-size: 11px;
+    }
+
+    .todo-item {
+        grid-template-columns: 35px minmax(0,1fr) !important;
+        gap: 9px !important;
+        padding: 11px !important;
+    }
+
+    .todo-icon {
+        width: 35px;
+        height: 35px;
+        font-size: 16px;
+    }
+
+    .todo-item .todo-content {
+        min-width: 0;
+    }
+
+    .todo-item > div:last-child {
+        grid-column: 1 / -1;
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: wrap;
+        width: 100%;
+    }
+
+    .todo-item button {
+        flex: 1 1 120px;
+        min-height: 38px !important;
+    }
+
+    .bottom-nav {
+        padding-bottom: calc(8px + env(safe-area-inset-bottom)) !important;
+    }
+}
+
+/* کاهش حرکت برای تنظیمات دسترس‌پذیری */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+    }
+    }
+    
 </style>
 </head>
 <body>
