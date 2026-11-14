@@ -1525,7 +1525,7 @@ try {
         if (expiresAt && new Date(expiresAt) < new Date()) { window.location.href = 'locked.html'; return; }
     }
 
-    // نمایش مدیریت پرداخت فقط برای مالک اصلی پلتفرم
+ // نمایش مدیریت پرداخت فقط برای مالک اصلی پلتفرم
 const adminEmail = 'hahass12na@gmail.com';
 
 const isPlatformOwner = (
@@ -1538,13 +1538,20 @@ const adminCard = $('adminCard');
 const adminNav = $('adminNav');
 
 if (adminCard) {
-    adminCard.classList.toggle('hidden', !isPlatformOwner);
+    adminCard.style.setProperty(
+        'display',
+        isPlatformOwner ? 'flex' : 'none',
+        'important'
+    );
 }
 
 if (adminNav) {
-    adminNav.style.display = isPlatformOwner ? 'flex' : 'none';
+    adminNav.style.setProperty(
+        'display',
+        isPlatformOwner ? 'flex' : 'none',
+        'important'
+    );
 }
-    
     // وضعیت اشتراک پیش از نمایش داشبورد بارگذاری شود
     await loadSubscription();
 
