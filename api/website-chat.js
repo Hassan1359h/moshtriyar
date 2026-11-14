@@ -51,6 +51,170 @@ async function supabase(path, options = {}) {
 }
 
 // ==========================================================
+// 🪪 ثبت مشتری از طریق کارت ویزیت عمومی
+// ==========================================================
+function normalizeIranPhone(value) {
+  let phone = String(value || "")
+    .replace(/[۰-۹]/g, d => "۰۱۲۳۴۵۶۷۸۹".indexOf(d))
+    .replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d))
+    .replace(/\D/g, "");
+
+  if (phone.startsWith("0098")) phone = "0" + phone.slice(4);
+  else if (phone.startsWith("98")) phone = "0" + phone.slice(2);
+  else if (phone.length === 10 && phone.startsWith("9")) phone = "0" + phone;
+
+  return /^09\d{9}$/.test(phone) ? phone : null;
+}
+
+async function registerCardCustomer(req, res) {
+  if (!SUPABASE_URL || !SUPABASE_KEY) {
+    return res.status(500).json({
+      success: false,
+      message: "سرویس ثبت اطلاعات موقتاً در دسترس نیست."
+    });
+  }
+
+  const ip = getClientIP(req);
+  const rate = await checkRateLimit(
+    ip,
+    "register_card_customer",
+    5,
+    60
+  );
+
+  if (!rate.allowed) {
+    return res.status(429).json({
+      success: false,
+      message: "تعداد درخواست‌ها زیاد است. کمی بعد دوباره تلاش کنید.",
+      retryAfter: rate.retryAfter
+    });
+  }
+
+  const body = req.body || {};
+  const businessCardId = String(body.businessCardId || "").trim();
+  const name = String(body.name || "").trim();
+  const phone = normalizeIranPhone(body.phone);
+  const consent = body.consent === true;
+
+  if (
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(businessCardId) ||
+    name.length < 2 ||
+    name.length > 100 ||
+    !phone ||
+    !consent
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: "نام، شماره موبایل معتبر و تأیید رضایت الزامی است."
+    });
+  }
+
+  try {
+    const headers = {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      "Content-Type": "application/json"
+    };
+
+    // مالک فقط از کارت منتشرشده در دیتابیس تعیین می‌شود.
+    const cardUrl = new URL(
+      `${SUPABASE_URL}/rest/v1/business_directory`
+    );
+    cardUrl.search = new URLSearchParams({
+      id: `eq.${businessCardId}`,
+      is_published: "eq.true",
+      select: "id,owner_id,business_name",
+      limit: "1"
+    }).toString();
+
+    const cardResponse = await fetch(cardUrl, { headers });
+    if (!cardResponse.ok) throw new Error("CARD_LOOKUP_FAILED");
+
+    const cards = await cardResponse.json();
+    const card = cards?.[0];
+
+    if (!card?.owner_id) {
+      return res.status(404).json({
+        success: false,
+        message: "کارت کسب‌وکار پیدا نشد یا منتشر نشده است."
+      });
+    }
+
+    // بررسی شماره تکراری در فهرست همین صاحب کسب‌وکار
+    const duplicateUrl = new URL(
+      `${SUPABASE_URL}/rest/v1/customers`
+    );
+    duplicateUrl.search = new URLSearchParams({
+      user_id: `eq.${card.owner_id}`,
+      phone: `ilike.*${phone.slice(-10)}*`,
+      select: "id,name,phone",
+      limit: "100"
+    }).toString();
+
+    const duplicateResponse = await fetch(duplicateUrl, { headers });
+    if (!duplicateResponse.ok) throw new Error("DUPLICATE_CHECK_FAILED");
+
+    const existingCustomers = await duplicateResponse.json();
+    const duplicate = existingCustomers.some(customer => {
+      const existingPhone = normalizeIranPhone(customer.phone);
+      return existingPhone === phone;
+    });
+
+    if (duplicate) {
+      return res.status(409).json({
+        success: false,
+        duplicate: true,
+        message: "این شماره قبلاً در فهرست مشتریان این کسب‌وکار ثبت شده است."
+      });
+    }
+
+    // فقط اطلاعات پایه ثبت می‌شود؛ اطلاعات مالی و پرونده‌ها دست‌نخورده می‌مانند.
+    const insertResponse = await fetch(
+      `${SUPABASE_URL}/rest/v1/customers`,
+      {
+        method: "POST",
+        headers: {
+          ...headers,
+          Prefer: "return=representation"
+        },
+        body: JSON.stringify({
+          user_id: card.owner_id,
+          name,
+          phone,
+          created_at: new Date().toISOString()
+        })
+      }
+    );
+
+    if (insertResponse.status === 409) {
+      return res.status(409).json({
+        success: false,
+        duplicate: true,
+        message: "این شماره قبلاً ثبت شده است."
+      });
+    }
+
+    if (!insertResponse.ok) {
+      const errorText = await insertResponse.text();
+      console.error("Card customer insert failed:", errorText);
+      throw new Error("CUSTOMER_INSERT_FAILED");
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: "با موفقیت به مشتریان این کسب‌وکار پیوستید."
+    });
+
+  } catch (error) {
+    console.error("Register card customer error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "ثبت اطلاعات انجام نشد. لطفاً دوباره تلاش کنید."
+    });
+  }
+}
+
+// ==========================================================
 // 🔑 انتخاب بهترین کلید Gemini
 // ==========================================================
 async function getBestGeminiKey(websiteId) {
@@ -214,6 +378,10 @@ res.setHeader("Cloudflare-CDN-Cache-Control", "no-store");
     return res.status(405).json({ ok: false, reply: "فقط POST." });
   }
 
+  if (req.body?.action === "register_card_customer") {
+    return registerCardCustomer(req, res);
+  }
+  
   try {
     const { message, history, siteApiKey, userId, customerPhone } = req.body || {};
     if (!message || !message.trim()) {
