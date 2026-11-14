@@ -1107,18 +1107,23 @@ body {
             <button onclick="copySmartCardLink()" style="background: #3b82f6; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-family: inherit; font-size: 11px; font-weight: bold; cursor: pointer; flex-shrink: 0; margin-left: 8px;">کپی 🔗</button>
         </div>
 
-        <!-- دکمه‌های اشتراک‌گذاری -->
-        <div style="display: flex; gap: 8px;">
-            <button onclick="shareToWhatsApp()" style="flex: 1; background: #25D366; color: white; border: none; padding: 10px; border-radius: 8px; font-family: inherit; font-weight: bold; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
-                <span style="font-size: 14px;">💬</span> ارسال به واتساپ
-            </button>
-            
-           <a class="smart-card-view-link" href="business-profile.html" style="flex: 1; background: #fff; color: #2563eb; text-decoration: none; padding: 10px; border-radius: 8px; font-family: inherit; font-weight: bold; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 4px; border: 1px solid #bfdbfe;">
-                <span style="font-size: 14px;">📱</span> مشاهده کارت
-            </a>
-        </div>
-    </div>
+<!-- دکمه‌های اشتراک‌گذاری -->
+<div style="display: flex; gap: 8px; flex-wrap: wrap;">
+
+    <button onclick="shareToWhatsApp()" style="flex: 1; min-width: 100px; background: #25D366; color: white; border: none; padding: 10px 6px; border-radius: 8px; font-family: inherit; font-weight: bold; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
+        <span style="font-size: 14px;">💬</span> واتساپ
+    </button>
+
+    <button onclick="shareToRubika()" style="flex: 1; min-width: 100px; background: #7c3aed; color: white; border: none; padding: 10px 6px; border-radius: 8px; font-family: inherit; font-weight: bold; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
+        <span style="font-size: 14px;">✈️</span> روبیکا
+    </button>
+
+    <a class="smart-card-view-link" href="business-profile.html" style="flex: 1; min-width: 100px; background: #fff; color: #2563eb; text-decoration: none; padding: 10px 6px; border-radius: 8px; font-family: inherit; font-weight: bold; font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 4px; border: 1px solid #bfdbfe;">
+        <span style="font-size: 14px;">📱</span> مشاهده کارت
+    </a>
+
 </div>
+          
 <!-- 🚀 پایان ویجت کارت ویزیت -->
     </div>
     <div class="card">
@@ -1459,6 +1464,20 @@ window.shareToWhatsApp = function() {
     const encodedText = encodeURIComponent(text);
     window.open(`https://wa.me/?text=${encodedText}`, '_blank');
 };
+  
+window.shareToRubika = function() {
+    if (!mySmartCardUrl) return;
+
+    const storeName = $('storeNameDisplay').textContent || 'کسب‌وکار من';
+    const text = `سلام 👋
+من ${storeName} هستم.
+برای مشاهده خدمات، قیمت‌ها و ارتباط مستقیم با من، روی لینک زیر بزنید:
+${mySmartCardUrl}`;
+
+    const encodedText = encodeURIComponent(text);
+    window.open(`https://rubika.ir/share?text=${encodedText}`, '_blank');
+};
+
 async function init() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { window.location.href = 'login.html'; return; }
