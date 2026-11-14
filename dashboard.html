@@ -1465,18 +1465,38 @@ window.shareToWhatsApp = function() {
     window.open(`https://wa.me/?text=${encodedText}`, '_blank');
 };
   
-window.shareToRubika = function() {
-    if (!mySmartCardUrl) return;
+
+window.shareToRubika = async function() {
+    if (!mySmartCardUrl) {
+        alert('لینک کارت ویزیت شما هنوز آماده نیست.');
+        return;
+    }
 
     const storeName = $('storeNameDisplay').textContent || 'کسب‌وکار من';
+
     const text = `سلام 👋
 من ${storeName} هستم.
-برای مشاهده خدمات، قیمت‌ها و ارتباط مستقیم با من، روی لینک زیر بزنید:
+برای مشاهده خدمات، قیمت‌ها و ارتباط مستقیم با من، کارت ویزیت من را مشاهده کنید:
 ${mySmartCardUrl}`;
 
-    const encodedText = encodeURIComponent(text);
-    window.open(`https://rubika.ir/share?text=${encodedText}`, '_blank');
+    try {
+        if (navigator.share) {
+            await navigator.share({
+                title: `کارت ویزیت ${storeName}`,
+                text: text
+            });
+        } else {
+            await navigator.clipboard.writeText(text);
+            alert('متن و لینک کارت ویزیت کپی شد. آن را در روبیکا ارسال کنید.');
+        }
+    } catch (error) {
+        if (error.name !== 'AbortError') {
+            console.error('خطای اشتراک‌گذاری:', error);
+            alert('اشتراک‌گذاری انجام نشد. لطفاً دوباره تلاش کنید.');
+        }
+    }
 };
+
 
 async function init() {
     const { data: { session } } = await supabase.auth.getSession();
