@@ -689,12 +689,12 @@ async function registerCustomerContact(customerId) {
     renderTodos();
 
     alert('تاریخ تماس مشتری ثبت شد.');
-    }
-        
+   } 
 
 function getTodos() {
     const todos = [];
     const now = new Date();
+
     const today = new Date(
         now.getFullYear(),
         now.getMonth(),
@@ -703,9 +703,20 @@ function getTodos() {
 
     const activeTaskCustomers = new Set();
 
-    // پیگیری‌های ثبت‌شده و سررسیدشده
+    // پیگیری‌های ثبت‌شده
     (contactTasks || []).forEach(task => {
-        if (task.status !== 'pending' || !task.due_at) return;
+        if (task.status !== 'pending') return;
+
+        const customer = customers.find(
+            c => c.id === task.customer_id
+        );
+
+        if (!customer) return;
+
+        // مشتری دارای پیگیری فعال، مورد تکراری نگیرد
+        activeTaskCustomers.add(customer.id);
+
+        if (!task.due_at) return;
 
         const due = new Date(task.due_at);
         if (Number.isNaN(due.getTime())) return;
@@ -716,16 +727,8 @@ function getTodos() {
             due.getDate()
         );
 
-        // فقط پیگیری‌های امروز و عقب‌افتاده
+        // پیگیری آینده فعلاً در کارهای فوری نمایش داده نشود
         if (dueDay > today) return;
-
-        const customer = customers.find(
-            c => c.id === task.customer_id
-        );
-
-        if (!customer) return;
-
-        activeTaskCustomers.add(customer.id);
 
         const overdue = dueDay < today;
 
@@ -739,31 +742,31 @@ function getTodos() {
         });
     });
 
-    // مشتریان نیازمند پیگیری
+    // نمایش مشتریانی که هنوز پیگیری بعدی ندارند
     customers.forEach(c => {
         if (c.status === 'lost') return;
-
-        // اگر برای مشتری پیگیری فعال ثبت شده،
-        // مورد تکراری ایجاد نکن
         if (activeTaskCustomers.has(c.id)) return;
 
         const days = daysSince(c.last_contact_at);
 
-        if (days === null || days >= 14) {
-            todos.push({
-                urgency:
-                    days === null || days >= 30
-                        ? 'urgent'
-                        : 'warn',
-                icon: '📞',
-                name: c.name,
-                reason:
-                    days === null
-                        ? 'هنوز تماسی ثبت نشده'
-                        : `${days} روز بدون پیگیری`,
-                customerId: c.id
-            });
-        }
+        const needsContact = days === null || days >= 14;
+
+        todos.push({
+            urgency: needsContact
+                ? (days === null || days >= 30 ? 'urgent' : 'warn')
+                : 'good',
+
+            icon: needsContact ? '📞' : '👤',
+            name: c.name,
+
+            reason: days === null
+                ? 'هنوز تماسی ثبت نشده'
+                : days >= 14
+                    ? `${days} روز بدون پیگیری`
+                    : 'تماس ثبت شده؛ پیگیری بعدی تعیین نشده',
+
+            customerId: c.id
+        });
     });
 
     // تولد مشتریان
@@ -776,13 +779,13 @@ function getTodos() {
             birthday.getMonth() === today.getMonth() &&
             birthday.getDate() === today.getDate()
         ) {
-            todos.push({
-                urgency: 'good',
-                icon: '🎂',
-                name: c.name,
-                reason: 'امروز تولدشه!',
-                customerId: c.id
-            });
+            const existing = todos.find(
+                t => t.customerId === c.id && !t.taskId
+            );
+
+            if (existing) {
+                existing.reason += ' 🎂 امروز تولدشه';
+            }
         }
     });
 
@@ -792,20 +795,22 @@ function getTodos() {
         good: 2
     };
 
-    todos.sort((a, b) => {
-        return order[a.urgency] - order[b.urgency];
-    });
+    todos.sort((a, b) =>
+        order[a.urgency] - order[b.urgency]
+    );
 
     return todos.slice(0, 5);
-        }
-    
+    }
+            
 
 function renderTodos() {
     const list = $('todoList');
     const count = $('todoCount');
     const todos = getTodos();
 
-    count.textContent = todos.length;
+    count.textContent = todos.filter(
+    t => t.urgency === 'urgent' || t.urgency === 'warn'
+   ).length;
     list.innerHTML = '';
 
     if (!todos.length) {
