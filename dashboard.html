@@ -696,6 +696,360 @@ body {
     }
     }
     
+/* MOSHTRIYAR INTELLIGENCE CENTER — STRUCTURE V2 */
+
+.mi-overview,
+.mi-tools {
+    margin: 28px 0;
+}
+
+.mi-section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 17px;
+}
+
+.mi-section-heading h2 {
+    font-size: 21px;
+    font-weight: 900;
+    margin: 6px 0;
+    color: #17213b;
+}
+
+.mi-section-heading p {
+    margin: 0;
+    font-size: 12px;
+    color: #8991a5;
+}
+
+.mi-eyebrow {
+    font-size: 9px;
+    letter-spacing: 1.6px;
+    font-weight: 900;
+    color: #7770dc;
+    direction: ltr;
+    display: inline-block;
+}
+
+.mi-live-indicator {
+    background: #e9f8f3;
+    color: #138866;
+    padding: 9px 13px;
+    border-radius: 30px;
+    font-size: 11px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.mi-live-indicator span {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #18b889;
+    margin-left: 6px;
+}
+
+.mi-metrics {
+    display: grid;
+    grid-template-columns: 1.25fr 1fr 1fr 1fr;
+    background: #fff;
+    border: 1px solid #e8ebf3;
+    border-radius: 23px;
+    overflow: hidden;
+    box-shadow: 0 12px 35px rgba(29,39,75,.055);
+}
+
+.mi-metric {
+    padding: 25px 19px;
+    min-width: 0;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+
+.mi-metric + .mi-metric::before {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 22%;
+    height: 56%;
+    width: 1px;
+    background: #edf0f5;
+}
+
+.mi-metric-main {
+    background: linear-gradient(140deg, #f1f0ff, #fafaff);
+}
+
+.mi-metric-label {
+    color: #7d859a;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.mi-metric b {
+    color: #27265e;
+    font-size: clamp(22px, 3vw, 31px);
+    font-weight: 900;
+    overflow-wrap: anywhere;
+}
+
+.mi-metric-caption {
+    color: #a0a6b6;
+    font-size: 10px;
+}
+
+.mi-subscription {
+    border-right: 4px solid #655cda !important;
+}
+
+.mi-sub-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.mi-sub-symbol {
+    font-size: 30px;
+    color: #8278e8;
+}
+
+.mi-tools {
+    padding: 27px;
+    border-radius: 27px;
+    background: linear-gradient(145deg, #f9faff, #f0f2fa);
+    border: 1px solid #e6e9f2;
+}
+
+.mi-tools-count {
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    color: #9299ad;
+    direction: ltr;
+}
+
+.mi-tool-layout {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 15px;
+}
+
+.mi-featured-tools {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.mi-tool {
+    min-width: 0;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center;
+    gap: 13px;
+    text-decoration: none !important;
+    background: #fff !important;
+    border: 1px solid #e8ebf3 !important;
+    border-radius: 17px !important;
+    padding: 15px !important;
+    color: #17213b !important;
+    transition: .22s ease;
+}
+
+.mi-tool:hover {
+    transform: translateY(-3px);
+    border-color: #c9c5f4 !important;
+    box-shadow: 0 10px 24px rgba(70,63,160,.09);
+}
+
+.mi-tool-featured {
+    min-height: 90px;
+    background: linear-gradient(115deg, #292650, #49429e) !important;
+    color: #fff !important;
+    border-color: transparent !important;
+    padding: 19px !important;
+}
+
+.mi-tool-violet {
+    background: linear-gradient(115deg, #4b3a94, #7767d8) !important;
+}
+
+.mi-tool-cyan {
+    background: linear-gradient(115deg, #146c83, #269cb0) !important;
+}
+
+.mi-tool-featured .mi-tool-text strong,
+.mi-tool-featured .mi-tool-text small {
+    color: #fff !important;
+}
+
+.mi-tool-icon {
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 14px;
+    background: #f0efff;
+    color: #655cda;
+    font-size: 19px;
+}
+
+.mi-tool-featured .mi-tool-icon {
+    background: rgba(255,255,255,.14);
+    color: #fff;
+}
+
+.mi-tool-text {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+}
+
+.mi-tool-text strong {
+    font-size: 12px;
+    font-weight: 900;
+    color: #202944;
+}
+
+.mi-tool-text small {
+    font-size: 10px;
+    line-height: 1.7;
+    color: #969caf;
+}
+
+.mi-tool-arrow {
+    margin-right: auto;
+    font-size: 20px;
+    opacity: .65;
+}
+
+.mi-tool-group {
+    padding: 15px;
+    background: rgba(255,255,255,.63);
+    border: 1px solid #e8ebf3;
+    border-radius: 19px;
+}
+
+.mi-group-heading {
+    font-size: 12px;
+    font-weight: 900;
+    color: #555d77;
+    margin-bottom: 12px;
+    padding-bottom: 11px;
+    border-bottom: 1px solid #eceef5;
+}
+
+.mi-tool-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.mi-tool-list .mi-tool {
+    padding: 10px !important;
+    border-radius: 13px !important;
+}
+
+.mi-tool-list .mi-tool-icon {
+    width: 36px;
+    height: 36px;
+    flex-basis: 36px;
+    font-size: 16px;
+    border-radius: 11px;
+}
+
+.mi-creative-group {
+    grid-column: 2;
+}
+
+.mi-admin-tool {
+    grid-column: 1 / -1;
+    background: #fff5f5 !important;
+    border-color: #f5d9de !important;
+}
+
+@media(max-width:850px) {
+    .mi-tool-layout {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .mi-creative-group {
+        grid-column: auto;
+    }
+
+    .mi-metric {
+        padding: 19px 12px;
+    }
+}
+
+@media(max-width:560px) {
+    .mi-section-heading h2 {
+        font-size: 17px;
+    }
+
+    .mi-section-heading p {
+        font-size: 10px;
+    }
+
+    .mi-metrics {
+        grid-template-columns: 1fr 1fr;
+        border-radius: 19px;
+    }
+
+    .mi-metric {
+        padding: 17px 13px;
+    }
+
+    .mi-metric:nth-child(3)::before {
+        display: none;
+    }
+
+    .mi-metric:nth-child(n+3) {
+        border-top: 1px solid #edf0f5;
+    }
+
+    .mi-metric b {
+        font-size: 24px;
+    }
+
+    .mi-tools {
+        padding: 15px 11px;
+        border-radius: 21px;
+    }
+
+    .mi-tool-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .mi-featured-tools {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .mi-tool-featured {
+        min-height: 76px;
+    }
+
+    .mi-creative-group {
+        grid-column: auto;
+    }
+
+    .mi-admin-tool {
+        grid-column: auto;
+    }
+
+    .mi-tools-count {
+        font-size: 8px;
+    }
+}
+
 </style>
 </head>
 <body>
@@ -788,35 +1142,221 @@ body {
         <div class="card-title">💳 وضعیت اشتراک</div>
         <div id="subContent"></div>
     </div>
-    <div class="menu-grid">
-        <a href="business-type.html" class="grid-card"><div class="grid-icon" style="color:#2563eb; background:#eff6ff;">🎯</div><div class="grid-title">نوع کسب‌وکار</div><div class="grid-subtitle" id="currentBT">انتخاب کنید</div></a>
-        <a href="invoice.html" class="grid-card"><div class="grid-icon" style="color:#8b5cf6; background:#f5f3ff;">🧾</div><div class="grid-title">فاکتور هوشمند</div><div class="grid-subtitle">صدور و مدیریت فاکتور</div></a>
-        <a href="customers.html?action=add" class="grid-card"><div class="grid-icon" style="color:#10b981; background:#ecfdf5;">➕</div><div class="grid-title">افزودن مشتری</div><div class="grid-subtitle">ثبت مشتری جدید</div></a>
-        <a href="checks.html" class="grid-card"><div class="grid-icon" style="color:#d97706; background:#fffbeb;">💳</div><div class="grid-title">مدیریت چک</div><div class="grid-subtitle">چک‌های دریافتی و سررسید</div></a>
-        <a href="installments.html" class="grid-card"><div class="grid-icon" style="color:#0ea5e9; background:#f0f9ff;">📅</div><div class="grid-title">مدیریت اقساط</div><div class="grid-subtitle">قراردادهای اقساطی</div></a>
-        <a href="operator.html" class="grid-card"><div class="grid-icon" style="color:#ec4899; background:#fdf2f8;">📞</div><div class="grid-title">تماس و چت</div><div class="grid-subtitle">ویجت تماس و چت هوشمند</div></a>
-        <a href="website-agent.html" class="grid-card"><div class="grid-icon" style="color:#f59e0b; background:#fffbeb;">🌐</div><div class="grid-title">اتصال به سایت</div><div class="grid-subtitle">افزونه وب‌سایت</div></a>
-        <a href="sms-bulk.html" class="grid-card"><div class="grid-icon" style="color:#6366f1; background:#e0e7ff;">✉️</div><div class="grid-title">پیامک انبوه</div><div class="grid-subtitle">ارسال پیام به مشتریان</div></a>
-        <a href="financial-reports.html" class="grid-card"><div class="grid-icon" style="color:#3b82f6; background:#eff6ff;">📊</div><div class="grid-title">گزارش مالی</div><div class="grid-subtitle">آمار درآمد و وصولی</div></a>
-        <a href="discount-campaigns.html" class="grid-card"><div class="grid-icon" style="color:#d946ef; background:#fdf4ff;">🎁</div><div class="grid-title">کمپین تخفیف</div><div class="grid-subtitle">کد تخفیف و باشگاه مشتریان</div></a>
-        <a href="#" onclick="event.preventDefault(); window.checkLogoAccess();" class="grid-card"><div class="grid-icon" style="color:#8b5cf6; background:#f3e8ff;">🎨</div><div class="grid-title">ساخت لوگو با AI</div><div class="grid-subtitle">طراحی لوگو اختصاصی کسب‌وکار</div></a>
-        
-        <!-- کارت مدیریت کسب‌وکار -->
-        <a href="business-profile.html" class="grid-card">
-            <div class="grid-icon" style="color:#16a34a; background:#f0fdf4;">🏪</div>
-            <div class="grid-title">کارت کسب‌وکار من</div>
-            <div class="grid-subtitle">ثبت اطلاعات، تصویر و انتشار کارت</div>
-        </a>
 
-        <!-- فهرست عمومی کسب‌وکارها -->
-        <a href="business-directory.html" class="grid-card">
-            <div class="grid-icon" style="color:#2563eb; background:#eff6ff;">🌐</div>
-            <div class="grid-title">معرفی کسب‌وکارها</div>
-            <div class="grid-subtitle">مشاهده کسب‌وکارها و امتیاز مشتریان</div>
-        </a>
 
-        <a href="admin-payments.html" class="grid-card hidden" id="adminCard"><div class="grid-icon" style="color:#dc2626; background:#fef2f2;">💳</div><div class="grid-title">مدیریت پرداخت‌ها</div><div class="grid-subtitle">بررسی و تایید واریزی‌ها</div></a>
+<!-- MOSHTRIYAR INTELLIGENCE CENTER -->
+
+<section class="mi-overview">
+    <div class="mi-section-heading">
+        <div>
+            <span class="mi-eyebrow">BUSINESS INTELLIGENCE</span>
+            <h2>نبض کسب‌وکار شما</h2>
+            <p>نمای کلی عملکرد و ارتباط با مشتریان</p>
+        </div>
+        <div class="mi-live-indicator">
+            <span></span>
+            مرکز هوشمند
+        </div>
     </div>
+
+    <div class="mi-metrics">
+        <div class="mi-metric mi-metric-main">
+            <span class="mi-metric-label" id="label_total">کل مشتریان</span>
+            <b id="totalCustomers">0</b>
+            <span class="mi-metric-caption">سرمایه ارتباطی شما</span>
+        </div>
+        <div class="mi-metric">
+            <span class="mi-metric-label" id="label_active">مشتری فعال</span>
+            <b id="activeCustomers">0</b>
+            <span class="mi-metric-caption">ارتباط فعال</span>
+        </div>
+        <div class="mi-metric">
+            <span class="mi-metric-label" id="label_sales">فروش (تومان)</span>
+            <b id="totalSales">۰</b>
+            <span class="mi-metric-caption">عملکرد فروش</span>
+        </div>
+        <div class="mi-metric">
+            <span class="mi-metric-label" id="label_new">اضافه شده این ماه</span>
+            <b id="newCustomers">0</b>
+            <span class="mi-metric-caption">رشد ارتباطات</span>
+        </div>
+    </div>
+</section>
+
+<div class="card danger-card hidden" id="riskCard">
+    <div class="card-title">
+        ⚠️ <span id="label_atrisk">مشتریان در خطر از دست رفتن</span>
+    </div>
+    <div class="risk-summary">
+        <div class="risk-amount"><span id="riskCount">0</span> مشتری</div>
+        <div class="risk-desc">ارزش در خطر: <strong id="riskValue">۰</strong> تومان</div>
+    </div>
+    <a href="customers.html" class="btn-main">مشاهده و پیگیری</a>
+</div>
+
+<div class="card mi-subscription" id="subCard">
+    <div class="mi-sub-heading">
+        <div>
+            <span class="mi-eyebrow">YOUR MEMBERSHIP</span>
+            <div class="card-title">💳 وضعیت اشتراک</div>
+        </div>
+        <span class="mi-sub-symbol">✦</span>
+    </div>
+    <div id="subContent"></div>
+</div>
+
+<section class="mi-tools">
+    <div class="mi-section-heading">
+        <div>
+            <span class="mi-eyebrow">YOUR BUSINESS TOOLS</span>
+            <h2>ابزارهای هوشمند</h2>
+            <p>تمام امکانات کسب‌وکار، در یک مرکز</p>
+        </div>
+        <span class="mi-tools-count">14 MODULES</span>
+    </div>
+
+    <div class="mi-tool-layout">
+
+        <div class="mi-featured-tools">
+            <a href="customers.html?action=add" class="mi-tool mi-tool-featured">
+                <span class="mi-tool-icon">＋</span>
+                <span class="mi-tool-text">
+                    <strong>افزودن مشتری</strong>
+                    <small>شروع یک ارتباط ارزشمند</small>
+                </span>
+                <span class="mi-tool-arrow">←</span>
+            </a>
+
+            <a href="invoice.html" class="mi-tool mi-tool-featured mi-tool-violet">
+                <span class="mi-tool-icon">🧾</span>
+                <span class="mi-tool-text">
+                    <strong>فاکتور هوشمند</strong>
+                    <small>صدور و مدیریت فاکتورها</small>
+                </span>
+                <span class="mi-tool-arrow">←</span>
+            </a>
+
+            <a href="business-type.html" class="mi-tool mi-tool-featured mi-tool-cyan">
+                <span class="mi-tool-icon">🎯</span>
+                <span class="mi-tool-text">
+                    <strong>نوع کسب‌وکار</strong>
+                    <small id="currentBT">انتخاب کنید</small>
+                </span>
+                <span class="mi-tool-arrow">←</span>
+            </a>
+        </div>
+
+        <div class="mi-tool-group">
+            <div class="mi-group-heading">مدیریت و امور مالی</div>
+
+            <div class="mi-tool-list">
+                <a href="checks.html" class="mi-tool">
+                    <span class="mi-tool-icon">💳</span>
+                    <span class="mi-tool-text">
+                        <strong>مدیریت چک</strong>
+                        <small>چک‌های دریافتی و سررسید</small>
+                    </span>
+                </a>
+
+                <a href="installments.html" class="mi-tool">
+                    <span class="mi-tool-icon">📅</span>
+                    <span class="mi-tool-text">
+                        <strong>مدیریت اقساط</strong>
+                        <small>قراردادهای اقساطی</small>
+                    </span>
+                </a>
+
+                <a href="financial-reports.html" class="mi-tool">
+                    <span class="mi-tool-icon">📊</span>
+                    <span class="mi-tool-text">
+                        <strong>گزارش مالی</strong>
+                        <small>درآمد و وصولی‌ها</small>
+                    </span>
+                </a>
+
+                <a href="discount-campaigns.html" class="mi-tool">
+                    <span class="mi-tool-icon">🎁</span>
+                    <span class="mi-tool-text">
+                        <strong>کمپین تخفیف</strong>
+                        <small>باشگاه مشتریان</small>
+                    </span>
+                </a>
+            </div>
+        </div>
+
+        <div class="mi-tool-group">
+            <div class="mi-group-heading">ارتباط و توسعه</div>
+
+            <div class="mi-tool-list">
+                <a href="operator.html" class="mi-tool">
+                    <span class="mi-tool-icon">📞</span>
+                    <span class="mi-tool-text">
+                        <strong>تماس و چت</strong>
+                        <small>ارتباط هوشمند</small>
+                    </span>
+                </a>
+
+                <a href="website-agent.html" class="mi-tool">
+                    <span class="mi-tool-icon">🌐</span>
+                    <span class="mi-tool-text">
+                        <strong>اتصال به سایت</strong>
+                        <small>افزونه وب‌سایت</small>
+                    </span>
+                </a>
+
+                <a href="sms-bulk.html" class="mi-tool">
+                    <span class="mi-tool-icon">✉️</span>
+                    <span class="mi-tool-text">
+                        <strong>پیامک انبوه</strong>
+                        <small>ارتباط با مشتریان</small>
+                    </span>
+                </a>
+
+                <a href="business-directory.html" class="mi-tool">
+                    <span class="mi-tool-icon">🌍</span>
+                    <span class="mi-tool-text">
+                        <strong>معرفی کسب‌وکارها</strong>
+                        <small>فهرست و امتیازها</small>
+                    </span>
+                </a>
+            </div>
+        </div>
+
+        <div class="mi-tool-group mi-creative-group">
+            <div class="mi-group-heading">هویت و برندینگ</div>
+
+            <div class="mi-tool-list">
+                <a href="business-profile.html" class="mi-tool">
+                    <span class="mi-tool-icon">🏪</span>
+                    <span class="mi-tool-text">
+                        <strong>کارت کسب‌وکار من</strong>
+                        <small>اطلاعات و انتشار کارت</small>
+                    </span>
+                </a>
+
+                <a href="#" onclick="event.preventDefault(); window.checkLogoAccess();" class="mi-tool">
+                    <span class="mi-tool-icon">🎨</span>
+                    <span class="mi-tool-text">
+                        <strong>ساخت لوگو با AI</strong>
+                        <small>طراحی هویت بصری اختصاصی</small>
+                    </span>
+                </a>
+            </div>
+        </div>
+
+        <a href="admin-payments.html" class="mi-tool mi-admin-tool hidden" id="adminCard">
+            <span class="mi-tool-icon">⚙️</span>
+            <span class="mi-tool-text">
+                <strong>مدیریت پرداخت‌ها</strong>
+                <small>بررسی و تأیید واریزی‌ها</small>
+            </span>
+        </a>
+
+    </div>
+</section>
+
+
+  
     <div class="card" id="financialStats" style="display:none;">
         <div class="card-title">📊 وضعیت مالی</div>
         <div class="stats-grid">
