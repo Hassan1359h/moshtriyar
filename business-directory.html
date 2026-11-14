@@ -65,7 +65,6 @@ input{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:11px;font:i
     background:#f1f5f9;
 }
   
-
 .content{
     padding:16px;
 }
@@ -169,7 +168,87 @@ input{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:11px;font:i
         padding:11px 5px;
     }
 }
-  
+ 
+/* فرم پیوستن به مشتریان کسب‌وکار */
+.join-section {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.join-toggle {
+    width: 100%;
+    padding: 12px;
+    border: 0;
+    border-radius: 11px;
+    background: #2563eb;
+    color: white;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.join-form {
+    margin-top: 12px;
+    padding: 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+}
+
+.join-form label {
+    display: block;
+    margin: 10px 0 5px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.join-form input[type="text"],
+.join-form input[type="tel"] {
+    width: 100%;
+    padding: 11px;
+    border: 1px solid #cbd5e1;
+    border-radius: 9px;
+    font: inherit;
+    background: white;
+}
+
+.join-consent {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 12px 0;
+    font-size: 11px;
+    line-height: 1.8;
+}
+
+.join-consent input {
+    margin-top: 5px;
+}
+
+.join-submit {
+    width: 100%;
+    padding: 11px;
+    border: 0;
+    border-radius: 9px;
+    background: #16a34a;
+    color: white;
+    font: inherit;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.join-submit:disabled {
+    opacity: .6;
+}
+
+.join-message {
+    font-size: 12px;
+    line-height: 1.8;
+    margin-top: 10px;
+}
+ 
 </style>
 </head>
 <body>
@@ -244,35 +323,78 @@ function renderCard(b, rating) {
     return `
     <article class="card" id="business-${escapeHTML(b.id)}" data-business-id="${escapeHTML(b.id)}">
         <div class="cover">${cover}</div>
+
         <div class="content">
             <h2 class="name">${escapeHTML(b.business_name)}</h2>
+
             <div class="meta">
                 ${escapeHTML(b.category || 'سایر فعالیت‌ها')}
                 ${location ? ' | ' + escapeHTML(location) : ''}
             </div>
-            <div class="description">${escapeHTML(b.description || 'معرفی کسب‌وکار عضو مشتری‌یار')}</div>
+
+            <div class="description">
+                ${escapeHTML(b.description || 'معرفی کسب‌وکار عضو مشتری‌یار')}
+            </div>
+
             ${website ? `<a class="website" href="${escapeHTML(website)}" target="_blank" rel="noopener noreferrer">🌐 مشاهده وب‌سایت</a>` : ''}
+
             <div class="rating">
                 <span class="stars" aria-label="امتیاز ${score} از ۵">${stars(score)}</span>
                 <span class="score">${score.toFixed(1)} از ۵ (${count} رأی)</span>
             </div>
-          <div class="actions">
-    <button
-        type="button"
-        class="vote"
-        data-business-id="${escapeHTML(b.id)}"
-        data-satisfied="true">
-        👍 راضی هستم
-    </button>
 
-    <button
-        type="button"
-        class="vote"
-        data-business-id="${escapeHTML(b.id)}"
-        data-satisfied="false">
-        👎 ناراضی هستم
-    </button>
-</div>  
+            <div class="actions">
+                <button type="button" class="vote"
+                    data-business-id="${escapeHTML(b.id)}"
+                    data-satisfied="true">
+                    👍 راضی هستم
+                </button>
+
+                <button type="button" class="vote"
+                    data-business-id="${escapeHTML(b.id)}"
+                    data-satisfied="false">
+                    👎 ناراضی هستم
+                </button>
+            </div>
+
+            <div class="join-section">
+                <button type="button"
+                    class="join-toggle"
+                    data-join-toggle
+                    aria-expanded="false">
+                    🤝 پیوستن به مشتریان این کسب‌وکار
+                </button>
+
+                <form class="join-form" data-register-form hidden>
+                    <label>نام و نام خانوادگی</label>
+                    <input type="text"
+                        name="name"
+                        maxlength="100"
+                        placeholder="نام خود را وارد کنید"
+                        required>
+
+                    <label>شماره موبایل</label>
+                    <input type="tel"
+                        name="phone"
+                        inputmode="tel"
+                        maxlength="20"
+                        placeholder="مثلاً 09123456789"
+                        required>
+
+                    <label class="join-consent">
+                        <input type="checkbox" name="consent" required>
+                        <span>
+                            رضایت دارم نام و شماره موبایلم در فهرست مشتریان این کسب‌وکار ثبت شود.
+                        </span>
+                    </label>
+
+                    <button type="submit" class="join-submit">
+                        ثبت و پیوستن
+                    </button>
+
+                    <div class="join-message" role="status" aria-live="polite"></div>
+                </form>
+            </div>
         </div>
     </article>`;
 }
@@ -384,6 +506,76 @@ let debounce;
 });
 
 $('more').addEventListener('click', () => loadBusinesses());
+  
+// باز و بسته کردن فرم پیوستن به مشتریان
+$('cards').addEventListener('click', (event) => {
+    const toggle = event.target.closest('[data-join-toggle]');
+    if (!toggle) return;
+
+    const card = toggle.closest('.card');
+    const form = card.querySelector('[data-register-form]');
+
+    form.hidden = !form.hidden;
+    toggle.setAttribute('aria-expanded', String(!form.hidden));
+
+    if (!form.hidden) {
+        form.querySelector('[name="name"]').focus();
+    }
+});
+
+// ارسال اطلاعات به API ثبت مشتری
+$('cards').addEventListener('submit', async (event) => {
+    const form = event.target.closest('[data-register-form]');
+    if (!form) return;
+
+    event.preventDefault();
+
+    if (!form.reportValidity()) return;
+
+    const card = form.closest('.card');
+    const button = form.querySelector('.join-submit');
+    const message = form.querySelector('.join-message');
+
+    const formData = new FormData(form);
+
+    button.disabled = true;
+    button.textContent = 'در حال ثبت اطلاعات...';
+    message.textContent = '';
+
+    try {
+        const response = await fetch('/api/website-chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                action: 'register_card_customer',
+                businessCardId: card.dataset.businessId,
+                name: String(formData.get('name') || '').trim(),
+                phone: String(formData.get('phone') || '').trim(),
+                consent: formData.get('consent') === 'on'
+            })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || 'ثبت اطلاعات انجام نشد.');
+        }
+
+        message.style.color = '#15803d';
+        message.textContent = '✅ ' + result.message;
+        form.reset();
+
+    } catch (error) {
+        message.style.color = '#dc2626';
+        message.textContent = '❌ ' + error.message;
+
+    } finally {
+        button.disabled = false;
+        button.textContent = 'ثبت و پیوستن';
+    }
+});
 
 // مدیریت رأی‌گیری کسب‌وکارها
 $('cards').addEventListener('click', async (event) => {
