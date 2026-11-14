@@ -260,6 +260,7 @@ import { loadBusinessType, isShamsiPast } from './js/helpers.js';
 const $ = id => document.getElementById(id);
 let me = null;
 let customers = [];
+let contactTasks = [];  
 let myLabels = null;
 let myBusinessType = null;    
 // 🚀 توابع کارت ویزیت هوشمند
@@ -503,6 +504,7 @@ async function loadCustomers() {
     const { data, error } = await supabase.from('customers').select('*').eq('user_id', me.id);
     if (error) { console.error(error); return; }
     customers = data || [];
+    await loadContactTasks();
     const now = new Date(); const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     $('totalCustomers').textContent = customers.length;
     $('activeCustomers').textContent = customers.filter(c => c.status === 'loyal' || c.status === 'waiting' || c.status === 'new').length;
@@ -514,20 +516,227 @@ async function loadCustomers() {
 
 function daysSince(dateStr) { if (!dateStr) return null; return Math.floor((Date.now() - new Date(dateStr)) / 86400000); }
 
+async function loadContactTasks() {
+    if (!me) return;
+
+    const { data, error } = await supabase
+        .from('customer_contact_tasks')
+        .select('*')
+        .eq('user_id', me.id)
+        .eq('status', 'pending')
+        .order('due_at', { ascending: true, nullsFirst: false });
+
+    if (error) {
+        console.error('خطا در دریافت پیگیری‌ها:', error);
+        contactTasks = [];
+        return;
+    }
+
+    contactTasks = data || [];
+}
+
+async function createContactTask(customerId) {
+    const customer = customers.find(c => c.id === customerId);
+    if (!customer) return;
+
+    const title = prompt(
+        `عنوان پیگیری برای ${customer.name} را وارد کنید:`,
+        'تماس با مشتری'
+    );
+
+    if (!title || !title.trim()) return;
+
+    const dateValue = prompt(
+        'زمان پیگیری را وارد کنید (مثلاً 2026-11-15T10:30):'
+    );
+
+    if (!dateValue) return;
+
+    const dueAt = new Date(dateValue);
+
+    if (Number.isNaN(dueAt.getTime())) {
+        alert('تاریخ واردشده معتبر نیست.');
+        return;
+    }
+
+    const { error } = await supabase
+        .from('customer_contact_tasks')
+        .insert({
+            user_id: me.id,
+            customer_id: customer.id,
+            task_type: 'call',
+            title: title.trim(),
+            due_at: dueAt.toISOString()
+        });
+
+    if (error) {
+        console.error(error);
+        alert('ثبت پیگیری انجام نشد.');
+        return;
+    }
+
+    await loadContactTasks();
+    renderTodos();
+    alert('پیگیری با موفقیت ثبت شد.');
+}
+
+async function completeContactTask(taskId) {
+    const outcome = prompt('نتیجه پیگیری را وارد کنید:');
+    if (outcome === null) return;
+
+    const { error } = await supabase
+        .from('customer_contact_tasks')
+        .update({
+            status: 'completed',
+            outcome: outcome.trim(),
+            completed_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+        })
+        .eq('id', taskId)
+        .eq('user_id', me.id);
+
+    if (error) {
+        console.error(error);
+        alert('تکمیل پیگیری انجام نشد.');
+        return;
+    }
+
+    await loadContactTasks();
+    renderTodos();
+}
+
+async function registerCustomerContact(customerId) {
+    const customer = customers.find(c => c.id === customerId);
+    if (!customer) return;
+
+    const { error } = await supabase
+        .from('customers')
+        .update({
+            last_contact_at: new Date().toISOString()
+        })
+        .eq('id', customerId)
+        .eq('user_id', me.id);
+
+    if (error) {
+        console.error(error);
+        alert('ثبت تماس انجام نشد.');
+        return;
+    }
+
+    customer.last_contact_at = new Date().toISOString();
+    renderTodos();
+
+    alert('تاریخ تماس مشتری ثبت شد.');
+    }
+        
+
 function getTodos() {
     const todos = [];
+    const now = new Date();
+    const today = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate()
+    );
+
+    const activeTaskCustomers = new Set();
+
+    // پیگیری‌های ثبت‌شده و سررسیدشده
+    (contactTasks || []).forEach(task => {
+        if (task.status !== 'pending' || !task.due_at) return;
+
+        const due = new Date(task.due_at);
+        if (Number.isNaN(due.getTime())) return;
+
+        const dueDay = new Date(
+            due.getFullYear(),
+            due.getMonth(),
+            due.getDate()
+        );
+
+        // فقط پیگیری‌های امروز و عقب‌افتاده
+        if (dueDay > today) return;
+
+        const customer = customers.find(
+            c => c.id === task.customer_id
+        );
+
+        if (!customer) return;
+
+        activeTaskCustomers.add(customer.id);
+
+        const overdue = dueDay < today;
+
+        todos.push({
+            urgency: overdue ? 'urgent' : 'warn',
+            icon: overdue ? '⏰' : '📌',
+            name: customer.name,
+            reason: `${task.title}${overdue ? ' - سررسید گذشته' : ' - موعد امروز'}`,
+            customerId: customer.id,
+            taskId: task.id
+        });
+    });
+
+    // مشتریان نیازمند پیگیری
     customers.forEach(c => {
+        if (c.status === 'lost') return;
+
+        // اگر برای مشتری پیگیری فعال ثبت شده،
+        // مورد تکراری ایجاد نکن
+        if (activeTaskCustomers.has(c.id)) return;
+
         const days = daysSince(c.last_contact_at);
-        if (c.status !== 'lost' && (days === null || days >= 14)) { todos.push({ urgency: days === null || days >= 30 ? 'urgent' : 'warn', icon: '📞', name: c.name, reason: days === null ? 'هنوز تماسی ثبت نشده' : `${days} روز بدون پیگیری` }); }
-        if (c.birthday) {
-            const bday = new Date(c.birthday); const today = new Date();
-            if (bday.getMonth() === today.getMonth() && bday.getDate() === today.getDate()) { todos.push({ urgency: 'good', icon: '🎂', name: c.name, reason: 'امروز تولدشه!' }); }
+
+        if (days === null || days >= 14) {
+            todos.push({
+                urgency:
+                    days === null || days >= 30
+                        ? 'urgent'
+                        : 'warn',
+                icon: '📞',
+                name: c.name,
+                reason:
+                    days === null
+                        ? 'هنوز تماسی ثبت نشده'
+                        : `${days} روز بدون پیگیری`,
+                customerId: c.id
+            });
         }
     });
-    const order = { urgent: 0, warn: 1, good: 2 };
-    todos.sort((a, b) => order[a.urgency] - order[b.urgency]);
+
+    // تولد مشتریان
+    customers.forEach(c => {
+        if (!c.birthday) return;
+
+        const birthday = new Date(c.birthday + 'T00:00:00');
+
+        if (
+            birthday.getMonth() === today.getMonth() &&
+            birthday.getDate() === today.getDate()
+        ) {
+            todos.push({
+                urgency: 'good',
+                icon: '🎂',
+                name: c.name,
+                reason: 'امروز تولدشه!',
+                customerId: c.id
+            });
+        }
+    });
+
+    const order = {
+        urgent: 0,
+        warn: 1,
+        good: 2
+    };
+
+    todos.sort((a, b) => {
+        return order[a.urgency] - order[b.urgency];
+    });
+
     return todos.slice(0, 5);
-}
+        }
+    
 
 function renderTodos() {
     const todos = getTodos();
