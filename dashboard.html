@@ -108,7 +108,8 @@ body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f8fafc;color:#0f172a;li
         </div>
         
         <p style="font-size: 12px; color: #475569; margin-bottom: 12px; line-height: 1.6;">
-            برای جذب مشتریان جدید، لینک کارت ویزیت خود را برای آن‌ها ارسال کنید. هر بازدید منجر به ثبت مشتری جدید می‌شود.
+            لینک کارت ویزیت خود را برای دیگران ارسال کنید تا با کسب‌وکار، خدمات و راه‌های ارتباطی شما آشنا شوند. افرادی که مایل باشند، می‌توانند با رضایت خود به فهرست مشتریان شما بپیوندند.
+
         </p>
 
         <!-- لینک اختصاصی -->
@@ -737,21 +738,105 @@ function getTodos() {
     return todos.slice(0, 5);
         }
     
-
 function renderTodos() {
+    const list = $('todoList');
+    const count = $('todoCount');
     const todos = getTodos();
-    $('todoCount').textContent = todos.length;
-    if (!todos.length) { $('todoList').innerHTML = `<div class="empty-note">${customers.length ? '✅ امروز کار فوری نداری. آفرین!' : 'مشتری‌ای نداری. اول مشتری اضافه کن.'}</div>`; return; }
-    $('todoList').innerHTML = '';
+
+    count.textContent = todos.length;
+    list.innerHTML = '';
+
+    if (!todos.length) {
+        const empty = document.createElement('div');
+        empty.className = 'empty-note';
+        empty.textContent = customers.length
+            ? '✅ امروز کار فوری نداری. آفرین!'
+            : 'مشتری‌ای نداری. اول مشتری اضافه کن.';
+        list.appendChild(empty);
+        return;
+    }
+
     todos.forEach(t => {
         const div = document.createElement('div');
         div.className = 'todo-item ' + t.urgency;
-        div.innerHTML = `<div class="todo-icon">${t.icon}</div><div class="todo-content"><div class="todo-name">${t.name}</div><div class="todo-reason">${t.reason}</div></div><div style="font-size:12px;color:#2563eb;font-weight:700;">پیگیری ←</div>`;
-        div.style.cursor = 'pointer';
-        div.onclick = () => { window.location.href = 'customers.html'; };
-        $('todoList').appendChild(div);
+
+        const icon = document.createElement('div');
+        icon.className = 'todo-icon';
+        icon.textContent = t.icon || '📌';
+
+        const content = document.createElement('div');
+        content.className = 'todo-content';
+
+        const name = document.createElement('div');
+        name.className = 'todo-name';
+        name.textContent = t.name || 'مشتری';
+
+        const reason = document.createElement('div');
+        reason.className = 'todo-reason';
+        reason.textContent = t.reason || '';
+
+        content.append(name, reason);
+
+        const actions = document.createElement('div');
+        actions.style.cssText =
+            'display:flex;flex-direction:column;gap:6px;align-items:flex-start;';
+
+        const style =
+            'border:0;border-radius:7px;padding:7px 9px;' +
+            'font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;';
+
+        if (t.taskId) {
+            const completeBtn = document.createElement('button');
+            completeBtn.textContent = 'تکمیل پیگیری';
+            completeBtn.style.cssText =
+                style + 'background:#dcfce7;color:#166534;';
+
+            completeBtn.onclick = async e => {
+                e.stopPropagation();
+                await completeContactTask(t.taskId);
+            };
+
+            actions.appendChild(completeBtn);
+
+        } else if (t.customerId) {
+            const callBtn = document.createElement('button');
+            callBtn.textContent = 'ثبت تماس';
+            callBtn.style.cssText =
+                style + 'background:#dbeafe;color:#1d4ed8;';
+
+            callBtn.onclick = async e => {
+                e.stopPropagation();
+                await registerCustomerContact(t.customerId);
+            };
+
+            const taskBtn = document.createElement('button');
+            taskBtn.textContent = 'تعیین پیگیری';
+            taskBtn.style.cssText =
+                style + 'background:#fef3c7;color:#92400e;';
+
+            taskBtn.onclick = async e => {
+                e.stopPropagation();
+                await createContactTask(t.customerId);
+            };
+
+            actions.append(callBtn, taskBtn);
+        }
+
+        div.append(icon, content, actions);
+
+        if (t.customerId) {
+            div.style.cursor = 'pointer';
+            div.onclick = () => {
+                window.location.href =
+                    'customer-360.html?id=' +
+                    encodeURIComponent(t.customerId);
+            };
+        }
+
+        list.appendChild(div);
     });
-}
+    }
+    
 
 function renderRisk() {
     const risky = customers.filter(c => { if (c.status === 'lost') return false; const days = daysSince(c.last_contact_at); if (days === null) return true; return days >= 21; });
