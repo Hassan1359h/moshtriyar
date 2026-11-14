@@ -799,6 +799,7 @@ function getTodos() {
     return todos.slice(0, 5);
         }
     
+
 function renderTodos() {
     const list = $('todoList');
     const count = $('todoCount');
@@ -840,51 +841,82 @@ function renderTodos() {
 
         const actions = document.createElement('div');
         actions.style.cssText =
-            'display:flex;flex-direction:column;gap:6px;align-items:flex-start;';
+            'display:flex;flex-direction:column;gap:8px;align-items:stretch;';
 
-        const style =
-            'border:0;border-radius:7px;padding:7px 9px;' +
-            'font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;';
+        const buttonStyle = `
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            min-height:40px;
+            padding:9px 13px;
+            border-radius:9px;
+            font-family:inherit;
+            font-size:12px;
+            font-weight:800;
+            cursor:pointer;
+            border:1px solid transparent;
+            appearance:none;
+            -webkit-appearance:none;
+            box-shadow:0 2px 5px rgba(0,0,0,.10);
+        `;
 
         if (t.taskId) {
-  const completeBtn = document.createElement('button');
-  completeBtn.type = 'button';
-  completeBtn.textContent = '✓ تکمیل پیگیری';
+            const completeBtn = document.createElement('button');
+            completeBtn.type = 'button';
+            completeBtn.textContent = '✓ تکمیل پیگیری';
+            completeBtn.style.cssText =
+                buttonStyle +
+                'background:#16a34a;color:white;border-color:#15803d;';
 
-  completeBtn.style.cssText = `
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 38px;
-    padding: 9px 14px;
-    background: #16a34a;
-    color: #ffffff;
-    border: 1px solid #15803d;
-    border-radius: 9px;
-    font-family: inherit;
-    font-size: 12px;
-    font-weight: 800;
-    cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0,0,0,.15);
-    appearance: none;
-    -webkit-appearance: none;
-  `;
+            completeBtn.onclick = async e => {
+                e.preventDefault();
+                e.stopPropagation();
+                completeBtn.disabled = true;
+                completeBtn.textContent = 'در حال ثبت...';
 
-  completeBtn.onclick = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    completeBtn.disabled = true;
-    completeBtn.textContent = 'در حال ثبت...';
+                try {
+                    await completeContactTask(t.taskId);
+                } finally {
+                    completeBtn.disabled = false;
+                    completeBtn.textContent = '✓ تکمیل پیگیری';
+                }
+            };
 
-    try {
-      await completeContactTask(t.taskId);
-    } finally {
-      completeBtn.disabled = false;
-    }
-  };
+            actions.appendChild(completeBtn);
 
-  actions.appendChild(completeBtn);
-}
+        } else if (t.customerId) {
+            const callBtn = document.createElement('button');
+            callBtn.type = 'button';
+            callBtn.textContent = '📞 ثبت تماس';
+            callBtn.style.cssText =
+                buttonStyle +
+                'background:#dbeafe;color:#1d4ed8;border-color:#93c5fd;';
+
+            callBtn.onclick = async e => {
+                e.preventDefault();
+                e.stopPropagation();
+                await registerCustomerContact(t.customerId);
+            };
+
+            const taskBtn = document.createElement('button');
+            taskBtn.type = 'button';
+            taskBtn.textContent = '📅 تعیین پیگیری';
+            taskBtn.style.cssText =
+                buttonStyle +
+                'background:#fef3c7;color:#92400e;border-color:#fcd34d;';
+
+            taskBtn.onclick = async e => {
+                e.preventDefault();
+                e.stopPropagation();
+                await createContactTask(t.customerId);
+            };
+
+            actions.append(callBtn, taskBtn);
+        }
+
+        // این خط مهم است؛ محتوای ردیف را به صفحه اضافه می‌کند
+        div.append(icon, content, actions);
+
         if (t.customerId) {
             div.style.cursor = 'pointer';
             div.onclick = () => {
@@ -896,7 +928,8 @@ function renderTodos() {
 
         list.appendChild(div);
     });
-    }
+}
+
     
 
 function renderRisk() {
