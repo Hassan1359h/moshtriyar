@@ -545,7 +545,17 @@ if (!businessName) {
     );
 
     let linkData = await linkRes.json().catch(() => ({}));
-
+console.log("Invite link diagnostic:", {
+  ok: linkRes.ok,
+  status: linkRes.status,
+  code: linkData?.code,
+  message: linkData?.message,
+  msg: linkData?.msg,
+  hasHashedToken: !!(
+    linkData?.hashed_token ||
+    linkData?.properties?.hashed_token
+  )
+});
     // اگر حساب قبلاً وجود داشته باشد، لینک ورود می‌سازیم؛
     // رمز قبلی مشتری تغییر نمی‌کند.
     if (!linkRes.ok) {
