@@ -730,15 +730,23 @@ async function sendMessage(){
          * ارسال درخواست به Vercel API
          */
 
-        const response = await fetch(
-            '/api/ai-chat',
-            {
-                method: 'POST',
+        const { data: sessionData, error: sessionError } =
+    await supabase.auth.getSession();
 
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
+if (sessionError || !sessionData?.session?.access_token) {
+    throw new Error('نشست شما منقضی شده است؛ لطفاً دوباره وارد شوید.');
+}
+
+const response = await fetch(
+    '/api/ai-chat',
+    {
+        method: 'POST',
+
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${sessionData.session.access_token}`
+        },
 
                 body: JSON.stringify({
 
