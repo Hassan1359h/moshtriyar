@@ -384,7 +384,7 @@ export default async function handler(req, res) {
   const inviteLimit = await checkRateLimit(
     inviteIP,
     "customer-invite",
-    3,
+    20,
     3600
   );
 
