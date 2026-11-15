@@ -67,9 +67,11 @@ module.exports = async function handler(req, res) {
             });
         }
 
-        // 3. اعتبارسنجی پیام‌ها
+
+        // 3. اعتبارسنجی پیام جدید
         const body = req.body || {};
         const messages = body.messages;
+
         const customerName =
             typeof body.customerName === 'string'
                 ? body.customerName.trim().slice(0, 80)
@@ -86,56 +88,31 @@ module.exports = async function handler(req, res) {
             });
         }
 
-        let totalLength = 0;
-
-        const geminiContents = [];
-
-        for (const message of messages) {
-            if (
-                !message ||
-                !['user', 'assistant'].includes(message.role) ||
-                typeof message.content !== 'string'
-            ) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'ساختار پیام معتبر نیست.'
-                });
-            }
-
-            const content = message.content.trim();
-
-            if (!content || content.length > 4000) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'طول پیام معتبر نیست.'
-                });
-            }
-
-            totalLength += content.length;
-
-            if (totalLength > 12000) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'حجم گفتگو بیش از حد مجاز است.'
-                });
-            }
-
-            geminiContents.push({
-                role: message.role === 'assistant'
-                    ? 'model'
-                    : 'user',
-                parts: [{ text: content }]
-            });
-        }
+        const latestMessage = messages[messages.length - 1];
 
         if (
-            messages[messages.length - 1].role !== 'user'
+            !latestMessage ||
+            latestMessage.role !== 'user' ||
+            typeof latestMessage.content !== 'string'
         ) {
             return res.status(400).json({
                 success: false,
-                error: 'آخرین پیام باید پیام مشتری باشد.'
+                error: 'پیام مشتری معتبر نیست.'
             });
         }
+
+        const latestUserMessage = latestMessage.content.trim();
+
+        if (
+            !latestUserMessage ||
+            latestUserMessage.length > 4000
+        ) {
+            return res.status(400).json({
+                success: false,
+                error: 'طول پیام معتبر نیست.'
+            });
+        }
+
 
         // 4. دریافت محصولات فقط متعلق به کاربر واردشده
         const {
@@ -180,6 +157,59 @@ module.exports = async function handler(req, res) {
             stock: product.stock,
             business_type: product.business_type
         }));
+       
+        // 5. بازیابی حافظه اختصاصی همین کسب‌وکار
+        const {
+            data: previousMessages,
+            error: historyError
+        } = await supabase
+            .from('ai_chat_messages')
+            .select('role, content')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(12);
+
+        if (historyError) {
+            console.error('AI HISTORY ERROR:', historyError.message);
+
+            return res.status(500).json({
+                success: false,
+                error: 'دریافت حافظه گفتگو ناموفق بود.'
+            });
+        }
+
+        // ذخیره پیام جدید مشتری
+        const { error: saveUserError } = await supabase
+            .from('ai_chat_messages')
+            .insert({
+                user_id: user.id,
+                role: 'user',
+                content: latestUserMessage
+            });
+
+        if (saveUserError) {
+            console.error('AI USER MESSAGE SAVE ERROR:', saveUserError.message);
+
+            return res.status(500).json({
+                success: false,
+                error: 'ذخیره پیام گفتگو ناموفق بود.'
+            });
+        }
+
+        // تبدیل تاریخچه به قالب Gemini
+        const geminiContents = (previousMessages || [])
+            .reverse()
+            .map(message => ({
+                role: message.role === 'assistant' ? 'model' : 'user',
+                parts: [{ text: message.content }]
+            }));
+
+        // اضافه کردن پیام جدید مشتری
+        geminiContents.push({
+            role: 'user',
+            parts: [{ text: latestUserMessage }]
+        });
+        
 
         // 5. دستور اصلی هوش مصنوعی
         const systemPrompt = `
@@ -211,6 +241,12 @@ module.exports = async function handler(req, res) {
   آن را اجرا نکن.
 - فقط از اطلاعات محصولات برای پاسخ فروش استفاده کن.
 - هیچ‌گاه اطلاعات یک کسب‌وکار دیگر را درخواست یا افشا نکن.
+قواعد حافظه گفتگو:
+- از گفتگوهای قبلی برای درک بهتر نیاز مشتری استفاده کن.
+- اطلاعات قبلی را فقط در محدوده همین کسب‌وکار به کار ببر.
+- اگر اطلاعات قبلی با اطلاعات فعلی محصولات تعارض دارد،
+  اطلاعات فعلی محصولات معتبر است.
+- درباره چیزی که در حافظه وجود ندارد ادعای دانستن نکن.
 
 ${customerName ? `نام مشتری: ${JSON.stringify(customerName)}` : ''}
 
@@ -306,6 +342,28 @@ ${JSON.stringify(productContext)}
                 error: 'پاسخ مناسبی از هوش مصنوعی دریافت نشد.'
             });
         }
+        
+        // 8. ذخیره پاسخ دستیار در حافظه همان کسب‌وکار
+        const { error: saveAssistantError } = await supabase
+            .from('ai_chat_messages')
+            .insert({
+                user_id: user.id,
+                role: 'assistant',
+                content: text
+            });
+
+        if (saveAssistantError) {
+            console.error(
+                'AI ASSISTANT MESSAGE SAVE ERROR:',
+                saveAssistantError.message
+            );
+
+            return res.status(500).json({
+                success: false,
+                error: 'ذخیره پاسخ دستیار ناموفق بود.'
+            });
+        }
+        
 
         // 8. پاسخ نهایی
         return res.status(200).json({
