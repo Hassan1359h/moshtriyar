@@ -219,16 +219,23 @@ if (linkType === 'magiclink') {
           showMessage('پنل مشتری با موفقیت فعال شد. اکنون می‌توانید با حساب قبلی خود وارد شوید.', 'success');
         } 
 
-      } catch (error) {
-        inviteSessionReady = false;
-        invitedUserId = null;
-        form.hidden = true;
+} catch (error) {
+  console.error("Customer invitation initialization failed:", {
+    message: error?.message,
+    name: error?.name
+  });
 
-        showMessage(
-          'لینک دعوت‌نامه نامعتبر یا منقضی شده است. لطفاً از کسب‌وکار درخواست دعوت‌نامه جدید کنید.',
-          'error'
-        );
-      }
+  inviteSessionReady = false;
+  invitedUserId = null;
+  form.hidden = true;
+
+  showMessage(
+    'خطای فعال‌سازی: ' + (error?.message || 'خطای نامشخص'),
+    'error'
+       );
+
+      } 
+
     }
 
     form.addEventListener('submit', async (event) => {
