@@ -264,6 +264,49 @@ body{
     }
 }
 
+.mode-switch{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    padding:12px;
+    background:#fff;
+    border-bottom:1px solid #e2e8f0;
+    flex-shrink:0;
+}
+
+.mode-btn{
+    border:1px solid #cbd5e1;
+    background:#f8fafc;
+    color:#475569;
+    padding:9px 16px;
+    border-radius:12px;
+    font-family:inherit;
+    font-size:12px;
+    font-weight:700;
+    cursor:pointer;
+}
+
+.mode-btn.active{
+    background:#2563eb;
+    color:#fff;
+    border-color:#2563eb;
+}
+
+.mode-btn:disabled{
+    opacity:.5;
+    cursor:not-allowed;
+}
+
+@media(max-width:600px){
+    .mode-switch{
+        gap:6px;
+    }
+
+    .mode-btn{
+        padding:8px 10px;
+        font-size:11px;
+    }
+}    
 @media(max-width:600px){
     .msg .bubble{
         max-width:85%;
@@ -287,9 +330,19 @@ body{
 <body>
 
 <header class="header">
-    <h1>✨ دستیار فروش</h1>
+    <h1 id="modeTitle">✨ دستیار فروش</h1>
     <a href="dashboard.html" class="btn-back">← داشبورد</a>
 </header>
+
+<div class="mode-switch">
+    <button type="button" class="mode-btn active" data-mode="sales">
+        🛍️ دستیار فروش
+    </button>
+
+    <button type="button" class="mode-btn" data-mode="manager">
+        🧠 مشاور مدیریت کسب‌وکار
+    </button>
+</div>
 
 <div class="chat" id="chat">
 
@@ -371,7 +424,104 @@ const $ = id => document.getElementById(id);
 let messages = [];
 let products = [];
 let customerName = "";
+let currentMode = 'sales';
+    
+ /* =========================
+   تغییر حالت دستیار
+========================= */
 
+function switchMode(mode){
+
+    if(!['sales', 'manager'].includes(mode)){
+        return;
+    }
+
+    if($('sendBtn').disabled){
+        return;
+    }
+
+    if(currentMode === mode){
+        return;
+    }
+
+    currentMode = mode;
+
+    // جداسازی تاریخچه نمایشی دو حالت
+    messages = [];
+
+    // تغییر عنوان
+    $('modeTitle').textContent =
+        mode === 'sales'
+        ? '✨ دستیار فروش'
+        : '🧠 مشاور مدیریت کسب‌وکار';
+
+    // تغییر پیام خوش‌آمدگویی
+    $('chat').innerHTML = '';
+
+    addMessage(
+        'bot',
+        mode === 'sales'
+        ? 'سلام! من دستیار فروش تو هستم.\\n\\nمی‌تونم برای پاسخ به مشتریان، معرفی محصولات، مذاکره و افزایش فروش کمکت کنم.\\n\\nبگو مشتری چی گفته؟ 👇'
+        : 'سلام! من مشاور هوشمند مدیریت کسب‌وکار تو هستم.\\n\\nمی‌تونم اطلاعات مشتریان، شکایت‌ها، پیگیری‌ها، بازخوردها و عملکرد کسب‌وکارت رو تحلیل کنم و برای رشد کسب‌وکارت پیشنهاد عملی بدم.\\n\\nچه موضوعی رو بررسی کنیم؟ 👇'
+    );
+
+    // تغییر پیشنهادهای آماده
+    const suggestions = mode === 'sales'
+        ? [
+            ['💰 گرونه', 'مشتری میگه قیمتت بالاست، چی بگم؟'],
+            ['🎒 محصول دارین؟', 'مشتری میگه باتوم کوهنوردی دارین؟'],
+            ['📭 جواب نمیده', 'مشتری جواب نمیده، چطور پیگیری کنم؟'],
+            ['⏰ بعداً', 'مشتری میگه بعداً میخرم، چی بگم؟'],
+            ['🙏 تشکر', 'پیام تشکر از خرید بنویس']
+        ]
+        : [
+            ['📊 تحلیل مشتریان', 'وضعیت مشتریان کسب‌وکارم رو تحلیل کن'],
+            ['⚠️ شکایت‌ها', 'شکایت‌های ثبت‌شده و وضعیت رسیدگی به آن‌ها رو بررسی کن'],
+            ['📞 پیگیری‌ها', 'پیگیری‌های انجام‌شده و پیگیری‌های عقب‌افتاده رو بررسی کن'],
+            ['📈 افزایش فروش', 'با توجه به اطلاعات کسب‌وکارم راهکارهای افزایش فروش پیشنهاد بده'],
+            ['💡 برنامه رشد', 'یک برنامه عملی برای بهبود عملکرد کسب‌وکارم ارائه بده']
+        ];
+
+    const container = $('suggestions');
+
+    container.innerHTML = '';
+
+    suggestions.forEach(([label, question]) => {
+
+        const button = document.createElement('button');
+
+        button.className = 'suggestion';
+        button.textContent = label;
+        button.dataset.q = question;
+
+        button.addEventListener('click', function(){
+
+            $('input').value = this.dataset.q;
+
+            sendMessage();
+        });
+
+        container.appendChild(button);
+    });
+
+    $('input').placeholder =
+        mode === 'sales'
+        ? 'بنویس...'
+        : 'سؤال مدیریتی خود را بنویس...';
+}
+
+// اتصال دکمه‌های انتخاب حالت
+document.querySelectorAll('.mode-btn').forEach(button => {
+
+    button.addEventListener('click', function(){
+
+        switchMode(this.dataset.mode);
+
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.classList.toggle('active', btn === this);
+        });
+    });
+});
 
 /* =========================
    بررسی ورود کاربر
@@ -696,7 +846,10 @@ async function sendMessage(){
      */
 
     $('sendBtn').disabled = true;
-
+    
+     document.querySelectorAll('.mode-btn').forEach(btn => {
+       btn.disabled = true;
+    });
     document
         .querySelectorAll('.suggestion')
         .forEach(btn => {
@@ -748,15 +901,17 @@ const response = await fetch(
             'Authorization': `Bearer ${sessionData.session.access_token}`
         },
 
-                body: JSON.stringify({
+          body: JSON.stringify({
 
-                    messages: messages,
+    mode: currentMode,
 
-                    products: productContext,
+    messages: messages,
 
-                    customerName: customerName
+    products: productContext,
 
-                })
+    customerName: customerName
+
+                })      
             }
         );
 
@@ -895,7 +1050,10 @@ const response = await fetch(
     }finally{
 
         $('sendBtn').disabled = false;
-
+        
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.disabled = false;
+    });
 
         document
             .querySelectorAll('.suggestion')
