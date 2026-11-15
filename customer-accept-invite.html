@@ -155,11 +155,22 @@
             token_hash: tokenHash,
             type: linkType
           });
+           if (error) {
+  console.error("Supabase verifyOtp error:", {
+    message: error.message,
+    code: error.code,
+    status: error.status
+  });
 
-        if (error || !data.session || !data.user) {
-          throw new Error('Invitation verification failed');
-        }
+  throw new Error(
+    'خطای تأیید Supabase: ' + error.message
+  );
+}
 
+if (!data.session || !data.user) {
+  throw new Error('Supabase session or user is missing');
+}
+        
         const { data: verified, error: userError } =
           await inviteAuth.auth.getUser();
 
