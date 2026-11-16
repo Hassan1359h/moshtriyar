@@ -264,37 +264,79 @@ const REAL_PAYMENT_CUTOFF = Date.parse('2026-11-11T05:41:00.000Z');
 const isBazaarGateway = value => ['cafebazaar', 'cafe_bazaar', 'bazaar'].includes(String(value || '').toLowerCase().replace(/[\s-]/g, '_'));
 const isBazaarPayment = payment => isBazaarGateway(payment?.gateway) || isBazaarGateway(payment?.payment_method) || isBazaarGateway(payment?.method);
 let verifiedPaymentIds = new Set(), verifiedBuyerIds = new Set();
+
 function rebuildVerifiedPurchases() {
   verifiedPaymentIds = new Set();
   verifiedBuyerIds = new Set();
-  const profilesById = new Map(allProfiles.map(p => [String(p.id), p]));
-  const paymentsById = new Map(allPayments.map(p => [String(p.id), p]));
+
+  const profilesById = new Map(
+    allProfiles.map(p => [String(p.id), p])
+  );
+
   const bazaarSubscriptionsByPayment = new Map();
+
   for (const sub of allSubscriptions) {
     if (!isBazaarGateway(sub.gateway) || !sub.payment_id) continue;
     bazaarSubscriptionsByPayment.set(String(sub.payment_id), sub);
   }
+
   const verifiedBazaarByPayment = new Map();
+
   for (const purchase of allBazaarPurchases) {
-    if (String(purchase.status || '').toLowerCase() !== 'verified' || !purchase.payment_id) continue;
-    if (!purchase.verified_at || new Date(purchase.verified_at).getTime() < REAL_PAYMENT_CUTOFF) continue;
+    if (String(purchase.status || '').toLowerCase() !== 'verified') continue;
+    if (!purchase.payment_id || !purchase.verified_at) continue;
+    if (new Date(purchase.verified_at).getTime() < REAL_PAYMENT_CUTOFF) continue;
+
     verifiedBazaarByPayment.set(String(purchase.payment_id), purchase);
   }
+
   for (const payment of allPayments) {
-    if (String(payment.status || '').toLowerCase() !== 'approved' || Number(payment.amount || 0) <= 0) continue;
+    if (String(payment.status || '').toLowerCase() !== 'approved') continue;
+    if (Number(payment.amount || 0) <= 0) continue;
     if (!payment.created_at || new Date(payment.created_at).getTime() < REAL_PAYMENT_CUTOFF) continue;
+
     const userId = String(payment.user_id || '');
     const profile = profilesById.get(userId);
-    if (!profile || EXCLUDED_ACCOUNT_EMAILS.has(String(profile.email || '').toLowerCase())) continue;
+
+    if (!profile) continue;
+    if (EXCLUDED_ACCOUNT_EMAILS.has(String(profile.email || '').toLowerCase())) continue;
+
     const paymentId = String(payment.id);
+
+    const linkedSubscriptions = allSubscriptions.filter(sub =>
+      String(sub.payment_id || '') === paymentId &&
+      String(sub.user_id) === userId
+    );
+
     const bazaarSub = bazaarSubscriptionsByPayment.get(paymentId);
-    if (bazaarSub || isBazaarPayment(payment)) {
+    const isBazaar = !!bazaarSub || isBazaarPayment(payment);
+
+    if (isBazaar) {
       const purchase = verifiedBazaarByPayment.get(paymentId);
-      if (!bazaarSub || !purchase || String(bazaarSub.user_id) !== userId || String(purchase.user_id) !== userId) continue;
+
+      if (
+        !bazaarSub ||
+        !purchase ||
+        String(bazaarSub.user_id) !== userId ||
+        String(purchase.user_id) !== userId
+      ) continue;
+    } else {
+      const manualSubscription = linkedSubscriptions.find(sub =>
+        !isBazaarGateway(sub.gateway)
+      );
+
+      if (!manualSubscription) continue;
     }
+
     verifiedPaymentIds.add(paymentId);
     verifiedBuyerIds.add(userId);
   }
+
+  allSpecialCustomers = allProfiles.filter(p =>
+    verifiedBuyerIds.has(String(p.id))
+  );
+}
+  
   allSpecialCustomers = allProfiles.filter(p => verifiedBuyerIds.has(String(p.id)));
 }
 function verifiedPaymentsForUser(userId) {
