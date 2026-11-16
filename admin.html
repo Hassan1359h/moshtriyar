@@ -337,8 +337,6 @@ function rebuildVerifiedPurchases() {
   );
 }
   
-  allSpecialCustomers = allProfiles.filter(p => verifiedBuyerIds.has(String(p.id)));
-}
 function verifiedPaymentsForUser(userId) {
   return allPayments.filter(p => String(p.user_id) === String(userId) && verifiedPaymentIds.has(String(p.id)));
 }
