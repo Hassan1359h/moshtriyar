@@ -246,9 +246,6 @@ function rebuildVerifiedPurchases() {
         qualifyingUserIds.add(String(purchase.user_id));
     }
 
-    customers = customers.filter(user => qualifyingUserIds.has(String(user.id)));
-}
-
 function verifiedSubscriptionsFor(userId) {
     const id = String(userId);
     return subscriptions.filter(sub => {
@@ -289,20 +286,34 @@ function trialStatus(user) {
 }
 
 function updateStats() {
-    const visible = customers.filter(user => !user.is_deleted);
-    const active = visible.filter(user => !user.is_blocked && paidSubscriptionStatus(user.id).active);
-    const trials = visible.filter(user => !user.is_blocked && !paidSubscriptionStatus(user.id).active && trialStatus(user).active);
+    const special = customers.filter(user =>
+        qualifyingUserIds.has(String(user.id))
+    );
+
+    const visible = special.filter(user => !user.is_deleted);
+
+    const active = visible.filter(user =>
+        !user.is_blocked && paidSubscriptionStatus(user.id).active
+    );
+
+    const trials = visible.filter(user =>
+        !user.is_blocked &&
+        !paidSubscriptionStatus(user.id).active &&
+        trialStatus(user).active
+    );
+
     const expired = visible.filter(user =>
         !user.is_blocked &&
         !paidSubscriptionStatus(user.id).active &&
         !trialStatus(user).active
     );
 
-    totalCount.textContent = customers.length;
+    totalCount.textContent = special.length;
     activeCount.textContent = active.length;
     expiredCount.textContent = expired.length;
     trialCount.textContent = trials.length;
-    archivedCount.textContent = customers.filter(user => user.is_deleted).length;
+    archivedCount.textContent =
+        special.filter(user => user.is_deleted).length;
 }
 
 function getStatusBadge(user) {
