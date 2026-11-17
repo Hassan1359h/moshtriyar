@@ -499,12 +499,11 @@ ${JSON.stringify(crmContext)}
             parts: [{ text: latestUserMessage }]
         });
 
-         
-        
       const models = [
-       'gemini-3.8-flash'
-      ];
-
+    'gemini-3.6-flash',
+    'gemini-3.5-flash',
+    'gemini-2.5-flash'
+];
 
         let response = null;
         let lastGeminiError = '';
