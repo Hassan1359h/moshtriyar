@@ -500,12 +500,11 @@ ${JSON.stringify(crmContext)}
         });
 
          
-        // 7. ارتباط با Gemini با محدودیت زمانی و ثبت خطای دقیق
-        const models = [
-            'gemini-3.6-flash',
-            'gemini-3.5-flash',
-            'gemini-2.5-flash'
-        ];
+        
+      const models = [
+       'gemini-3.8-flash'
+      ];
+
 
         let response = null;
         let lastGeminiError = '';
@@ -514,7 +513,7 @@ ${JSON.stringify(crmContext)}
             const controller = new AbortController();
             const timeoutId = setTimeout(
                 () => controller.abort(),
-                15000
+                30000
             );
 
             try {
