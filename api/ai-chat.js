@@ -499,17 +499,26 @@ ${JSON.stringify(crmContext)}
             parts: [{ text: latestUserMessage }]
         });
 
-        // 7. ارتباط با Gemini
+         
+        // 7. ارتباط با Gemini با محدودیت زمانی و ثبت خطای دقیق
         const models = [
-    'gemini-3.6-flash',
-    'gemini-3.5-flash',
-    'gemini-2.5-flash'
-];
+            'gemini-3.6-flash',
+            'gemini-3.5-flash',
+            'gemini-2.5-flash'
+        ];
+
         let response = null;
+        let lastGeminiError = '';
 
         for (const model of models) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(
+                () => controller.abort(),
+                15000
+            );
+
             try {
-                response = await fetch(
+                const geminiResponse = await fetch(
                     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(GEMINI_KEY)}`,
                     {
                         method: 'POST',
@@ -525,36 +534,52 @@ ${JSON.stringify(crmContext)}
                                 temperature: mode === 'manager' ? 0.4 : 0.7,
                                 maxOutputTokens: 1500
                             }
-                        })
+                        }),
+                        signal: controller.signal
                     }
                 );
 
-                if (response.ok) {
+                if (geminiResponse.ok) {
+                    response = geminiResponse;
                     break;
                 }
 
+                const errorDetails = await geminiResponse.text();
+
+                lastGeminiError =
+                    `${model} | HTTP ${geminiResponse.status} | ${errorDetails.slice(0, 1200)}`;
+
                 console.error(
-                    `Gemini ${model} error:`,
-                    response.status
+                    'GEMINI API ERROR:',
+                    lastGeminiError
                 );
 
             } catch (error) {
+                lastGeminiError =
+                    `${model} | ${error.name}: ${error.message}`;
+
                 console.error(
-                    `Gemini ${model} connection error:`,
-                    error.message
+                    'GEMINI CONNECTION ERROR:',
+                    lastGeminiError
                 );
 
-                response = null;
+            } finally {
+                clearTimeout(timeoutId);
             }
         }
 
         if (!response || !response.ok) {
+            console.error(
+                'ALL GEMINI MODELS FAILED:',
+                lastGeminiError
+            );
+
             return res.status(502).json({
                 success: false,
                 error: 'ارتباط با سرویس هوش مصنوعی ناموفق بود.'
             });
         }
-
+        
         const data = await response.json();
 
         const answer = (
