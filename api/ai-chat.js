@@ -2,8 +2,46 @@
 const { createClient } = require('@supabase/supabase-js');
 
 module.exports = async function handler(req, res) {
+    let supabase = null;
+    let quotaUserId = null;
+    let reservedQuotaId = null;
+
+    // بازگرداندن سهمیه در صورت شکست درخواست
+    async function refundReservedQuota() {
+        if (!reservedQuotaId || !supabase || !quotaUserId) {
+            return;
+        }
+
+        // جلوگیری از اجرای دوباره بازپرداخت در همین درخواست
+        const quotaId = reservedQuotaId;
+        reservedQuotaId = null;
+
+        try {
+            const { data, error } = await supabase.rpc(
+                'refund_ai_quota',
+                {
+                    p_user_id: quotaUserId,
+                    p_quota_id: quotaId
+                }
+            );
+
+            if (error || data !== true) {
+                console.error(
+                    'AI QUOTA REFUND ERROR:',
+                    error?.message || 'Refund was not confirmed'
+                );
+            }
+        } catch (error) {
+            console.error(
+                'AI QUOTA REFUND EXCEPTION:',
+                error?.message || error
+            );
+        }
+    }
+
     if (req.method !== 'POST') {
         res.setHeader('Allow', 'POST');
+
         return res.status(405).json({
             success: false,
             error: 'Method not allowed'
@@ -11,6 +49,7 @@ module.exports = async function handler(req, res) {
     }
 
     try {
+        // 1. بررسی تنظیمات سرور
         const SUPABASE_URL = process.env.SUPABASE_URL;
         const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
         const GEMINI_KEY = process.env.GEMINI_API_KEY;
@@ -22,7 +61,7 @@ module.exports = async function handler(req, res) {
             });
         }
 
-        // 1. احراز هویت
+        // 2. احراز هویت
         const authorization = req.headers.authorization || '';
 
         if (!authorization.startsWith('Bearer ')) {
@@ -41,7 +80,7 @@ module.exports = async function handler(req, res) {
             });
         }
 
-        const supabase = createClient(
+        supabase = createClient(
             SUPABASE_URL,
             SUPABASE_KEY,
             {
@@ -64,7 +103,9 @@ module.exports = async function handler(req, res) {
             });
         }
 
-        // 2. اعتبارسنجی درخواست
+        quotaUserId = user.id;
+
+        // 3. اعتبارسنجی درخواست
         const body = req.body || {};
         const mode = body.mode || 'sales';
 
@@ -118,13 +159,20 @@ module.exports = async function handler(req, res) {
                 ? body.customerName.trim().slice(0, 80)
                 : '';
 
-        // 3. بررسی نقش و وضعیت حساب
+        // 4. بررسی نقش و وضعیت حساب
         const {
             data: profile,
             error: profileError
         } = await supabase
             .from('profiles')
-            .select('id, role, full_name, business_type, is_blocked, is_deleted')
+            .select(`
+                id,
+                role,
+                full_name,
+                business_type,
+                is_blocked,
+                is_deleted
+            `)
             .eq('id', user.id)
             .maybeSingle();
 
@@ -145,7 +193,7 @@ module.exports = async function handler(req, res) {
             });
         }
 
-        // 4. مجوز اختصاصی مشاور مدیر
+        // 5. مجوز اختصاصی مشاور مدیر
         if (mode === 'manager') {
             // مدیر کل پلتفرم از این مسیر به CRM کسب‌وکارها دسترسی ندارد.
             if (profile.role !== 'user') {
@@ -155,8 +203,7 @@ module.exports = async function handler(req, res) {
                 });
             }
 
-            // حسابی که مشتری فعال پورتال کسب‌وکار دیگری است،
-            // نباید از این مسیر به مشاور مدیر دسترسی بگیرد.
+            // مشتری فعال پورتال نباید به مشاور مدیر دسترسی داشته باشد.
             const {
                 data: portalAccess,
                 error: portalError
@@ -191,7 +238,7 @@ module.exports = async function handler(req, res) {
         let productContext = [];
         let crmContext = null;
 
-        // 5. دریافت اطلاعات مختص هر حالت
+        // 6. دریافت اطلاعات محصولات برای فروش و اینستاگرام
         if (mode === 'sales' || mode === 'instagram') {
             const {
                 data: products,
@@ -234,7 +281,10 @@ module.exports = async function handler(req, res) {
                 stock: product.stock,
                 business_type: product.business_type
             }));
+        }
 
+        // 7. ساخت دستور اختصاصی مشاور فروش
+        if (mode === 'sales') {
             systemPrompt = `
 تو دستیار فروش کسب‌وکار هستی.
 
@@ -264,9 +314,10 @@ ${JSON.stringify(productContext)}
 فقط متن نهایی مناسب برای ارسال به مشتری را بنویس.
 `;
         }
-        
-if (mode === 'instagram') {
-    systemPrompt = `
+
+        // 8. ساخت دستور اختصاصی مشاور اینستاگرام
+        if (mode === 'instagram') {
+            systemPrompt = `
 تو مدیر خلاقیت و استراتژیست حرفه‌ای بازاریابی اینستاگرام در مشتری‌یار هستی.
 
 اطلاعات کسب‌وکار:
@@ -302,11 +353,10 @@ ${JSON.stringify(productContext)}
 اگر تقویم خواست، برنامه را روزبه‌روز تنظیم کن.
 اگر کمپین خواست، هدف، مخاطب، پیام تبلیغاتی و مراحل اجرا را مشخص کن.
 `;
-}
-        
+        }
 
+        // 9. دریافت اطلاعات اختصاصی CRM برای مشاور مدیر
         if (mode === 'manager') {
-            // تمام کوئری‌ها با شناسه مالک احراز هویت‌شده محدود شده‌اند.
             const [
                 customersResult,
                 casesResult,
@@ -317,10 +367,17 @@ ${JSON.stringify(productContext)}
                 supabase
                     .from('customers')
                     .select(`
-                        id, name, status, total_purchase,
-                        total_paid, total_pending,
-                        last_contact_at, last_purchase_at,
-                        preferred_channel, best_time, notes
+                        id,
+                        name,
+                        status,
+                        total_purchase,
+                        total_paid,
+                        total_pending,
+                        last_contact_at,
+                        last_purchase_at,
+                        preferred_channel,
+                        best_time,
+                        notes
                     `)
                     .eq('user_id', user.id)
                     .order('created_at', { ascending: false })
@@ -329,10 +386,17 @@ ${JSON.stringify(productContext)}
                 supabase
                     .from('customer_cases')
                     .select(`
-                        id, customer_id, case_type,
-                        title, description, status,
-                        details, warranty_expires_at,
-                        resolved_at, created_at, updated_at
+                        id,
+                        customer_id,
+                        case_type,
+                        title,
+                        description,
+                        status,
+                        details,
+                        warranty_expires_at,
+                        resolved_at,
+                        created_at,
+                        updated_at
                     `)
                     .eq('user_id', user.id)
                     .order('created_at', { ascending: false })
@@ -341,9 +405,15 @@ ${JSON.stringify(productContext)}
                 supabase
                     .from('customer_contact_tasks')
                     .select(`
-                        id, customer_id, task_type,
-                        title, due_at, status,
-                        outcome, completed_at, created_at
+                        id,
+                        customer_id,
+                        task_type,
+                        title,
+                        due_at,
+                        status,
+                        outcome,
+                        completed_at,
+                        created_at
                     `)
                     .eq('user_id', user.id)
                     .order('created_at', { ascending: false })
@@ -352,9 +422,14 @@ ${JSON.stringify(productContext)}
                 supabase
                     .from('customer_feedback')
                     .select(`
-                        id, case_id, rating,
-                        is_satisfied, issue_resolved,
-                        comment, source, created_at
+                        id,
+                        case_id,
+                        rating,
+                        is_satisfied,
+                        issue_resolved,
+                        comment,
+                        source,
+                        created_at
                     `)
                     .eq('user_id', user.id)
                     .order('created_at', { ascending: false })
@@ -363,9 +438,16 @@ ${JSON.stringify(productContext)}
                 supabase
                     .from('customer_followups')
                     .select(`
-                        id, case_id, title, description,
-                        assigned_to, due_at, status,
-                        outcome, completed_at, created_at
+                        id,
+                        case_id,
+                        title,
+                        description,
+                        assigned_to,
+                        due_at,
+                        status,
+                        outcome,
+                        completed_at,
+                        created_at
                     `)
                     .eq('user_id', user.id)
                     .order('created_at', { ascending: false })
@@ -442,7 +524,7 @@ ${JSON.stringify(crmContext)}
 `;
         }
 
-        // 6. حافظه اختصاصی بر اساس مالک و حالت
+        // 10. دریافت حافظه اختصاصی کاربر و حالت
         const {
             data: previousMessages,
             error: historyError
@@ -466,6 +548,51 @@ ${JSON.stringify(crmContext)}
             });
         }
 
+        // 11. رزرو یک درخواست از سهمیه مشترک سه دستیار
+        const {
+            data: quotaResult,
+            error: quotaError
+        } = await supabase.rpc('consume_ai_quota', {
+            p_user_id: user.id
+        });
+
+        if (quotaError) {
+            console.error(
+                'AI QUOTA ERROR:',
+                quotaError.message
+            );
+
+            return res.status(500).json({
+                success: false,
+                error: 'بررسی سهمیه هوش مصنوعی ناموفق بود.'
+            });
+        }
+
+        if (!quotaResult || quotaResult.allowed !== true) {
+            const exhausted =
+                quotaResult?.reason === 'quota_exhausted';
+
+            return res.status(exhausted ? 429 : 403).json({
+                success: false,
+                error: exhausted
+                    ? 'سهمیه هوش مصنوعی شما به پایان رسیده است.'
+                    : 'برای استفاده از دستیار هوشمند، اشتراک Business یا VIP فعال لازم است.',
+                quota: quotaResult || null
+            });
+        }
+
+        if (!quotaResult.quota_id) {
+            console.error('AI QUOTA ERROR: Missing quota_id');
+
+            return res.status(500).json({
+                success: false,
+                error: 'رزرو سهمیه هوش مصنوعی ناموفق بود.'
+            });
+        }
+
+        reservedQuotaId = quotaResult.quota_id;
+
+        // 12. ذخیره سؤال کاربر
         const { error: saveUserError } = await supabase
             .from('ai_chat_messages')
             .insert({
@@ -481,12 +608,15 @@ ${JSON.stringify(crmContext)}
                 saveUserError.message
             );
 
+            await refundReservedQuota();
+
             return res.status(500).json({
                 success: false,
                 error: 'ذخیره پیام گفتگو ناموفق بود.'
             });
         }
 
+        // 13. آماده‌سازی تاریخچه گفتگو برای Gemini
         const geminiContents = (previousMessages || [])
             .reverse()
             .map(message => ({
@@ -499,86 +629,91 @@ ${JSON.stringify(crmContext)}
             parts: [{ text: latestUserMessage }]
         });
 
-      const models = [
-    'gemini-3.6-flash',
-    'gemini-3.5-flash',
-    'gemini-2.5-flash'
-];
+        // 14. ارسال درخواست به Gemini
+        const model = 'gemini-3.8-flash';
 
-        let response = null;
-        let lastGeminiError = '';
+        const controller = new AbortController();
 
-        for (const model of models) {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(
-                () => controller.abort(),
-                30000
+        const timeoutId = setTimeout(
+            () => controller.abort(),
+            30000
+        );
+
+        let geminiResponse;
+
+        try {
+            geminiResponse = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(GEMINI_KEY)}`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        systemInstruction: {
+                            parts: [{ text: systemPrompt }]
+                        },
+                        contents: geminiContents,
+                        generationConfig: {
+                            temperature: mode === 'manager' ? 0.4 : 0.7,
+                            maxOutputTokens: 1500
+                        }
+                    }),
+                    signal: controller.signal
+                }
+            );
+        } catch (error) {
+            console.error(
+                'GEMINI CONNECTION ERROR:',
+                error.name,
+                error.message
             );
 
-            try {
-                const geminiResponse = await fetch(
-                    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(GEMINI_KEY)}`,
-                    {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            systemInstruction: {
-                                parts: [{ text: systemPrompt }]
-                            },
-                            contents: geminiContents,
-                            generationConfig: {
-                                temperature: mode === 'manager' ? 0.4 : 0.7,
-                                maxOutputTokens: 1500
-                            }
-                        }),
-                        signal: controller.signal
-                    }
-                );
+            await refundReservedQuota();
 
-                if (geminiResponse.ok) {
-                    response = geminiResponse;
-                    break;
-                }
-
-                const errorDetails = await geminiResponse.text();
-
-                lastGeminiError =
-                    `${model} | HTTP ${geminiResponse.status} | ${errorDetails.slice(0, 1200)}`;
-
-                console.error(
-                    'GEMINI API ERROR:',
-                    lastGeminiError
-                );
-
-            } catch (error) {
-                lastGeminiError =
-                    `${model} | ${error.name}: ${error.message}`;
-
-                console.error(
-                    'GEMINI CONNECTION ERROR:',
-                    lastGeminiError
-                );
-
-            } finally {
-                clearTimeout(timeoutId);
-            }
+            return res.status(502).json({
+                success: false,
+                error: 'ارتباط با سرویس هوش مصنوعی ناموفق بود.'
+            });
+        } finally {
+            clearTimeout(timeoutId);
         }
 
-        if (!response || !response.ok) {
+        if (!geminiResponse.ok) {
+            const errorDetails = await geminiResponse.text();
+
             console.error(
-                'ALL GEMINI MODELS FAILED:',
-                lastGeminiError
+                'GEMINI API ERROR:',
+                geminiResponse.status,
+                errorDetails.slice(0, 1200)
             );
+
+            await refundReservedQuota();
 
             return res.status(502).json({
                 success: false,
                 error: 'ارتباط با سرویس هوش مصنوعی ناموفق بود.'
             });
         }
-        
-        const data = await response.json();
+
+        // 15. دریافت و اعتبارسنجی پاسخ
+        let data;
+
+        try {
+            data = await geminiResponse.json();
+        } catch (error) {
+            console.error(
+                'GEMINI JSON ERROR:',
+                error.message
+            );
+
+            await refundReservedQuota();
+
+            return res.status(502).json({
+                success: false,
+                error: 'پاسخ سرویس هوش مصنوعی قابل پردازش نیست.'
+            });
+        }
 
         const answer = (
             data?.candidates?.[0]?.content?.parts || []
@@ -588,13 +723,20 @@ ${JSON.stringify(crmContext)}
             .trim();
 
         if (!answer) {
+            console.error(
+                'GEMINI EMPTY RESPONSE:',
+                JSON.stringify(data).slice(0, 1500)
+            );
+
+            await refundReservedQuota();
+
             return res.status(502).json({
                 success: false,
                 error: 'پاسخ مناسبی از هوش مصنوعی دریافت نشد.'
             });
         }
 
-        // 8. ذخیره پاسخ در حافظه همان حالت
+        // 16. ذخیره پاسخ دستیار
         const { error: saveAssistantError } = await supabase
             .from('ai_chat_messages')
             .insert({
@@ -610,16 +752,28 @@ ${JSON.stringify(crmContext)}
                 saveAssistantError.message
             );
 
+            await refundReservedQuota();
+
             return res.status(500).json({
                 success: false,
                 error: 'ذخیره پاسخ دستیار ناموفق بود.'
             });
         }
 
+        // 17. پاسخ با موفقیت ذخیره شد؛ سهمیه نهایی می‌شود.
+        reservedQuotaId = null;
+
         return res.status(200).json({
             success: true,
             mode,
-            text: answer
+            text: answer,
+            quota: {
+                plan: quotaResult.plan,
+                quota_limit: quotaResult.quota_limit,
+                used_count: quotaResult.used_count,
+                remaining: quotaResult.remaining,
+                period_end: quotaResult.period_end
+            }
         });
 
     } catch (error) {
@@ -627,6 +781,8 @@ ${JSON.stringify(crmContext)}
             'AI CHAT ERROR:',
             error?.message || error
         );
+
+        await refundReservedQuota();
 
         return res.status(500).json({
             success: false,
