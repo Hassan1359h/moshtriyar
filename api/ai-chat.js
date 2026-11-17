@@ -500,7 +500,11 @@ ${JSON.stringify(crmContext)}
         });
 
         // 7. ارتباط با Gemini
-        
+        const models = [
+    'gemini-3.6-flash',
+    'gemini-3.5-flash',
+    'gemini-2.5-flash'
+];
 const models = [
     'gemini-3.8-flash',
     'gemini-3.7-flash',
