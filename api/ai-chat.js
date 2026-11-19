@@ -52,9 +52,9 @@ module.exports = async function handler(req, res) {
         // 1. بررسی تنظیمات سرور
         const SUPABASE_URL = process.env.SUPABASE_URL;
         const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-        const GEMINI_KEY = process.env.GEMINI_API_KEY;
+        const ONEXAI_KEY = process.env.ONEXAI_API_KEY;
 
-        if (!SUPABASE_URL || !SUPABASE_KEY || !GEMINI_KEY) {
+        if (!SUPABASE_URL || !SUPABASE_KEY || !ONEXAI_KEY) {
             return res.status(500).json({
                 success: false,
                 error: 'تنظیمات سرویس هوش مصنوعی کامل نیست.'
@@ -616,20 +616,30 @@ ${JSON.stringify(crmContext)}
             });
         }
 
-        // 13. آماده‌سازی تاریخچه گفتگو برای Gemini
-        const geminiContents = (previousMessages || [])
-            .reverse()
-            .map(message => ({
-                role: message.role === 'assistant' ? 'model' : 'user',
-                parts: [{ text: message.content }]
-            }));
+        
+        // 13. آماده‌سازی تاریخچه گفتگو برای 1xAi
+        const chatMessages = [
+            {
+                role: 'system',
+                content: systemPrompt
+            },
+            ...(previousMessages || [])
+                .reverse()
+                .filter(message =>
+                    message.role === 'user' ||
+                    message.role === 'assistant'
+                )
+                .map(message => ({
+                    role: message.role,
+                    content: message.content
+                })),
+            {
+                role: 'user',
+                content: latestUserMessage
+            }
+        ];
 
-        geminiContents.push({
-            role: 'user',
-            parts: [{ text: latestUserMessage }]
-        });
-
-        // 14. ارسال درخواست به Gemini
+        // 14. ارسال درخواست به 1xAi
         const model = 'gemini-3.8-flash';
 
         const controller = new AbortController();
@@ -639,32 +649,29 @@ ${JSON.stringify(crmContext)}
             30000
         );
 
-        let geminiResponse;
+        let aiResponse;
 
         try {
-            geminiResponse = await fetch(
-                `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(GEMINI_KEY)}`,
+            aiResponse = await fetch(
+                'https://1xai.ir/v1/chat/completions',
                 {
                     method: 'POST',
                     headers: {
+                        'Authorization': `Bearer ${ONEXAI_KEY}`,
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        systemInstruction: {
-                            parts: [{ text: systemPrompt }]
-                        },
-                        contents: geminiContents,
-                        generationConfig: {
-                            temperature: mode === 'manager' ? 0.4 : 0.7,
-                            maxOutputTokens: 1500
-                        }
+                        model,
+                        messages: chatMessages,
+                        temperature: mode === 'manager' ? 0.4 : 0.7,
+                        max_tokens: 1500
                     }),
                     signal: controller.signal
                 }
             );
         } catch (error) {
             console.error(
-                'GEMINI CONNECTION ERROR:',
+                '1XAI CONNECTION ERROR:',
                 error.name,
                 error.message
             );
@@ -679,13 +686,10 @@ ${JSON.stringify(crmContext)}
             clearTimeout(timeoutId);
         }
 
-        if (!geminiResponse.ok) {
-            const errorDetails = await geminiResponse.text();
-
+        if (!aiResponse.ok) {
             console.error(
-                'GEMINI API ERROR:',
-                geminiResponse.status,
-                errorDetails.slice(0, 1200)
+                '1XAI API ERROR:',
+                aiResponse.status
             );
 
             await refundReservedQuota();
@@ -696,14 +700,14 @@ ${JSON.stringify(crmContext)}
             });
         }
 
-        // 15. دریافت و اعتبارسنجی پاسخ
+        // 15. دریافت و اعتبارسنجی پاسخ 1xAi
         let data;
 
         try {
-            data = await geminiResponse.json();
+            data = await aiResponse.json();
         } catch (error) {
             console.error(
-                'GEMINI JSON ERROR:',
+                '1XAI JSON ERROR:',
                 error.message
             );
 
@@ -715,17 +719,14 @@ ${JSON.stringify(crmContext)}
             });
         }
 
-        const answer = (
-            data?.candidates?.[0]?.content?.parts || []
-        )
-            .map(part => part?.text || '')
-            .join('')
-            .trim();
+        const answer = data?.choices?.[0]?.message?.content;
 
-        if (!answer) {
+        if (
+            typeof answer !== 'string' ||
+            !answer.trim()
+        ) {
             console.error(
-                'GEMINI EMPTY RESPONSE:',
-                JSON.stringify(data).slice(0, 1500)
+                '1XAI EMPTY OR INVALID RESPONSE'
             );
 
             await refundReservedQuota();
@@ -736,6 +737,9 @@ ${JSON.stringify(crmContext)}
             });
         }
 
+        const finalAnswer = answer.trim();
+        
+
         // 16. ذخیره پاسخ دستیار
         const { error: saveAssistantError } = await supabase
             .from('ai_chat_messages')
@@ -743,7 +747,7 @@ ${JSON.stringify(crmContext)}
                 user_id: user.id,
                 mode,
                 role: 'assistant',
-                content: answer
+                content: finalAnswer
             });
 
         if (saveAssistantError) {
@@ -766,7 +770,7 @@ ${JSON.stringify(crmContext)}
         return res.status(200).json({
             success: true,
             mode,
-            text: answer,
+            text: finalAnswer,
             quota: {
                 plan: quotaResult.plan,
                 quota_limit: quotaResult.quota_limit,
