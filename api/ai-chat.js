@@ -237,7 +237,24 @@ module.exports = async function handler(req, res) {
         let systemPrompt = '';
         let productContext = [];
         let crmContext = null;
+        // دریافت نام و مشخصات کسب‌وکار مدیر
+let businessDirectory = [];
 
+if (mode === 'manager') {
+    const { data, error } = await supabase
+        .from('business_directory')
+        .select('business_name, category, province, city, website_url, description')
+        .eq('owner_id', user.id)
+        .eq('is_published', true)
+        .order('updated_at', { ascending: false })
+        .limit(1);
+
+    if (error) {
+        console.error('AI BUSINESS DIRECTORY ERROR:', error.message);
+    } else {
+        businessDirectory = data || [];
+    }
+}
         // 6. دریافت اطلاعات محصولات برای فروش و اینستاگرام
         if (mode === 'sales' || mode === 'instagram') {
             const {
@@ -600,9 +617,14 @@ ${JSON.stringify(productContext)}
            
 crmContext = {
     business: {
-        name: profile.full_name,
-        business_type: profile.business_type
-    },
+    name: businessDirectory[0]?.business_name || profile.full_name,
+    business_type: businessDirectory[0]?.category || profile.business_type,
+    province: businessDirectory[0]?.province || null,
+    city: businessDirectory[0]?.city || null,
+    website_url: businessDirectory[0]?.website_url || null,
+    description: businessDirectory[0]?.description || null
+},
+    
     customers: customersResult.data || [],
     cases: casesResult.data || [],
     contact_tasks: tasksResult.data || [],
