@@ -759,7 +759,61 @@ crmContext.financial_summary = {
         
     ]
 };     
- 
+ // تبدیل تاریخ‌های میلادی به شمسی برای نمایش در هوش مصنوعی
+function toPersianDate(value, includeTime = false) {
+    if (typeof value !== 'string') return value;
+
+    if (!/^\d{4}-\d{2}-\d{2}/.test(value)) return value;
+
+    const isDateOnly = /^\d{4}-\d{2}-\d{2}$/.test(value);
+    const date = new Date(isDateOnly ? `${value}T12:00:00Z` : value);
+
+    if (!Number.isFinite(date.getTime())) return value;
+
+    const options = {
+        calendar: 'persian',
+        numberingSystem: 'arab',
+        timeZone: 'Asia/Tehran',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    };
+
+    if (includeTime && !isDateOnly) {
+        options.hour = '2-digit';
+        options.minute = '2-digit';
+        options.hourCycle = 'h23';
+    }
+
+    return new Intl.DateTimeFormat('fa-IR', options).format(date);
+}
+
+function convertCrmDatesToPersian(data) {
+    if (Array.isArray(data)) {
+        return data.map(item => convertCrmDatesToPersian(item));
+    }
+
+    if (!data || typeof data !== 'object') return data;
+
+    const result = {};
+
+    for (const [key, value] of Object.entries(data)) {
+        if (
+            typeof value === 'string' &&
+            /(_at|_date|^date$|^birthday$)/i.test(key)
+        ) {
+            result[key] = toPersianDate(value, key.endsWith('_at'));
+        } else if (value && typeof value === 'object') {
+            result[key] = convertCrmDatesToPersian(value);
+        } else {
+            result[key] = value;
+        }
+    }
+
+    return result;
+}
+
+crmContext = convertCrmDatesToPersian(crmContext);
 
             systemPrompt = `
 تو مشاور هوشمند مدیریت کسب‌وکار مشتری‌یار هستی.
