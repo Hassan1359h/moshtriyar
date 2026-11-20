@@ -705,16 +705,12 @@ const today = new Date().toLocaleDateString('sv-SE', {
     timeZone: 'Asia/Tehran'
 });
 
-const overduePayments = payments.filter(item => {
-    const confirmed =
-        item.status === 'paid' &&
-        item.paid_at &&
-        Number.isFinite(new Date(item.paid_at).getTime());
 
-    return item.status === 'pending' &&
+const overduePayments = payments.filter(item =>
+    item.status === 'pending' &&
     item.due_date &&
-    item.due_date < today;
-
+    item.due_date < today
+);
 const overdueAmount = overduePayments.reduce(
     (sum, item) => sum + Number(item.amount || 0),
     0
@@ -758,8 +754,9 @@ crmContext.financial_summary = {
         'فاکتور cash به‌تنهایی اثبات وصول وجه نیست.',
         'فقط پرداخت paid دارای paid_at معتبر وصول‌شده محسوب می‌شود.',
         'مانده بدهی از مبلغ قرارداد منهای پرداخت‌های واقعی محاسبه شده است.',
-        'پرداخت اشتراک پلتفرم مشتری‌یار درآمد کسب‌وکار نیست.'
-        'مبلغ چک‌های ثبت‌شده به‌معنای وجه وصول‌شده نیست.'
+        'پرداخت اشتراک پلتفرم مشتری‌یار درآمد کسب‌وکار نیست.',
+'مبلغ چک‌های ثبت‌شده به‌معنای وجه وصول‌شده نیست.'
+        
     ]
 };     
  
