@@ -655,10 +655,12 @@ const linkedInvoiceIds = new Set(
         .filter(Boolean)
 );
 
-const independentInvoices = invoices.filter(
-    invoice => !linkedInvoiceIds.has(invoice.id)
-);
 
+const independentInvoices = invoices.filter(
+    invoice =>
+        !linkedInvoiceIds.has(invoice.id) &&
+        !invoice.installment_id
+);
 // مجموع فاکتورهای مستقل
 const independentInvoiceTotal = independentInvoices.reduce(
     (sum, invoice) => sum + Number(invoice.total || 0),
