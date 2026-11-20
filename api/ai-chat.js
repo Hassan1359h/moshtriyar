@@ -748,10 +748,10 @@ crmContext.financial_summary = {
 
     check_count: checks.length,
 
-    check_total: checks.reduce(
-        (sum, item) => sum + Number(item.amount || 0),
-        0
-    ),
+    check_recorded_total: checks.reduce(
+    (sum, item) => sum + Number(item.amount || 0),
+    0
+),
 
     calculation_notes: [
         'فاکتورهای متصل به قرارداد اقساطی دوباره شمرده نشده‌اند.',
@@ -759,6 +759,7 @@ crmContext.financial_summary = {
         'فقط پرداخت paid دارای paid_at معتبر وصول‌شده محسوب می‌شود.',
         'مانده بدهی از مبلغ قرارداد منهای پرداخت‌های واقعی محاسبه شده است.',
         'پرداخت اشتراک پلتفرم مشتری‌یار درآمد کسب‌وکار نیست.'
+        'مبلغ چک‌های ثبت‌شده به‌معنای وجه وصول‌شده نیست.'
     ]
 };     
  
