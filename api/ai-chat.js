@@ -640,6 +640,37 @@ crmContext = {
 
     case_messages: caseMessagesResult.data || []
 };
+            
+// تشخیص احتمال ناقص بودن اطلاعات به دلیل محدودیت دریافت
+const completenessChecks = [
+    { name: 'مشتریان', rows: crmContext.customers, limit: 100 },
+    { name: 'پرونده‌ها', rows: crmContext.cases, limit: 100 },
+    { name: 'وظایف تماس', rows: crmContext.contact_tasks, limit: 100 },
+    { name: 'بازخوردها', rows: crmContext.feedback, limit: 100 },
+    { name: 'پیگیری‌ها', rows: crmContext.followups, limit: 100 },
+    { name: 'فاکتورها', rows: crmContext.financial.invoices, limit: 100 },
+    { name: 'قراردادهای اقساطی', rows: crmContext.financial.installments, limit: 100 },
+    { name: 'پرداخت اقساط', rows: crmContext.financial.installment_payments, limit: 200 },
+    { name: 'چک‌ها', rows: crmContext.financial.checks, limit: 100 },
+    {
+        name: 'پیام‌های پرونده',
+        rows: crmContext.case_messages,
+        limit: 200
+    }
+];
+
+const limitedSources = completenessChecks
+    .filter(item =>
+        Array.isArray(item.rows) &&
+        item.rows.length >= item.limit
+    )
+    .map(item => item.name);
+
+crmContext.data_completeness = {
+    potentially_incomplete: limitedSources.length > 0,
+    limited_sources: limitedSources
+};
+            
         // محاسبه قطعی وضعیت پیگیری‌ها با ساعت ایران
 const nowTehran = Date.now();
 
@@ -852,6 +883,14 @@ crmContext = convertCrmDatesToPersian(crmContext);
 
             systemPrompt = `
 تو مشاور هوشمند مدیریت کسب‌وکار مشتری‌یار هستی.
+
+قوانین کامل بودن اطلاعات:
+- قبل از ارائه گزارش، data_completeness را بررسی کن.
+- اگر potentially_incomplete برابر true بود، اعلام کن اطلاعات بخش‌های مشخص‌شده ممکن است کامل نباشد.
+- در این وضعیت، هیچ‌وقت گزارش را آمار کامل کل سوابق کسب‌وکار معرفی نکن.
+- نام بخش‌های احتمالا ناقص را از limited_sources بخوان.
+- اگر false بود، درباره محدودیت احتمالی هشدار نده.
+
 قوانین قطعی گزارش پیگیری‌ها:
 - برای اعلام تعداد پیگیری‌های در انتظار و عقب‌افتاده، فقط از followup_summary استفاده کن.
 - pending_contact_task_count تعداد وظایف تماس در انتظار است.
