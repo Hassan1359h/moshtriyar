@@ -709,10 +709,9 @@ const overduePayments = payments.filter(item => {
         item.paid_at &&
         Number.isFinite(new Date(item.paid_at).getTime());
 
-    return !confirmed &&
-        item.due_date &&
-        item.due_date < today;
-});
+    return item.status === 'pending' &&
+    item.due_date &&
+    item.due_date < today;
 
 const overdueAmount = overduePayments.reduce(
     (sum, item) => sum + Number(item.amount || 0),
