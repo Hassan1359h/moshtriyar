@@ -640,6 +640,126 @@ crmContext = {
 
     case_messages: caseMessagesResult.data || []
 };
+       // محاسبات قطعی مالی کسب‌وکار
+const financial = crmContext.financial;
+
+const invoices = financial.invoices;
+const installments = financial.installments;
+const payments = financial.installment_payments;
+const checks = financial.checks;
+
+// جلوگیری از دوباره‌شماری فاکتورهای متصل به اقساط
+const linkedInvoiceIds = new Set(
+    installments
+        .map(item => item.invoice_id)
+        .filter(Boolean)
+);
+
+const independentInvoices = invoices.filter(
+    invoice => !linkedInvoiceIds.has(invoice.id)
+);
+
+// مجموع فاکتورهای مستقل
+const independentInvoiceTotal = independentInvoices.reduce(
+    (sum, invoice) => sum + Number(invoice.total || 0),
+    0
+);
+
+// مبلغ قراردادهای اقساطی
+const installmentTotal = installments.reduce(
+    (sum, item) => sum + Number(item.total_amount || 0),
+    0
+);
+
+// فقط پرداخت‌های واقعاً تأییدشده
+const confirmedPayments = payments.filter(item =>
+    item.status === 'paid' &&
+    item.paid_at &&
+    Number.isFinite(new Date(item.paid_at).getTime())
+);
+
+const actualReceived = confirmedPayments.reduce(
+    (sum, item) => sum + Number(item.amount || 0),
+    0
+);
+
+// محاسبه دریافتی هر قرارداد اقساطی
+const paidByInstallment = {};
+
+confirmedPayments.forEach(item => {
+    paidByInstallment[item.installment_id] =
+        (paidByInstallment[item.installment_id] || 0) +
+        Number(item.amount || 0);
+});
+
+// مانده بدهی قراردادها
+const outstandingDebt = installments.reduce((sum, item) => {
+    const paid = paidByInstallment[item.id] || 0;
+    return sum + Math.max(0, Number(item.total_amount || 0) - paid);
+}, 0);
+
+// اقساط سررسیدگذشته و وصول‌نشده
+const today = new Date().toLocaleDateString('sv-SE', {
+    timeZone: 'Asia/Tehran'
+});
+
+const overduePayments = payments.filter(item => {
+    const confirmed =
+        item.status === 'paid' &&
+        item.paid_at &&
+        Number.isFinite(new Date(item.paid_at).getTime());
+
+    return !confirmed &&
+        item.due_date &&
+        item.due_date < today;
+});
+
+const overdueAmount = overduePayments.reduce(
+    (sum, item) => sum + Number(item.amount || 0),
+    0
+);
+
+// خلاصه مالی محاسبه‌شده
+crmContext.financial_summary = {
+    independent_invoice_count: independentInvoices.length,
+    independent_invoice_total: independentInvoiceTotal,
+
+    installment_count: installments.length,
+    installment_contract_total: installmentTotal,
+
+    total_sales:
+        independentInvoiceTotal + installmentTotal,
+
+    confirmed_installment_payment_count:
+        confirmedPayments.length,
+
+    actual_installment_received:
+        actualReceived,
+
+    installment_outstanding_debt:
+        outstandingDebt,
+
+    overdue_installment_count:
+        overduePayments.length,
+
+    overdue_installment_amount:
+        overdueAmount,
+
+    check_count: checks.length,
+
+    check_total: checks.reduce(
+        (sum, item) => sum + Number(item.amount || 0),
+        0
+    ),
+
+    calculation_notes: [
+        'فاکتورهای متصل به قرارداد اقساطی دوباره شمرده نشده‌اند.',
+        'فاکتور cash به‌تنهایی اثبات وصول وجه نیست.',
+        'فقط پرداخت paid دارای paid_at معتبر وصول‌شده محسوب می‌شود.',
+        'مانده بدهی از مبلغ قرارداد منهای پرداخت‌های واقعی محاسبه شده است.',
+        'پرداخت اشتراک پلتفرم مشتری‌یار درآمد کسب‌وکار نیست.'
+    ]
+};     
  
 
             systemPrompt = `
@@ -682,6 +802,13 @@ crmContext = {
 - اگر داده کافی برای محاسبه درآمد قطعی وجود ندارد، صریحاً اعلام کن که درآمد قطعی از داده‌های موجود قابل محاسبه نیست.
 - پیام‌های پرونده ۳۶۰ را به case_id مرتبط کن و میان پیام مشتری و مدیر تفاوت قائل شو.
 - هیچ آمار یا مبلغی را از روی حدس محاسبه نکن.
+- برای گزارش مالی، ابتدا از financial_summary استفاده کن.
+- total_sales مبلغ فروش ثبت‌شده است، نه مبلغ وصول‌شده.
+- actual_installment_received فقط مجموع پرداخت‌های اقساط تأییدشده است.
+- installment_outstanding_debt مانده قراردادهای اقساطی است.
+- overdue_installment_amount فقط مبلغ اقساط سررسیدگذشته و پرداخت‌نشده است.
+- مستقل بودن فاکتورها و قراردادهای اقساطی را با توجه به محاسبات financial_summary رعایت کن.
+- اگر اطلاعات مالی خام با financial_summary مغایرت داشت، اعداد محاسبه‌شده در financial_summary را مبنا قرار بده.
 
 - اطلاعات مشتریان را فقط برای تحلیل داخلی مدیر استفاده کن.
 - هیچ متن محرمانه‌ای را به‌عنوان پیام آماده ارسال به مشتری ارائه نکن.
