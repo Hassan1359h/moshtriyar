@@ -808,6 +808,7 @@ crmContext.financial_summary = {
 - total_sales مبلغ فروش ثبت‌شده است، نه مبلغ وصول‌شده.
 - actual_installment_received فقط مجموع پرداخت‌های اقساط تأییدشده است.
 - installment_outstanding_debt مانده قراردادهای اقساطی است.
+- check_recorded_total فقط مبلغ اسمی چک‌های ثبت‌شده است و به‌هیچ‌وجه نباید به‌عنوان درآمد یا وجه وصول‌شده گزارش شود.
 - overdue_installment_amount فقط مبلغ اقساط سررسیدگذشته و پرداخت‌نشده است.
 - مستقل بودن فاکتورها و قراردادهای اقساطی را با توجه به محاسبات financial_summary رعایت کن.
 - اگر اطلاعات مالی خام با financial_summary مغایرت داشت، اعداد محاسبه‌شده در financial_summary را مبنا قرار بده.
