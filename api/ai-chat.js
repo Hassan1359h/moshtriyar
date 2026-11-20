@@ -640,6 +640,41 @@ crmContext = {
 
     case_messages: caseMessagesResult.data || []
 };
+        // محاسبه قطعی وضعیت پیگیری‌ها با ساعت ایران
+const nowTehran = Date.now();
+
+function getOverdueTasks(tasks) {
+    return tasks.filter(task => {
+        if (task.status !== 'pending') return false;
+        if (!task.due_at) return false;
+
+        const dueTime = new Date(task.due_at).getTime();
+
+        return Number.isFinite(dueTime) && dueTime < nowTehran;
+    });
+}
+
+const pendingContactTasks = crmContext.contact_tasks.filter(
+    task => task.status === 'pending'
+);
+
+const pendingFollowups = crmContext.followups.filter(
+    task => task.status === 'pending'
+);
+
+const overdueContactTasks = getOverdueTasks(pendingContactTasks);
+const overdueFollowups = getOverdueTasks(pendingFollowups);
+
+crmContext.followup_summary = {
+    pending_contact_task_count: pendingContactTasks.length,
+    overdue_contact_task_count: overdueContactTasks.length,
+
+    pending_followup_count: pendingFollowups.length,
+    overdue_followup_count: overdueFollowups.length,
+
+    overdue_contact_tasks: overdueContactTasks,
+    overdue_followups: overdueFollowups
+};    
        // محاسبات قطعی مالی کسب‌وکار
 const financial = crmContext.financial;
 
