@@ -1156,7 +1156,7 @@ ${JSON.stringify(crmContext)}
                         model,
                         messages: chatMessages,
                         temperature: mode === 'manager' ? 0.4 : 0.7,
-                        max_tokens: 1500
+                        max_tokens: mode === 'instagram' ? 5000 : 1500
                     }),
                     signal: controller.signal
                 }
