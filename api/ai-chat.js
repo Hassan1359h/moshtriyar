@@ -1138,7 +1138,7 @@ ${JSON.stringify(crmContext)}
 
         const timeoutId = setTimeout(
             () => controller.abort(),
-            30000
+            60000
         );
 
         let aiResponse;
