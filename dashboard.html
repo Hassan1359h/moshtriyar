@@ -1243,6 +1243,80 @@ body {
 }
 @media(prefers-reduced-motion: reduce) { .annual-ai-cursor, .annual-ai-robot-eye { animation: none !important; } }
 
+/* Warm premium AI assistant card */
+.annual-ai-intro {
+    background:
+        radial-gradient(circle at 12% 15%, rgba(45, 212, 191, .19), transparent 35%),
+        linear-gradient(125deg, #101b35 0%, #192b49 55%, #263b59 100%) !important;
+    border: 1px solid rgba(245, 190, 92, .45) !important;
+    border-radius: 22px !important;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, .20),
+                inset 0 1px 0 rgba(255,255,255,.12) !important;
+    color: #fff !important;
+    cursor: pointer;
+    transition: transform .25s ease, box-shadow .25s ease;
+}
+
+.annual-ai-intro:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 17px 38px rgba(15, 23, 42, .27),
+                0 0 20px rgba(245, 190, 92, .12) !important;
+}
+
+.annual-ai-heading {
+    color: #fff3d5 !important;
+    font-weight: 900 !important;
+}
+
+.annual-ai-year-badge {
+    background: linear-gradient(135deg, #f8d78d, #d99b3d) !important;
+    color: #38240b !important;
+    border: 1px solid rgba(255,255,255,.35);
+    font-weight: 800 !important;
+}
+
+.annual-ai-typing {
+    color: #d5e6f3 !important;
+}
+
+.annual-ai-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 13px;
+    padding: 10px 19px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #ffe4a6, #e9ad4e);
+    color: #34220c !important;
+    text-decoration: none !important;
+    font-size: 13px;
+    font-weight: 900;
+    box-shadow: 0 5px 16px rgba(233, 173, 78, .22);
+    transition: transform .2s ease, filter .2s ease;
+}
+
+.annual-ai-cta:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.06);
+}
+
+.annual-ai-cta span {
+    font-size: 19px;
+}
+
+.annual-ai-robot-head {
+    box-shadow: 0 0 22px rgba(45, 212, 191, .2);
+}
+
+@media (max-width: 600px) {
+    .annual-ai-cta {
+        width: 100%;
+        box-sizing: border-box;
+        margin-top: 12px;
+    }
+}
+
 </style>
 </head>
 <body>
