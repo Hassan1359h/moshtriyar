@@ -1653,6 +1653,25 @@ import { supabase } from './js/supabase.js';
 import { getLabels } from './js/labels.js';
 import { loadBusinessType, isShamsiPast } from './js/helpers.js';
 const $ = id => document.getElementById(id);
+ // فعال‌کردن کلیک روی کارت معرفی دستیار
+const annualAiIntro = $('annualAiIntro');
+
+if (annualAiIntro) {
+    annualAiIntro.style.cursor = 'pointer';
+    annualAiIntro.setAttribute('role', 'link');
+    annualAiIntro.setAttribute('tabindex', '0');
+
+    annualAiIntro.addEventListener('click', () => {
+        window.location.href = 'ai.html';
+    });
+
+    annualAiIntro.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            window.location.href = 'ai.html';
+        }
+    });
+} 
 let me = null;
 let customers = [];
 let contactTasks = [];  
