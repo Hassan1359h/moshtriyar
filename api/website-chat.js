@@ -311,11 +311,25 @@ async function incrementSiteUsage(websiteId) {
   }
 }
 
+function buildBusinessIdentity(businessName) {
+  const name = String(businessName || "").trim().slice(0, 100);
+
+  if (!name) {
+    return "تو دستیار هوشمند این کسب‌وکار هستی.";
+  }
+
+  return `تو دستیار هوشمند کسب‌وکار «${name}» هستی. نام خودت را دستیار هوشمند ${name} معرفی کن و هرگز خودت را مشتری‌یار معرفی نکن.`;
+}
+
 // ==========================================================
 // 🎭 پرامپت
 // ==========================================================
-function buildSystemPrompt(customerContext) {
-    let base = `تو «مشتری‌یار» هستی؛ یک دستیار پشتیبانی هوشمند، مودب، صبور و حرفه‌ای فارسی‌زبان که در وب‌سایت مشغول کمک به مشتریان است.
+function buildSystemPrompt(customerContext, businessName) {
+    let base = `${buildBusinessIdentity(businessName)}
+
+یک دستیار پشتیبانی هوشمند، مودب، صبور و حرفه‌ای فارسی‌زبان هستی که در وب‌سایت مشغول کمک به مشتریان است.
+
+وظایف تو:
 
 وظایف تو:
 - پاسخ دادن به سوالات مشتریان درباره محصولات، خدمات، سفارش‌ها، قیمت‌ها، ارسال و پیگیری
