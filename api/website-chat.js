@@ -405,6 +405,7 @@ res.setHeader("Cloudflare-CDN-Cache-Control", "no-store");
     // 🔍 شناسایی سایت
     let websiteId = null;
     let plan = "trial";
+    let businessName = "";
 
 // 🎯 چک انقضا با userId (چون ویجت userId می‌فرسته)
 if (userId) {
@@ -501,7 +502,7 @@ if (ownerUserId && customerPhone) {
     contents.push({ role: "user", parts: [{ text: message.trim() }] });
 
     const requestBody = {
-      systemInstruction: { parts: [{ text: buildSystemPrompt(customerContext) }] },
+     systemInstruction: { parts: [{ text: buildSystemPrompt(customerContext, businessName) }] }, 
       contents,
       generationConfig: {
         temperature: 0.8,
