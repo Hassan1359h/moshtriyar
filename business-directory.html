@@ -594,7 +594,7 @@ $('cards').addEventListener('click', async (event) => {
 
     if (sessionError || !session?.user) {
         alert('برای ثبت رأی ابتدا وارد حساب کاربری خود شوید.');
-        window.location.href = 'login.html';
+        window.location.href = 'customer-login.html?redirect=' + encodeURIComponent(window.location.pathname + window.location.search + window.location.hash);
         return;
     }
 
